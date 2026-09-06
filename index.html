@@ -73,36 +73,49 @@
                 background-color: #e6e6e6;
             }
             /* 股价上涨闪烁动画（东方财富风格） */
+            /* 数字变化淡入淡出动画（优雅柔和，无背景色闪烁） */
             @keyframes flashUp {
-                0% { background-color: rgba(255, 77, 79, 0.35); }
-                100% { background-color: transparent; }
+                0% { opacity: 0.25; }
+                100% { opacity: 1; }
             }
-            /* 股价下跌闪烁动画 */
             @keyframes flashDown {
-                0% { background-color: rgba(0, 214, 143, 0.35); }
-                100% { background-color: transparent; }
+                0% { opacity: 0.25; }
+                100% { opacity: 1; }
             }
             .flash-up {
-                animation: flashUp 0.8s ease-out;
-                border-radius: 4px;
+                animation: flashUp 0.5s ease-out;
             }
             .flash-down {
-                animation: flashDown 0.8s ease-out;
-                border-radius: 4px;
+                animation: flashDown 0.5s ease-out;
+            }
+            /* 列表模式柔和淡入淡出 */
+            @keyframes softFlashUp {
+                0% { opacity: 0.3; }
+                100% { opacity: 1; }
+            }
+            @keyframes softFlashDown {
+                0% { opacity: 0.3; }
+                100% { opacity: 1; }
+            }
+            .soft-flash-up {
+                animation: softFlashUp 0.45s ease-out;
+            }
+            .soft-flash-down {
+                animation: softFlashDown 0.45s ease-out;
             }
             /* 数字变化平滑过渡 */
             .num-transition {
                 transition: color 0.3s ease;
             }
-            /* 排名上升动画 */
+            /* 排名上升动画（无背景色，仅位移+淡入） */
             @keyframes rankUp {
-                0% { background-color: rgba(255, 77, 79, 0.15); transform: translateY(10px); opacity: 0.5; }
-                100% { background-color: transparent; transform: translateY(0); opacity: 1; }
+                0% { transform: translateY(8px); opacity: 0.5; }
+                100% { transform: translateY(0); opacity: 1; }
             }
             /* 排名下降动画 */
             @keyframes rankDown {
-                0% { background-color: rgba(0, 214, 143, 0.15); transform: translateY(-10px); opacity: 0.5; }
-                100% { background-color: transparent; transform: translateY(0); opacity: 1; }
+                0% { transform: translateY(-8px); opacity: 0.5; }
+                100% { transform: translateY(0); opacity: 1; }
             }
             .rank-up {
                 animation: rankUp 0.6s ease-out;
@@ -136,34 +149,45 @@
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
     <div id="pageHold" class="max-w-xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 页面标题 -->
-        <h1 class="text-center text-[22px] font-medium text-gray-800 mb-6">细水长流</h1>
+        <!-- 品牌标题：水滴图标 + 衬线渐变文字 + 装饰线副标题 -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center shadow-lg shadow-orange-500/25">
+                    <i class="fa fa-tint text-white text-sm"></i>
+                </div>
+                <h1 class="text-[26px] font-serif font-bold bg-gradient-to-r from-accent via-orange-600 to-orange-800 bg-clip-text text-transparent tracking-wide">细水长流</h1>
+            </div>
+            <div class="mt-2 flex items-center justify-center gap-2">
+                <div class="h-px w-8 bg-gradient-to-r from-transparent to-accent/40"></div>
+                <span class="text-[11px] text-gray-400 tracking-widest">股息持仓 · 价值投资</span>
+                <div class="h-px w-8 bg-gradient-to-l from-transparent to-accent/40"></div>
+            </div>
+        </div>
 
-        <!-- 顶部深色汇总卡片 - 顶级金融APP风格（富途/老虎质感） -->
-        <div class="relative text-white rounded-3xl p-5 shadow-2xl mb-5 overflow-hidden card-shimmer" style="background: linear-gradient(135deg, #1e2235 0%, #1a1d2e 40%, #161825 100%);">
+        <!-- 顶部汇总卡片 - 暖色调渐变，与页面整体风格协调 -->
+        <div class="relative text-white rounded-3xl p-5 shadow-2xl mb-5 overflow-hidden card-shimmer" style="background: linear-gradient(135deg, #C46137 0%, #A04E2C 50%, #7A3A20 100%);">
             <!-- 顶部高光线 -->
-            <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+            <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-200/30 to-transparent"></div>
             <!-- 内发光边框 -->
-            <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.3);"></div>
+            <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.2);"></div>
             <!-- 背景装饰：细腻网格纹理 -->
-            <div class="absolute inset-0 opacity-[0.025]" style="background-image: linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px); background-size: 24px 24px;"></div>
+            <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 24px 24px;"></div>
             <!-- 光晕装饰：右上角金色主光晕 -->
-            <div class="absolute -top-24 -right-16 w-56 h-56 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(251,191,36,0.18) 0%, transparent 70%);"></div>
-            <!-- 左下角橙色辅光晕 -->
-            <div class="absolute -bottom-20 -left-20 w-48 h-48 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(212,83,41,0.12) 0%, transparent 70%);"></div>
-            <!-- 中间微妙紫蓝光晕（增加高级感） -->
-            <div class="absolute top-1/3 left-1/4 w-40 h-40 rounded-full pointer-events-none opacity-40" style="background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);"></div>
+            <div class="absolute -top-24 -right-16 w-56 h-56 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(253,230,138,0.25) 0%, transparent 70%);"></div>
+            <!-- 左下角深橙辅光晕 -->
+            <div class="absolute -bottom-20 -left-20 w-48 h-48 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(180,83,9,0.2) 0%, transparent 70%);"></div>
+            <!-- 中间暖金光晕（增加层次感） -->
+            <div class="absolute top-1/3 left-1/4 w-40 h-40 rounded-full pointer-events-none opacity-30" style="background: radial-gradient(circle, rgba(251,191,36,0.15) 0%, transparent 70%);"></div>
 
             <div class="relative z-10">
                 <!-- 年度分红收入 -->
                 <div class="mb-5">
-                    <div class="text-gray-400 text-xs flex items-center gap-1.5 mb-2">
-                        <i class="fa fa-coins text-amber-400 text-[10px]"></i>
+                    <div class="text-orange-100/70 text-xs flex items-center gap-1.5 mb-2">
+                        <i class="fa fa-coins text-amber-300 text-[10px]"></i>
                         <span class="tracking-wide">年度分红收入</span>
                     </div>
                     <div class="flex items-baseline gap-1.5">
-                        <span class="text-amber-400/80 text-lg font-light">¥</span>
-                        <span class="text-[36px] font-bold text-amber-400 tabular-nums tracking-tight num-transition" id="totalYearDiv">0.00</span>
+                        <span class="text-[36px] font-bold text-amber-200 tabular-nums tracking-tight num-transition" id="totalYearDiv">0.00</span>
                     </div>
                 </div>
 
@@ -173,35 +197,35 @@
                     <div class="col-span-3 h-px mb-0" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
                     <!-- 第一行 -->
                     <div class="py-3.5 pr-2.5">
-                        <div class="text-gray-400 text-[11px] mb-1">今年已收</div>
-                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white" id="incomeNowWrap"><span class="text-gray-500 text-[11px] font-normal">¥</span><span id="incomeNow">0.00</span></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">今年已收</div>
+                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white" id="incomeNowWrap"><span id="incomeNow">0.00</span></div>
                     </div>
                     <div class="py-3.5 px-2.5 relative">
-                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
-                        <div class="text-gray-400 text-[11px] mb-1">成本息率</div>
-                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white"><span id="costYield">0.00</span><span class="text-gray-500 text-[11px] font-normal">%</span></div>
+                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">成本息率</div>
+                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white"><span id="costYield">0.00</span><span class="text-orange-100/50 text-[11px] font-normal">%</span></div>
                     </div>
                     <div class="py-3.5 pl-2.5 relative">
-                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
-                        <div class="text-gray-400 text-[11px] mb-1">市值息率</div>
-                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white"><span id="marketYield">0.00</span><span class="text-gray-500 text-[11px] font-normal">%</span></div>
+                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">市值息率</div>
+                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white"><span id="marketYield">0.00</span><span class="text-orange-100/50 text-[11px] font-normal">%</span></div>
                     </div>
                     <!-- 分隔线 -->
                     <div class="col-span-3 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);"></div>
 
                     <!-- 第二行 -->
                     <div class="py-3.5 pr-2.5">
-                        <div class="text-gray-400 text-[11px] mb-1">累计分红总额</div>
-                        <div class="text-[15px] font-semibold tabular-nums num-transition" id="totalDivReceivedWrap"><span class="text-amber-400/60 text-[11px] font-normal">¥</span><span id="totalDivReceived" class="text-amber-400">0.00</span></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">累计分红总额</div>
+                        <div class="text-[15px] font-semibold tabular-nums num-transition" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-amber-200">0.00</span></div>
                     </div>
                     <div class="py-3.5 px-2.5 relative">
-                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
-                        <div class="text-gray-400 text-[11px] mb-1">月均分红</div>
-                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white" id="monthDivWrap"><span class="text-gray-500 text-[11px] font-normal">¥</span><span id="monthDiv">0.00</span></div>
+                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">月均分红</div>
+                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white" id="monthDivWrap"><span id="monthDiv">0.00</span></div>
                     </div>
                     <div class="py-3.5 pl-2.5 relative">
-                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
-                        <div class="text-gray-400 text-[11px] mb-1">今年收益率</div>
+                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">今年收益率</div>
                         <div class="text-[15px] font-bold tabular-nums num-transition" id="yearReturnRate">0.00%</div>
                     </div>
                     <!-- 分隔线 -->
@@ -209,17 +233,17 @@
 
                     <!-- 第三行 -->
                     <div class="pt-3.5 pr-2.5 pb-1">
-                        <div class="text-gray-400 text-[11px] mb-1">总资产</div>
-                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white" id="totalMarketWrap"><span class="text-gray-500 text-[11px] font-normal">¥</span><span id="totalMarket">0.00</span></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">总资产</div>
+                        <div class="text-[15px] font-semibold tabular-nums num-transition text-white" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
                     </div>
                     <div class="pt-3.5 px-2.5 pb-1 relative">
-                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
-                        <div class="text-gray-400 text-[11px] mb-1">持仓盈亏</div>
-                        <div class="text-[15px] font-bold tabular-nums num-transition" id="totalPnl">¥0.00</div>
+                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">持仓盈亏</div>
+                        <div class="text-[15px] font-bold tabular-nums num-transition" id="totalPnl">0.00</div>
                     </div>
                     <div class="pt-3.5 pl-2.5 pb-1 relative">
-                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);"></div>
-                        <div class="text-gray-400 text-[11px] mb-1">总收益率</div>
+                        <div class="absolute left-0 top-3 bottom-3 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
+                        <div class="text-orange-100/70 text-[11px] mb-1">总收益率</div>
                         <div class="text-[15px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                     </div>
                 </div>
@@ -232,17 +256,28 @@
             <h2 class="text-lg font-semibold text-gray-800">我的持仓</h2>
             <span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-xs"><span id="stockNum">0</span>只</span>
         </div>
-        <!-- 全部/A股/港股筛选标签，点击切换显示类型，动态填充数量 -->
-        <div class="flex gap-2 mb-4 text-sm" id="filterGroup">
-            <button type="button" data-filter="all" class="filterTag bg-gradient-to-r from-accent to-orange-600 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-sm transition-all">
-                全部 <span id="allCount">0</span>
-            </button>
-            <button type="button" data-filter="A" class="filterTag bg-gray-100 text-gray-500 px-3 py-1 rounded-full flex items-center gap-1 transition-all">
-                <span class="w-2 h-2 rounded-full bg-accent"></span>A股 <span id="aCount">0</span>
-            </button>
-            <button type="button" data-filter="HK" class="filterTag bg-gray-100 text-gray-500 px-3 py-1 rounded-full flex items-center gap-1 transition-all">
-                <span class="w-2 h-2 rounded-full bg-blue-500"></span>港股 <span id="hkCount">0</span>
-            </button>
+        <!-- 全部/A股/港股筛选标签 + 卡片/列表模式切换 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex gap-2 text-sm" id="filterGroup">
+                <button type="button" data-filter="all" class="filterTag bg-gradient-to-r from-accent to-orange-600 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-sm transition-all">
+                    全部 <span id="allCount">0</span>
+                </button>
+                <button type="button" data-filter="A" class="filterTag bg-gray-100 text-gray-500 px-3 py-1 rounded-full flex items-center gap-1 transition-all">
+                    <span class="w-2 h-2 rounded-full bg-accent"></span>A股 <span id="aCount">0</span>
+                </button>
+                <button type="button" data-filter="HK" class="filterTag bg-gray-100 text-gray-500 px-3 py-1 rounded-full flex items-center gap-1 transition-all">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>港股 <span id="hkCount">0</span>
+                </button>
+            </div>
+            <!-- 卡片/列表模式切换 -->
+            <div class="flex bg-gray-100 rounded-full p-0.5">
+                <button type="button" id="cardModeBtn" class="w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all bg-white text-accent shadow-sm" title="卡片模式">
+                    <i class="fa fa-th-large"></i>
+                </button>
+                <button type="button" id="listModeBtn" class="w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all text-gray-400" title="列表模式">
+                    <i class="fa fa-list"></i>
+                </button>
+            </div>
         </div>
 
         <!-- 持仓列表容器 -->
@@ -389,7 +424,10 @@
 
     <!-- 统计页面 -->
     <div id="pageStats" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">统计</h2>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+            统计
+        </h2>
 
         <!-- 今日涨跌幅排行榜 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
@@ -445,7 +483,7 @@
                     <div>
                         <div class="text-[11px] text-gray-400 mb-0.5">年度分红总额</div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-lg font-bold text-gray-800" id="divCompareThisYear">¥0</span>
+                            <span class="text-lg font-bold text-gray-800" id="divCompareThisYear">0</span>
                             <span class="text-[11px] text-gray-400">今年</span>
                         </div>
                     </div>
@@ -460,7 +498,7 @@
                     <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                         <div class="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full" id="divCompareBar" style="width: 50%"></div>
                     </div>
-                    <span class="text-[10px] text-gray-400 whitespace-nowrap">去年 <span id="divCompareLastYear">¥0</span></span>
+                    <span class="text-[10px] text-gray-400 whitespace-nowrap">去年 <span id="divCompareLastYear">0</span></span>
                 </div>
             </div>
             <!-- 个股对比列表 -->
@@ -477,7 +515,10 @@
 
     <!-- 我的页面 -->
     <div id="pageMine" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">我的</h2>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+            我的
+        </h2>
         <!-- 用户信息卡片 -->
         <div class="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-2xl p-5 card-shadow mb-4 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
@@ -485,7 +526,7 @@
             <div class="flex items-center gap-3 mb-4 relative z-10">
                 <div class="w-14 h-14 rounded-full bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30"><i class="fa fa-tree"></i></div>
                 <div>
-                    <div class="text-lg font-semibold text-white">细水长流</div>
+                    <div class="text-lg font-serif font-semibold text-white tracking-wide">细水长流</div>
                     <div class="text-xs text-gray-400">股息持仓记录 · 价值投资</div>
                 </div>
             </div>
@@ -496,15 +537,15 @@
                 </div>
                 <div class="bg-white/5 rounded-xl p-2.5">
                     <div class="text-[10px] text-gray-400">总资产</div>
-                    <div class="text-sm font-semibold text-white mt-0.5" id="mineTotalAsset">¥0</div>
+                    <div class="text-sm font-semibold text-white mt-0.5" id="mineTotalAsset">0</div>
                 </div>
                 <div class="bg-white/5 rounded-xl p-2.5">
                     <div class="text-[10px] text-gray-400">今年分红</div>
-                    <div class="text-sm font-semibold text-amber-300 mt-0.5" id="mineYearDiv">¥0</div>
+                    <div class="text-sm font-semibold text-amber-300 mt-0.5" id="mineYearDiv">0</div>
                 </div>
                 <div class="bg-white/5 rounded-xl p-2.5">
                     <div class="text-[10px] text-gray-400">累计收息</div>
-                    <div class="text-sm font-semibold text-accent mt-0.5" id="mineTotalDiv">¥0</div>
+                    <div class="text-sm font-semibold text-accent mt-0.5" id="mineTotalDiv">0</div>
                 </div>
             </div>
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/10 relative z-10">
@@ -521,7 +562,7 @@
             <div class="grid grid-cols-2 divide-x divide-gray-50">
                 <div class="p-4 text-center">
                     <div class="text-xs text-gray-400 mb-1">持仓盈亏</div>
-                    <div class="text-lg font-semibold" id="mineTotalPnl">¥0.00</div>
+                    <div class="text-lg font-semibold" id="mineTotalPnl">0.00</div>
                     <div class="text-[11px] mt-0.5" id="mineTotalReturn">+0.00%</div>
                 </div>
                 <div class="p-4 text-center">
@@ -616,6 +657,7 @@
         const customTaxEl = document.querySelector('#customTax');
         let editingId = null;       // 当前编辑中的持仓id，null 表示新增模式
         let activeFilter = 'all';   // 列表筛选：all / A / HK
+        let holdViewMode = localStorage.getItem('holdViewMode') || 'card';  // 持仓展示模式：card / list
         let divTaxRate = 0.2;       // 港股当前税率（小数）
         let divTaxCustom = false;   // 港股是否自定义税率
         let hkFxRate = 0.85;        // 港币→人民币汇率（实时刷新，1港币=X人民币）
@@ -1085,8 +1127,8 @@
                         recordDailyAssets();
                         // 更新顶部关键指标
                         const sumA = calcSummary();
-                        document.querySelector('#analysisTotalAsset').innerText = '¥' + fmtMoney(Number(sumA.totalMarket));
-                        document.querySelector('#analysisYearDiv').innerText = '¥' + fmtMoney(Number(sumA.totalYearDiv));
+                        document.querySelector('#analysisTotalAsset').innerText = fmtMoney(Number(sumA.totalMarket));
+                        document.querySelector('#analysisYearDiv').innerText = fmtMoney(Number(sumA.totalYearDiv));
                         const yrA = sumA.yearReturnRate || 0;
                         const retElA = document.querySelector('#analysisYearReturn');
                         retElA.innerText = (yrA >= 0 ? '+' : '') + yrA.toFixed(2) + '%';
@@ -1521,7 +1563,7 @@
         // 盈亏格式化：盈利带 +，与券商一致（红涨绿跌）
         function formatPnl(v){
             const sign = v > 0 ? '+' : (v < 0 ? '-' : '');
-            return sign + '¥' + fmtMoney(Math.abs(v));
+            return sign + fmtMoney(Math.abs(v));
         }
         // 盈亏颜色：盈利璀璨红，亏损绿，平盘灰白（deep 深色卡片 / light 浅色列表）
         function pnlClass(v, deep){
@@ -1673,8 +1715,8 @@
                 }
                 // 更新顶部关键指标
                 const sum = calcSummary();
-                document.querySelector('#analysisTotalAsset').innerText = '¥' + fmtMoney(Number(sum.totalMarket));
-                document.querySelector('#analysisYearDiv').innerText = '¥' + fmtMoney(Number(sum.totalYearDiv));
+                document.querySelector('#analysisTotalAsset').innerText = fmtMoney(Number(sum.totalMarket));
+                document.querySelector('#analysisYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
                 const yr = sum.yearReturnRate || 0;
                 const retEl = document.querySelector('#analysisYearReturn');
                 retEl.innerText = (yr >= 0 ? '+' : '') + yr.toFixed(2) + '%';
@@ -1702,9 +1744,9 @@
             const sum = calcSummary();
             // 顶部4个指标
             document.querySelector('#mineStockNum').innerText = sum.holdLen + '只';
-            document.querySelector('#mineTotalAsset').innerText = '¥' + fmtMoney(Number(sum.totalMarket));
-            document.querySelector('#mineYearDiv').innerText = '¥' + fmtMoney(Number(sum.totalYearDiv));
-            document.querySelector('#mineTotalDiv').innerText = '¥' + fmtMoney(Number(sum.totalDivReceived));
+            document.querySelector('#mineTotalAsset').innerText = fmtMoney(Number(sum.totalMarket));
+            document.querySelector('#mineYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
+            document.querySelector('#mineTotalDiv').innerText = fmtMoney(Number(sum.totalDivReceived));
             // A股/港股数量
             document.querySelector('#mineAShare').innerText = sum.aShareNum;
             document.querySelector('#mineHKShare').innerText = sum.hkShareNum;
@@ -1725,6 +1767,8 @@
         }
         // 统计页上一次的数值和排名，用于检测变化触发动画
         const statsPrevValues = { ranks: {}, pcts: {}, dayPnls: {} };
+        // 列表模式上一次的当日盈亏百分比，用于检测变化触发柔和闪烁
+        const listPrevValues = { dayPnlPct: {} };
         // 渲染统计页面
         function renderStatsPage(){
             // ===== 1. 今日涨跌幅排行榜 =====
@@ -1783,7 +1827,7 @@
                             dayPnlText = fmtMoney(dayPnl);
                             dayPnlClass = 'text-[#00d68f]';
                         } else {
-                            dayPnlText = '¥0.00';
+                            dayPnlText = '0.00';
                             dayPnlClass = 'text-gray-500';
                         }
                     }
@@ -1791,7 +1835,7 @@
                         + '<div class="w-6 h-6 rounded-full ' + rankClass + ' flex items-center justify-center text-xs font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
                         + '<div class="text-sm font-medium text-gray-800 truncate">' + it.name + marketTag + '</div>'
-                        + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + ' · 现价¥' + (it.nowPrice ? it.nowPrice.toFixed(2) : '--') + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + ' · 现价' + (it.nowPrice ? it.nowPrice.toFixed(2) : '--') + '</div>'
                         + '</div>'
                         + '<div class="text-right flex-shrink-0">'
                         + '<div class="text-base font-semibold ' + pctClass + ' tabular-nums stats-pct" data-code="' + it.code + '">' + arrow + pctText + '</div>'
@@ -1816,22 +1860,11 @@
                             }
                             setTimeout(function(){ row.classList.remove('rank-up', 'rank-down'); }, 600);
                         }
-                        // 涨跌幅闪烁
+                        // 涨跌幅百分比闪烁（仅保留这个动态效果）
                         const pctEl = row.querySelector('.stats-pct');
                         const prevPct = statsPrevValues.pcts[it.code];
                         if(prevPct != null && prevPct !== it.changePct && pctEl){
                             flashElement(pctEl, (it.changePct || 0) > (prevPct || 0));
-                        }
-                        // 当日盈亏闪烁
-                        const dayPnlEl = row.querySelector('.stats-daypnl');
-                        const prevDayPnl = statsPrevValues.dayPnls[it.code];
-                        if(dayPnlEl){
-                            const curDayPnlText = dayPnlEl.innerText;
-                            if(prevDayPnl != null && prevDayPnl !== curDayPnlText){
-                                const isUp = curDayPnlText.startsWith('+') || (!curDayPnlText.startsWith('-') && curDayPnlText !== '¥0.00' && curDayPnlText !== '--');
-                                flashElement(dayPnlEl, isUp);
-                            }
-                            statsPrevValues.dayPnls[it.code] = curDayPnlText;
                         }
                         statsPrevValues.pcts[it.code] = it.changePct;
                     });
@@ -1954,8 +1987,8 @@
                         + dateHtml
                         + '<div class="text-right">'
                         + '<span class="text-gray-500">每股</span>'
-                        + '<span class="text-accent font-semibold tabular-nums ml-1">¥' + item.perShare.toFixed(3) + '</span>'
-                        + '<span class="text-gray-400 ml-2">合计¥' + fmtMoney(item.totalDiv) + '</span>'
+                        + '<span class="text-accent font-semibold tabular-nums ml-1">' + item.perShare.toFixed(3) + '</span>'
+                        + '<span class="text-gray-400 ml-2">合计' + fmtMoney(item.totalDiv) + '</span>'
                         + '</div>'
                         + '</div>'
                         + '</div>';
@@ -2053,7 +2086,7 @@
                             const d = td.perShare - ld.perShare;
                             if(Math.abs(d) > 0.001){
                                 const label = td.periodLabel || '分红';
-                                notes.push(label + (d > 0 ? '提升' : '降低') + '¥' + Math.abs(d).toFixed(3));
+                                notes.push(label + (d > 0 ? '提升' : '降低') + Math.abs(d).toFixed(3));
                             }
                         }
                     });
@@ -2083,8 +2116,8 @@
             });
 
             // 渲染总额对比
-            document.querySelector('#divCompareThisYear').innerText = '¥' + fmtMoney(totalThisYear);
-            document.querySelector('#divCompareLastYear').innerText = '¥' + fmtMoney(totalLastYear);
+            document.querySelector('#divCompareThisYear').innerText = fmtMoney(totalThisYear);
+            document.querySelector('#divCompareLastYear').innerText = fmtMoney(totalLastYear);
             const totalDiff = totalThisYear - totalLastYear;
             const totalDiffPct = totalLastYear > 0 ? (totalDiff / totalLastYear * 100) : (totalThisYear > 0 ? 100 : 0);
             const totalChangeEl = document.querySelector('#divCompareTotalChange');
@@ -2132,7 +2165,7 @@
                             if(!details.length) return '<span class="text-gray-300">无</span>';
                             return details.map(function(d){
                                 return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] ' + color + ' bg-gray-50 mr-1 mb-0.5">'
-                                    + d.periodLabel + ' ¥' + d.perShare.toFixed(3) + '</span>';
+                                    + d.periodLabel + ' ' + d.perShare.toFixed(3) + '</span>';
                             }).join('');
                         };
                         html += '<div class="px-5 py-3 active:bg-gray-50">'
@@ -2146,9 +2179,9 @@
                             + '</div>'
                             + '</div>'
                             + '<div class="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">'
-                            + '<span>今年每股 <span class="text-accent font-medium">¥' + item.thisYearPer.toFixed(3) + '</span></span>'
-                            + '<span>去年每股 ¥' + item.lastYearPer.toFixed(3) + '</span>'
-                            + '<span class="' + pctColor + '">' + (item.diff >= 0 ? '+' : '') + '¥' + item.diff.toFixed(3) + '/股</span>'
+                            + '<span>今年每股 <span class="text-accent font-medium">' + item.thisYearPer.toFixed(3) + '</span></span>'
+                            + '<span>去年每股 ' + item.lastYearPer.toFixed(3) + '</span>'
+                            + '<span class="' + pctColor + '">' + (item.diff >= 0 ? '+' : '') + item.diff.toFixed(3) + '/股</span>'
                             + '</div>'
                             + '<div class="text-[10px] text-gray-500 leading-relaxed">'
                             + '<span class="text-gray-400">今年：</span>' + renderDetails(item.thisYearDetails, 'text-accent')
@@ -2173,7 +2206,7 @@
                             if(!details.length) return '<span class="text-gray-300">无</span>';
                             return details.map(function(d){
                                 return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] ' + color + ' bg-gray-50 mr-1 mb-0.5">'
-                                    + d.periodLabel + ' ¥' + d.perShare.toFixed(3) + '</span>';
+                                    + d.periodLabel + ' ' + d.perShare.toFixed(3) + '</span>';
                             }).join('');
                         };
                         html += '<div class="px-5 py-3 active:bg-gray-50">'
@@ -2187,9 +2220,9 @@
                             + '</div>'
                             + '</div>'
                             + '<div class="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">'
-                            + '<span>今年每股 <span class="text-accent font-medium">¥' + item.thisYearPer.toFixed(3) + '</span></span>'
-                            + '<span>去年每股 ¥' + item.lastYearPer.toFixed(3) + '</span>'
-                            + '<span class="text-[#00d68f]">¥' + item.diff.toFixed(3) + '/股</span>'
+                            + '<span>今年每股 <span class="text-accent font-medium">' + item.thisYearPer.toFixed(3) + '</span></span>'
+                            + '<span>去年每股 ' + item.lastYearPer.toFixed(3) + '</span>'
+                            + '<span class="text-[#00d68f]">' + item.diff.toFixed(3) + '/股</span>'
                             + '</div>'
                             + '<div class="text-[10px] text-gray-500 leading-relaxed">'
                             + '<span class="text-gray-400">今年：</span>' + renderDetails(item.thisYearDetails, 'text-accent')
@@ -2231,7 +2264,7 @@
             });
             // 显示最新总资产
             const latestAsset = monthValues.length ? monthValues[monthValues.length - 1] : 0;
-            document.querySelector('#analysisLatestAsset').innerText = '最新：¥' + fmtTooltipMoney(latestAsset);
+            document.querySelector('#analysisLatestAsset').innerText = '最新：' + fmtTooltipMoney(latestAsset);
             // X轴标签优化：根据数据量动态调整间隔和旋转，确保所有数据在一张图上不重叠
             const monthCount = allMonths.length;
             let xInterval = 0;      // 默认全部显示
@@ -2268,7 +2301,7 @@
             }
             const c1 = echarts.init(document.querySelector('#chartMonthly'));
             const c1Option = {
-                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '<br/><span style="color:#e67027">●</span> 总资产：¥' + fmtTooltipMoney(p[0].value); } }),
+                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '<br/><span style="color:#e67027">●</span> 总资产：' + fmtTooltipMoney(p[0].value); } }),
                 grid: { left: 60, right: 20, top: 20, bottom: xRotate > 0 ? 45 : 30 },
                 xAxis: {
                     type: 'category',
@@ -2300,10 +2333,10 @@
             const divValues = years.map(function(y){ return historyData.yearlyDiv[y]; });
             // 显示最新分红
             const latestDiv = divValues.length ? divValues[divValues.length - 1] : 0;
-            document.querySelector('#analysisLatestDiv').innerText = '最新：¥' + fmtTooltipMoney(latestDiv);
+            document.querySelector('#analysisLatestDiv').innerText = '最新：' + fmtTooltipMoney(latestDiv);
             const c2 = echarts.init(document.querySelector('#chartYearlyDiv'));
             c2.setOption({
-                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '年<br/><span style="color:#f59e0b">●</span> 分红收入：¥' + fmtTooltipMoney(p[0].value); } }),
+                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '年<br/><span style="color:#f59e0b">●</span> 分红收入：' + fmtTooltipMoney(p[0].value); } }),
                 grid: { left: 60, right: 20, top: 20, bottom: 30 },
                 xAxis: { type: 'category', data: years, axisLabel: { fontSize: 11, color: '#999' }, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false } },
                 yAxis: { type: 'value', axisLabel: { fontSize: 11, color: '#999', formatter: function(v){ return v >= 10000 ? (v/10000).toFixed(0)+'万' : v; } }, splitLine: { lineStyle: { color: '#f5f5f5' } } },
@@ -2396,9 +2429,7 @@
         }
 
         // 渲染整个页面
-        // 保存上一次的数值，用于检测变化触发闪烁
-        const prevValues = {};
-        // 触发闪烁效果：上涨红色，下跌绿色
+        // 触发闪烁效果：上涨红色，下跌绿色（仅用于统计页和列表模式的当日盈亏百分比）
         function flashElement(el, isUp){
             if(!el) return;
             el.classList.remove('flash-up', 'flash-down');
@@ -2414,98 +2445,34 @@
             document.querySelector('#aCount').innerText = sum.aShareNum;
             document.querySelector('#hkCount').innerText = sum.hkShareNum;
 
-            // 年度分红收入（纯数字，¥符号在HTML中）
-            const yearDivVal = Number(sum.totalYearDiv);
-            const yearDivEl = document.querySelector('#totalYearDiv');
-            const yearDivText = fmtMoney(yearDivVal);
-            if(prevValues.totalYearDiv !== yearDivText){
-                flashElement(yearDivEl, yearDivVal > (prevValues.totalYearDivNum || 0));
-                prevValues.totalYearDiv = yearDivText;
-                prevValues.totalYearDivNum = yearDivVal;
-            }
-            yearDivEl.innerText = yearDivText;
-
+            // 年度分红收入（纯数字，无货币符号）
+            document.querySelector('#totalYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
             // 累计分红总额
-            const divReceivedVal = Number(sum.totalDivReceived);
-            const divReceivedEl = document.querySelector('#totalDivReceived');
-            const divReceivedText = fmtMoney(divReceivedVal);
-            if(prevValues.totalDivReceived !== divReceivedText){
-                flashElement(divReceivedEl, divReceivedVal > (prevValues.totalDivReceivedNum || 0));
-                prevValues.totalDivReceived = divReceivedText;
-                prevValues.totalDivReceivedNum = divReceivedVal;
-            }
-            divReceivedEl.innerText = divReceivedText;
-
+            document.querySelector('#totalDivReceived').innerText = fmtMoney(Number(sum.totalDivReceived));
             // 今年已收
-            const incomeVal = Number(sum.totalReceived);
-            const incomeEl = document.querySelector('#incomeNow');
-            const incomeText = fmtMoney(incomeVal);
-            if(prevValues.incomeNow !== incomeText){
-                flashElement(incomeEl, incomeVal > (prevValues.incomeNowNum || 0));
-                prevValues.incomeNow = incomeText;
-                prevValues.incomeNowNum = incomeVal;
-            }
-            incomeEl.innerText = incomeText;
-
+            document.querySelector('#incomeNow').innerText = fmtMoney(Number(sum.totalReceived));
             // 持仓盈亏
             const totalPnlEl = document.querySelector('#totalPnl');
             const pnlVal = Number(sum.totalPnl);
-            const pnlText = formatPnl(pnlVal);
-            if(prevValues.totalPnl !== pnlText){
-                flashElement(totalPnlEl, pnlVal > (prevValues.totalPnlNum || 0));
-                prevValues.totalPnl = pnlText;
-                prevValues.totalPnlNum = pnlVal;
-            }
-            totalPnlEl.innerText = pnlText;
+            totalPnlEl.innerText = formatPnl(pnlVal);
             totalPnlEl.className = 'text-[15px] font-bold tabular-nums num-transition ' + pnlClass(pnlVal, true);
-
             // 总资产
-            const marketVal = Number(sum.totalMarket);
-            const marketEl = document.querySelector('#totalMarket');
-            const marketText = fmtMoney(marketVal);
-            if(prevValues.totalMarket !== marketText){
-                flashElement(marketEl, marketVal > (prevValues.totalMarketNum || 0));
-                prevValues.totalMarket = marketText;
-                prevValues.totalMarketNum = marketVal;
-            }
-            marketEl.innerText = marketText;
-
+            document.querySelector('#totalMarket').innerText = fmtMoney(Number(sum.totalMarket));
             // 总收益率
             const trrEl = document.querySelector('#totalReturnRate');
             const trrVal = Number(sum.totalReturnRate);
-            const trrText = (trrVal > 0 ? '+' : (trrVal < 0 ? '-' : '')) + Math.abs(trrVal).toFixed(2) + '%';
-            if(prevValues.totalReturnRate !== trrText){
-                flashElement(trrEl, trrVal > (prevValues.totalReturnRateNum || 0));
-                prevValues.totalReturnRate = trrText;
-                prevValues.totalReturnRateNum = trrVal;
-            }
-            trrEl.innerText = trrText;
+            trrEl.innerText = (trrVal > 0 ? '+' : (trrVal < 0 ? '-' : '')) + Math.abs(trrVal).toFixed(2) + '%';
             trrEl.className = 'text-[15px] font-bold tabular-nums num-transition ' + pnlClass(trrVal, true);
-
             // 今年收益率
             const yrrEl = document.querySelector('#yearReturnRate');
             const yrrVal = Number(sum.yearReturnRate);
-            const yrrText = (yrrVal > 0 ? '+' : (yrrVal < 0 ? '-' : '')) + Math.abs(yrrVal).toFixed(2) + '%';
-            if(prevValues.yearReturnRate !== yrrText){
-                flashElement(yrrEl, yrrVal > (prevValues.yearReturnRateNum || 0));
-                prevValues.yearReturnRate = yrrText;
-                prevValues.yearReturnRateNum = yrrVal;
-            }
-            yrrEl.innerText = yrrText;
+            yrrEl.innerText = (yrrVal > 0 ? '+' : (yrrVal < 0 ? '-' : '')) + Math.abs(yrrVal).toFixed(2) + '%';
             yrrEl.className = 'text-[15px] font-bold tabular-nums num-transition ' + pnlClass(yrrVal, true);
 
             document.querySelector('#costYield').innerText = sum.costYield;
             document.querySelector('#marketYield').innerText = sum.marketYield;
             // 月均分红
-            const monthDivVal = Number(sum.monthDiv);
-            const monthDivEl = document.querySelector('#monthDiv');
-            const monthDivText = fmtMoney(monthDivVal);
-            if(prevValues.monthDiv !== monthDivText){
-                flashElement(monthDivEl, monthDivVal > (prevValues.monthDivNum || 0));
-                prevValues.monthDiv = monthDivText;
-                prevValues.monthDivNum = monthDivVal;
-            }
-            monthDivEl.innerText = monthDivText;
+            document.querySelector('#monthDiv').innerText = fmtMoney(Number(sum.monthDiv));
 
             // 渲染持仓列表：按当前筛选类型过滤，再按最新总市值降序排序
             const filtered = activeFilter === 'all'
@@ -2521,12 +2488,22 @@
                 holdListDom.innerHTML = `<div class="text-center py-10 text-gray-500">${tip}</div>`;
                 return;
             }
-            let htmlStr = '';
-            // 计算总资产（用于持仓占比）
+            // 根据模式渲染
+            if(holdViewMode === 'list'){
+                renderHoldListMode(sorted, sum);
+            } else {
+                renderHoldCardMode(sorted, sum);
+            }
+        }
+
+        // 卡片模式渲染
+        function renderHoldCardMode(sorted, sum){
+            const holdListDom = document.querySelector('#holdList');
             const totalMarketForPct = Number(sum.totalMarket) || 1;
+            let htmlStr = '';
             sorted.forEach(function(item, index){
                 const isHk = item.marketType === 'HK';
-                const pricePrefix = isHk ? 'HK$' : '¥';
+                const pricePrefix = isHk ? 'HK$' : '';
                 const itemCostTotal = (item.count * item.costPrice * (isHk ? hkFxRate : 1));
                 const itemMarketTotal = getMarketValue(item);
                 const itemAnnualDiv = getAnnualDiv(item);
@@ -2563,7 +2540,7 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="text-lg font-bold text-accent tabular-nums"><span class="text-[11px] font-medium">¥</span>${fmtMoney(itemAnnualDiv)}</div>
+                                <div class="text-lg font-bold text-accent tabular-nums">${fmtMoney(itemAnnualDiv)}</div>
                                 <div class="text-[10px] text-gray-400 mt-0.5">预测分红</div>
                             </div>
                         </div>
@@ -2576,7 +2553,7 @@
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">市值</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">¥</span>${fmtMoney(itemMarketTotal)}</div>
+                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${fmtMoney(itemMarketTotal)}</div>
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">成本</div>
@@ -2595,7 +2572,7 @@
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计收息</div>
-                            <div class="text-sm font-semibold mt-0.5 text-accent tabular-nums"><span class="text-[10px] font-medium">¥</span>${fmtMoney(itemTotalReceived)}</div>
+                            <div class="text-sm font-semibold mt-0.5 text-accent tabular-nums">${fmtMoney(itemTotalReceived)}</div>
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">现价</div>
@@ -2617,9 +2594,143 @@
             holdListDom.innerHTML = htmlStr;
         }
 
+        // 列表模式渲染（卡片风格：整个表格在一个白色卡片上，行风格和卡片两行一致）
+        function renderHoldListMode(sorted, sum){
+            const holdListDom = document.querySelector('#holdList');
+            const totalMarketForPct = Number(sum.totalMarket) || 1;
+            let htmlStr = '';
+            // 外层白色卡片
+            htmlStr += `
+            <div class="bg-white rounded-2xl overflow-hidden card-shadow">
+                <!-- 表头 -->
+                <div class="grid grid-cols-12 px-3 pt-3 pb-2">
+                    <div class="col-span-1 text-center text-[10px] text-gray-400 font-medium">#</div>
+                    <div class="col-span-3 text-center text-[10px] text-gray-400 font-medium">市值</div>
+                    <div class="col-span-2 text-center text-[10px] text-gray-400 font-medium">持仓</div>
+                    <div class="col-span-3 text-center text-[10px] text-gray-400 font-medium">成本/现价</div>
+                    <div class="col-span-3 text-center text-[10px] text-gray-400 font-medium">当日盈亏</div>
+                </div>
+            `;
+            sorted.forEach(function(item, index){
+                const isHk = item.marketType === 'HK';
+                const pricePrefix = isHk ? 'HK$' : '';
+                const itemMarketTotal = getMarketValue(item);
+                const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1):0;
+                // 市场标签
+                let tagText, tagClass;
+                if(item.marketType === "A"){
+                    tagText = "A";
+                    tagClass = "bg-tagA text-accent";
+                }else{
+                    tagText = "港";
+                    tagClass = "bg-tagHk text-blue-700";
+                }
+                // 当日盈亏（券商标准）
+                const pct = item.changePct;
+                let dayPnl = 0;
+                let dayPnlText = '--';
+                let dayPnlClass = 'text-gray-400';
+                let dayPnlPctText = '--';
+                if(pct != null && !isNaN(pct) && item.nowPrice && item.count){
+                    const fx = isHk ? hkFxRate : 1;
+                    dayPnl = item.nowPrice * item.count * fx * pct / (100 + pct);
+                    if(dayPnl > 0){
+                        dayPnlText = '+' + fmtMoney(dayPnl);
+                        dayPnlClass = 'text-[#ff4d4f]';
+                    } else if(dayPnl < 0){
+                        dayPnlText = fmtMoney(dayPnl);
+                        dayPnlClass = 'text-[#00d68f]';
+                    } else {
+                        dayPnlText = '0.00';
+                        dayPnlClass = 'text-gray-500';
+                    }
+                    dayPnlPctText = (pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%';
+                }
+                // 序号样式：前三名特殊颜色
+                let rankClass = 'bg-gray-100 text-gray-500';
+                if(index === 0) rankClass = 'bg-gradient-to-br from-red-400 to-red-500 text-white';
+                else if(index === 1) rankClass = 'bg-gradient-to-br from-orange-400 to-orange-500 text-white';
+                else if(index === 2) rankClass = 'bg-gradient-to-br from-amber-400 to-amber-500 text-white';
+                // 股票名称最多显示4个字，超出用...代替
+                const shortName = item.name.length > 4 ? item.name.substring(0, 4) + '...' : item.name;
+                // 行风格：和卡片视图的两行一致（bg-pageBg rounded-xl），列表模式不可点击编辑
+                const marginClass = index === 0 ? 'mt-0' : 'mt-1.5';
+                htmlStr += `
+                <div class="bg-pageBg mx-3 ${marginClass} mb-1.5 rounded-xl grid grid-cols-12 px-1 py-2.5 items-center">
+                    <div class="col-span-1 flex justify-center">
+                        <div class="w-6 h-6 rounded-full ${rankClass} flex items-center justify-center text-[10px] font-bold">${index+1}</div>
+                    </div>
+                    <div class="col-span-3 text-center px-1">
+                        <div class="flex items-center justify-center gap-1">
+                            <span class="text-xs font-semibold text-gray-800">${shortName}</span>
+                            <span class="${tagClass} text-[8px] px-1 py-0.5 rounded flex-shrink-0">${tagText}</span>
+                        </div>
+                        <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market">${fmtMoney(itemMarketTotal)}</div>
+                    </div>
+                    <div class="col-span-2 text-center px-1">
+                        <div class="text-xs font-semibold text-gray-700 tabular-nums">${item.count}股</div>
+                        <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums">${holdPct}%</div>
+                    </div>
+                    <div class="col-span-3 text-center px-1">
+                        <div class="text-xs font-semibold text-gray-700 tabular-nums"><span class="text-[9px] text-gray-400">${pricePrefix}</span>${item.costPrice}</div>
+                        <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[9px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice)}</div>
+                    </div>
+                    <div class="col-span-3 text-center px-1">
+                        <div class="text-xs font-bold ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
+                        <div class="text-[10px] font-medium ${dayPnlClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
+                    </div>
+                </div>
+                `
+            })
+            htmlStr += '<div class="h-2"></div></div>';
+            holdListDom.innerHTML = htmlStr;
+
+            // 渲染后仅检测当日盈亏百分比变化，触发柔和闪烁（东方财富通风格）
+            setTimeout(function(){
+                sorted.forEach(function(item){
+                    const code = item.code;
+                    const pct = item.changePct;
+                    // 仅当日盈亏百分比变化触发闪烁
+                    const dayPnlPctEl = holdListDom.querySelector('.list-num[data-code="' + code + '"][data-field="dayPnlPct"]');
+                    if(dayPnlPctEl && listPrevValues.dayPnlPct[code] != null && listPrevValues.dayPnlPct[code] !== pct){
+                        const isUp = (pct || 0) > (listPrevValues.dayPnlPct[code] || 0);
+                        dayPnlPctEl.classList.add(isUp ? 'soft-flash-up' : 'soft-flash-down');
+                        setTimeout(function(){ dayPnlPctEl.classList.remove('soft-flash-up', 'soft-flash-down'); }, 600);
+                    }
+                    listPrevValues.dayPnlPct[code] = pct;
+                });
+            }, 50);
+        }
+
         // 挂载全局函数
         window.deleteItem = deleteItem;
         window.editItem = editItem;
+
+        // 卡片/列表模式切换
+        function updateModeButtons(){
+            const cardBtn = document.querySelector('#cardModeBtn');
+            const listBtn = document.querySelector('#listModeBtn');
+            if(holdViewMode === 'card'){
+                cardBtn.className = 'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all bg-white text-accent shadow-sm';
+                listBtn.className = 'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all text-gray-400';
+            } else {
+                cardBtn.className = 'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all text-gray-400';
+                listBtn.className = 'w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all bg-white text-accent shadow-sm';
+            }
+        }
+        document.querySelector('#cardModeBtn').addEventListener('click', function(){
+            holdViewMode = 'card';
+            localStorage.setItem('holdViewMode', 'card');
+            updateModeButtons();
+            renderPage();
+        });
+        document.querySelector('#listModeBtn').addEventListener('click', function(){
+            holdViewMode = 'list';
+            localStorage.setItem('holdViewMode', 'list');
+            updateModeButtons();
+            renderPage();
+        });
+        updateModeButtons();
 
         // 底部导航 Tab 切换
         document.querySelectorAll('.bottomTab').forEach(function(btn){

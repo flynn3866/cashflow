@@ -301,38 +301,52 @@
 
         <!-- 今日涨跌幅排行榜 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsChangeWrap">
                 <div class="flex items-center gap-2">
                     <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     <span class="text-base font-semibold text-gray-800">今日涨跌幅</span>
                 </div>
-                <span id="statsUpdateTime" class="text-[11px] text-gray-400">--</span>
+                <div class="flex items-center gap-2">
+                    <span id="statsUpdateTime" class="text-[11px] text-gray-400">--</span>
+                    <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                </div>
             </div>
-            <div id="statsChangeList" class="divide-y divide-gray-50">
-                <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无持仓数据</div>
+            <div id="statsChangeWrap" class="stats-collapse-content">
+                <div id="statsChangeList" class="divide-y divide-gray-50">
+                    <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无持仓数据</div>
+                </div>
             </div>
         </div>
 
         <!-- 分红预计派发时间表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">分红派发日程</span>
+            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsDividendWrap">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    <span class="text-base font-semibold text-gray-800">分红派发日程</span>
+                </div>
+                <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
             </div>
-            <div id="statsDividendList" class="divide-y divide-gray-50">
-                <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无分红数据</div>
+            <div id="statsDividendWrap" class="stats-collapse-content">
+                <div id="statsDividendList" class="divide-y divide-gray-50">
+                    <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无分红数据</div>
+                </div>
             </div>
         </div>
 
         <!-- 分红升降对比 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsDivCompareWrap">
                 <div class="flex items-center gap-2">
                     <div class="w-1 h-4 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full"></div>
                     <span class="text-base font-semibold text-gray-800">分红升降对比</span>
                 </div>
-                <span class="text-[11px] text-gray-400">今年 vs 去年</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-gray-400">今年 vs 去年</span>
+                    <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                </div>
             </div>
+            <div id="statsDivCompareWrap" class="stats-collapse-content">
             <!-- 总额对比 -->
             <div class="px-5 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-gray-100">
                 <div class="flex items-center justify-between">
@@ -360,6 +374,7 @@
             <!-- 个股对比列表 -->
             <div id="statsDivCompareList" class="divide-y divide-gray-50">
                 <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无对比数据</div>
+            </div>
             </div>
         </div>
 
@@ -441,8 +456,8 @@
         </div>
     </div>
 
-    <!-- 浮动加号按钮：固定右下角，滚动时保持不动 -->
-    <button id="openModalBtn" class="fixed bottom-20 right-5 w-12 h-12 bg-gradient-to-br from-accent to-orange-700 text-white rounded-full flex items-center justify-center text-xl shadow-lg shadow-orange-500/30 active:scale-95 transition-transform z-30">
+    <!-- 浮动加号按钮：固定右下角，仅在持仓页显示，滚动时保持不动 -->
+    <button id="openModalBtn" class="fixed bottom-[4.5rem] right-5 w-12 h-12 bg-gradient-to-br from-accent to-orange-700 text-white rounded-full flex items-center justify-center text-xl shadow-lg shadow-orange-500/30 active:scale-95 transition-transform z-30" style="margin-bottom: env(safe-area-inset-bottom);">
         <i class="fa fa-plus"></i>
     </button>
 
@@ -1525,6 +1540,8 @@
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
             document.querySelector('#pageStats').classList.toggle('hidden', tab !== 'stats');
             document.querySelector('#pageMine').classList.toggle('hidden', tab !== 'mine');
+            // 新增按钮仅在持仓页显示
+            document.querySelector('#openModalBtn').classList.toggle('hidden', tab !== 'hold');
             // 更新底部导航高亮
             document.querySelectorAll('.bottomTab').forEach(function(btn){
                 const isActive = btn.getAttribute('data-tab') === tab;
@@ -2294,7 +2311,7 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <div class="text-lg font-bold text-accent tabular-nums">¥${fmtMoney(itemAnnualDiv)}</div>
+                                <div class="text-lg font-bold text-accent tabular-nums"><span class="text-[11px] font-medium">¥</span>${fmtMoney(itemAnnualDiv)}</div>
                                 <div class="text-[10px] text-gray-400 mt-0.5">预测分红</div>
                             </div>
                         </div>
@@ -2307,11 +2324,11 @@
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">市值</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">¥${fmtMoney(itemMarketTotal)}</div>
+                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">¥</span>${fmtMoney(itemMarketTotal)}</div>
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">成本</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${pricePrefix}${item.costPrice}</div>
+                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${item.costPrice}</div>
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">股价息率</div>
@@ -2326,11 +2343,11 @@
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计收息</div>
-                            <div class="text-sm font-semibold mt-0.5 text-accent tabular-nums">¥${fmtMoney(itemTotalReceived)}</div>
+                            <div class="text-sm font-semibold mt-0.5 text-accent tabular-nums"><span class="text-[10px] font-medium">¥</span>${fmtMoney(itemTotalReceived)}</div>
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">现价</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${pricePrefix}${fmtPrice(item.nowPrice)}</div>
+                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice)}</div>
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计盈亏</div>
@@ -2356,6 +2373,33 @@
         document.querySelectorAll('.bottomTab').forEach(function(btn){
             btn.addEventListener('click', function(){
                 switchTab(btn.getAttribute('data-tab'));
+            });
+        });
+
+        // 统计页折叠功能
+        const statsCollapseState = JSON.parse(localStorage.getItem('statsCollapseState') || '{}');
+        document.querySelectorAll('.stats-collapse-header').forEach(function(header){
+            const targetId = header.getAttribute('data-target');
+            const content = document.querySelector('#' + targetId);
+            const icon = header.querySelector('.stats-collapse-icon');
+            // 恢复折叠状态
+            if(statsCollapseState[targetId]){
+                content.classList.add('hidden');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+            header.addEventListener('click', function(){
+                const isHidden = content.classList.toggle('hidden');
+                if(isHidden){
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                    statsCollapseState[targetId] = true;
+                } else {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                    delete statsCollapseState[targetId];
+                }
+                localStorage.setItem('statsCollapseState', JSON.stringify(statsCollapseState));
             });
         });
 

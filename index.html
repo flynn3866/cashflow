@@ -1610,6 +1610,10 @@
                 closeModal();
                 editingId = null;
                 renderPage();
+                // 主动刷新行情和分红数据
+                if(holdDataList.some(it => it.marketType === 'A')){
+                    setTimeout(function(){ refreshAll(); }, 300);
+                }
                 // 持仓变化后同步更新分析页
                 if(activeTab === 'analysis'){
                     recordDailyAssets();
@@ -1642,6 +1646,10 @@
                 saveLocal();
                 closeModal();
                 renderPage();
+                // 主动刷新行情和分红数据
+                if(holdDataList.some(it => it.marketType === 'A')){
+                    setTimeout(function(){ refreshAll(); }, 300);
+                }
                 // 持仓变化后同步更新分析页
                 if(activeTab === 'analysis'){
                     recordDailyAssets();
@@ -1672,6 +1680,10 @@
             saveLocal();
             closeModal();
             renderPage();
+            // 主动刷新行情和分红数据（非交易时间智能刷新不运行，需要主动触发）
+            if(holdDataList.some(it => it.marketType === 'A')){
+                setTimeout(function(){ refreshAll(); }, 300);
+            }
             // 持仓变化后同步更新分析页
             if(activeTab === 'analysis'){
                 recordDailyAssets();
@@ -1789,8 +1801,23 @@
         const statsPrevValues = { ranks: {}, pcts: {}, dayPnls: {} };
         // 列表模式上一次的当日盈亏百分比，用于检测变化触发柔和闪烁
         const listPrevValues = { dayPnlPct: {} };
+        // 统计页分红数据加载状态：避免重复触发，记录开始加载时间用于超时判断
+        let statsDivLoadTriggered = false;
+        let statsDivLoadStartTime = 0;
         // 渲染统计页面
         function renderStatsPage(){
+            // 主动加载分红数据：有A股持仓但divCacheMap为空时，主动触发refreshAll
+            const hasAStockForDiv = holdDataList.some(it => it.marketType === 'A');
+            const divCacheEmpty = hasAStockForDiv && holdDataList.some(it => it.marketType === 'A' && !divCacheMap[it.code]);
+            if(divCacheEmpty && !statsDivLoadTriggered){
+                statsDivLoadTriggered = true;
+                statsDivLoadStartTime = Date.now();
+                setTimeout(function(){ refreshAll(); }, 200);
+            }
+            // 如果分红数据已加载完成，重置触发状态
+            if(!divCacheEmpty){
+                statsDivLoadTriggered = false;
+            }
             // ===== 1. 今日涨跌幅排行榜 =====
             const changeList = document.querySelector('#statsChangeList');
             if(!holdDataList.length){
@@ -1964,12 +1991,14 @@
                 const divLoading = hasAStock && holdDataList.some(function(it){
                     return it.marketType === 'A' && !divCacheMap[it.code];
                 });
-                if(divLoading){
+                // 超时判断：加载超过15秒则认为加载完成（无数据）
+                const loadTimeout = statsDivLoadStartTime > 0 && (Date.now() - statsDivLoadStartTime > 15000);
+                if(divLoading && !loadTimeout){
                     divList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm"><i class="fa fa-spinner fa-spin mr-2"></i>分红数据加载中...</div>';
                 } else if(!hasAStock){
                     divList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无A股持仓<br><span class="text-[11px]">港股分红为手动填写，暂不纳入派发日程</span></div>';
                 } else {
-                    divList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无今年分红数据<br><span class="text-[11px]">A股分红数据按天更新，请稍后再试</span></div>';
+                    divList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无分红数据</div>';
                 }
             } else {
                 let html = '';
@@ -2154,10 +2183,17 @@
             // 渲染个股对比列表
             if(!compareItems.length){
                 const hasAStock = holdDataList.some(function(it){ return it.marketType === 'A'; });
-                if(hasAStock){
+                const divLoading = hasAStock && holdDataList.some(function(it){
+                    return it.marketType === 'A' && !divCacheMap[it.code];
+                });
+                // 超时判断：加载超过15秒则认为加载完成（无数据）
+                const loadTimeout = statsDivLoadStartTime > 0 && (Date.now() - statsDivLoadStartTime > 15000);
+                if(divLoading && !loadTimeout){
                     compareList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm"><i class="fa fa-spinner fa-spin mr-2"></i>分红数据加载中...</div>';
-                } else {
+                } else if(!hasAStock){
                     compareList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无A股持仓<br><span class="text-[11px]">港股分红为手动填写，暂不纳入对比</span></div>';
+                } else {
+                    compareList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无分红数据</div>';
                 }
             } else {
                 // 排序：提升的在前（按提升幅度降序），下降的在后（按下降幅度升序）

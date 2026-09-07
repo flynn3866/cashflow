@@ -414,7 +414,7 @@
         </div>
     </div>
 
-    <!-- 资产分析页面：每月总资产 / 每年分红 / 每年总收益率 三个走势图 -->
+    <!-- 资产分析页面：总资产 / 分红收入 / 总收益率 三个走势图 -->
     <div id="pageAnalysis" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
@@ -438,34 +438,34 @@
         </div>
 
         <div class="space-y-4">
-            <!-- 每月总资产趋势 -->
+            <!-- 总资产趋势（按年份显示） -->
             <div class="bg-white rounded-2xl p-4 card-shadow">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <i class="fa fa-line-chart text-accent text-sm"></i>
-                        <span class="text-sm font-semibold text-gray-700">每月总资产趋势</span>
+                        <span class="text-sm font-semibold text-gray-700">总资产趋势</span>
                     </div>
                     <span id="analysisLatestAsset" class="text-[11px] text-gray-400">--</span>
                 </div>
                 <div id="chartMonthly" style="width:100%;height:260px;"></div>
             </div>
-            <!-- 每年分红收入趋势 -->
+            <!-- 分红收入趋势 -->
             <div class="bg-white rounded-2xl p-4 card-shadow">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <i class="fa fa-money text-amber-500 text-sm"></i>
-                        <span class="text-sm font-semibold text-gray-700">每年分红收入趋势</span>
+                        <span class="text-sm font-semibold text-gray-700">分红收入趋势</span>
                     </div>
                     <span id="analysisLatestDiv" class="text-[11px] text-gray-400">--</span>
                 </div>
                 <div id="chartYearlyDiv" style="width:100%;height:260px;"></div>
             </div>
-            <!-- 每年总收益率趋势 -->
+            <!-- 总收益率趋势 -->
             <div class="bg-white rounded-2xl p-4 card-shadow">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <i class="fa fa-percent text-[#ff4d4f] text-sm"></i>
-                        <span class="text-sm font-semibold text-gray-700">每年总收益率趋势</span>
+                        <span class="text-sm font-semibold text-gray-700">总收益率趋势</span>
                     </div>
                     <span id="analysisLatestReturn" class="text-[11px] text-gray-400">--</span>
                 </div>
@@ -473,7 +473,7 @@
             </div>
         </div>
         <div class="text-[11px] text-gray-400 mt-4 leading-relaxed">
-            每月总资产在每日打开时自动记录，月底或次月初自动归档；每年分红与收益率基于当前持仓与公开分红数据估算（港股分红为手动填写值估算），仅供参考。
+            总资产历史年份取年终数据，当前年份取每日最新值；分红与收益率基于当前持仓与公开分红数据估算（港股分红为手动填写值估算），仅供参考。
         </div>
     </div>
 
@@ -708,6 +708,30 @@
                 <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                 设置
             </h2>
+        </div>
+
+        <!-- 总资产 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" id="yearAssetHeader">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                        <i class="fa fa-bank text-accent text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="text-base font-semibold text-gray-800">总资产</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入历史年终总资产，编辑后不会被自动计算覆盖</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="addYearAssetBtn" class="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center active:scale-95 transition-transform" onclick="event.stopPropagation();">
+                        <i class="fa fa-plus text-sm"></i>
+                    </button>
+                    <i id="yearAssetChevron" class="fa fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
+            </div>
+            <div id="yearAssetList" class="divide-y divide-gray-50 transition-all duration-300">
+                <!-- 动态生成 -->
+            </div>
         </div>
 
         <!-- 每年分红收入 -->
@@ -1688,7 +1712,7 @@
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, portfolioStartYear: null };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, portfolioStartYear: null };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
@@ -1699,9 +1723,11 @@
                     const parsed = JSON.parse(s);
                     historyData.dailyAssets = parsed.dailyAssets || {};
                     historyData.monthlyAssets = parsed.monthlyAssets || {};
+                    historyData.yearlyAssets = parsed.yearlyAssets || {};
                     historyData.yearlyDiv = parsed.yearlyDiv || {};
                     historyData.yearlyReturn = parsed.yearlyReturn || {};
                     // 加载手动编辑标记和组合起始年（防止历史数据被自动计算覆盖/删除）
+                    historyData.manualYearlyAssets = parsed.manualYearlyAssets || {};
                     historyData.manualYearlyDiv = parsed.manualYearlyDiv || {};
                     historyData.manualYearlyReturn = parsed.manualYearlyReturn || {};
                     if(parsed.portfolioStartYear) historyData.portfolioStartYear = parsed.portfolioStartYear;
@@ -3113,74 +3139,93 @@
                 padding: [8, 12]
             };
 
-            // ===== 图1：每月总资产趋势 =====
-            const months = Object.keys(historyData.monthlyAssets).sort();
-            const cm = curMonthStr();
+            // ===== 图1：总资产趋势（按年份显示） =====
+            // 历史年份：优先使用手动编辑的yearlyAssets，否则取年终数据（固定不变）
+            // 当前年份：取每天最新总资产（每天更新，直到年底成为最终数据）
+            const curYear = new Date().getFullYear();
             let curTotal = 0;
             holdDataList.forEach(function(it){ curTotal += getMarketValue(it); });
-            const allMonths = months.slice();
-            if(allMonths.indexOf(cm) < 0) allMonths.push(cm);
-            allMonths.sort();
-            const monthValues = allMonths.map(function(m){
-                return m === cm ? Number(curTotal.toFixed(2)) : historyData.monthlyAssets[m];
+            // 收集所有有数据的年份
+            const yearSet = {};
+            // 1. 优先从手动编辑的yearlyAssets获取（已锁定的数据不会被自动计算覆盖）
+            Object.keys(historyData.yearlyAssets || {}).forEach(function(y){
+                yearSet[y] = { year: y, value: historyData.yearlyAssets[y], source: 'manual' };
             });
+            // 2. 从monthlyAssets提取历史年份（取该年最后一个月的数据作为年终数据），不覆盖手动编辑的数据
+            Object.keys(historyData.monthlyAssets).forEach(function(m){
+                const y = m.substring(0, 4);
+                if(yearSet[y] && yearSet[y].source === 'manual') return; // 手动编辑的数据优先
+                if(!yearSet[y]) yearSet[y] = { year: y, value: null, source: 'monthly' };
+                const val = historyData.monthlyAssets[m];
+                if(yearSet[y].value == null || m > yearSet[y].lastMonth){
+                    yearSet[y].value = val;
+                    yearSet[y].lastMonth = m;
+                }
+            });
+            // 3. 从dailyAssets补充（如果monthlyAssets没有该年数据），不覆盖手动编辑的数据
+            Object.keys(historyData.dailyAssets).forEach(function(d){
+                const y = d.substring(0, 4);
+                if(yearSet[y] && yearSet[y].source === 'manual') return; // 手动编辑的数据优先
+                if(!yearSet[y]) yearSet[y] = { year: y, value: null, source: 'daily' };
+                if(yearSet[y].source === 'daily'){
+                    const val = historyData.dailyAssets[d];
+                    if(yearSet[y].value == null || d > yearSet[y].lastDay){
+                        yearSet[y].value = val;
+                        yearSet[y].lastDay = d;
+                    }
+                }
+            });
+            // 4. 当前年份：取最新总资产（每天更新），不覆盖手动编辑的数据
+            if(!yearSet[String(curYear)] || yearSet[String(curYear)].source !== 'manual'){
+                yearSet[String(curYear)] = { year: String(curYear), value: Number(curTotal.toFixed(2)), source: 'current' };
+            }
+            // 按年份排序
+            const assetYears = Object.keys(yearSet).sort();
+            const assetValues = assetYears.map(function(y){ return yearSet[y].value; });
             // 显示最新总资产
-            const latestAsset = monthValues.length ? monthValues[monthValues.length - 1] : 0;
+            const latestAsset = assetValues.length ? assetValues[assetValues.length - 1] : 0;
             document.querySelector('#analysisLatestAsset').innerText = '最新：' + fmtTooltipMoney(latestAsset);
-            // X轴标签优化：根据数据量动态调整间隔和旋转，确保所有数据在一张图上不重叠
-            const monthCount = allMonths.length;
+            // X轴标签优化：根据年份数量动态调整间隔，确保所有数据在一张图上不重叠（手机端优化）
+            const yearCount = assetYears.length;
             let xInterval = 0;      // 默认全部显示
             let xRotate = 0;        // 默认不旋转
-            let xFormatter = null;  // 默认完整标签
             let symbolSize = 7;     // 数据点大小
-            if(monthCount > 240){
-                // 超过20年：每24个月显示一个，只显示年份
-                xInterval = 23;
-                xFormatter = function(val){ return val.substring(0, 4); };
+            if(yearCount > 50){
+                // 超过50年：每5年显示一个
+                xInterval = 4;
                 symbolSize = 4;
-            } else if(monthCount > 120){
-                // 超过10年：每12个月显示一个，只显示年份
-                xInterval = 11;
-                xFormatter = function(val){ return val.substring(0, 4); };
+            } else if(yearCount > 30){
+                // 超过30年：每3年显示一个
+                xInterval = 2;
                 symbolSize = 5;
-            } else if(monthCount > 60){
-                // 超过5年：每6个月显示一个，只显示年份
-                xInterval = 5;
-                xFormatter = function(val){ return val.substring(0, 4); };
+            } else if(yearCount > 20){
+                // 超过20年：每2年显示一个
+                xInterval = 1;
                 symbolSize = 5;
-            } else if(monthCount > 36){
-                // 超过3年：每6个月显示一个，显示年-月
-                xInterval = 5;
+            } else if(yearCount > 10){
+                // 超过10年：全部显示，稍微旋转
                 xRotate = 30;
                 symbolSize = 6;
-            } else if(monthCount > 24){
-                // 超过2年：每3个月显示一个
-                xInterval = 2;
-                xRotate = 30;
-            } else if(monthCount > 12){
-                // 超过1年：每2个月显示一个
-                xInterval = 1;
             }
             const c1 = echarts.init(document.querySelector('#chartMonthly'));
             const c1Option = {
-                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '<br/><span style="color:#e67027">●</span> 总资产：' + fmtTooltipMoney(p[0].value); } }),
+                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '年<br/><span style="color:#e67027">●</span> 总资产：' + fmtTooltipMoney(p[0].value); } }),
                 grid: { left: 60, right: 20, top: 20, bottom: xRotate > 0 ? 45 : 30 },
                 xAxis: {
                     type: 'category',
-                    data: allMonths,
+                    data: assetYears,
                     axisLabel: {
                         fontSize: 11,
                         color: '#999',
                         interval: xInterval,
-                        rotate: xRotate,
-                        formatter: xFormatter || null
+                        rotate: xRotate
                     },
                     axisLine: { lineStyle: { color: '#eee' } },
                     axisTick: { show: false }
                 },
                 yAxis: { type: 'value', axisLabel: { fontSize: 11, color: '#999', formatter: function(v){ return v >= 10000 ? (v/10000).toFixed(0)+'万' : v; } }, splitLine: { lineStyle: { color: '#f5f5f5' } } },
                 series: [{
-                    type: 'line', data: monthValues, smooth: true, symbol: 'circle', symbolSize: symbolSize,
+                    type: 'line', data: assetValues, smooth: true, symbol: 'circle', symbolSize: symbolSize,
                     lineStyle: { color: '#e67027', width: 3 },
                     itemStyle: { color: '#e67027', borderColor: '#fff', borderWidth: 2 },
                     areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(230,112,39,0.25)' }, { offset: 1, color: 'rgba(230,112,39,0.02)' }] } },
@@ -3196,14 +3241,23 @@
             // 显示最新分红
             const latestDiv = divValues.length ? divValues[divValues.length - 1] : 0;
             document.querySelector('#analysisLatestDiv').innerText = '最新：' + fmtTooltipMoney(latestDiv);
+            // X轴标签优化：根据年份数量动态调整间隔（手机端优化）
+            const divYearCount = years.length;
+            let divXInterval = 0;
+            let divXRotate = 0;
+            let divSymbolSize = 7;
+            if(divYearCount > 50){ divXInterval = 4; divSymbolSize = 4; }
+            else if(divYearCount > 30){ divXInterval = 2; divSymbolSize = 5; }
+            else if(divYearCount > 20){ divXInterval = 1; divSymbolSize = 5; }
+            else if(divYearCount > 10){ divXRotate = 30; divSymbolSize = 6; }
             const c2 = echarts.init(document.querySelector('#chartYearlyDiv'));
             c2.setOption({
                 tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '年<br/><span style="color:#f59e0b">●</span> 分红收入：' + fmtTooltipMoney(p[0].value); } }),
-                grid: { left: 60, right: 20, top: 20, bottom: 30 },
-                xAxis: { type: 'category', data: years, axisLabel: { fontSize: 11, color: '#999' }, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false } },
+                grid: { left: 60, right: 20, top: 20, bottom: divXRotate > 0 ? 45 : 30 },
+                xAxis: { type: 'category', data: years, axisLabel: { fontSize: 11, color: '#999', interval: divXInterval, rotate: divXRotate }, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false } },
                 yAxis: { type: 'value', axisLabel: { fontSize: 11, color: '#999', formatter: function(v){ return v >= 10000 ? (v/10000).toFixed(0)+'万' : v; } }, splitLine: { lineStyle: { color: '#f5f5f5' } } },
                 series: [{
-                    type: 'line', data: divValues, smooth: true, symbol: 'circle', symbolSize: 7,
+                    type: 'line', data: divValues, smooth: true, symbol: 'circle', symbolSize: divSymbolSize,
                     lineStyle: { color: '#f59e0b', width: 3 },
                     itemStyle: { color: '#f59e0b', borderColor: '#fff', borderWidth: 2 },
                     areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(245,158,11,0.25)' }, { offset: 1, color: 'rgba(245,158,11,0.02)' }] } },
@@ -3218,14 +3272,23 @@
             // 显示最新收益率
             const latestRet = retValues.length ? retValues[retValues.length - 1] : 0;
             document.querySelector('#analysisLatestReturn').innerText = '最新：' + (latestRet >= 0 ? '+' : '') + latestRet.toFixed(2) + '%';
+            // X轴标签优化：根据年份数量动态调整间隔（手机端优化）
+            const retYearCount = retYears.length;
+            let retXInterval = 0;
+            let retXRotate = 0;
+            let retSymbolSize = 8;
+            if(retYearCount > 50){ retXInterval = 4; retSymbolSize = 5; }
+            else if(retYearCount > 30){ retXInterval = 2; retSymbolSize = 6; }
+            else if(retYearCount > 20){ retXInterval = 1; retSymbolSize = 6; }
+            else if(retYearCount > 10){ retXRotate = 30; retSymbolSize = 7; }
             const c3 = echarts.init(document.querySelector('#chartYearlyReturn'));
             c3.setOption({
                 tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '年<br/><span style="color:' + (p[0].value >= 0 ? '#ff4d4f' : '#00d68f') + '">●</span> 总收益率：' + (p[0].value >= 0 ? '+' : '') + p[0].value + '%'; } }),
-                grid: { left: 50, right: 20, top: 20, bottom: 30 },
-                xAxis: { type: 'category', data: retYears, axisLabel: { fontSize: 11, color: '#999' }, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false } },
+                grid: { left: 50, right: 20, top: 20, bottom: retXRotate > 0 ? 45 : 30 },
+                xAxis: { type: 'category', data: retYears, axisLabel: { fontSize: 11, color: '#999', interval: retXInterval, rotate: retXRotate }, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false } },
                 yAxis: { type: 'value', axisLabel: { fontSize: 11, color: '#999', formatter: '{value}%' }, splitLine: { lineStyle: { color: '#f5f5f5' } } },
                 series: [{
-                    type: 'line', data: retValues, smooth: true, symbol: 'circle', symbolSize: 8,
+                    type: 'line', data: retValues, smooth: true, symbol: 'circle', symbolSize: retSymbolSize,
                     lineStyle: { color: '#ff4d4f', width: 3 },
                     itemStyle: { color: function(p){ return p.value >= 0 ? '#ff4d4f' : '#00d68f'; }, borderColor: '#fff', borderWidth: 2 },
                     markLine: { silent: true, symbol: 'none', lineStyle: { color: '#ddd', type: 'dashed', width: 1 }, data: [{ yAxis: 0 }], label: { show: false } },
@@ -3597,6 +3660,62 @@
         }
 
         // ==================== 设置页面 ====================
+        // 渲染每年总资产列表
+        function renderYearAssetList(){
+            const listDom = document.querySelector('#yearAssetList');
+            if(!listDom) return;
+            const years = Object.keys(historyData.yearlyAssets || {}).sort();
+            if(!years.length){
+                listDom.innerHTML = '<div class="px-5 py-6 text-center text-sm text-gray-400">暂无数据，点击右上角 + 添加</div>';
+                return;
+            }
+            let html = '';
+            years.forEach(function(y){
+                const isManual = historyData.manualYearlyAssets && historyData.manualYearlyAssets[y];
+                const val = historyData.yearlyAssets[y] || 0;
+                html += `
+                <div class="px-5 py-3 flex items-center gap-3" data-year="${y}">
+                    <div class="w-16 flex-shrink-0">
+                        <span class="text-sm font-semibold text-gray-700">${y}年</span>
+                        ${isManual ? '<span class="ml-1 text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-full cursor-pointer unlock-year-asset" title="点击恢复自动计算">已锁定</span>' : ''}
+                    </div>
+                    <div class="flex-1 relative">
+                        <input type="number" step="0.01" class="year-asset-input w-full px-3 py-2 border-2 border-gray-100 rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="${val}" data-year="${y}" placeholder="0.00">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">元</span>
+                    </div>
+                    <button class="remove-year-asset w-8 h-8 rounded-full bg-red-50 text-red-400 flex items-center justify-center active:scale-95 transition-transform flex-shrink-0" data-year="${y}">
+                        <i class="fa fa-times text-xs"></i>
+                    </button>
+                </div>
+                `;
+            });
+            listDom.innerHTML = html;
+            // 绑定输入框编辑事件
+            listDom.querySelectorAll('.year-asset-input').forEach(function(input){
+                input.addEventListener('input', function(){
+                    this.setAttribute('data-edited', 'true');
+                });
+            });
+            // 绑定删除按钮
+            listDom.querySelectorAll('.remove-year-asset').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const y = this.getAttribute('data-year');
+                    delete historyData.yearlyAssets[y];
+                    if(historyData.manualYearlyAssets) delete historyData.manualYearlyAssets[y];
+                    renderYearAssetList();
+                });
+            });
+            // 绑定解锁按钮
+            listDom.querySelectorAll('.unlock-year-asset').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const y = this.closest('[data-year]').getAttribute('data-year');
+                    if(historyData.manualYearlyAssets) delete historyData.manualYearlyAssets[y];
+                    showToast(y + '年总资产已恢复自动计算');
+                    renderYearAssetList();
+                });
+            });
+        }
+
         // 渲染每年分红收入列表
         function renderYearDivList(){
             const listDom = document.querySelector('#yearDivList');
@@ -3713,6 +3832,7 @@
         function showSettings(){
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#pageSettings').classList.remove('hidden');
+            renderYearAssetList();
             renderYearDivList();
             renderYearReturnList();
             // 初始化折叠状态
@@ -3728,9 +3848,13 @@
                 collapseState = JSON.parse(localStorage.getItem('settingsCollapseState') || '{}');
             }catch(e){}
             // 应用折叠状态
+            applyCollapseState('yearAsset', collapseState.yearAsset);
             applyCollapseState('yearDiv', collapseState.yearDiv);
             applyCollapseState('yearReturn', collapseState.yearReturn);
             // 绑定点击事件
+            document.querySelector('#yearAssetHeader').addEventListener('click', function(){
+                toggleSettingsCollapse('yearAsset');
+            });
             document.querySelector('#yearDivHeader').addEventListener('click', function(){
                 toggleSettingsCollapse('yearDiv');
             });
@@ -3772,6 +3896,17 @@
 
         // 保存设置
         function saveSettings(){
+            // 保存每年总资产
+            document.querySelectorAll('.year-asset-input').forEach(function(input){
+                const y = input.getAttribute('data-year');
+                const val = Number(input.value) || 0;
+                historyData.yearlyAssets[y] = val;
+                // 只标记用户实际编辑过的年份为手动
+                if(input.getAttribute('data-edited') === 'true'){
+                    if(!historyData.manualYearlyAssets) historyData.manualYearlyAssets = {};
+                    historyData.manualYearlyAssets[y] = true;
+                }
+            });
             // 保存每年分红收入
             document.querySelectorAll('.year-div-input').forEach(function(input){
                 const y = input.getAttribute('data-year');
@@ -3807,6 +3942,20 @@
             }
         }
 
+        // 添加新年份到总资产列表（往历史方向添加，取最小年份减1）
+        function addYearAsset(){
+            const years = Object.keys(historyData.yearlyAssets || {}).map(Number).sort(function(a, b){ return a - b; });
+            const firstYear = years.length ? years[0] : new Date().getFullYear();
+            const newYear = String(firstYear - 1);
+            if(!historyData.yearlyAssets[newYear]){
+                historyData.yearlyAssets[newYear] = 0;
+                // 用户主动添加的历史年份，标记为手动编辑，防止被自动计算覆盖
+                if(!historyData.manualYearlyAssets) historyData.manualYearlyAssets = {};
+                historyData.manualYearlyAssets[newYear] = true;
+            }
+            renderYearAssetList();
+        }
+
         // 添加新年份到分红列表（往历史方向添加，取最小年份减1）
         function addYearDiv(){
             const years = Object.keys(historyData.yearlyDiv || {}).map(Number).sort(function(a, b){ return a - b; });
@@ -3839,6 +3988,7 @@
         document.querySelector('#settingsBtn').addEventListener('click', showSettings);
         document.querySelector('#settingsBackBtn').addEventListener('click', hideSettings);
         document.querySelector('#saveSettingsBtn').addEventListener('click', saveSettings);
+        document.querySelector('#addYearAssetBtn').addEventListener('click', addYearAsset);
         document.querySelector('#addYearDivBtn').addEventListener('click', addYearDiv);
         document.querySelector('#addYearReturnBtn').addEventListener('click', addYearReturn);
 

@@ -293,25 +293,35 @@
                 <h3 id="modalTitle" class="text-lg font-semibold">新增持仓股票</h3>
                 <button id="closeModalBtn" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
             </div>
-            <form id="stockForm" class="space-y-3">
+            <form id="stockForm" class="space-y-3.5">
+                <!-- 市场类型 -->
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">市场类型</label>
-                    <select id="marketType" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                        <option value="A">A股</option>
-                        <option value="HK">港股</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">市场类型</label>
+                    <div class="flex gap-2">
+                        <button type="button" data-market="A" class="market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent">A股</button>
+                        <button type="button" data-market="HK" class="market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200">港股</button>
+                    </div>
+                    <input type="hidden" id="marketType" value="A">
                 </div>
+                <!-- 股票代码 -->
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">股票代码</label>
-                    <input type="text" id="stockCode" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="例如 600795" required>
-                    <div class="mt-1 text-xs text-gray-400" id="codeHint">输入 6 位 A 股代码或 5 位港股代码，自动获取名称、股价与每股分红</div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">股票代码</label>
+                    <div class="relative">
+                        <input type="text" id="stockCode" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="例如 600795" required>
+                        <i class="fa fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                    </div>
+                    <div class="mt-1.5 text-xs text-gray-400" id="codeHint">输入 6 位 A 股代码或 5 位港股代码，自动获取名称、股价与每股分红</div>
                 </div>
+                <!-- 股票名称（自动获取，不可编辑） -->
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">股票名称 <span class="text-xs text-gray-400">（输入代码后自动获取）</span></label>
-                    <input type="text" id="stockName" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50" placeholder="输入代码后自动填充" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">股票名称 <span class="text-xs text-gray-400 font-normal">（自动获取）</span></label>
+                    <div class="relative">
+                        <input type="text" id="stockName" class="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed" placeholder="输入代码后自动填充" readonly required>
+                        <i class="fa fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">所属行业（自动获取）</label>
+                <!-- 所属行业（自动获取，隐藏，保存在后台） -->
+                <div class="hidden">
                     <select id="stockIndustry" class="w-full border border-gray-300 rounded-lg px-3 py-2">
                         <option value="银行">银行</option>
                         <option value="非银金融">非银金融</option>
@@ -346,50 +356,59 @@
                         <option value="其他">其他</option>
                     </select>
                 </div>
+                <!-- 持仓股数 -->
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">持仓股数</label>
-                    <input type="number" id="stockCount" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="50000" min="1" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">持仓股数</label>
+                    <input type="number" id="stockCount" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="50000" min="1" required>
                 </div>
+                <!-- 买入成本价 -->
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1" id="costLabel">买入成本价(元)</label>
-                    <input type="number" step="0.0001" id="costPrice" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="4.9460" required>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5" id="costLabel">买入成本价(元)</label>
+                    <input type="number" step="0.0001" id="costPrice" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="4.9460" required>
                 </div>
+                <!-- 当前股价（自动获取，不可编辑） -->
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1" id="priceLabel">当前股价(元) <span class="text-xs text-gray-400">（输入代码后自动获取）</span></label>
-                    <input type="number" step="any" id="nowPrice" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="输入代码后自动填充">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5" id="priceLabel">当前股价 <span class="text-xs text-gray-400 font-normal">（自动获取）</span></label>
+                    <div class="relative">
+                        <input type="number" step="any" id="nowPrice" class="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed" placeholder="输入代码后自动填充" readonly>
+                        <i class="fa fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+                    </div>
                 </div>
-                <!-- 每股分红：参考图片样式，含统计口径选择 -->
+                <!-- 每股分红（A股自动获取不可编辑，港股没拉取到时可编辑） -->
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1" id="divPerShareLabel">每股分红（元/股）<span class="text-xs text-gray-400">（近一年 · 自动获取）</span></label>
-                    <input type="number" step="0.0001" id="divPerShare" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="0.1700">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5" id="divPerShareLabel">每股分红 <span class="text-xs text-gray-400 font-normal" id="divPerShareHint">（近一年 · 自动获取）</span></label>
+                    <div class="relative">
+                        <input type="number" step="0.0001" id="divPerShare" class="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed" placeholder="0.1700" readonly>
+                        <i class="fa fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 text-xs" id="divLockIcon"></i>
+                    </div>
                     <!-- 统计口径 -->
-                    <div class="flex gap-2 mt-2 text-sm" id="divRangeGroup">
-                        <button type="button" data-years="1" class="divRange flex-1 py-1 rounded-full bg-black text-white">近1年</button>
-                        <button type="button" data-years="3" class="divRange flex-1 py-1 rounded-full border border-gray-300 text-gray-500">近3年</button>
-                        <button type="button" data-years="5" class="divRange flex-1 py-1 rounded-full border border-gray-300 text-gray-500">近5年</button>
+                    <div class="flex gap-2 mt-2.5 text-sm" id="divRangeGroup">
+                        <button type="button" data-years="1" class="divRange flex-1 py-1.5 rounded-full bg-accent text-white font-medium">近1年</button>
+                        <button type="button" data-years="3" class="divRange flex-1 py-1.5 rounded-full border border-gray-200 text-gray-500">近3年</button>
+                        <button type="button" data-years="5" class="divRange flex-1 py-1.5 rounded-full border border-gray-200 text-gray-500">近5年</button>
                     </div>
-                    <div class="mt-1 text-xs text-gray-400" id="divHint">输入股票代码后，自动获取所选口径的年均每股派息（含税）</div>
+                    <div class="mt-1.5 text-xs text-gray-400" id="divHint">输入股票代码后，自动获取所选口径的年均每股派息（含税）</div>
                 </div>
-                <!-- 分红税率（仅港股显示，参考图片样式） -->
+                <!-- 分红税率（仅港股显示） -->
                 <div id="hkTaxGroup" class="hidden">
-                    <label class="block text-sm text-gray-600 mb-2">分红税率</label>
-                    <div class="flex gap-2 text-sm" id="divTaxGroup">
-                        <button type="button" data-tax="20" class="divTax flex-1 py-1 rounded-full bg-black text-white">20%</button>
-                        <button type="button" data-tax="28" class="divTax flex-1 py-1 rounded-full border border-gray-300 text-gray-500">28%</button>
-                        <button type="button" data-tax="10" class="divTax flex-1 py-1 rounded-full border border-gray-300 text-gray-500">10%</button>
-                        <button type="button" data-tax="0" class="divTax flex-1 py-1 rounded-full border border-gray-300 text-gray-500">0%</button>
-                        <button type="button" data-tax="custom" class="divTax flex-1 py-1 rounded-full border border-gray-300 text-gray-500">自定义</button>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">分红税率</label>
+                    <div class="flex gap-2 text-sm flex-wrap" id="divTaxGroup">
+                        <button type="button" data-tax="20" class="divTax flex-1 py-1.5 rounded-full bg-accent text-white font-medium min-w-[60px]">20%</button>
+                        <button type="button" data-tax="28" class="divTax flex-1 py-1.5 rounded-full border border-gray-200 text-gray-500 min-w-[60px]">28%</button>
+                        <button type="button" data-tax="10" class="divTax flex-1 py-1.5 rounded-full border border-gray-200 text-gray-500 min-w-[60px]">10%</button>
+                        <button type="button" data-tax="0" class="divTax flex-1 py-1.5 rounded-full border border-gray-200 text-gray-500 min-w-[60px]">0%</button>
+                        <button type="button" data-tax="custom" class="divTax flex-1 py-1.5 rounded-full border border-gray-200 text-gray-500 min-w-[60px]">自定义</button>
                     </div>
-                    <input type="number" id="customTax" step="0.1" min="0" max="100" class="hidden w-full border border-gray-300 rounded-lg px-3 py-2 mt-2" placeholder="输入税率，如 15">
-                    <div class="mt-1 text-xs text-gray-400">港股通H股默认20%；红筹股选28%；香港券商直投H股选10%；港股直投本地股选0%</div>
-                    <div class="mt-1 text-xs text-gray-400">港股预测分红将按所选税率扣除红利税后计入</div>
+                    <input type="number" id="customTax" step="0.1" min="0" max="100" class="hidden w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 mt-2.5 focus:border-accent focus:outline-none" placeholder="输入税率，如 15">
+                    <div class="mt-2 text-xs text-gray-400 leading-relaxed">港股通H股默认20%；红筹股选28%；香港券商直投H股选10%；港股直投本地股选0%</div>
                 </div>
-                <div class="pt-3 flex gap-3">
-                    <button type="button" id="cancelBtn" class="flex-1 py-2 border border-gray-300 rounded-lg">取消</button>
-                    <button type="submit" class="flex-1 py-2 bg-black text-white rounded-lg">保存持仓</button>
+                <!-- 操作按钮 -->
+                <div class="pt-4 flex gap-3">
+                    <button type="button" id="cancelBtn" class="flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 transition-colors">取消</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-accent to-orange-600 text-white rounded-xl font-medium shadow-lg shadow-orange-200 hover:shadow-xl transition-all">保存持仓</button>
                 </div>
-                <div class="text-[11px] text-gray-400 leading-relaxed">
-                    行情数据来源：腾讯财经；分红数据来源：东方财富。数据为公开信息自动抓取，仅供记录参考，请以交易所/公司公告为准。
+                <div class="text-[11px] text-gray-400 leading-relaxed text-center">
+                    行情数据来源：腾讯财经；分红数据来源：东方财富。数据为公开信息自动抓取，仅供记录参考
                 </div>
             </form>
         </div>
@@ -654,6 +673,15 @@
         </div>
         <!-- 功能列表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <button id="settingsBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
+                <span><i class="fa fa-cog mr-2 text-gray-400"></i>设置</span>
+                <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
+            </button>
+            <button id="importDataBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
+                <span><i class="fa fa-upload mr-2 text-gray-400"></i>导入持仓数据</span>
+                <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
+            </button>
+            <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
             <button id="exportDataBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
                 <span><i class="fa fa-download mr-2 text-gray-400"></i>导出持仓数据</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
@@ -666,6 +694,78 @@
         <div class="text-[11px] text-gray-400 mt-4 text-center leading-relaxed">
             数据保存在浏览器本地，清除浏览器数据会丢失<br>
             行情来源：腾讯财经 · 分红来源：东方财富
+        </div>
+    </div>
+
+    <!-- 设置页面 -->
+    <div id="pageSettings" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航 -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="settingsBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                设置
+            </h2>
+        </div>
+
+        <!-- 每年分红收入 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" id="yearDivHeader">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <i class="fa fa-coins text-amber-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="text-base font-semibold text-gray-800">每年分红收入</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入历史数据，编辑后不会被自动计算覆盖</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="addYearDivBtn" class="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center active:scale-95 transition-transform" onclick="event.stopPropagation();">
+                        <i class="fa fa-plus text-sm"></i>
+                    </button>
+                    <i id="yearDivChevron" class="fa fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
+            </div>
+            <div id="yearDivList" class="divide-y divide-gray-50 transition-all duration-300">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 每年总收益率 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" id="yearReturnHeader">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                        <i class="fa fa-line-chart text-green-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="text-base font-semibold text-gray-800">每年总收益率</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入历史收益率，编辑后不会被自动计算覆盖</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="addYearReturnBtn" class="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center active:scale-95 transition-transform" onclick="event.stopPropagation();">
+                        <i class="fa fa-plus text-sm"></i>
+                    </button>
+                    <i id="yearReturnChevron" class="fa fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
+            </div>
+            <div id="yearReturnList" class="divide-y divide-gray-50 transition-all duration-300">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 保存按钮 -->
+        <button id="saveSettingsBtn" class="w-full py-3.5 bg-gradient-to-r from-accent to-orange-600 text-white rounded-2xl font-semibold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform mb-4">
+            保存设置
+        </button>
+
+        <div class="text-[11px] text-gray-400 text-center leading-relaxed">
+            手动编辑的数据会标记为"已锁定"，自动计算不会覆盖<br>
+            点击"已锁定"标签可恢复自动计算
         </div>
     </div>
 
@@ -702,6 +802,23 @@
 
     <!-- Toast 提示 -->
     <div id="toast" class="fixed top-1/3 left-1/2 -translate-x-1/2 bg-black/80 text-white px-5 py-3 rounded-xl text-sm z-[100] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+    <!-- 确认删除弹窗 -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/50 z-[90] hidden flex justify-center items-center px-4">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-sm">
+            <div class="text-center">
+                <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                    <i class="fa fa-trash-alt text-red-500 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">确认删除</h3>
+                <p class="text-sm text-gray-500 leading-relaxed" id="confirmMessage">确定要删除这只股票吗？删除后无法恢复。</p>
+            </div>
+            <div class="flex gap-3 mt-5">
+                <button type="button" id="confirmCancel" class="flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 transition-colors">取消</button>
+                <button type="button" id="confirmOk" class="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg shadow-red-200 hover:shadow-xl transition-all">删除</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 数据存储key
@@ -1020,14 +1137,27 @@
             stockNameEl.value = '';
             nowPriceEl.value = '';
             divPerShareEl.value = '';
-            codeHintEl.innerText = marketTypeEl.value === 'HK' ? '输入 5 位港股代码，自动获取名称、股价' : '输入 6 位 A 股代码，自动获取名称、股价与每股分红';
-            codeHintEl.className = 'mt-1 text-xs text-gray-400';
+            // 重置市场类型为A股，并更新按钮状态
+            marketTypeEl.value = 'A';
+            document.querySelectorAll('.market-type-btn').forEach(function(b){
+                if(b.getAttribute('data-market') === 'A'){
+                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent';
+                } else {
+                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200';
+                }
+            });
+            // 新增时默认A股，分红字段readonly
+            const divInput = document.querySelector('#divPerShare');
+            const divLockIcon = document.querySelector('#divLockIcon');
+            divInput.readOnly = true;
+            divInput.className = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed';
+            divLockIcon.style.display = '';
+            codeHintEl.innerText = '输入 6 位 A 股代码，自动获取名称、股价与每股分红';
+            codeHintEl.className = 'mt-1.5 text-xs text-gray-400';
             divHintEl.innerText = '输入股票代码后，自动获取所选口径的年均每股派息（含税）';
-            divHintEl.className = 'mt-1 text-xs text-gray-400';
-            priceLabelEl.innerHTML = marketTypeEl.value === 'HK'
-                ? '当前股价(港币) <span class="text-xs text-gray-400">（输入代码后自动获取）</span>'
-                : '当前股价(元) <span class="text-xs text-gray-400">（输入代码后自动获取）</span>';
-            costLabelEl.innerText = marketTypeEl.value === 'HK' ? '买入成本价(港币)' : '买入成本价(元)';
+            divHintEl.className = 'mt-1.5 text-xs text-gray-400';
+            priceLabelEl.innerHTML = '当前股价 <span class="text-xs text-gray-400 font-normal">（自动获取）</span>';
+            costLabelEl.innerText = '买入成本价(元)';
             // 港股税率默认值 + 显示
             divTaxRate = 0.2;
             divTaxCustom = false;
@@ -1044,8 +1174,8 @@
 
             // 随市场切换更新币种标签 & 港股税率区块
             priceLabelEl.innerHTML = market === 'HK'
-                ? '当前股价(港币) <span class="text-xs text-gray-400">（输入代码后自动获取）</span>'
-                : '当前股价(元) <span class="text-xs text-gray-400">（输入代码后自动获取）</span>';
+                ? '当前股价(港币) <span class="text-xs text-gray-400 font-normal">（自动获取）</span>'
+                : '当前股价 <span class="text-xs text-gray-400 font-normal">（自动获取）</span>';
             costLabelEl.innerText = market === 'HK' ? '买入成本价(港币)' : '买入成本价(元)';
             syncHkTaxUI();
 
@@ -1055,22 +1185,22 @@
             divPerShareEl.value = '';
             divRecordsCache = null;
             divHintEl.innerText = '输入股票代码后，自动获取所选口径的年均每股派息（含税）';
-            divHintEl.className = 'mt-1 text-xs text-gray-400';
+            divHintEl.className = 'mt-1.5 text-xs text-gray-400';
             setRangeActive();
 
             if(!/^\d+$/.test(code)){
                 codeHintEl.innerText = market === 'HK' ? '请输入 5 位港股代码' : '请输入 6 位 A 股代码';
-                codeHintEl.className = 'mt-1 text-xs text-amber-600';
+                codeHintEl.className = 'mt-1.5 text-xs text-amber-600';
                 return;
             }
             const validLen = market === 'HK' ? code.length === 5 : code.length === 6;
             if(!validLen){
                 codeHintEl.innerText = market === 'HK' ? '港股代码为 5 位数字' : 'A 股代码为 6 位数字';
-                codeHintEl.className = 'mt-1 text-xs text-amber-600';
+                codeHintEl.className = 'mt-1.5 text-xs text-amber-600';
                 return;
             }
             codeHintEl.innerText = '正在自动获取行情…';
-            codeHintEl.className = 'mt-1 text-xs text-gray-400';
+            codeHintEl.className = 'mt-1.5 text-xs text-gray-400';
 
             fetchTimer = setTimeout(function(){
                 fetchQuote(code, market, function(q){
@@ -1081,7 +1211,7 @@
                             nowPriceEl.value = Number(q.price).toString();
                         }
                         codeHintEl.innerText = '已自动获取：' + q.name + (q.price ? '，现价 ' + q.price : '');
-                        codeHintEl.className = 'mt-1 text-xs text-green-600';
+                        codeHintEl.className = 'mt-1.5 text-xs text-green-600';
                         // 自动获取行业信息
                         fetchIndustry(code, market, function(industry){
                             if(token !== fetchToken) return;
@@ -1106,7 +1236,7 @@
                         });
                     } else {
                         codeHintEl.innerText = '未能自动获取行情，请检查代码或稍后重试';
-                        codeHintEl.className = 'mt-1 text-xs text-red-500';
+                        codeHintEl.className = 'mt-1.5 text-xs text-red-500';
                     }
                     // 分红：仅A股自动获取；港股暂无免费数据源，降级为手动填写
                     if(market === 'A'){
@@ -1129,7 +1259,36 @@
         }
 
         stockCodeEl.addEventListener('input', onCodeInput);
-        marketTypeEl.addEventListener('change', onCodeInput);
+        // 市场类型按钮点击事件
+        document.querySelectorAll('.market-type-btn').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                const market = btn.getAttribute('data-market');
+                marketTypeEl.value = market;
+                // 更新按钮状态
+                document.querySelectorAll('.market-type-btn').forEach(function(b){
+                    if(b.getAttribute('data-market') === market){
+                        b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent';
+                    } else {
+                        b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200';
+                    }
+                });
+                // 切换市场类型时，控制分红字段的readonly
+                // A股：分红自动获取，readonly；港股：分红可手动输入（没拉取到时）
+                const divInput = document.querySelector('#divPerShare');
+                const divLockIcon = document.querySelector('#divLockIcon');
+                if(market === 'A'){
+                    divInput.readOnly = true;
+                    divInput.className = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed';
+                    divLockIcon.style.display = '';
+                } else {
+                    divInput.readOnly = false;
+                    divInput.className = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors';
+                    divLockIcon.style.display = 'none';
+                }
+                // 触发代码输入，重新获取行情
+                onCodeInput();
+            });
+        });
         divRangeGroupEl.addEventListener('click', function(e){
             const btn = e.target.closest('.divRange');
             if(!btn) return;
@@ -1327,16 +1486,20 @@
                 });
                 await Promise.all(divTasks);
                 // 4) 分红除权：A股现金分红除权除息日到期后，自动下调成本价（真实净成本）
+                // 只除权用户建仓日之后的分红，建仓日之前的历史分红不除权（用户未收到）
                 const todayStr = new Date().toISOString().substring(0, 10);
                 holdDataList.forEach(function(it){
                     if(it.marketType !== 'A') return;
                     const cache = divCacheMap[it.code];
                     if(!cache || !cache.records || !cache.records.length) return;
                     if(!it.processedDivDates) it.processedDivDates = [];
+                    // 用户建仓日（只除权建仓日之后的分红，建仓日前的历史分红用户未收到，不除权）
+                    const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : todayStr;
                     cache.records.forEach(function(r){
                         const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0, 10);
                         if(!exDate || exDate.length < 10) return;          // 未到除权日（仅预告）
                         if(exDate > todayStr) return;                       // 除权日在未来
+                        if(exDate < createDate) return;                     // 除权日在建仓日之前，用户未收到该分红，不除权
                         if(it.processedDivDates.indexOf(exDate) >= 0) return; // 已处理过
                         const per10 = Number(r.PRETAX_BONUS_RMB);
                         if(isNaN(per10) || per10 <= 0) return;             // 无现金分红（送转股等）
@@ -1359,10 +1522,14 @@
                     if(activeTab === 'stats'){
                         renderStatsPage();
                     }
-                    // 如果当前在分析页，同步更新当天总资产、顶部指标并重新渲染图表
+                    // 如果当前在分析页，同步更新顶部关键指标（文本实时更新，图表不频繁渲染）
                     if(activeTab === 'analysis'){
                         recordDailyAssets();
-                        // 更新顶部关键指标
+                        // 月底归档：新月份数据归档后才重新渲染总资产趋势图
+                        const monthlyBefore = Object.keys(historyData.monthlyAssets).length;
+                        finalizePastMonths();
+                        const monthlyAfter = Object.keys(historyData.monthlyAssets).length;
+                        // 更新顶部关键指标（文本实时更新）
                         const sumA = calcSummary();
                         document.querySelector('#analysisTotalAsset').innerText = fmtMoney(Number(sumA.totalMarket));
                         document.querySelector('#analysisYearDiv').innerText = fmtMoney(Number(sumA.totalYearDiv));
@@ -1370,7 +1537,10 @@
                         const retElA = document.querySelector('#analysisYearReturn');
                         retElA.innerText = (yrA >= 0 ? '+' : '') + yrA.toFixed(2) + '%';
                         retElA.className = 'text-base font-bold tabular-nums ' + (yrA >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
-                        renderAnalysisCharts();
+                        // 只有月度数据新增时才重新渲染图表（避免每2秒重复渲染）
+                        if(monthlyAfter > monthlyBefore){
+                            renderAnalysisCharts();
+                        }
                     }
                     // 如果当前在我的页，同步更新数据
                     if(activeTab === 'mine'){
@@ -1438,6 +1608,21 @@
                         it.industry = '其他';
                     }
                 });
+                // 一次性修复：清空调仓日之前的错误除权记录（之前bug导致建仓日前的历史分红也被除权）
+                // 注意：成本价已被错误除权的部分无法自动恢复，需要用户重新编辑输入成本
+                const fixTodayStr = new Date().toISOString().substring(0, 10);
+                holdDataList.forEach(function(it){
+                    if(!it.processedDivDates || !it.processedDivDates.length) return;
+                    const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : fixTodayStr;
+                    const beforeCount = it.processedDivDates.length;
+                    it.processedDivDates = it.processedDivDates.filter(function(d){
+                        return d >= createDate; // 只保留建仓日及之后的除权记录
+                    });
+                    if(it.processedDivDates.length < beforeCount){
+                        console.log('修复', it.name, '：清除了', beforeCount - it.processedDivDates.length, '条建仓日前的错误除权记录');
+                    }
+                });
+                saveLocal();
             }
             // 读取上次保存的港币汇率
             const fx = localStorage.getItem('dividendHkFx');
@@ -1503,8 +1688,9 @@
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyDiv: {}, yearlyReturn: {} };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, portfolioStartYear: null };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
+        let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
         function loadHistory(){
             try{
@@ -1515,6 +1701,10 @@
                     historyData.monthlyAssets = parsed.monthlyAssets || {};
                     historyData.yearlyDiv = parsed.yearlyDiv || {};
                     historyData.yearlyReturn = parsed.yearlyReturn || {};
+                    // 加载手动编辑标记和组合起始年（防止历史数据被自动计算覆盖/删除）
+                    historyData.manualYearlyDiv = parsed.manualYearlyDiv || {};
+                    historyData.manualYearlyReturn = parsed.manualYearlyReturn || {};
+                    if(parsed.portfolioStartYear) historyData.portfolioStartYear = parsed.portfolioStartYear;
                 }
             }catch(e){}
         }
@@ -1558,6 +1748,7 @@
             if(changed) saveHistory();
         }
         // 计算每年分红收入（从组合建立年起算，仅统计真实已发放的分红）
+        // 首次计算后，历史年份数据固定，只更新当前年份（新增/删除股票不影响历史）
         function computeYearlyDiv(){
             // 组合起始年：首次运行时设定为当前年，不回溯更早年份（无历史持仓数据）
             if(!historyData.portfolioStartYear){
@@ -1566,6 +1757,29 @@
             }
             const startY = historyData.portfolioStartYear;
             const curY = new Date().getFullYear();
+            // 如果已经计算过，只更新当前年份（历史年份数据固定，不随持仓变化）
+            if(historyYearlyComputed){
+                let curYearDiv = 0;
+                holdDataList.forEach(function(it){
+                    const count = Number(it.count) || 0;
+                    if(it.marketType === 'A'){
+                        const per = getDivPerShareInYear(it, curY);
+                        if(per > 0) curYearDiv += per * count;
+                    } else {
+                        // 港股：无免费历史数据源，以当前每股分红(扣税后)计入当前年
+                        let per = Number(it.divPerShare) || 0;
+                        if(it.divTaxRate != null && Number(it.divTaxRate) > 0) per = per * (1 - Number(it.divTaxRate));
+                        curYearDiv += per * count;
+                    }
+                });
+                // 跳过手动编辑的年份，不覆盖用户输入
+                if(!(historyData.manualYearlyDiv && historyData.manualYearlyDiv[curY])){
+                    historyData.yearlyDiv[curY] = Number(curYearDiv.toFixed(2));
+                }
+                saveHistory();
+                return;
+            }
+            // 首次计算：计算所有年份（从startY到curY）
             const byYear = {};
             for(let y = startY; y <= curY; y++) byYear[y] = 0;
             holdDataList.forEach(function(it){
@@ -1583,25 +1797,47 @@
                 }
             });
             Object.keys(byYear).forEach(function(y){
+                // 跳过手动编辑的年份，不覆盖用户输入
+                if(historyData.manualYearlyDiv && historyData.manualYearlyDiv[y]) return;
                 historyData.yearlyDiv[y] = Number(byYear[y].toFixed(2));
             });
             // 清除组合起始年以前的旧数据（之前版本误存的早年分红）
             Object.keys(historyData.yearlyDiv).forEach(function(y){
-                if(Number(y) < startY) delete historyData.yearlyDiv[y];
+                if(Number(y) < startY && !(historyData.manualYearlyDiv && historyData.manualYearlyDiv[y])) delete historyData.yearlyDiv[y];
             });
             saveHistory();
         }
         // 计算每年总收益率 = (年末总资产 - 年初总资产 + 当年分红) / 年初总资产 × 100%
+        // 首次计算后，历史年份数据固定，只更新当前年份（新增/删除股票不影响历史）
         function computeYearlyReturn(){
             const months = Object.keys(historyData.monthlyAssets).sort();
             if(!months.length) return;
+            const curY = String(new Date().getFullYear());
+            // 如果已经计算过，只更新当前年份（历史年份数据固定，不随持仓变化）
+            if(historyYearlyComputed){
+                const curYearMonths = months.filter(function(m){ return m.substring(0,4) === curY; }).sort();
+                if(curYearMonths.length){
+                    const startVal = historyData.monthlyAssets[curYearMonths[0]];
+                    let endVal = 0;
+                    holdDataList.forEach(function(it){ endVal += getMarketValue(it); });
+                    const yearDiv = historyData.yearlyDiv[curY] || 0;
+                    if(startVal > 0 && endVal > 0){
+                        // 跳过手动编辑的年份，不覆盖用户输入
+                        if(!(historyData.manualYearlyReturn && historyData.manualYearlyReturn[curY])){
+                            historyData.yearlyReturn[curY] = Number(((endVal - startVal + yearDiv) / startVal * 100).toFixed(2));
+                        }
+                    }
+                    saveHistory();
+                }
+                return;
+            }
+            // 首次计算：计算所有年份
             const byYearMonths = {};
             months.forEach(function(m){
                 const y = m.substring(0,4);
                 if(!byYearMonths[y]) byYearMonths[y] = [];
                 byYearMonths[y].push(m);
             });
-            const curY = String(new Date().getFullYear());
             Object.keys(byYearMonths).forEach(function(y){
                 const ms = byYearMonths[y].sort();
                 const startVal = historyData.monthlyAssets[ms[0]];
@@ -1614,6 +1850,8 @@
                 }
                 const yearDiv = historyData.yearlyDiv[y] || 0;
                 if(startVal > 0 && endVal > 0){
+                    // 跳过手动编辑的年份，不覆盖用户输入
+                    if(historyData.manualYearlyReturn && historyData.manualYearlyReturn[y]) return;
                     historyData.yearlyReturn[y] = Number(((endVal - startVal + yearDiv) / startVal * 100).toFixed(2));
                 }
             });
@@ -1623,24 +1861,28 @@
         // 弹窗模式切换：false=新增，true=编辑（股数/成本/每股分红可改，其余锁定）
         function setModalMode(editing){
             document.querySelector('#modalTitle').innerText = editing ? '编辑持仓' : '新增持仓股票';
-            // 市场、代码、名称、现价 在编辑时锁定；每股分红保持可编辑（港股需手动更新）
-            [marketTypeEl, stockCodeEl, stockNameEl, nowPriceEl].forEach(function(el){
-                if(el.tagName === 'SELECT'){
-                    el.disabled = editing;
-                } else {
-                    el.readOnly = editing;
-                }
+            // 市场、代码、名称、现价 在编辑时锁定
+            // 市场类型按钮禁用/启用
+            document.querySelectorAll('.market-type-btn').forEach(function(btn){
                 if(editing){
-                    el.classList.add('bg-gray-100');
+                    btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
                 } else {
-                    el.classList.remove('bg-gray-100');
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
                 }
             });
-            divPerShareEl.classList.remove('bg-gray-100');
+            // 代码在编辑时锁定
+            if(editing){
+                stockCodeEl.readOnly = true;
+                stockCodeEl.classList.add('bg-gray-50', 'cursor-not-allowed');
+            } else {
+                stockCodeEl.readOnly = false;
+                stockCodeEl.classList.remove('bg-gray-50', 'cursor-not-allowed');
+            }
+            // 名称、现价已经是readonly，不需要额外处理
             divRangeGroupEl.style.display = editing ? 'none' : 'flex';
             if(editing){
                 codeHintEl.innerText = '编辑模式：可修改持仓股数、买入成本与每股分红';
-                codeHintEl.className = 'mt-1 text-xs text-gray-400';
+                codeHintEl.className = 'mt-1.5 text-xs text-gray-400';
                 divHintEl.innerText = '';
             }
             syncHkTaxUI();
@@ -1663,6 +1905,26 @@
             modalMask.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             marketTypeEl.value = item.marketType;
+            // 更新市场类型按钮状态
+            document.querySelectorAll('.market-type-btn').forEach(function(b){
+                if(b.getAttribute('data-market') === item.marketType){
+                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent';
+                } else {
+                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200';
+                }
+            });
+            // 编辑时分红字段：A股readonly，港股可编辑
+            const divInput = document.querySelector('#divPerShare');
+            const divLockIcon = document.querySelector('#divLockIcon');
+            if(item.marketType === 'A'){
+                divInput.readOnly = true;
+                divInput.className = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed';
+                divLockIcon.style.display = '';
+            } else {
+                divInput.readOnly = false;
+                divInput.className = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors';
+                divLockIcon.style.display = 'none';
+            }
             stockCodeEl.value = item.code;
             stockNameEl.value = item.name;
             stockCountEl.value = item.count;
@@ -1765,7 +2027,25 @@
         function getReceivedThisYear(item){
             const count = Number(item.count) || 0;
             if(item.marketType === 'A'){
-                return getDivPerShareInYear(item, new Date().getFullYear()) * count;
+                const cache = divCacheMap[item.code];
+                if(!cache || !cache.records) return 0;
+                const today = todayStr();
+                const curY = new Date().getFullYear();
+                const createDate = item.createdAt ? String(item.createdAt).substring(0, 10) : today;
+                let perShare = 0;
+                cache.records.forEach(function(r){
+                    const p = Number(r.PRETAX_BONUS_RMB);
+                    if(r.PRETAX_BONUS_RMB == null || isNaN(p)) return;
+                    const progress = String(r.ASSIGN_PROGRESS || '');
+                    if(/取消|终止|停止/.test(progress)) return;
+                    const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
+                    if(exDate.length < 10) return;
+                    if(exDate.substring(0,4) !== String(curY)) return;
+                    if(exDate > today) return;
+                    if(exDate < createDate) return;
+                    perShare += p / 10;
+                });
+                return perShare * count;
             } else {
                 let per = Number(item.divPerShare) || 0;
                 if(item.divTaxRate != null && Number(item.divTaxRate) > 0){
@@ -1781,18 +2061,14 @@
             return total;
         }
 
-        // 单只A股累计每股已收分红（所有年份，仅EX_DIVIDEND_DATE已到期的真实发放）
+        // 单只A股累计每股已收分红（所有年份，仅EX_DIVIDEND_DATE已到期且在建仓日之后的真实发放）
         function getTotalDivPerShare(item){
             if(item.marketType !== 'A') return 0;
             const cache = divCacheMap[item.code];
             if(!cache || !cache.records) return 0;
             const today = todayStr();
-            // 建仓年份：累计分红从建仓当年开始算起，不统计建仓前的历史分红
-            let createYear = new Date().getFullYear();
-            if(item.createdAt){
-                const cy = new Date(item.createdAt).getFullYear();
-                if(!isNaN(cy)) createYear = cy;
-            }
+            // 建仓日期：累计分红从建仓日开始算起，不统计建仓日前的历史分红
+            const createDate = item.createdAt ? String(item.createdAt).substring(0, 10) : today;
             let perShare = 0;
             cache.records.forEach(function(r){
                 const p = Number(r.PRETAX_BONUS_RMB);
@@ -1802,9 +2078,7 @@
                 const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
                 if(exDate.length < 10) return;
                 if(exDate > today) return;
-                // 只统计建仓年份及以后的真实除权除息分红
-                const exYear = Number(exDate.substring(0,4));
-                if(exYear < createYear) return;
+                if(exDate < createDate) return;  // 建仓日之前的分红，用户未收到
                 perShare += p / 10;
             });
             return perShare;
@@ -1859,6 +2133,25 @@
                 el.style.opacity = '0';
             }, 2000);
         }
+        // 确认弹窗
+        let confirmCallback = null;
+        function showConfirm(message, callback){
+            document.querySelector('#confirmMessage').innerText = message;
+            confirmCallback = callback;
+            document.querySelector('#confirmModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        document.querySelector('#confirmCancel').addEventListener('click', function(){
+            document.querySelector('#confirmModal').classList.add('hidden');
+            document.body.style.overflow = '';
+            confirmCallback = null;
+        });
+        document.querySelector('#confirmOk').addEventListener('click', function(){
+            document.querySelector('#confirmModal').classList.add('hidden');
+            document.body.style.overflow = '';
+            if(confirmCallback) confirmCallback();
+            confirmCallback = null;
+        });
         // 每股价格格式化（保留2位小数，不加逗号）
         function fmtPrice(v){
             const n = Number(v);
@@ -1902,8 +2195,13 @@
             if(editingId != null){
                 const item = holdDataList.find(it => it.id === editingId);
                 if(item){
+                    const newCost = Number(costPriceEl.value);
+                    // 如果成本价变化了，清空已处理分红日期，让分红除权基于新成本重新计算
+                    if(newCost !== item.costPrice){
+                        item.processedDivDates = [];
+                    }
                     item.count = Number(stockCountEl.value);
-                    item.costPrice = Number(costPriceEl.value);
+                    item.costPrice = newCost;
                     item.divPerShare = Number(divPerShareEl.value || 0);
                     item.industry = stockIndustryEl.value || '其他';
                     if(item.marketType === 'HK'){
@@ -1918,13 +2216,7 @@
                 if(holdDataList.some(it => it.marketType === 'A')){
                     setTimeout(function(){ refreshAll(); }, 300);
                 }
-                // 持仓变化后同步更新分析页
-                if(activeTab === 'analysis'){
-                    recordDailyAssets();
-                    computeYearlyDiv();
-                    computeYearlyReturn();
-                    renderAnalysisCharts();
-                }
+                // 注意：股票编辑不影响历史图表数据（已过去的年份/月份数据固定），不重新渲染分析页图表
                 showToast('修改成功');
                 return;
             }
@@ -1946,6 +2238,10 @@
                 existing.costPrice = costPrice;
                 existing.nowPrice = nowPrice;
                 existing.divPerShare = divPerShare;
+                // 覆盖更新时，更新建仓日为当前时间，并清空已处理分红日期
+                // 让分红除权基于新成本和新建仓日重新计算，避免历史除权记录影响新成本
+                existing.createdAt = new Date().toISOString();
+                existing.processedDivDates = [];
                 if(marketType === 'HK'){
                     existing.divTaxRate = divTaxRate;
                 }
@@ -1991,28 +2287,21 @@
             if(holdDataList.some(it => it.marketType === 'A')){
                 setTimeout(function(){ refreshAll(); }, 300);
             }
-            // 持仓变化后同步更新分析页
-            if(activeTab === 'analysis'){
-                recordDailyAssets();
-                computeYearlyDiv();
-                computeYearlyReturn();
-                renderAnalysisCharts();
-            }
+            // 注意：股票新增不影响历史图表数据（已过去的年份/月份数据固定），不重新渲染分析页图表
             showToast('添加成功');
         })
 
         // 删除持仓
         function deleteItem(id){
-            holdDataList = holdDataList.filter(item=>item.id !== id);
-            saveLocal();
-            renderPage();
-            // 持仓变化后同步更新分析页
-            if(activeTab === 'analysis'){
-                recordDailyAssets();
-                computeYearlyDiv();
-                computeYearlyReturn();
-                renderAnalysisCharts();
-            }
+            const item = holdDataList.find(it => it.id === id);
+            const name = item ? item.name : '这只股票';
+            showConfirm('确定要删除「' + name + '」吗？删除后无法恢复。', function(){
+                holdDataList = holdDataList.filter(item=>item.id !== id);
+                saveLocal();
+                renderPage();
+                showToast('已删除「' + name + '」');
+                // 注意：股票删除不影响历史图表数据（已过去的年份/月份数据固定），不重新渲染分析页图表
+            });
         }
 
         // ==================== 资产分析弹窗 ====================
@@ -2043,7 +2332,7 @@
                     indicator.classList.toggle('bg-transparent', !isActive);
                 }
             });
-            // 切换到分析页时渲染图表
+            // 切换到分析页时渲染图表（只渲染一次，之后切换不重复渲染）
             if(tab === 'analysis'){
                 recordDailyAssets();
                 finalizePastMonths();
@@ -2060,7 +2349,11 @@
                 const retEl = document.querySelector('#analysisYearReturn');
                 retEl.innerText = (yr >= 0 ? '+' : '') + yr.toFixed(2) + '%';
                 retEl.className = 'text-base font-bold tabular-nums ' + (yr >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
-                setTimeout(renderAnalysisCharts, 120);
+                // 只有首次切换到分析页面时才渲染图表，之后切换不重复渲染
+                if(!analysisChartsRendered){
+                    setTimeout(renderAnalysisCharts, 120);
+                    analysisChartsRendered = true;
+                }
             }
             // 切换到我的页时更新数据
             if(tab === 'mine'){
@@ -3097,7 +3390,8 @@
                                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-base font-bold text-white shadow-sm">${index+1}</div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="text-base font-semibold text-gray-800">${item.name}</span>
+                                        <span class="text-base font-semibold ${item.costPrice < 0 ? 'text-purple-600' : 'text-gray-800'}">${item.name}</span>
+                                        ${item.costPrice < 0 ? '<span class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium shadow-sm flex items-center gap-0.5"><i class="fa fa-trophy text-[8px]"></i>已回本</span>' : ''}
                                         <span class="${tagClass} text-[10px] px-1 py-0.5 rounded">${tagText}</span>
                                     </div>
                                     <div class="text-xs text-gray-400 mt-0.5 tabular-nums">${item.code}</div>
@@ -3178,11 +3472,11 @@
             industryArr.forEach(function(ind){
                 ind.stocks.sort(function(a, b){ return getMarketValue(b) - getMarketValue(a); });
             });
-            // 外层白色卡片
+            // 外层白色卡片（去掉overflow-hidden，让表头sticky相对于视口定位）
             htmlStr += `
-            <div class="bg-white rounded-2xl overflow-hidden card-shadow">
-                <!-- 表头 -->
-                <div class="grid grid-cols-12 px-3 pt-3 pb-2">
+            <div class="bg-white rounded-2xl card-shadow overflow-visible">
+                <!-- 表头：sticky固定在顶部，滚动时一直可见 -->
+                <div class="sticky top-0 z-20 grid grid-cols-12 px-3 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-2xl">
                     <div class="col-span-1 text-center text-[10px] text-gray-400 font-medium">#</div>
                     <div class="col-span-3 text-center text-[10px] text-gray-400 font-medium">市值</div>
                     <div class="col-span-2 text-center text-[10px] text-gray-400 font-medium">持仓</div>
@@ -3195,20 +3489,14 @@
             industryArr.forEach(function(ind, indIdx){
                 const indColor = industryColors[indIdx % industryColors.length];
                 const indPct = totalMarketForPct > 0 ? (ind.totalMV / totalMarketForPct * 100).toFixed(1) : 0;
-                // 行业标题行：左侧彩色竖条 + 行业名 + 股票数 + 右侧占比
+                // 行业标题行：左侧彩色竖条 + 行业名 + 股票数 + 仓位百分比（靠着标题右边）
                 htmlStr += `
                 <div class="grid grid-cols-12 mx-3 mt-2 mb-1 rounded-lg bg-gray-50 overflow-hidden items-center">
-                    <div class="col-span-12 flex items-center justify-between px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span class="w-1 h-4 rounded-full flex-shrink-0" style="background:${indColor}"></span>
-                            <span class="text-[13px] font-bold text-gray-700">${ind.name}</span>
-                            <span class="text-[10px] text-gray-400">${ind.stocks.length}只</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[11px] text-gray-400">市值</span>
-                            <span class="text-[13px] font-bold text-gray-700 tabular-nums">${fmtMoney(ind.totalMV)}</span>
-                            <span class="text-[13px] font-bold text-gray-700 tabular-nums">${indPct}%</span>
-                        </div>
+                    <div class="col-span-12 flex items-center gap-2 px-3 py-2">
+                        <span class="w-1 h-4 rounded-full flex-shrink-0" style="background:${indColor}"></span>
+                        <span class="text-[13px] font-bold text-gray-700">${ind.name}</span>
+                        <span class="text-[10px] text-gray-400">${ind.stocks.length}只</span>
+                        <span class="text-[12px] font-semibold text-gray-500 tabular-nums">${indPct}%</span>
                     </div>
                 </div>
                 `;
@@ -3265,7 +3553,7 @@
                         </div>
                         <div class="col-span-3 text-center px-1">
                             <div class="flex items-center justify-center gap-1">
-                                <span class="text-xs font-semibold text-gray-800">${shortName}</span>
+                                <span class="text-xs font-semibold ${item.costPrice < 0 ? 'text-purple-600' : 'text-gray-800'}">${shortName}</span>
                                 <span class="${tagClass} text-[8px] px-1 py-0.5 rounded flex-shrink-0">${tagText}</span>
                             </div>
                             <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market">${fmtMoney(itemMarketTotal)}</div>
@@ -3305,6 +3593,252 @@
                 });
             }, 50);
         }
+
+        // ==================== 设置页面 ====================
+        // 渲染每年分红收入列表
+        function renderYearDivList(){
+            const listDom = document.querySelector('#yearDivList');
+            if(!listDom) return;
+            const years = Object.keys(historyData.yearlyDiv || {}).sort();
+            if(!years.length){
+                listDom.innerHTML = '<div class="px-5 py-6 text-center text-sm text-gray-400">暂无数据，点击右上角 + 添加</div>';
+                return;
+            }
+            let html = '';
+            years.forEach(function(y){
+                const isManual = historyData.manualYearlyDiv && historyData.manualYearlyDiv[y];
+                const val = historyData.yearlyDiv[y] || 0;
+                html += `
+                <div class="px-5 py-3 flex items-center gap-3" data-year="${y}">
+                    <div class="w-16 flex-shrink-0">
+                        <span class="text-sm font-semibold text-gray-700">${y}年</span>
+                        ${isManual ? '<span class="ml-1 text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-full cursor-pointer unlock-year-div" title="点击恢复自动计算">已锁定</span>' : ''}
+                    </div>
+                    <div class="flex-1 relative">
+                        <input type="number" step="0.01" class="year-div-input w-full px-3 py-2 border-2 border-gray-100 rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="${val}" data-year="${y}" placeholder="0.00">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">元</span>
+                    </div>
+                    <button class="remove-year-div w-8 h-8 rounded-full bg-red-50 text-red-400 flex items-center justify-center active:scale-95 transition-transform flex-shrink-0" data-year="${y}">
+                        <i class="fa fa-times text-xs"></i>
+                    </button>
+                </div>
+                `;
+            });
+            listDom.innerHTML = html;
+            // 绑定输入框编辑事件
+            listDom.querySelectorAll('.year-div-input').forEach(function(input){
+                input.addEventListener('input', function(){
+                    this.setAttribute('data-edited', 'true');
+                });
+            });
+            // 绑定删除按钮
+            listDom.querySelectorAll('.remove-year-div').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const y = this.getAttribute('data-year');
+                    delete historyData.yearlyDiv[y];
+                    if(historyData.manualYearlyDiv) delete historyData.manualYearlyDiv[y];
+                    renderYearDivList();
+                });
+            });
+            // 绑定解锁按钮
+            listDom.querySelectorAll('.unlock-year-div').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const y = this.closest('[data-year]').getAttribute('data-year');
+                    if(historyData.manualYearlyDiv) delete historyData.manualYearlyDiv[y];
+                    showToast(y + '年分红已恢复自动计算');
+                    renderYearDivList();
+                });
+            });
+        }
+
+        // 渲染每年总收益率列表
+        function renderYearReturnList(){
+            const listDom = document.querySelector('#yearReturnList');
+            if(!listDom) return;
+            const years = Object.keys(historyData.yearlyReturn || {}).sort();
+            if(!years.length){
+                listDom.innerHTML = '<div class="px-5 py-6 text-center text-sm text-gray-400">暂无数据，点击右上角 + 添加</div>';
+                return;
+            }
+            let html = '';
+            years.forEach(function(y){
+                const isManual = historyData.manualYearlyReturn && historyData.manualYearlyReturn[y];
+                const val = historyData.yearlyReturn[y] || 0;
+                html += `
+                <div class="px-5 py-3 flex items-center gap-3" data-year="${y}">
+                    <div class="w-16 flex-shrink-0">
+                        <span class="text-sm font-semibold text-gray-700">${y}年</span>
+                        ${isManual ? '<span class="ml-1 text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-full cursor-pointer unlock-year-return" title="点击恢复自动计算">已锁定</span>' : ''}
+                    </div>
+                    <div class="flex-1 relative">
+                        <input type="number" step="0.01" class="year-return-input w-full px-3 py-2 border-2 border-gray-100 rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="${val}" data-year="${y}" placeholder="0.00">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>
+                    </div>
+                    <button class="remove-year-return w-8 h-8 rounded-full bg-red-50 text-red-400 flex items-center justify-center active:scale-95 transition-transform flex-shrink-0" data-year="${y}">
+                        <i class="fa fa-times text-xs"></i>
+                    </button>
+                </div>
+                `;
+            });
+            listDom.innerHTML = html;
+            // 绑定输入框编辑事件
+            listDom.querySelectorAll('.year-return-input').forEach(function(input){
+                input.addEventListener('input', function(){
+                    this.setAttribute('data-edited', 'true');
+                });
+            });
+            // 绑定删除按钮
+            listDom.querySelectorAll('.remove-year-return').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const y = this.getAttribute('data-year');
+                    delete historyData.yearlyReturn[y];
+                    if(historyData.manualYearlyReturn) delete historyData.manualYearlyReturn[y];
+                    renderYearReturnList();
+                });
+            });
+            // 绑定解锁按钮
+            listDom.querySelectorAll('.unlock-year-return').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const y = this.closest('[data-year]').getAttribute('data-year');
+                    if(historyData.manualYearlyReturn) delete historyData.manualYearlyReturn[y];
+                    showToast(y + '年收益率已恢复自动计算');
+                    renderYearReturnList();
+                });
+            });
+        }
+
+        // 显示设置页面
+        function showSettings(){
+            document.querySelector('#pageMine').classList.add('hidden');
+            document.querySelector('#pageSettings').classList.remove('hidden');
+            renderYearDivList();
+            renderYearReturnList();
+            // 初始化折叠状态
+            initSettingsCollapse();
+            window.scrollTo(0, 0);
+        }
+
+        // 初始化设置页面折叠功能
+        function initSettingsCollapse(){
+            // 从localStorage读取折叠状态
+            let collapseState = {};
+            try{
+                collapseState = JSON.parse(localStorage.getItem('settingsCollapseState') || '{}');
+            }catch(e){}
+            // 应用折叠状态
+            applyCollapseState('yearDiv', collapseState.yearDiv);
+            applyCollapseState('yearReturn', collapseState.yearReturn);
+            // 绑定点击事件
+            document.querySelector('#yearDivHeader').addEventListener('click', function(){
+                toggleSettingsCollapse('yearDiv');
+            });
+            document.querySelector('#yearReturnHeader').addEventListener('click', function(){
+                toggleSettingsCollapse('yearReturn');
+            });
+        }
+
+        // 应用折叠状态
+        function applyCollapseState(key, collapsed){
+            const listEl = document.querySelector('#' + key + 'List');
+            const chevronEl = document.querySelector('#' + key + 'Chevron');
+            if(!listEl || !chevronEl) return;
+            if(collapsed){
+                listEl.style.display = 'none';
+                chevronEl.style.transform = 'rotate(-90deg)';
+            } else {
+                listEl.style.display = '';
+                chevronEl.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // 切换折叠状态
+        function toggleSettingsCollapse(key){
+            let collapseState = {};
+            try{
+                collapseState = JSON.parse(localStorage.getItem('settingsCollapseState') || '{}');
+            }catch(e){}
+            collapseState[key] = !collapseState[key];
+            localStorage.setItem('settingsCollapseState', JSON.stringify(collapseState));
+            applyCollapseState(key, collapseState[key]);
+        }
+
+        // 隐藏设置页面，返回"我的"
+        function hideSettings(){
+            document.querySelector('#pageSettings').classList.add('hidden');
+            document.querySelector('#pageMine').classList.remove('hidden');
+        }
+
+        // 保存设置
+        function saveSettings(){
+            // 保存每年分红收入
+            document.querySelectorAll('.year-div-input').forEach(function(input){
+                const y = input.getAttribute('data-year');
+                const val = Number(input.value) || 0;
+                historyData.yearlyDiv[y] = val;
+                // 只标记用户实际编辑过的年份为手动
+                if(input.getAttribute('data-edited') === 'true'){
+                    if(!historyData.manualYearlyDiv) historyData.manualYearlyDiv = {};
+                    historyData.manualYearlyDiv[y] = true;
+                }
+            });
+            // 保存每年总收益率
+            document.querySelectorAll('.year-return-input').forEach(function(input){
+                const y = input.getAttribute('data-year');
+                const val = Number(input.value) || 0;
+                historyData.yearlyReturn[y] = val;
+                // 只标记用户实际编辑过的年份为手动
+                if(input.getAttribute('data-edited') === 'true'){
+                    if(!historyData.manualYearlyReturn) historyData.manualYearlyReturn = {};
+                    historyData.manualYearlyReturn[y] = true;
+                }
+            });
+            saveHistory();
+            showToast('设置已保存');
+            // 重新渲染列表，显示"已锁定"标签
+            renderYearDivList();
+            renderYearReturnList();
+            // 重新渲染分析页图表
+            if(activeTab === 'analysis'){
+                renderAnalysisCharts();
+            } else {
+                analysisChartsRendered = false; // 数据变化，下次切换到分析页时重新渲染
+            }
+        }
+
+        // 添加新年份到分红列表（往历史方向添加，取最小年份减1）
+        function addYearDiv(){
+            const years = Object.keys(historyData.yearlyDiv || {}).map(Number).sort(function(a, b){ return a - b; });
+            const firstYear = years.length ? years[0] : new Date().getFullYear();
+            const newYear = String(firstYear - 1);
+            if(!historyData.yearlyDiv[newYear]){
+                historyData.yearlyDiv[newYear] = 0;
+                // 用户主动添加的历史年份，标记为手动编辑，防止被自动计算清除
+                if(!historyData.manualYearlyDiv) historyData.manualYearlyDiv = {};
+                historyData.manualYearlyDiv[newYear] = true;
+            }
+            renderYearDivList();
+        }
+
+        // 添加新年份到收益率列表（往历史方向添加，取最小年份减1）
+        function addYearReturn(){
+            const years = Object.keys(historyData.yearlyReturn || {}).map(Number).sort(function(a, b){ return a - b; });
+            const firstYear = years.length ? years[0] : new Date().getFullYear();
+            const newYear = String(firstYear - 1);
+            if(!historyData.yearlyReturn[newYear]){
+                historyData.yearlyReturn[newYear] = 0;
+                // 用户主动添加的历史年份，标记为手动编辑，防止被自动计算清除
+                if(!historyData.manualYearlyReturn) historyData.manualYearlyReturn = {};
+                historyData.manualYearlyReturn[newYear] = true;
+            }
+            renderYearReturnList();
+        }
+
+        // 绑定设置页面事件
+        document.querySelector('#settingsBtn').addEventListener('click', showSettings);
+        document.querySelector('#settingsBackBtn').addEventListener('click', hideSettings);
+        document.querySelector('#saveSettingsBtn').addEventListener('click', saveSettings);
+        document.querySelector('#addYearDivBtn').addEventListener('click', addYearDiv);
+        document.querySelector('#addYearReturnBtn').addEventListener('click', addYearReturn);
 
         // 挂载全局函数
         window.deleteItem = deleteItem;
@@ -3372,15 +3906,130 @@
 
         // 我的页面：导出数据
         document.querySelector('#exportDataBtn').addEventListener('click', function(){
-            const data = localStorage.getItem(STORAGE_KEY);
-            const blob = new Blob([data || '[]'], {type: 'application/json'});
+            // 导出所有重要数据：持仓数据 + 历史数据 + 港币汇率
+            const holdData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const historyData = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
+            const hkFxRate = localStorage.getItem('dividendHkFx') || null;
+            const exportObj = {
+                version: '1.0',
+                exportTime: new Date().toISOString(),
+                app: '细水长流-股息持仓记录',
+                holdData: holdData,
+                historyData: historyData,
+                hkFxRate: hkFxRate
+            };
+            const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = '细水长流_持仓数据_' + new Date().toISOString().substring(0,10) + '.json';
+            a.download = '细水长流_完整数据_' + new Date().toISOString().substring(0,10) + '.json';
             a.click();
             URL.revokeObjectURL(url);
-            showToast('数据已导出');
+            showToast('数据已导出（含持仓+历史+汇率）');
+        });
+
+        // 我的页面：导入持仓数据
+        document.querySelector('#importDataBtn').addEventListener('click', function(){
+            document.querySelector('#importFileInput').click();
+        });
+
+        document.querySelector('#importFileInput').addEventListener('change', function(e){
+            const file = e.target.files[0];
+            if(!file) return;
+            // 重置input，允许重复选择同一文件
+            e.target.value = '';
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                try{
+                    const content = ev.target.result;
+                    const parsed = JSON.parse(content);
+                    // 支持两种格式：新格式（对象，含holdData/historyData/hkFxRate）和旧格式（纯数组，只有持仓数据）
+                    let holdData = null;
+                    let historyData = null;
+                    let hkFxRate = null;
+                    let formatType = '';
+
+                    if(Array.isArray(parsed)){
+                        // 旧格式：纯数组，只有持仓数据
+                        holdData = parsed;
+                        formatType = '旧格式（仅持仓数据）';
+                    } else if(parsed && typeof parsed === 'object' && Array.isArray(parsed.holdData)){
+                        // 新格式：对象，包含完整数据
+                        holdData = parsed.holdData;
+                        historyData = parsed.historyData || null;
+                        hkFxRate = parsed.hkFxRate || null;
+                        formatType = '新格式（完整数据）';
+                    } else {
+                        showToast('文件格式错误：无法识别的数据格式');
+                        return;
+                    }
+
+                    // 验证持仓数据格式
+                    if(!Array.isArray(holdData)){
+                        showToast('文件格式错误：持仓数据必须是数组');
+                        return;
+                    }
+                    // 验证每个元素是否有必要字段
+                    let validCount = 0;
+                    holdData.forEach(function(item){
+                        if(item && item.code && item.name && item.count != null){
+                            validCount++;
+                        }
+                    });
+                    if(validCount === 0){
+                        showToast('文件中没有有效的持仓数据');
+                        return;
+                    }
+
+                    // 构建确认信息
+                    let confirmMsg = '确定要导入' + validCount + '条持仓数据吗？\n格式：' + formatType;
+                    if(historyData){
+                        const yearDivCount = Object.keys(historyData.yearlyDiv || {}).length;
+                        const yearRetCount = Object.keys(historyData.yearlyReturn || {}).length;
+                        confirmMsg += '\n含历史数据：' + yearDivCount + '年分红/' + yearRetCount + '年收益率';
+                    }
+                    if(hkFxRate){
+                        confirmMsg += '\n含港币汇率：' + hkFxRate;
+                    }
+                    confirmMsg += '\n导入后将覆盖现有数据！';
+
+                    // 确认导入
+                    showConfirm(confirmMsg, function(){
+                        // 保存持仓数据
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(holdData));
+                        holdDataList = holdData;
+                        // 保存历史数据（如果有）
+                        if(historyData){
+                            localStorage.setItem(HISTORY_KEY, JSON.stringify(historyData));
+                            historyData = historyData;
+                            // 重新加载历史数据到内存
+                            loadHistory();
+                        }
+                        // 保存港币汇率（如果有）
+                        if(hkFxRate){
+                            localStorage.setItem('dividendHkFx', String(hkFxRate));
+                            hkFxRate = Number(hkFxRate);
+                        }
+                        // 重置分红缓存，重新拉取
+                        Object.keys(divCacheMap).forEach(function(k){ delete divCacheMap[k]; });
+                        historyYearlyComputed = false;
+                        analysisChartsRendered = false;
+                        // 重新渲染
+                        renderPage();
+                        // 主动刷新数据
+                        if(holdDataList.length){
+                            setTimeout(function(){ refreshAll(); }, 500);
+                        }
+                        showToast('成功导入' + validCount + '条持仓数据' + (historyData ? '及历史数据' : ''));
+                    });
+                }catch(err){
+                    showToast('文件解析失败：' + (err.message || '未知错误'));
+                }
+            };
+            reader.onerror = function(){
+                showToast('文件读取失败');
+            };
+            reader.readAsText(file);
         });
 
         // 我的页面：清空数据

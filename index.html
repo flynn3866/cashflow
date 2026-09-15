@@ -3703,6 +3703,17 @@
             const holdListDom = document.querySelector('#holdList');
             const totalMarketForPct = Number(sum.totalMarket) || 1;
             let htmlStr = '';
+            // 文本宽度估算（12px基准）：中文≈12px/字，ASCII数字/符号≈6.5px/字符，点号/省略号≈4px
+            function estListTextW(s){
+                let w = 0;
+                for(let i = 0; i < s.length; i++){
+                    const c = s.charAt(i);
+                    if(c === '.' || c === '…') w += 4;
+                    else if(s.charCodeAt(i) > 0x2E80) w += 12;
+                    else w += 6.5;
+                }
+                return w;
+            }
             // 行业颜色调色板（和仓位分布环形图一致）
             const industryColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
             // 按行业分组
@@ -3722,13 +3733,13 @@
             htmlStr += `
             <div class="bg-white rounded-2xl card-shadow overflow-visible">
                 <!-- 表头：sticky固定在顶部，滚动时一直可见 -->
-                <div class="sticky top-0 z-20 grid grid-cols-12 px-2.5 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-2xl">
-                    <div class="col-span-1 text-center text-[10px] text-gray-400 font-medium">#</div>
-                    <div class="col-span-3 text-center text-[10px] text-gray-400 font-medium">名称/市值</div>
-                    <div class="col-span-2 text-center text-[10px] text-gray-400 font-medium">个股仓位</div>
-                    <div class="col-span-2 text-center text-[10px] text-gray-400 font-medium">成本/现价</div>
-                    <div class="col-span-2 text-center text-[10px] text-gray-400 font-medium">当日盈亏</div>
-                    <div class="col-span-2 text-center text-[10px] text-gray-400 font-medium">累计盈亏</div>
+                <div class="sticky top-0 z-20 grid px-2 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-2xl" style="grid-template-columns:24px 1.3fr 0.8fr 1.1fr 1.1fr 1.1fr">
+                    <div class="text-center text-[10px] text-gray-400 font-medium">#</div>
+                    <div class="text-center text-[10px] text-gray-400 font-medium">名称/市值</div>
+                    <div class="text-center text-[10px] text-gray-400 font-medium">个股仓位</div>
+                    <div class="text-center text-[10px] text-gray-400 font-medium">成本/现价</div>
+                    <div class="text-center text-[10px] text-gray-400 font-medium">当日盈亏</div>
+                    <div class="text-center text-[10px] text-gray-400 font-medium">累计盈亏</div>
                 </div>
             `;
             // 全局序号
@@ -3738,7 +3749,7 @@
                 const indPct = totalMarketForPct > 0 ? (ind.totalMV / totalMarketForPct * 100).toFixed(1) : 0;
                 // 行业标题行：左侧彩色竖条 + 行业名 + 股票数 + 仓位百分比（靠着标题右边）
                 htmlStr += `
-                <div class="grid grid-cols-12 mx-3 mt-2 mb-1 rounded-lg bg-gray-50 overflow-hidden items-center">
+                <div class="grid grid-cols-12 mx-2 mt-2 mb-1 rounded-lg bg-gray-50 overflow-hidden items-center">
                     <div class="col-span-12 flex items-center gap-2 px-3 py-2">
                         <span class="w-1 h-4 rounded-full flex-shrink-0" style="background:${indColor}"></span>
                         <span class="text-[13px] font-bold text-gray-700">${ind.name}</span>
@@ -3807,35 +3818,41 @@
                         : 'bg-pageBg';
                     // 市值颜色：已回本股票显示紫色
                     const marketValueClass = isCostRecovered ? 'text-purple-600' : 'text-gray-500';
+                    // 市值数字与股票名左对齐（渲染时直接内联偏移，避免渲染后测量导致的闪烁）
+                    const mvText = fmtMoney(itemMarketTotal);
+                    const mvW = estListTextW(mvText);
+                    const nameRowW = estListTextW(shortName) + 4 + 21; // 名字宽+gap(4px)+A/港标签宽(约21px)
+                    // 居中文本移动量=margin/2，向右视觉偏移2px需margin+4px（再微调1px→+6px）
+                    const mvMargin = (mvW >= nameRowW ? 0 : -(nameRowW - mvW)) + 6;
                     // 行风格：和卡片视图的两行一致（bg-pageBg rounded-xl），列表模式不可点击编辑
                     htmlStr += `
-                    <div class="${rowBgClass} mx-3 mt-1 mb-1 rounded-xl grid grid-cols-12 px-0.5 py-2.5 items-center transition-all duration-300">
-                        <div class="col-span-1 flex justify-center">
+                    <div class="hold-row ${rowBgClass} mx-2 mt-1 mb-1 rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" style="grid-template-columns:24px 1.3fr 0.8fr 1.1fr 1.1fr 1.1fr">
+                        <div class="flex justify-center">
                             <div class="w-6 h-6 rounded-full ${rankClass} flex items-center justify-center text-[10px] font-bold">${globalIndex}</div>
                         </div>
-                        <div class="col-span-3 text-center px-0.5">
+                        <div class="text-center px-0.5">
                             <div class="flex items-center justify-center gap-1 flex-wrap">
                                 <span class="text-xs font-semibold ${isCostRecovered ? 'text-purple-600 font-bold' : 'text-gray-800'}">${shortName}</span>
                                 ${recoveredBadge}
                                 <span class="${tagClass} text-[8px] px-1 py-0.5 rounded flex-shrink-0">${tagText}</span>
                             </div>
-                            <div class="text-[11px] font-medium ${marketValueClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market">${fmtMoney(itemMarketTotal)}</div>
+                            <div class="text-[11px] font-medium ${marketValueClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market" style="margin-left:${mvMargin}px">${mvText}</div>
                         </div>
-                        <div class="col-span-2 text-center px-0.5">
+                        <div class="text-center px-0.5">
                             <div class="text-xs font-semibold text-gray-700 tabular-nums">${item.count}</div>
                             <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums">${holdPct}%</div>
                         </div>
-                        <div class="col-span-2 text-center px-0.5">
-                            <div class="text-[11px] font-semibold text-gray-700 tabular-nums"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${item.costPrice}</div>
-                            <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
+                        <div class="text-center px-0.5">
+                            <div class="text-xs font-semibold text-gray-700 tabular-nums"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${item.costPrice}</div>
+                            <div class="text-xs font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
                         </div>
-                        <div class="col-span-2 text-center px-0.5">
-                            <div class="text-[11px] font-bold ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
-                            <div class="text-[10px] font-medium ${dayPnlClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
+                        <div class="text-center px-0.5">
+                            <div class="text-xs font-bold ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
+                            <div class="text-[11px] font-medium ${dayPnlClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>
-                        <div class="col-span-2 text-center px-0.5">
-                            <div class="text-[11px] font-bold ${itemPnlClass2} tabular-nums">${formatPnl(itemPnl2)}</div>
-                            <div class="text-[10px] font-medium ${itemPnlClass2} mt-0.5 tabular-nums">${pnlPctText2}</div>
+                        <div class="text-center px-0.5">
+                            <div class="text-xs font-bold ${itemPnlClass2} tabular-nums">${formatPnl(itemPnl2)}</div>
+                            <div class="text-[11px] font-medium ${itemPnlClass2} mt-0.5 tabular-nums">${pnlPctText2}</div>
                         </div>
                     </div>
                     `
@@ -3843,27 +3860,6 @@
             });
             htmlStr += '<div class="h-2"></div></div>';
             holdListDom.innerHTML = htmlStr;
-
-            // 名称/市值列：市值数字左边缘与股票名左边缘精确对齐（仅调整该列第二行数字，列整体仍居中）
-            setTimeout(function(){
-                holdListDom.querySelectorAll('.list-num[data-field="market"]').forEach(function(el){
-                    const row = el.closest('.grid-cols-12');
-                    if(!row || row.children.length < 2) return;
-                    const nameBox = row.children[1].children[0];
-                    if(!nameBox) return;
-                    const nameSpan = nameBox.querySelector('span');
-                    if(!nameSpan) return;
-                    const nameLeft = nameSpan.getBoundingClientRect().left;
-                    const range = document.createRange();
-                    range.selectNodeContents(el);
-                    const textLeft = range.getBoundingClientRect().left;
-                    const diff = nameLeft - textLeft;
-                    if(Math.abs(diff) > 1){
-                        // 居中文本的移动量 = 偏移量的一半（负margin会同时增加块宽度），需取2倍偏移
-                        el.style.marginLeft = (diff * 2) + 'px';
-                    }
-                });
-            }, 0);
 
             // 渲染后仅检测当日盈亏百分比变化，触发柔和闪烁（东方财富通风格）
             setTimeout(function(){

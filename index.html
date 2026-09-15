@@ -993,8 +993,11 @@
                     if(raw){
                         const arr = String(raw).split('~');
                         if(arr.length > 4 && arr[1]){
-                            const changePct = arr.length > 32 && arr[32] ? parseFloat(arr[32]) : null;
-                            result[p] = { name: arr[1], price: parseFloat(arr[3]), changePct: changePct };
+                        const changePct = arr.length > 32 && arr[32] ? parseFloat(arr[32]) : null;
+                        // 昨收价(arr[4])、涨跌额(arr[31]，现价-昨收) 用于统计页显示涨跌差额
+                        const prevClose = arr.length > 4 && arr[4] ? parseFloat(arr[4]) : null;
+                        const change = arr.length > 31 && arr[31] ? parseFloat(arr[31]) : null;
+                        result[p] = { name: arr[1], price: parseFloat(arr[3]), changePct: changePct, prevClose: prevClose, change: change };
                         }
                     }
                 });
@@ -1391,9 +1394,9 @@
 
         // 更新仓位快照（收盘后调用）
         function updatePositionSnapshot(){
-            const todayStr = new Date().toISOString().substring(0, 10);
+            const curDateStr = todayStr();
             // 如果今天已经有快照，不重复更新
-            if(positionSnapshot && positionSnapshot.date === todayStr) return;
+            if(positionSnapshot && positionSnapshot.date === curDateStr) return;
             const stocks = {};
             holdDataList.forEach(function(it){
                 stocks[it.code] = {
@@ -1404,7 +1407,7 @@
                     industry: it.industry || '其他'
                 };
             });
-            positionSnapshot = { date: todayStr, stocks: stocks };
+            positionSnapshot = { date: curDateStr, stocks: stocks };
             savePositionSnapshot();
         }
 
@@ -1413,18 +1416,18 @@
             // 如果已收盘且有今天的快照，使用今天的快照
             // 如果交易时间内，使用上一个交易日的快照（快照日期 < 今天）
             // 如果没有快照，使用当前数据
-            const todayStr = new Date().toISOString().substring(0, 10);
+            const curDateStr = todayStr();
             if(positionSnapshot && positionSnapshot.stocks){
                 // 已收盘且有今天的快照 → 用今天的
-                if(isMarketClosed() && positionSnapshot.date === todayStr){
+                if(isMarketClosed() && positionSnapshot.date === curDateStr){
                     return snapshotToHoldData(positionSnapshot);
                 }
                 // 交易时间内且快照是之前的 → 用上一个交易日的快照
-                if(!isMarketClosed() && positionSnapshot.date < todayStr){
+                if(!isMarketClosed() && positionSnapshot.date < curDateStr){
                     return snapshotToHoldData(positionSnapshot);
                 }
                 // 已收盘但快照不是今天的（刚收盘还没更新）→ 用当前数据，同时触发更新
-                if(isMarketClosed() && positionSnapshot.date !== todayStr){
+                if(isMarketClosed() && positionSnapshot.date !== curDateStr){
                     updatePositionSnapshot();
                     return holdDataList;
                 }
@@ -1480,6 +1483,13 @@
                         if(q.changePct != null && !isNaN(q.changePct)){
                             it.changePct = q.changePct;
                         }
+                        // 保存昨收价和涨跌额（用于统计页显示涨跌差额）
+                        if(q.prevClose != null && !isNaN(q.prevClose) && q.prevClose > 0){
+                            it.prevClose = q.prevClose;
+                        }
+                        if(q.change != null && !isNaN(q.change)){
+                            it.change = q.change;
+                        }
                         changed = true;
                     }
                 });
@@ -1511,18 +1521,18 @@
                 await Promise.all(divTasks);
                 // 4) 分红除权：A股现金分红除权除息日到期后，自动下调成本价（真实净成本）
                 // 只除权用户建仓日之后的分红，建仓日之前的历史分红不除权（用户未收到）
-                const todayStr = new Date().toISOString().substring(0, 10);
+                const curDateStr = todayStr();
                 holdDataList.forEach(function(it){
                     if(it.marketType !== 'A') return;
                     const cache = divCacheMap[it.code];
                     if(!cache || !cache.records || !cache.records.length) return;
                     if(!it.processedDivDates) it.processedDivDates = [];
                     // 用户建仓日（只除权建仓日之后的分红，建仓日前的历史分红用户未收到，不除权）
-                    const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : todayStr;
+                    const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : curDateStr;
                     cache.records.forEach(function(r){
                         const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0, 10);
                         if(!exDate || exDate.length < 10) return;          // 未到除权日（仅预告）
-                        if(exDate > todayStr) return;                       // 除权日在未来
+                        if(exDate > curDateStr) return;                       // 除权日在未来
                         if(exDate < createDate) return;                     // 除权日在建仓日之前，用户未收到该分红，不除权
                         if(it.processedDivDates.indexOf(exDate) >= 0) return; // 已处理过
                         const per10 = Number(r.PRETAX_BONUS_RMB);
@@ -1634,7 +1644,7 @@
                 });
                 // 一次性修复：清空调仓日之前的错误除权记录（之前bug导致建仓日前的历史分红也被除权）
                 // 注意：成本价已被错误除权的部分无法自动恢复，需要用户重新编辑输入成本
-                const fixTodayStr = new Date().toISOString().substring(0, 10);
+                const fixTodayStr = todayStr();
                 holdDataList.forEach(function(it){
                     if(!it.processedDivDates || !it.processedDivDates.length) return;
                     const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : fixTodayStr;
@@ -1999,24 +2009,24 @@
             return mv;
         }
 
-        // 判断当前是否是交易日的盘前时段（周一到周五 0:00-9:00）
-        // 盘前时段涨跌幅尚未产生，应显示+0.00和+0.00%，不使用前一天的数据
-        // 周末和法定节假日：接口返回的是上一个交易日收盘数据，可正常使用
-        function isTradingDayPreMarket(){
+        // 判断当前是否已进入交易取数时间（交易日 9:00 后）
+        // 9点后开始取最新的实时数据；9点前/周末/节假日显示前一个交易日的数据
+        function isTradingTimeStarted(){
             const now = new Date();
             const day = now.getDay(); // 0=周日, 6=周六
             if(day === 0 || day === 6) return false; // 周末不是交易日
             const hour = now.getHours();
-            const minute = now.getMinutes();
-            // 交易日9:00前为盘前时段
-            if(hour < 9 || (hour === 9 && minute === 0)) return true;
+            // 交易日9:00后进入实时取数时段
+            if(hour >= 9) return true;
             return false;
         }
 
-        // 获取有效的涨跌幅：盘前时段返回0，其他时段返回原始值
+        // 获取有效的涨跌幅：
+        // 交易日9点后 → 取最新实时数据，接口尚未更新（无数据）则显示0
+        // 其他时间（9点前/周末/节假日）→ 显示前一个交易日的数据（接口返回的最近收盘数据）
         function getEffectiveChangePct(pct){
-            if(isTradingDayPreMarket()){
-                return 0;
+            if(isTradingTimeStarted()){
+                return (pct == null || isNaN(pct)) ? 0 : pct;
             }
             return pct;
         }
@@ -2518,15 +2528,46 @@
                             dayPnlClass = 'text-gray-500';
                         }
                     }
+                    // 现价与前一交易日收盘价的涨跌差额（券商样式：红色+0.01、绿色-0.20）
+                    // 交易日9点后接口尚未更新时显示0，其他时间显示前一个交易日数据
+                    let changeDiffText = '--';
+                    let changeDiffClass = 'text-gray-400';
+                    let effChange = it.change;
+                    if(isTradingTimeStarted() && (effChange == null || isNaN(effChange))) effChange = 0;
+                    if(effChange != null && !isNaN(effChange)){
+                        if(effChange > 0){
+                            changeDiffText = '+' + effChange.toFixed(2);
+                            changeDiffClass = 'text-[#ff4d4f]';
+                        } else if(effChange < 0){
+                            changeDiffText = effChange.toFixed(2);
+                            changeDiffClass = 'text-[#00d68f]';
+                        } else {
+                            changeDiffText = '0.00';
+                            changeDiffClass = 'text-gray-500';
+                        }
+                    }
+                    // 现价前缀（港股显示HK$）
+                    const pricePrefix2 = it.marketType === 'HK' ? 'HK$' : '';
+                    // 现价颜色：跟涨跌幅一致（涨红跌绿）
+                    let priceColorClass = 'text-gray-900';
+                    if(pct != null && !isNaN(pct)){
+                        if(pct > 0) priceColorClass = 'text-[#ff4d4f]';
+                        else if(pct < 0) priceColorClass = 'text-[#00d68f]';
+                        else priceColorClass = 'text-gray-500';
+                    }
                     html += '<div class="px-5 py-3 flex items-center gap-3 active:bg-gray-50 stock-row" data-code="' + it.code + '">'
                         + '<div class="w-6 h-6 rounded-full ' + rankClass + ' flex items-center justify-center text-xs font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
                         + '<div class="text-sm font-medium text-gray-800 truncate">' + it.name + marketTag + '</div>'
-                        + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + ' · 现价' + (it.nowPrice ? it.nowPrice.toFixed(2) : '--') + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + '</div>'
                         + '</div>'
-                        + '<div class="text-right flex-shrink-0">'
-                        + '<div class="text-base font-semibold ' + dayPnlClass + ' tabular-nums stats-daypnl" data-code="' + it.code + '">' + dayPnlText + '</div>'
-                        + '<div class="text-[11px] font-medium mt-0.5 ' + pctClass + ' tabular-nums stats-pct" data-code="' + it.code + '">' + arrow + pctText + '</div>'
+                        + '<div class="w-[92px] text-right flex-shrink-0 ml-1">'
+                        + '<div class="text-[13px] font-bold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? it.nowPrice.toFixed(2) : '--') + '</div>'
+                        + '<div class="text-[11px] font-semibold mt-0.5 ' + changeDiffClass + ' tabular-nums whitespace-nowrap">' + changeDiffText + '</div>'
+                        + '</div>'
+                        + '<div class="w-[96px] text-right flex-shrink-0 ml-2">'
+                        + '<div class="text-base font-semibold ' + dayPnlClass + ' tabular-nums stats-daypnl whitespace-nowrap" data-code="' + it.code + '">' + dayPnlText + '</div>'
+                        + '<div class="text-[11px] font-medium mt-0.5 ' + pctClass + ' tabular-nums stats-pct whitespace-nowrap" data-code="' + it.code + '">' + arrow + pctText + '</div>'
                         + '</div>'
                         + '</div>';
                 });
@@ -2602,7 +2643,7 @@
             // ===== 1.5 仓位分布：行业占比汇总 + 个股仓位占比倒序 =====
             // 严格控制刷新频率：第一次渲染一次，之后只有收盘后且今天没渲染过才刷新
             // 其他时间（包括交易时间内）一律不刷新，延用上次渲染的数据
-            const posTodayStr = new Date().toISOString().substring(0, 10);
+            const posTodayStr = todayStr();
             const needRenderPosition = !positionRendered ||
                                         (isMarketClosed() && positionRenderDate !== posTodayStr);
             if(needRenderPosition){
@@ -2711,7 +2752,7 @@
 
             // ===== 2. 分红预计派发时间表（仅今年，分即将派发/已派发两部分）=====
             const divList = document.querySelector('#statsDividendList');
-            const todayStr = new Date().toISOString().substring(0, 10);
+            const curDateStr = todayStr();
             const curYear = String(new Date().getFullYear());
             const yearEndDate = curYear + '-12-31'; // 年底最后一天，用于未定日期的排序
             const upcoming = []; // 今年即将派发（未来）
@@ -2732,15 +2773,18 @@
                     // 只显示今年的数据（股权登记日或除权日在今年）
                     if(sortDate.substring(0, 4) !== curYear) return;
                     // 判断是否即将派发：
-                    // 1. 有股权登记日且 > 今天 → 即将派发
-                    // 2. 有除权日且 > 今天 → 即将派发
+                    // 1. 有股权登记日且 >= 今天（含今天登记）→ 即将派发
+                    // 2. 有除权日且 >= 今天 → 即将派发
                     // 3. 都没有但方案进度不是"实施" → 即将派发（股权登记日待定）
                     let isFuture = false;
+                    let isTodayRegister = false;
                     let datePending = false;
                     if(equityDate && equityDate.length >= 10){
-                        isFuture = equityDate > todayStr;
+                        // 登记日 >= 今天（含今天）→ 即将派发；登记日 < 今天 → 已派发
+                        isFuture = equityDate >= curDateStr;
+                        isTodayRegister = equityDate === curDateStr;
                     } else if(exDate && exDate.length >= 10){
-                        isFuture = exDate > todayStr;
+                        isFuture = exDate >= curDateStr;
                     } else {
                         // 没有股权登记日和除权日，预案状态视为即将派发
                         if(!progress.includes('实施')){
@@ -2760,6 +2804,7 @@
                         sortDate: sortDate,
                         progress: progress,
                         isFuture: isFuture,
+                        isTodayRegister: isTodayRegister,
                         datePending: datePending,
                         totalDiv: perShare * it.count
                     };
@@ -2796,7 +2841,15 @@
                     const progressColor = item.isFuture
                         ? (item.progress.includes('实施') ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50')
                         : 'text-gray-400 bg-gray-100';
-                    const futureBadge = item.isFuture ? '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5">待派发</span>' : '';
+                    // 待派发徽章：今天登记显示绿色"今天登记"，其他显示橙色"待派发"
+                    let futureBadge = '';
+                    if(item.isFuture){
+                        if(item.isTodayRegister){
+                            futureBadge = '<span class="text-[10px] text-green-600 bg-green-100 px-1.5 py-0.5 rounded ml-1.5 border border-green-200">今天登记</span>';
+                        } else {
+                            futureBadge = '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5">待派发</span>';
+                        }
+                    }
                     // 日期显示：格式为"股权登记日: 2026-09-29"
                     let dateHtml = '';
                     if(item.datePending){
@@ -3494,17 +3547,36 @@
                     tagText = "港";
                     tagClass = "bg-tagHk text-blue-700";
                 }
+                // 已回本里程碑样式（成本<0）：整卡紫色渐变+顶部横幅+紫色渐变序号+紫色数据
+                const isCostRecovered = item.costPrice < 0;
+                const cardOuterClass = isCostRecovered
+                    ? 'bg-gradient-to-br from-purple-50 via-white to-purple-50 rounded-2xl overflow-hidden card-shadow border border-purple-200 shadow-lg shadow-purple-100 transition-transform duration-150 active:scale-[0.99]'
+                    : 'bg-white rounded-2xl overflow-hidden card-shadow transition-transform duration-150 active:scale-[0.99]';
+                const topBanner = isCostRecovered
+                    ? '<div class="h-1.5 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-400"></div>'
+                    : '';
+                const seqClass = isCostRecovered
+                    ? 'w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-base font-bold text-white shadow-md shadow-purple-300'
+                    : 'w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-base font-bold text-white shadow-sm';
+                const nameClass = isCostRecovered ? 'text-purple-600 font-bold' : 'text-gray-800 font-semibold';
+                const badgeHtml = isCostRecovered
+                    ? '<span class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium shadow-sm flex items-center gap-0.5"><i class="fa fa-trophy text-[8px]"></i>已回本</span>'
+                    : '';
+                const rowBgClass = isCostRecovered
+                    ? 'bg-purple-50/70 mx-3 rounded-xl grid grid-cols-4 border border-purple-100'
+                    : 'bg-pageBg mx-3 rounded-xl grid grid-cols-4';
                 htmlStr += `
-                <div class="bg-white rounded-2xl overflow-hidden card-shadow transition-transform duration-150 active:scale-[0.99]">
+                <div class="${cardOuterClass}">
+                    ${topBanner}
                     <div class="p-3.5">
                         <div class="flex justify-between items-start">
                             <div class="flex gap-2.5 items-center">
-                                <!-- 序号圆形：渐变背景 -->
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-base font-bold text-white shadow-sm">${index+1}</div>
+                                <!-- 序号圆形：已回本用紫色渐变 -->
+                                <div class="${seqClass}">${index+1}</div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="text-base font-semibold ${item.costPrice < 0 ? 'text-purple-600' : 'text-gray-800'}">${item.name}</span>
-                                        ${item.costPrice < 0 ? '<span class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium shadow-sm flex items-center gap-0.5"><i class="fa fa-trophy text-[8px]"></i>已回本</span>' : ''}
+                                        <span class="text-base ${nameClass}">${item.name}</span>
+                                        ${badgeHtml}
                                         <span class="${tagClass} text-[10px] px-1 py-0.5 rounded">${tagText}</span>
                                     </div>
                                     <div class="text-xs text-gray-400 mt-0.5 tabular-nums">${item.code}</div>
@@ -3517,7 +3589,7 @@
                         </div>
                     </div>
                     <!-- 第一行：持仓 | 市值 | 成本 | 股价息率 -->
-                    <div class="bg-pageBg mx-3 rounded-xl grid grid-cols-4">
+                    <div class="${rowBgClass}">
                         <div class="px-1.5 py-2 text-center">
                             <div class="text-[10px] text-gray-400">持仓</div>
                             <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${item.count}股</div>
@@ -3536,7 +3608,7 @@
                         </div>
                     </div>
                     <!-- 第二行：持仓占比 | 累计收息 | 现价 | 累计盈亏 -->
-                    <div class="bg-pageBg mx-3 mt-1.5 rounded-xl grid grid-cols-4">
+                    <div class="${rowBgClass} mt-1.5">
                         <div class="px-1.5 py-2 text-center">
                             <div class="text-[10px] text-gray-400">持仓占比</div>
                             <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${holdPct}%</div>

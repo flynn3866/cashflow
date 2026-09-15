@@ -2248,15 +2248,21 @@
             const today = todayStr();
             const yStr = String(year);
             let perShare = 0;
+            // 同一笔分红可能有多条记录（预案+实施），按"除权日|每10股金额"去重，只算一次
+            const seen = {};
             cache.records.forEach(function(r){
                 const p = Number(r.PRETAX_BONUS_RMB);
                 if(r.PRETAX_BONUS_RMB == null || isNaN(p)) return;
                 const progress = String(r.ASSIGN_PROGRESS || '');
-                if(/取消|终止|停止/.test(progress)) return;
+                // 只统计已实施的记录（预案/提案未实施不发放，不计入已收，防止重复累加）
+                if(!progress.includes('实施')) return;
                 const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
                 if(exDate.length < 10) return;       // 无除权日=仅预告/提案，尚未发放
                 if(exDate.substring(0,4) !== yStr) return;
                 if(exDate > today) return;            // 除权日未到，尚未发放
+                const dedupKey = exDate + '|' + p;
+                if(seen[dedupKey]) return;
+                seen[dedupKey] = true;
                 perShare += p / 10;
             });
             return perShare;
@@ -2274,16 +2280,22 @@
                 const curY = new Date().getFullYear();
                 const createDate = item.createdAt ? String(item.createdAt).substring(0, 10) : today;
                 let perShare = 0;
+                // 同一笔分红可能有多条记录（预案+实施），按"除权日|每10股金额"去重，只算一次
+                const seen = {};
                 cache.records.forEach(function(r){
                     const p = Number(r.PRETAX_BONUS_RMB);
                     if(r.PRETAX_BONUS_RMB == null || isNaN(p)) return;
                     const progress = String(r.ASSIGN_PROGRESS || '');
-                    if(/取消|终止|停止/.test(progress)) return;
+                    // 只统计已实施的记录（预案/提案未实施不发放，不计入已收，防止重复累加）
+                    if(!progress.includes('实施')) return;
                     const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
                     if(exDate.length < 10) return;
                     if(exDate.substring(0,4) !== String(curY)) return;
                     if(exDate > today) return;
                     if(exDate < createDate) return;
+                    const dedupKey = exDate + '|' + p;
+                    if(seen[dedupKey]) return;
+                    seen[dedupKey] = true;
                     perShare += p / 10;
                 });
                 return perShare * count;
@@ -2311,15 +2323,21 @@
             // 建仓日期：累计分红从建仓日开始算起，不统计建仓日前的历史分红
             const createDate = item.createdAt ? String(item.createdAt).substring(0, 10) : today;
             let perShare = 0;
+            // 同一笔分红可能有多条记录（预案+实施），按"除权日|每10股金额"去重，只算一次
+            const seen = {};
             cache.records.forEach(function(r){
                 const p = Number(r.PRETAX_BONUS_RMB);
                 if(r.PRETAX_BONUS_RMB == null || isNaN(p)) return;
                 const progress = String(r.ASSIGN_PROGRESS || '');
-                if(/取消|终止|停止/.test(progress)) return;
+                // 只统计已实施的记录（预案/提案未实施不发放，不计入已收，防止重复累加）
+                if(!progress.includes('实施')) return;
                 const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
                 if(exDate.length < 10) return;
                 if(exDate > today) return;
                 if(exDate < createDate) return;  // 建仓日之前的分红，用户未收到
+                const dedupKey = exDate + '|' + p;
+                if(seen[dedupKey]) return;
+                seen[dedupKey] = true;
                 perShare += p / 10;
             });
             return perShare;
@@ -3734,16 +3752,25 @@
                 const cache = divCacheMap[it.code];
                 if(!cache || !cache.records) return;
                 const count = Number(it.count) || 0;
+                // 建仓日：建仓日之前已除权的分红用户从未收到，即使日期晚于手动基准日也不累加
+                const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : today;
+                // 同一笔分红可能有多条记录（预案+实施），按"除权日|每10股金额"去重，只算一次
+                const seen = {};
                 cache.records.forEach(function(r){
                     const p = Number(r.PRETAX_BONUS_RMB);
                     if(r.PRETAX_BONUS_RMB == null || isNaN(p)) return;
                     const progress = String(r.ASSIGN_PROGRESS || '');
-                    if(/取消|终止|停止/.test(progress)) return;
+                    // 只统计已实施的记录：预案/提案未实施不发放，不计入已收（防止重复累加）
+                    if(!progress.includes('实施')) return;
                     const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
                     if(exDate.length < 10) return;
                     if(exDate.substring(0,4) !== curY) return;
                     if(exDate <= asOf) return;  // 手动基准值已包含当天及之前已发放的分红
                     if(exDate > today) return;  // 尚未发放
+                    if(exDate < createDate) return;  // 建仓日之前的分红，用户从未收到
+                    const dedupKey = exDate + '|' + p;
+                    if(seen[dedupKey]) return;
+                    seen[dedupKey] = true;
                     extra += p / 10 * count;
                 });
             });

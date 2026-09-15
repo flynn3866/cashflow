@@ -846,6 +846,25 @@
             </div>
         </div>
 
+        <!-- 每年净流入 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" id="yearNetInflowHeader">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+                        <i class="fa fa-arrows-h text-sky-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="text-base font-semibold text-gray-800">每年净流入</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">用于今年收益率计算：正数=外部转入，负数=转出；历史年份无需填写，从今年开始</div>
+                    </div>
+                </div>
+                <i id="yearNetInflowChevron" class="fa fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+            </div>
+            <div id="yearNetInflowList" class="divide-y divide-gray-50 transition-all duration-300">
+                <!-- 动态生成：仅今年一栏 -->
+            </div>
+        </div>
+
         <!-- 每年总收益率 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" id="yearReturnHeader">
@@ -1860,7 +1879,7 @@
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, portfolioStartYear: null };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, portfolioStartYear: null };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
@@ -1874,10 +1893,12 @@
                     historyData.yearlyAssets = parsed.yearlyAssets || {};
                     historyData.yearlyDiv = parsed.yearlyDiv || {};
                     historyData.yearlyReturn = parsed.yearlyReturn || {};
+                    historyData.yearlyNetInflow = parsed.yearlyNetInflow || {};
                     // 加载手动编辑标记和组合起始年（防止历史数据被自动计算覆盖/删除）
                     historyData.manualYearlyAssets = parsed.manualYearlyAssets || {};
                     historyData.manualYearlyDiv = parsed.manualYearlyDiv || {};
                     historyData.manualYearlyReturn = parsed.manualYearlyReturn || {};
+                    historyData.manualYearlyDivAsOf = parsed.manualYearlyDivAsOf || {};
                     if(parsed.portfolioStartYear) historyData.portfolioStartYear = parsed.portfolioStartYear;
                 }
             }catch(e){}
@@ -2006,7 +2027,12 @@
                     if(endVal > 0){
                         // 跳过手动编辑的年份，不覆盖用户输入
                         if(!(historyData.manualYearlyReturn && historyData.manualYearlyReturn[curY])){
-                            historyData.yearlyReturn[curY] = Number(((endVal - startVal + yearDiv) / startVal * 100).toFixed(2));
+                            // 当年总收益率与顶部"今年收益率"同一券商口径：含当年净流入（正数=转入/负数=转出）
+                            const netInflowCur = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[curY]) || 0;
+                            const baseCur = startVal + netInflowCur;
+                            if(baseCur > 0){
+                                historyData.yearlyReturn[curY] = Number(((endVal - startVal - netInflowCur) / baseCur * 100).toFixed(2));
+                            }
                         }
                     }
                     saveHistory();
@@ -2503,6 +2529,9 @@
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
+            // 切换底部导航时同时收起设置页（二级页面），等效于点击左上角返回
+            document.querySelector('#pageSettings').classList.add('hidden');
+            document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
             document.querySelector('#pageStats').classList.toggle('hidden', tab !== 'stats');
@@ -2548,9 +2577,12 @@
             if(tab === 'mine'){
                 renderMinePage();
             }
-            // 切换到里程碑页：分红数据按天刷新，今天已渲染过则不重复渲染；若图表已初始化则resize适配
+            // 切换到里程碑页：以内存渲染状态判断——页面刷新后内存状态丢失，必须重新渲染；
+            // 同会话内切换（图表已初始化且轨道已有内容）只resize，不重复渲染
             if(tab === 'milestone'){
-                if(!milestoneRenderedToday()){
+                const msTrackEl = document.querySelector('#msTrack');
+                const alreadyRendered = msChartInited && msTrackEl && msTrackEl.children.length > 0;
+                if(!alreadyRendered){
                     renderMilestonePage();
                 } else if(msChartInited){
                     setTimeout(function(){ if(msChart) msChart.resize(); }, 60);
@@ -3516,20 +3548,13 @@
                     retStartVal = historyData.dailyAssets[retLastYear + '-12-31'];
                 }
                 if(retStartVal > 0 && curTotal > 0){
-                    // 实时计算当年已收分红（与computeYearlyDiv当年口径一致，保证每天最新）
-                    let curYearDivReal = 0;
-                    holdDataList.forEach(function(it){
-                        const count = Number(it.count) || 0;
-                        if(it.marketType === 'A'){
-                            const per = getDivPerShareInYear(it, retCurY);
-                            if(per > 0) curYearDivReal += per * count;
-                        } else {
-                            let per = Number(it.divPerShare) || 0;
-                            if(it.divTaxRate != null && Number(it.divTaxRate) > 0) per = per * (1 - Number(it.divTaxRate));
-                            curYearDivReal += per * count;
-                        }
-                    });
-                    retCurVal = Number(((curTotal - retStartVal + curYearDivReal) / retStartVal * 100).toFixed(2));
+                    // 实时计算当年收益率（与顶部"今年收益率"同一券商口径：含当年净流入，正数=转入/负数=转出）
+                    const retNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[retCurY]) || 0;
+                    const retGain = curTotal - retStartVal - retNetInflow;
+                    const retBase = retStartVal + retNetInflow;
+                    if(retBase > 0){
+                        retCurVal = Number((retGain / retBase * 100).toFixed(2));
+                    }
                 }
             }
             let retYears = Object.keys(historyData.yearlyReturn).sort();
@@ -3567,13 +3592,50 @@
             analysisCharts.push(c3);
         }
 
+        // 今年已收分红（与设置页"每年分红收入"当年值一致）
+        // 自动年份：直接取 yearlyDiv[当年]（computeYearlyDiv 随每次除权到账自动更新）
+        // 手动年份：以手动填写的值为基准（录入的是今年当天之前已收到的历史分红），
+        //           填写日期之后新到账的除权分红继续累加——今年数据栏不锁定
+        function getCurYearReceived(){
+            const curY = String(new Date().getFullYear());
+            let manualVal = null;
+            if(historyData.manualYearlyDiv && historyData.manualYearlyDiv[curY]){
+                manualVal = Number(historyData.yearlyDiv[curY]) || 0;
+            }
+            if(manualVal == null){
+                // 自动年份：设置页当年值（已含全部已除权发放）
+                return historyData.yearlyDiv && historyData.yearlyDiv[curY] != null ? Number(historyData.yearlyDiv[curY]) || 0 : 0;
+            }
+            // 手动年份：基准值 + 填写日期之后新到账的今年分红（A股除权发放）
+            const asOf = (historyData.manualYearlyDivAsOf && historyData.manualYearlyDivAsOf[curY]) || '0000-00-00';
+            const today = todayStr();
+            let extra = 0;
+            holdDataList.forEach(function(it){
+                if(it.marketType !== 'A') return;
+                const cache = divCacheMap[it.code];
+                if(!cache || !cache.records) return;
+                const count = Number(it.count) || 0;
+                cache.records.forEach(function(r){
+                    const p = Number(r.PRETAX_BONUS_RMB);
+                    if(r.PRETAX_BONUS_RMB == null || isNaN(p)) return;
+                    const progress = String(r.ASSIGN_PROGRESS || '');
+                    if(/取消|终止|停止/.test(progress)) return;
+                    const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
+                    if(exDate.length < 10) return;
+                    if(exDate.substring(0,4) !== curY) return;
+                    if(exDate <= asOf) return;  // 手动基准值已包含当天及之前已发放的分红
+                    if(exDate > today) return;  // 尚未发放
+                    extra += p / 10 * count;
+                });
+            });
+            return manualVal + extra;
+        }
+
         // 计算汇总数据（均为人民币口径）
         function calcSummary(){
             let totalCost = 0;
             let totalMarket = 0;
             let totalYearDiv = 0;
-            let totalReceived = 0;
-            let totalDivReceived = 0;
             let aShareNum = 0;
             let hkShareNum = 0;
             holdDataList.forEach(item=>{
@@ -3581,14 +3643,25 @@
                 totalCost += item.count * item.costPrice * fx;
                 totalMarket += getMarketValue(item);
                 totalYearDiv += getAnnualDiv(item);
-                totalReceived += getReceivedThisYear(item);
-                totalDivReceived += getItemTotalReceived(item);
                 if(item.marketType === 'A'){
                     aShareNum +=1;
                 }else{
                     hkShareNum +=1;
                 }
             })
+            // 今年已收（与设置页"每年分红收入"当年值一致）：
+            // 自动模式下随除权到账自动更新；手动填写过当年则以其为基准并继续累加后续新除权分红
+            const curYStr = String(new Date().getFullYear());
+            const totalReceived = getCurYearReceived();
+            // 累计分红总额 = 所有年份已收到的分红累加（含当年，含设置页手动录入的历史年份）
+            let totalDivReceived = 0;
+            Object.keys(historyData.yearlyDiv || {}).forEach(function(y){
+                if(String(y) === curYStr){
+                    totalDivReceived += totalReceived;   // 当年用实时口径（基准+后续新除权）
+                } else {
+                    totalDivReceived += Number(historyData.yearlyDiv[y]) || 0;
+                }
+            });
             const costYield = totalCost > 0 ? (totalYearDiv / totalCost *100).toFixed(2) : 0;
             const marketYield = totalMarket > 0 ? (totalYearDiv / totalMarket *100).toFixed(2) : 0;
             const monthDiv = (totalYearDiv /12).toFixed(2);
@@ -3614,7 +3687,7 @@
             if(yearStartMarket <= 0 && historyData.yearStart && historyData.yearStart.market > 0){
                 yearStartMarket = historyData.yearStart.market;
             }
-            const periodNetInflow = 0;
+            const periodNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[curYStr]) || 0;
             const yearTotalGain = totalMarket - yearStartMarket - periodNetInflow;
             const yearReturnBase = yearStartMarket + periodNetInflow;
             const yearReturnRate = yearReturnBase > 0 ? (yearTotalGain / yearReturnBase * 100) : 0;
@@ -3728,10 +3801,12 @@
         // 里程碑图表实例（只在首次渲染时init，之后setOption更新；分红数据按天刷新）
         let msChart = null;
         let msChartInited = false;
-        const MILESTONE_RENDER_KEY = 'milestoneRenderDate';
-        // 是否今天已渲染过里程碑页（分红数据按天刷新，无需每2秒/每次切换重渲染）
-        function milestoneRenderedToday(){
-            return localStorage.getItem(MILESTONE_RENDER_KEY) === todayStr();
+        // 里程碑数据可能变化时调用：销毁图表实例，下次切换到里程碑页时重新完整渲染
+        function invalidateMilestoneChart(){
+            if(msChartInited){
+                msChartInited = false;
+                if(msChart){ msChart.dispose(); msChart = null; }
+            }
         }
         // 渲染里程碑页（分红数据按天更新，拿到最新数据渲染一次即可）
         function renderMilestonePage(){
@@ -3742,7 +3817,8 @@
                 divMap[y] = Number(historyData.yearlyDiv[y]) || 0;
             });
             const curY = new Date().getFullYear();
-            const curYearDiv = divMap[curY] != null ? divMap[curY] : Number(calcSummary().totalYearDiv || 0);
+            // 当年分红收入：与顶部"今年已收"同一口径（手动基准+后续新除权，或自动计算值）
+            const curYearDiv = getCurYearReceived();
             divMap[curY] = curYearDiv;
             const years = Object.keys(divMap).map(Number).sort(function(a, b){ return a - b; });
             // 每个里程碑的达成情况：某年分红收入 >= 目标即达成（取第一次达成那年）
@@ -3861,8 +3937,6 @@
             document.querySelector('#msTrack').innerHTML = trackHtml;
             // ===== 累计分红征程图（ECharts面积图：逐年累加，永不回落）=====
             renderMsChart(divMap, years, milestones);
-            // 记录今天已渲染
-            localStorage.setItem(MILESTONE_RENDER_KEY, todayStr());
         }
         // 累计分红征程：X=年份，Y=累计分红总额；已达成的里程碑画紫色横线
         function renderMsChart(divMap, years, milestones){
@@ -4184,8 +4258,8 @@
                     <div class="text-center text-[10px] text-gray-400 font-medium">名称/市值</div>
                     <div class="text-center text-[10px] text-gray-400 font-medium">个股仓位</div>
                     <div class="text-center text-[10px] text-gray-400 font-medium">成本/现价</div>
-                    <div class="text-center text-[10px] text-gray-400 font-medium">当日盈亏</div>
                     <div class="text-center text-[10px] text-gray-400 font-medium">累计盈亏</div>
+                    <div class="text-center text-[10px] text-gray-400 font-medium">当日盈亏</div>
                 </div>
             `;
             // 全局序号
@@ -4293,12 +4367,12 @@
                             <div class="text-xs font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
                         </div>
                         <div class="text-center px-0.5">
-                            <div class="text-xs font-bold ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
-                            <div class="text-[11px] font-medium ${dayPnlClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
-                        </div>
-                        <div class="text-center px-0.5">
                             <div class="text-xs font-bold ${itemPnlClass2} tabular-nums">${formatPnl(itemPnl2)}</div>
                             <div class="text-[11px] font-medium ${itemPnlClass2} mt-0.5 tabular-nums">${pnlPctText2}</div>
+                        </div>
+                        <div class="text-center px-0.5">
+                            <div class="text-xs font-bold ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
+                            <div class="text-[11px] font-medium ${dayPnlClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>
                     </div>
                     `
@@ -4423,6 +4497,8 @@
                     const y = this.getAttribute('data-year');
                     delete historyData.yearlyDiv[y];
                     if(historyData.manualYearlyDiv) delete historyData.manualYearlyDiv[y];
+                    if(historyData.manualYearlyDivAsOf) delete historyData.manualYearlyDivAsOf[y];
+                    invalidateMilestoneChart(); // 分红历史变化，里程碑需重渲染
                     renderYearDivList();
                 });
             });
@@ -4431,6 +4507,8 @@
                 btn.addEventListener('click', function(){
                     const y = this.closest('[data-year]').getAttribute('data-year');
                     if(historyData.manualYearlyDiv) delete historyData.manualYearlyDiv[y];
+                    if(historyData.manualYearlyDivAsOf) delete historyData.manualYearlyDivAsOf[y];
+                    invalidateMilestoneChart(); // 分红历史变化，里程碑需重渲染
                     showToast(y + '年分红已恢复自动计算');
                     renderYearDivList();
                 });
@@ -4499,10 +4577,39 @@
             document.querySelector('#pageSettings').classList.remove('hidden');
             renderYearAssetList();
             renderYearDivList();
+            renderYearNetInflowList();
             renderYearReturnList();
             // 初始化折叠状态
             initSettingsCollapse();
             window.scrollTo(0, 0);
+        }
+
+        // 渲染每年净流入列表（仅今年一栏：从今年开始记录，历史年份无需填写）
+        function renderYearNetInflowList(){
+            const listDom = document.querySelector('#yearNetInflowList');
+            if(!listDom) return;
+            const curY = String(new Date().getFullYear());
+            if(!historyData.yearlyNetInflow) historyData.yearlyNetInflow = {};
+            if(historyData.yearlyNetInflow[curY] == null) historyData.yearlyNetInflow[curY] = 0;
+            const val = historyData.yearlyNetInflow[curY] || 0;
+            listDom.innerHTML = `
+            <div class="px-5 py-3" data-year="${curY}">
+                <div class="text-[11px] text-gray-400 mb-1.5">今年净流入（正数=外部转入，负数=转出）</div>
+                <div class="flex items-center gap-2">
+                    <div class="w-16 flex-shrink-0">
+                        <span class="text-sm font-semibold text-gray-700">${curY}年</span>
+                    </div>
+                    <div class="flex-1 relative">
+                        <input type="number" step="0.01" class="year-netinflow-input w-full px-3 py-2 border-2 border-gray-100 rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="${val}" data-year="${curY}" placeholder="0.00">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">元</span>
+                    </div>
+                </div>
+            </div>`;
+            listDom.querySelectorAll('.year-netinflow-input').forEach(function(input){
+                input.addEventListener('input', function(){
+                    this.setAttribute('data-edited', 'true');
+                });
+            });
         }
 
         // 初始化设置页面折叠功能
@@ -4515,6 +4622,7 @@
             // 应用折叠状态
             applyCollapseState('yearAsset', collapseState.yearAsset);
             applyCollapseState('yearDiv', collapseState.yearDiv);
+            applyCollapseState('yearNetInflow', collapseState.yearNetInflow);
             applyCollapseState('yearReturn', collapseState.yearReturn);
             // 绑定点击事件
             document.querySelector('#yearAssetHeader').addEventListener('click', function(){
@@ -4522,6 +4630,9 @@
             });
             document.querySelector('#yearDivHeader').addEventListener('click', function(){
                 toggleSettingsCollapse('yearDiv');
+            });
+            document.querySelector('#yearNetInflowHeader').addEventListener('click', function(){
+                toggleSettingsCollapse('yearNetInflow');
             });
             document.querySelector('#yearReturnHeader').addEventListener('click', function(){
                 toggleSettingsCollapse('yearReturn');
@@ -4581,6 +4692,12 @@
                 if(input.getAttribute('data-edited') === 'true'){
                     if(!historyData.manualYearlyDiv) historyData.manualYearlyDiv = {};
                     historyData.manualYearlyDiv[y] = true;
+                    // 今年数据栏不锁定：手动填写的是"填写日之前已收历史"基准，
+                    // 记录填写日期，之后新到账的除权分红继续累加
+                    if(String(new Date().getFullYear()) === y){
+                        if(!historyData.manualYearlyDivAsOf) historyData.manualYearlyDivAsOf = {};
+                        historyData.manualYearlyDivAsOf[y] = todayStr();
+                    }
                 }
             });
             // 保存每年总收益率
@@ -4594,21 +4711,32 @@
                     historyData.manualYearlyReturn[y] = true;
                 }
             });
+            // 保存每年净流入
+            document.querySelectorAll('.year-netinflow-input').forEach(function(input){
+                const y = input.getAttribute('data-year');
+                const val = Number(input.value) || 0;
+                if(!historyData.yearlyNetInflow) historyData.yearlyNetInflow = {};
+                historyData.yearlyNetInflow[y] = val;
+            });
             saveHistory();
             showToast('设置已保存');
             // 重新渲染列表，显示"已锁定"标签
             renderYearDivList();
+            renderYearNetInflowList();
             renderYearReturnList();
+            // 立即刷新持仓页顶部（今年收益率等受净流入影响的指标即时生效）
+            renderPage();
             // 重新渲染分析页图表
             if(activeTab === 'analysis'){
                 renderAnalysisCharts();
             } else {
                 analysisChartsRendered = false; // 数据变化，下次切换到分析页时重新渲染
             }
-            // 里程碑页：历史分红数据可能被修改，失效当天渲染标记（下次切换或分红拉取时重渲染）
-            localStorage.removeItem(MILESTONE_RENDER_KEY);
+            // 里程碑页：历史分红数据可能被修改，销毁图表下次切换或分红拉取时重新渲染
             if(activeTab === 'milestone'){
                 renderMilestonePage();
+            } else {
+                invalidateMilestoneChart();
             }
         }
 
@@ -4636,6 +4764,7 @@
                 // 用户主动添加的历史年份，标记为手动编辑，防止被自动计算清除
                 if(!historyData.manualYearlyDiv) historyData.manualYearlyDiv = {};
                 historyData.manualYearlyDiv[newYear] = true;
+                invalidateMilestoneChart(); // 分红历史变化，里程碑需重渲染
             }
             renderYearDivList();
         }
@@ -4844,12 +4973,8 @@
                         Object.keys(divCacheMap).forEach(function(k){ delete divCacheMap[k]; });
                         historyYearlyComputed = false;
                         analysisChartsRendered = false;
-                        // 里程碑页数据可能变化，失效当天渲染标记
-                        localStorage.removeItem(MILESTONE_RENDER_KEY);
-                        if(msChartInited){
-                            msChartInited = false;
-                            if(msChart){ msChart.dispose(); msChart = null; }
-                        }
+                        // 里程碑页数据可能变化，销毁图表下次渲染
+                        invalidateMilestoneChart();
                         // 重新渲染
                         renderPage();
                         // 主动刷新数据
@@ -4873,11 +4998,7 @@
             if(confirm('确定要清空所有持仓数据吗？此操作不可恢复！')){
                 localStorage.removeItem(STORAGE_KEY);
                 localStorage.removeItem('dividendHistory');
-                localStorage.removeItem(MILESTONE_RENDER_KEY);
-                if(msChartInited){
-                    msChartInited = false;
-                    if(msChart){ msChart.dispose(); msChart = null; }
-                }
+                invalidateMilestoneChart();
                 holdDataList = [];
                 renderPage();
                 showToast('数据已清空');

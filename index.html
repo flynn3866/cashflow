@@ -1237,7 +1237,7 @@
                         if(q.price != null && !isNaN(q.price) && isFinite(q.price)) {
                             nowPriceEl.value = Number(q.price).toString();
                         }
-                        codeHintEl.innerText = '已自动获取：' + q.name + (q.price ? '，现价 ' + q.price : '');
+                        codeHintEl.innerText = '已自动获取：' + q.name + (q.price ? '，现价 ' + (isEtfCode(code) ? Number(q.price).toFixed(3) : Number(q.price).toFixed(2)) : '');
                         codeHintEl.className = 'mt-1.5 text-xs text-green-600';
                         // 自动获取行业信息
                         fetchIndustry(code, market, function(industry){
@@ -1530,16 +1530,39 @@
                     // 用户建仓日（只除权建仓日之后的分红，建仓日前的历史分红用户未收到，不除权）
                     const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : curDateStr;
                     cache.records.forEach(function(r){
+                        // 只处理已实施的分红记录（预案/提案未实施不除权，避免同一笔分红预案+实施两条记录重复除权）
+                        const progress = String(r.ASSIGN_PROGRESS || '');
+                        if(!progress.includes('实施')) return;
+                        // 除权时机 = 股权登记日当天18:00（像券商一样在登记日进行成本除权）
+                        const equityDate = String(r.EQUITY_RECORD_DATE || '').substring(0, 10);
                         const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0, 10);
-                        if(!exDate || exDate.length < 10) return;          // 未到除权日（仅预告）
-                        if(exDate > curDateStr) return;                       // 除权日在未来
-                        if(exDate < createDate) return;                     // 除权日在建仓日之前，用户未收到该分红，不除权
-                        if(it.processedDivDates.indexOf(exDate) >= 0) return; // 已处理过
                         const per10 = Number(r.PRETAX_BONUS_RMB);
                         if(isNaN(per10) || per10 <= 0) return;             // 无现金分红（送转股等）
+                        // 除权基准日期：优先股权登记日，无登记日用除权日
+                        const divDate = equityDate || exDate;
+                        if(!divDate || divDate.length < 10) return;   // 未定日期（仅预告）
+                        // 判断是否已到除权时点：
+                        // 登记日 < 今天 → 已过登记日18:00，应除权
+                        // 登记日 == 今天 → 当天18:00才除权
+                        // 登记日 > 今天 → 未到
+                        let shouldEx = false;
+                        if(divDate < curDateStr){
+                            shouldEx = true;
+                        } else if(divDate === curDateStr){
+                            shouldEx = new Date().getHours() >= 18;
+                        }
+                        if(!shouldEx) return;
+                        if(divDate < createDate) return;                     // 登记日在建仓日之前，用户未收到该分红，不除权
+                        // 已处理过则跳过（防止重复除权）：
+                        // 新记录用组合标识"登记日|除权日|每10股金额"去重（同一笔分红即使多条记录也能识别）
+                        // 旧数据是单日期标识（登记日或除权日），任一命中即跳过
+                        const divKey = equityDate + '|' + exDate + '|' + per10;
+                        if(it.processedDivDates.indexOf(divKey) >= 0
+                            || (equityDate && it.processedDivDates.indexOf(equityDate) >= 0)
+                            || (exDate && it.processedDivDates.indexOf(exDate) >= 0)) return;
                         const perShare = per10 / 10;
                         it.costPrice = Number((it.costPrice - perShare).toFixed(4));
-                        it.processedDivDates.push(exDate);
+                        it.processedDivDates.push(divKey);
                         changed = true;
                     });
                 });
@@ -2196,11 +2219,17 @@
             if(confirmCallback) confirmCallback();
             confirmCallback = null;
         });
-        // 每股价格格式化（保留2位小数，不加逗号）
-        function fmtPrice(v){
+        // ETF判断（与行业抓取口径一致：A股ETF代码以159/510/511/512/513/515/516/518/588开头）
+        const etfPrefixes = ['159', '510', '511', '512', '513', '515', '516', '518', '588'];
+        function isEtfCode(code){
+            const c = String(code || '');
+            return etfPrefixes.some(function(p){ return c.indexOf(p) === 0; });
+        }
+        // 每股价格格式化：ETF三位小数（券商口径），其他保留2位小数，不加逗号
+        function fmtPrice(v, code){
             const n = Number(v);
             if(isNaN(n)) return '-';
-            return n.toFixed(2);
+            return isEtfCode(code) ? n.toFixed(3) : n.toFixed(2);
         }
         // 盈亏格式化：盈利带 +，与券商一致（红涨绿跌）
         function formatPnl(v){
@@ -2473,6 +2502,14 @@
             if(!holdDataList.length){
                 changeList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无持仓数据</div>';
             } else {
+                // 市值前十名（重仓标志）：A股=股数×现价，港股=股数×现价×汇率（人民币口径）
+                const heavyCodes = {};
+                const byMVList = holdDataList.slice().sort(function(a, b){
+                    const ma = (Number(a.count)||0) * (Number(a.nowPrice)||0) * (a.marketType === 'HK' ? hkFxRate : 1);
+                    const mb = (Number(b.count)||0) * (Number(b.nowPrice)||0) * (b.marketType === 'HK' ? hkFxRate : 1);
+                    return mb - ma;
+                });
+                byMVList.slice(0, 10).forEach(function(it){ heavyCodes[it.code] = true; });
                 const sorted = holdDataList.slice().sort(function(a, b){
                     const ap = a.changePct != null ? getEffectiveChangePct(a.changePct) : -999;
                     const bp = b.changePct != null ? getEffectiveChangePct(b.changePct) : -999;
@@ -2510,6 +2547,10 @@
                     const marketTag = it.marketType === 'HK'
                         ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5">港</span>'
                         : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5">A</span>';
+                    // 市值前十名重仓徽章（金色渐变星标，放在股票代码右边，精致不占位）
+                    const heavyBadge = heavyCodes[it.code]
+                        ? '<span class="inline-flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-amber-500 to-orange-500 ml-1.5 align-middle shadow-sm"><i class="fa fa-star text-[7px]"></i>重仓</span>'
+                        : '';
                     // 当日盈亏金额（券商标准）
                     let dayPnl = 0;
                     let dayPnlText = '--';
@@ -2559,10 +2600,10 @@
                         + '<div class="w-6 h-6 rounded-full ' + rankClass + ' flex items-center justify-center text-xs font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
                         + '<div class="text-sm font-medium text-gray-800 truncate">' + it.name + marketTag + '</div>'
-                        + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + heavyBadge + '</div>'
                         + '</div>'
                         + '<div class="w-[92px] text-right flex-shrink-0 ml-1">'
-                        + '<div class="text-[13px] font-bold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? it.nowPrice.toFixed(2) : '--') + '</div>'
+                        + '<div class="text-[13px] font-bold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? fmtPrice(it.nowPrice, it.code) : '--') + '</div>'
                         + '<div class="text-[11px] font-semibold mt-0.5 ' + changeDiffClass + ' tabular-nums whitespace-nowrap">' + changeDiffText + '</div>'
                         + '</div>'
                         + '<div class="w-[96px] text-right flex-shrink-0 ml-2">'
@@ -2780,7 +2821,9 @@
                     let isTodayRegister = false;
                     let datePending = false;
                     if(equityDate && equityDate.length >= 10){
-                        // 登记日 >= 今天（含今天）→ 即将派发；登记日 < 今天 → 已派发
+                        // 只按照股权登记日日期来划分（与是否除权无关）：
+                        // 登记日 >= 今天 → 即将派发（含今天，显示绿色"今日登记"）
+                        // 登记日 < 今天 → 已派发
                         isFuture = equityDate >= curDateStr;
                         isTodayRegister = equityDate === curDateStr;
                     } else if(exDate && exDate.length >= 10){
@@ -3328,11 +3371,13 @@
             analysisCharts.push(c2);
 
             // ===== 图3：总收益率趋势 =====
-            // 当前年份自动计算最新收益率（即使yearlyReturn中没有该年份，也加入显示）
+            // 当前年份始终实时计算最新收益率（每次渲染取最新一天数据，每天覆盖更新），历史年份用存储值（仅手动编辑可改）
             const retCurY = String(new Date().getFullYear());
-            let retCurVal = historyData.yearlyReturn[retCurY];
-            // 如果当前年份没有数据，自动计算
-            if(retCurVal == null || isNaN(retCurVal)){
+            let retCurVal = null;
+            // 手动录入的当年值优先（设置页可编辑）
+            if(historyData.manualYearlyReturn && historyData.manualYearlyReturn[retCurY] != null){
+                retCurVal = Number(historyData.manualYearlyReturn[retCurY]);
+            } else {
                 const retLastYear = String(new Date().getFullYear() - 1);
                 let retStartVal = 0;
                 if(historyData.yearlyAssets && historyData.yearlyAssets[retLastYear] > 0){
@@ -3342,9 +3387,21 @@
                 } else if(historyData.dailyAssets && historyData.dailyAssets[retLastYear + '-12-31'] > 0){
                     retStartVal = historyData.dailyAssets[retLastYear + '-12-31'];
                 }
-                if(retStartVal > 0 && totalMarket > 0){
-                    const retYearDiv = historyData.yearlyDiv[retCurY] || 0;
-                    retCurVal = Number(((totalMarket - retStartVal + retYearDiv) / retStartVal * 100).toFixed(2));
+                if(retStartVal > 0 && curTotal > 0){
+                    // 实时计算当年已收分红（与computeYearlyDiv当年口径一致，保证每天最新）
+                    let curYearDivReal = 0;
+                    holdDataList.forEach(function(it){
+                        const count = Number(it.count) || 0;
+                        if(it.marketType === 'A'){
+                            const per = getDivPerShareInYear(it, retCurY);
+                            if(per > 0) curYearDivReal += per * count;
+                        } else {
+                            let per = Number(it.divPerShare) || 0;
+                            if(it.divTaxRate != null && Number(it.divTaxRate) > 0) per = per * (1 - Number(it.divTaxRate));
+                            curYearDivReal += per * count;
+                        }
+                    });
+                    retCurVal = Number(((curTotal - retStartVal + curYearDivReal) / retStartVal * 100).toFixed(2));
                 }
             }
             let retYears = Object.keys(historyData.yearlyReturn).sort();
@@ -3619,7 +3676,7 @@
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">现价</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice)}</div>
+                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
                         </div>
                         <div class="px-1.5 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计盈亏</div>
@@ -3759,7 +3816,7 @@
                         </div>
                         <div class="col-span-3 text-center px-1">
                             <div class="text-xs font-semibold text-gray-700 tabular-nums"><span class="text-[9px] text-gray-400">${pricePrefix}</span>${item.costPrice}</div>
-                            <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[9px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice)}</div>
+                            <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[9px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
                         </div>
                         <div class="col-span-3 text-center px-1">
                             <div class="text-xs font-bold ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>

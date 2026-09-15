@@ -547,6 +547,39 @@
             </div>
         </div>
 
+        <!-- 盈亏排行：按累计盈亏额降序（收盘后更新一次，其他时间延用） -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsPnlRankWrap">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    <span class="text-base font-semibold text-gray-800">盈亏排行</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-gray-400">按累计盈亏 · 收盘后更新</span>
+                    <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                </div>
+            </div>
+            <div id="statsPnlRankWrap" class="stats-collapse-content">
+                <!-- 汇总条：盈利/亏损只数 + 累计盈亏总额 -->
+                <div class="px-5 py-3 bg-gradient-to-r from-gray-50 to-orange-50/50 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-[11px] text-gray-400">盈利 <span id="pnlRankWinCount" class="text-[#ff4d4f] font-semibold">0</span> 只</span>
+                            <span class="text-[11px] text-gray-400">亏损 <span id="pnlRankLoseCount" class="text-[#00d68f] font-semibold">0</span> 只</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[11px] text-gray-400 mb-0.5">累计盈亏</div>
+                            <div id="pnlRankTotal" class="text-base font-bold tabular-nums text-gray-800">--</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 盈亏排行榜 -->
+                <div id="statsPnlRankList" class="px-4 py-3 space-y-2.5">
+                    <div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 分红预计派发时间表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsDividendWrap">
@@ -2639,6 +2672,9 @@
         // 第一次渲染一次，之后只有收盘后且今天没渲染过才刷新，其他时间一律不刷新
         let positionRendered = false;
         let positionRenderDate = null;
+        // 盈亏排行渲染状态：与仓位分布一致，收盘后刷新一次，其他时间保持不变
+        let pnlRankRendered = false;
+        let pnlRankRenderDate = null;
         // 渲染统计页面
         function renderStatsPage(){
             // 主动加载分红数据：有A股持仓但divCacheMap为空时，主动触发refreshAll
@@ -2950,6 +2986,89 @@
                 stockPositionListEl.innerHTML = stockHtml;
             }
             } // end if(needRenderPosition)
+
+            // ===== 1.6 盈亏排行：按累计盈亏额降序 =====
+            // 刷新机制与仓位分布一致：首次渲染一次，之后只有收盘后且今天没渲染过才刷新，
+            // 其他时间（包括交易时间内）一律不刷新，延用上次渲染的数据
+            const pnlRankTodayStr = todayStr();
+            const needRenderPnlRank = !pnlRankRendered ||
+                                        (isMarketClosed() && pnlRankRenderDate !== pnlRankTodayStr);
+            if(needRenderPnlRank){
+                pnlRankRendered = true;
+                pnlRankRenderDate = pnlRankTodayStr;
+                const pnlRankListEl = document.querySelector('#statsPnlRankList');
+                const pnlRankTotalEl = document.querySelector('#pnlRankTotal');
+                const pnlRankWinEl = document.querySelector('#pnlRankWinCount');
+                const pnlRankLoseEl = document.querySelector('#pnlRankLoseCount');
+                if(!holdDataList.length){
+                    pnlRankListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>';
+                    pnlRankTotalEl.innerText = '--';
+                    pnlRankTotalEl.className = 'text-base font-bold tabular-nums text-gray-800';
+                    pnlRankWinEl.innerText = '0';
+                    pnlRankLoseEl.innerText = '0';
+                } else {
+                    // 计算每只股票累计盈亏（与持仓页累计盈亏口径一致）并降序排序
+                    const pnlRanks = holdDataList.map(function(it){
+                        const pnl = getPnl(it);
+                        const costTotal = (Number(it.count)||0) * (Number(it.costPrice)||0) * (it.marketType === 'HK' ? hkFxRate : 1);
+                        const pnlPct = costTotal !== 0 ? (pnl / costTotal * 100) : 0;
+                        return { item: it, pnl: pnl, pnlPct: pnlPct };
+                    }).sort(function(a, b){ return b.pnl - a.pnl; });
+                    // 汇总：盈利/亏损只数 + 累计盈亏总额
+                    let winCount = 0, loseCount = 0, totalPnl = 0;
+                    pnlRanks.forEach(function(x){
+                        totalPnl += x.pnl;
+                        if(x.pnl > 0.01) winCount++;
+                        else if(x.pnl < -0.01) loseCount++;
+                    });
+                    pnlRankWinEl.innerText = String(winCount);
+                    pnlRankLoseEl.innerText = String(loseCount);
+                    pnlRankTotalEl.innerText = (totalPnl >= 0 ? '+' : '') + fmtMoney(totalPnl);
+                    pnlRankTotalEl.className = 'text-base font-bold tabular-nums ' + (totalPnl >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+                    // 最大盈亏绝对值（用于进度条宽度比例，保持视觉统一）
+                    const maxAbs = Math.max.apply(null, pnlRanks.map(function(x){ return Math.abs(x.pnl); })) || 1;
+                    // 排行榜行
+                    let rankHtml = '';
+                    pnlRanks.forEach(function(x, idx){
+                        const it = x.item;
+                        const isHk = it.marketType === 'HK';
+                        const pnlCls = x.pnl > 0.01 ? 'text-[#ff4d4f]' : (x.pnl < -0.01 ? 'text-[#00d68f]' : 'text-gray-500');
+                        const rankCls = idx === 0
+                            ? 'bg-gradient-to-br from-red-400 to-red-500 text-white'
+                            : idx === 1
+                                ? 'bg-gradient-to-br from-orange-400 to-orange-500 text-white'
+                                : idx === 2
+                                    ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-white'
+                                    : 'bg-gray-100 text-gray-400';
+                        const tagHtml = isHk
+                            ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">港</span>'
+                            : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">A</span>';
+                        const pnlText = (x.pnl >= 0 ? '+' : '') + fmtMoney(x.pnl);
+                        const pctText = (x.pnlPct >= 0 ? '+' : '') + x.pnlPct.toFixed(2) + '%';
+                        const barW = Math.max(3, Math.min(100, Math.abs(x.pnl) / maxAbs * 100));
+                        const barBg = x.pnl > 0.01
+                            ? 'linear-gradient(90deg,#ff8a8c,#ff4d4f)'
+                            : (x.pnl < -0.01 ? 'linear-gradient(90deg,#00b37e,#00d68f)' : '#d1d5db');
+                        rankHtml += '<div class="flex items-center gap-3">'
+                            + '<div class="w-6 h-6 rounded-full ' + rankCls + ' flex items-center justify-center text-[11px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
+                            + '<div class="flex-1 min-w-0">'
+                            + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + '<span class="text-[14px] font-medium text-gray-800 truncate">' + it.name + '</span>'
+                            + tagHtml
+                            + '</div>'
+                            + '<div class="h-1 mt-1.5 bg-gray-100 rounded-full overflow-hidden">'
+                            + '<div class="h-full rounded-full transition-all duration-500" style="width:' + barW + '%;background:' + barBg + '"></div>'
+                            + '</div>'
+                            + '</div>'
+                            + '<div class="text-right flex-shrink-0 ml-2">'
+                            + '<div class="text-[15px] font-semibold ' + pnlCls + ' tabular-nums whitespace-nowrap">' + pnlText + '</div>'
+                            + '<div class="text-[11px] font-medium mt-0.5 ' + pnlCls + ' tabular-nums whitespace-nowrap">' + pctText + '</div>'
+                            + '</div>'
+                            + '</div>';
+                    });
+                    pnlRankListEl.innerHTML = rankHtml;
+                }
+            }
 
             // ===== 2. 分红预计派发时间表（仅今年，分即将派发/已派发两部分）=====
             const divList = document.querySelector('#statsDividendList');
@@ -4115,7 +4234,7 @@
                 const stockYield = itemMarketTotal>0 ? ((itemAnnualDiv / itemMarketTotal)*100).toFixed(2):0;
                 const itemPnl = getPnl(item);
                 const itemPnlClass = pnlClass(itemPnl, false);
-                const pnlPct = itemCostTotal>0 ? (itemPnl / itemCostTotal * 100) : 0;
+                const pnlPct = itemCostTotal !== 0 ? (itemPnl / itemCostTotal * 100) : 0;
                 const pnlPctText = (pnlPct>0?'+':(pnlPct<0?'-':'')) + Math.abs(pnlPct).toFixed(2) + '%';
                 // 持仓占比：当前股票市值 / 总资产
                 const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1):0;
@@ -4320,7 +4439,7 @@
                     const itemPnl2 = getPnl(item);
                     const itemPnlClass2 = pnlClass(itemPnl2, false);
                     const costTotal2 = (Number(item.count)||0) * (Number(item.costPrice)||0) * (isHk ? hkFxRate : 1);
-                    const pnlPct2 = costTotal2 > 0 ? (itemPnl2 / costTotal2 * 100) : 0;
+                    const pnlPct2 = costTotal2 !== 0 ? (itemPnl2 / costTotal2 * 100) : 0;
                     const pnlPctText2 = (pnlPct2>0?'+':(pnlPct2<0?'-':'')) + Math.abs(pnlPct2).toFixed(2) + '%';
                     // 序号样式：统一简洁优雅的浅灰色圆形（按行业分组后全局序号无排名意义，去掉前三名特殊颜色）
                     // 已回本股票（成本<0）：紫色渐变序号，更加醒目

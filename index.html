@@ -697,6 +697,94 @@
         </div>
     </div>
 
+    <!-- 分红收入里程碑页面 -->
+    <div id="pageMilestone" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 头部 -->
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <div class="w-1 h-5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
+                分红里程碑
+            </h2>
+            <button id="milestoneSettingBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-500 active:scale-95 transition-transform" title="设置里程碑节点">
+                <i class="fa fa-cog"></i>
+            </button>
+        </div>
+
+        <!-- 深色荣誉横幅 -->
+        <div class="relative rounded-3xl p-5 mb-4 text-white overflow-hidden shadow-2xl" style="background: linear-gradient(155deg, #2d1a10 0%, #4c2c18 45%, #6b3a1e 100%);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(253,230,138,0.4), transparent);"></div>
+            <div class="absolute -top-16 -right-12 w-52 h-52 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(253,230,138,0.28) 0%, transparent 70%);"></div>
+            <div class="absolute -bottom-24 -left-16 w-52 h-52 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(212,83,41,0.25) 0%, transparent 70%);"></div>
+            <div class="absolute inset-0 opacity-[0.04] pointer-events-none" style="background-image: linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px); background-size: 22px 22px;"></div>
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                    <i class="fa fa-trophy text-white text-2xl"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="text-amber-100/70 text-[10px] tracking-[0.2em]">DIVIDEND MILESTONE</div>
+                    <div class="text-xl font-serif font-bold tracking-wide mt-0.5">分红里程碑</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-amber-100/60 mb-0.5">已达成成就</div>
+                    <div class="text-2xl font-bold text-purple-300 tabular-nums"><span id="msDoneCount">0</span><span class="text-sm text-amber-100/50 font-normal"> / <span id="msTotalCount">0</span></span></div>
+                </div>
+            </div>
+            <div class="relative z-10 mt-4 pt-3 border-t border-white/10 flex items-center gap-2 text-[11px] text-amber-100/70">
+                <i class="fa fa-quote-left text-amber-300/60 text-[10px]"></i>
+                <span>每一笔分红，都是时间种下的果实 —— 一岁一收，细水长流</span>
+                <i class="fa fa-quote-right text-amber-300/60 text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- 当年进度卡 -->
+        <div class="bg-white rounded-2xl card-shadow p-4 mb-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="text-sm text-gray-500"><i class="fa fa-fire text-accent mr-1"></i>当年分红收入</div>
+                <div class="text-[10px] text-gray-400">距 <span class="text-accent font-medium" id="msNextLabel">--</span> 还差 <span class="font-medium tabular-nums" id="msNextGap">--</span></div>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span id="msCurYearDiv" class="text-[30px] font-bold text-accent tabular-nums tracking-tight">0.00</span>
+                <span class="text-xs text-gray-400">/ <span id="msNextValue">--</span></span>
+            </div>
+            <!-- 进度条 -->
+            <div class="relative mt-3 h-3 rounded-full bg-gray-100 overflow-hidden">
+                <div id="msProgressBar" class="h-full rounded-full transition-all duration-700" style="width:0%; background: linear-gradient(90deg, #f6c453 0%, #e8933c 60%, #D45329 100%);"></div>
+                <div id="msTicks" class="absolute inset-0 pointer-events-none"></div>
+            </div>
+            <div class="mt-2 flex justify-between text-[10px] text-gray-400">
+                <span>0</span>
+                <span id="msProgressPct" class="text-accent font-medium">0%</span>
+                <span id="msYearScaleRight">--</span>
+            </div>
+        </div>
+
+        <!-- 成就轨道 -->
+        <div class="bg-white rounded-2xl card-shadow p-4 mb-4">
+            <div class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
+                成就轨道
+                <span class="text-[10px] text-gray-400 font-normal">按每年分红收入判定</span>
+            </div>
+            <div id="msTrack"></div>
+        </div>
+
+        <!-- 累计分红征程 -->
+        <div class="bg-white rounded-2xl card-shadow p-4 mb-4">
+            <div class="text-sm font-semibold text-gray-800 mb-1 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-purple-400 to-purple-600 rounded-full"></div>
+                累计分红征程
+                <span class="text-[10px] text-gray-400 font-normal">每一笔分红都在加码</span>
+            </div>
+            <div class="text-[10px] text-gray-400 mb-2">累计分红 = 从建仓年起逐年累加，一路向上、永不回落</div>
+            <div id="msChart" class="w-full" style="height:235px"></div>
+            <div class="mt-1 text-right text-[10px] text-gray-400" id="msBarsNote">金色圆点 = 最新累计分红</div>
+        </div>
+
+        <div class="text-[11px] text-gray-400 text-center leading-relaxed">
+            里程碑按"每年分红收入"判定 · 节点可在右上角设置
+        </div>
+    </div>
+
     <!-- 设置页面 -->
     <div id="pageSettings" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
@@ -816,6 +904,11 @@
                 <i class="fa fa-line-chart text-xl"></i>
                 <span class="text-[11px] font-medium">分析</span>
             </button>
+            <button data-tab="milestone" class="bottomTab flex-1 py-2.5 flex flex-col items-center gap-0.5 text-gray-400 relative transition-colors">
+                <div class="absolute top-0 w-8 h-0.5 bg-transparent rounded-full"></div>
+                <i class="fa fa-trophy text-xl"></i>
+                <span class="text-[11px] font-medium">里程碑</span>
+            </button>
             <button data-tab="mine" class="bottomTab flex-1 py-2.5 flex flex-col items-center gap-0.5 text-gray-400 relative transition-colors">
                 <div class="absolute top-0 w-8 h-0.5 bg-transparent rounded-full"></div>
                 <i class="fa fa-user text-xl"></i>
@@ -840,6 +933,23 @@
             <div class="flex gap-3 mt-5">
                 <button type="button" id="confirmCancel" class="flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 transition-colors">取消</button>
                 <button type="button" id="confirmOk" class="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg shadow-red-200 hover:shadow-xl transition-all">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 里程碑设置弹窗 -->
+    <div id="milestoneModal" class="fixed inset-0 bg-black/50 z-[95] hidden justify-center items-center px-4">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl">
+            <div class="flex items-center justify-between mb-1">
+                <h3 class="text-lg font-bold text-gray-800">分红里程碑设置</h3>
+                <button id="msModalClose" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="text-[11px] text-gray-400 mb-4 leading-relaxed">设置每年分红收入的里程碑节点，达成后金色点亮。（单位：万元）</div>
+            <div id="msModalList" class="space-y-2 mb-3 max-h-64 overflow-y-auto"></div>
+            <button id="msAddRow" class="w-full py-2.5 border-2 border-dashed border-amber-200 rounded-xl text-accent text-sm font-medium active:bg-amber-50/50 transition-colors"><i class="fa fa-plus mr-1"></i>添加里程碑节点</button>
+            <div class="flex gap-3 mt-4">
+                <button id="msCancel" class="flex-1 py-2.5 border-2 border-gray-200 rounded-xl text-gray-600 font-medium active:bg-gray-50 transition-colors">取消</button>
+                <button id="msSave" class="flex-1 py-2.5 bg-gradient-to-r from-accent to-orange-600 text-white rounded-xl font-semibold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform">保存</button>
             </div>
         </div>
     </div>
@@ -1603,6 +1713,10 @@
                     if(activeTab === 'mine'){
                         renderMinePage();
                     }
+                    // 如果当前在里程碑页且本周期拉取了新分红数据，重渲染一次（分红按天更新，不随每2秒行情刷新）
+                    if(activeTab === 'milestone' && divTasks.length){
+                        renderMilestonePage();
+                    }
                 }
                 // 收盘后更新仓位分布快照（每天只更新一次）
                 if(isMarketClosed()){
@@ -1706,6 +1820,7 @@
                 saveHistory();
             }
             renderPage();
+            initMilestoneEvents();
             // 自动补全缺失的行业信息：对industry为"其他"的A股股票，自动从东方财富获取
             // 行业信息基本不变，获取成功后保存，不再重复获取（参考券商行业分类刷新机制）
             fetchMissingIndustries();
@@ -2392,6 +2507,7 @@
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
             document.querySelector('#pageStats').classList.toggle('hidden', tab !== 'stats');
             document.querySelector('#pageMine').classList.toggle('hidden', tab !== 'mine');
+            document.querySelector('#pageMilestone').classList.toggle('hidden', tab !== 'milestone');
             // 新增按钮仅在持仓页显示
             document.querySelector('#openModalBtn').classList.toggle('hidden', tab !== 'hold');
             // 更新底部导航高亮
@@ -2431,6 +2547,14 @@
             // 切换到我的页时更新数据
             if(tab === 'mine'){
                 renderMinePage();
+            }
+            // 切换到里程碑页：分红数据按天刷新，今天已渲染过则不重复渲染；若图表已初始化则resize适配
+            if(tab === 'milestone'){
+                if(!milestoneRenderedToday()){
+                    renderMilestonePage();
+                } else if(msChartInited){
+                    setTimeout(function(){ if(msChart) msChart.resize(); }, 60);
+                }
             }
             // 切换到统计页时渲染统计数据
             if(tab === 'stats'){
@@ -3580,6 +3704,328 @@
             }
         }
 
+        // ================= 分红收入里程碑 =================
+        const MILESTONE_KEY = 'dividendMilestones';
+        // 读取里程碑节点（单位：元），默认 5万/10万/15万/20万
+        function getMilestones(){
+            try{
+                const arr = JSON.parse(localStorage.getItem(MILESTONE_KEY) || '[]');
+                if(Array.isArray(arr) && arr.length){
+                    const vals = arr.map(Number).filter(function(v){ return v > 0; }).sort(function(a, b){ return a - b; });
+                    if(vals.length) return vals;
+                }
+            }catch(e){}
+            return [50000, 100000, 150000, 200000];
+        }
+        function saveMilestones(vals){
+            localStorage.setItem(MILESTONE_KEY, JSON.stringify(vals));
+        }
+        // 里程碑金额显示：整万显示"5万"，非整万显示"5.50万"
+        function fmtMileVal(v){
+            if(v % 10000 === 0) return (v / 10000) + '万';
+            return (v / 10000).toFixed(2) + '万';
+        }
+        // 里程碑图表实例（只在首次渲染时init，之后setOption更新；分红数据按天刷新）
+        let msChart = null;
+        let msChartInited = false;
+        const MILESTONE_RENDER_KEY = 'milestoneRenderDate';
+        // 是否今天已渲染过里程碑页（分红数据按天刷新，无需每2秒/每次切换重渲染）
+        function milestoneRenderedToday(){
+            return localStorage.getItem(MILESTONE_RENDER_KEY) === todayStr();
+        }
+        // 渲染里程碑页（分红数据按天更新，拿到最新数据渲染一次即可）
+        function renderMilestonePage(){
+            const milestones = getMilestones();
+            // 每年分红收入：历史+当年（与顶部"年度分红收入"口径一致）
+            const divMap = {};
+            Object.keys(historyData.yearlyDiv || {}).forEach(function(y){
+                divMap[y] = Number(historyData.yearlyDiv[y]) || 0;
+            });
+            const curY = new Date().getFullYear();
+            const curYearDiv = divMap[curY] != null ? divMap[curY] : Number(calcSummary().totalYearDiv || 0);
+            divMap[curY] = curYearDiv;
+            const years = Object.keys(divMap).map(Number).sort(function(a, b){ return a - b; });
+            // 每个里程碑的达成情况：某年分红收入 >= 目标即达成（取第一次达成那年）
+            // 参考成就系统逻辑：里程碑一旦达成即永久点亮（历史分红已实际收到，不会因后续年份分红变低而撤销）
+            const nodeStates = milestones.map(function(m){
+                let achievedYear = null;
+                years.forEach(function(y){
+                    if(achievedYear == null && divMap[y] >= m) achievedYear = y;
+                });
+                return { m: m, achievedYear: achievedYear, div: achievedYear != null ? divMap[achievedYear] : 0 };
+            });
+            const achievedCount = nodeStates.filter(function(n){ return n.achievedYear != null; }).length;
+            let curIdx = -1;
+            for(let i = 0; i < nodeStates.length; i++){
+                if(nodeStates[i].achievedYear == null){ curIdx = i; break; }
+            }
+            const next = curIdx >= 0 ? milestones[curIdx] : null;
+            // 顶部横幅
+            document.querySelector('#msDoneCount').innerText = achievedCount;
+            document.querySelector('#msTotalCount').innerText = milestones.length;
+            // 当年金额 & 进度
+            document.querySelector('#msCurYearDiv').innerText = fmtMoney(curYearDiv);
+            if(next){
+                const pct = Math.min(curYearDiv / next * 100, 100);
+                document.querySelector('#msNextLabel').innerText = fmtMileVal(next);
+                document.querySelector('#msNextValue').innerText = fmtMileVal(next);
+                document.querySelector('#msNextGap').innerText = fmtMoney(Math.max(next - curYearDiv, 0));
+                document.querySelector('#msProgressPct').innerText = pct.toFixed(0) + '%';
+                document.querySelector('#msYearScaleRight').innerText = fmtMileVal(next);
+                document.querySelector('#msProgressBar').style.width = pct.toFixed(1) + '%';
+                // 进度条刻度：已达成里程碑位置（白色细线）
+                let ticksHtml = '';
+                nodeStates.forEach(function(n){
+                    if(n.achievedYear != null){
+                        const pos = Math.min(n.m / next * 100, 100);
+                        ticksHtml += '<div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:' + pos.toFixed(1) + '%"></div>';
+                    }
+                });
+                document.querySelector('#msTicks').innerHTML = ticksHtml;
+            } else {
+                document.querySelector('#msNextLabel').innerText = '全部达成';
+                document.querySelector('#msNextValue').innerText = '全部达成';
+                document.querySelector('#msNextGap').innerText = '0.00';
+                document.querySelector('#msProgressPct').innerText = '100%';
+                document.querySelector('#msYearScaleRight').innerText = '全部达成';
+                document.querySelector('#msProgressBar').style.width = '100%';
+                document.querySelector('#msTicks').innerHTML = '';
+            }
+            // ===== 成就轨道 =====
+            let trackHtml = '';
+            nodeStates.forEach(function(n, i){
+                const isLast = i === nodeStates.length - 1;
+                const pb = isLast ? 'pb-1' : 'pb-6';
+                if(n.achievedYear != null){
+                    // 已达成：高贵紫色对勾节点 + 紫色渐变实线
+                    trackHtml += `
+                    <div class="flex gap-3">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-400/30 ring-4 ring-purple-100 flex-shrink-0">
+                                <i class="fa fa-check text-sm"></i>
+                            </div>
+                            ${isLast ? '' : '<div class="flex-1 w-0.5 mt-1 rounded" style="background: linear-gradient(180deg, #a78bfa, #e5e7eb);"></div>'}
+                        </div>
+                        <div class="flex-1 ${pb} min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-base font-bold text-purple-600">${fmtMileVal(n.m)}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 font-medium border border-purple-200/60 whitespace-nowrap"><i class="fa fa-trophy mr-0.5 text-[9px]"></i>${n.achievedYear}年达成</span>
+                            </div>
+                            <div class="text-[11px] text-gray-400 mt-0.5">当年分红收入 <span class="text-purple-600 font-medium tabular-nums">${fmtMoney(n.div)}</span></div>
+                        </div>
+                    </div>`;
+                } else if(i === curIdx){
+                    // 当前目标：橙色旗标 + 发光 + 进度条
+                    const pct = Math.min(curYearDiv / n.m * 100, 100);
+                    trackHtml += `
+                    <div class="flex gap-3">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full border-2 border-accent bg-accent/10 flex items-center justify-center text-accent shadow-md shadow-orange-500/20 flex-shrink-0" style="animation: msPulse 2s ease-in-out infinite;">
+                                <i class="fa fa-flag text-sm"></i>
+                            </div>
+                            ${isLast ? '' : '<div class="flex-1 w-0.5 mt-1 rounded bg-gray-200"></div>'}
+                        </div>
+                        <div class="flex-1 ${pb} min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-base font-bold text-accent">${fmtMileVal(n.m)}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium whitespace-nowrap"><i class="fa fa-bolt mr-0.5 text-[9px]"></i>进行中 · ${pct.toFixed(0)}%</span>
+                            </div>
+                            <div class="mt-1.5">
+                                <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                                    <div class="h-full rounded-full" style="width:${pct.toFixed(1)}%; background: linear-gradient(90deg, #f6c453, #D45329);"></div>
+                                </div>
+                                <div class="text-[11px] text-gray-400 mt-1">当年分红收入 <span class="text-accent font-medium tabular-nums">${fmtMoney(curYearDiv)}</span>，还差 <span class="font-medium tabular-nums">${fmtMoney(Math.max(n.m - curYearDiv, 0))}</span></div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    // 未达成：灰色锁定
+                    trackHtml += `
+                    <div class="flex gap-3 opacity-60">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 flex-shrink-0">
+                                <i class="fa fa-lock text-sm"></i>
+                            </div>
+                            ${isLast ? '' : '<div class="flex-1 w-0.5 mt-1 rounded bg-gray-200"></div>'}
+                        </div>
+                        <div class="flex-1 ${pb} min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-base font-bold text-gray-400">${fmtMileVal(n.m)}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 whitespace-nowrap">待解锁</span>
+                            </div>
+                            <div class="text-[11px] text-gray-300 mt-0.5">单年分红收入达到 ${fmtMileVal(n.m)} 即点亮</div>
+                        </div>
+                    </div>`;
+                }
+            });
+            document.querySelector('#msTrack').innerHTML = trackHtml;
+            // ===== 累计分红征程图（ECharts面积图：逐年累加，永不回落）=====
+            renderMsChart(divMap, years, milestones);
+            // 记录今天已渲染
+            localStorage.setItem(MILESTONE_RENDER_KEY, todayStr());
+        }
+        // 累计分红征程：X=年份，Y=累计分红总额；已达成的里程碑画紫色横线
+        function renderMsChart(divMap, years, milestones){
+            const el = document.querySelector('#msChart');
+            if(!el) return;
+            if(typeof echarts === 'undefined'){
+                el.innerHTML = '<div class="text-center py-16 text-gray-300 text-xs">图表组件未加载</div>';
+                return;
+            }
+            if(!msChartInited){
+                msChart = echarts.init(el);
+                msChartInited = true;
+            }
+            let cum = 0;
+            const cumData = years.map(function(y){
+                cum += (divMap[y] || 0);
+                return Math.round(cum * 100) / 100;
+            });
+            // X轴标签间隔：避免50年数据挤在一起（最多显示约10个标签）
+            const labelInterval = years.length > 15 ? Math.ceil(years.length / 10) : 1;
+            const lastYear = years.length ? years[years.length - 1] : null;
+            const lastVal = cumData.length ? cumData[cumData.length - 1] : 0;
+            const option = {
+                backgroundColor: 'transparent',
+                grid: { left: 8, right: 14, top: 30, bottom: 24, containLabel: true },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(30,20,15,0.92)',
+                    borderWidth: 0,
+                    textStyle: { color: '#fff', fontSize: 11 },
+                    formatter: function(params){
+                        const p = params[0];
+                        const y = p.axisValue;
+                        return y + '年<br/>累计分红：<span style="color:#a78bfa;font-weight:600;">' + fmtMoney(p.value) + '</span><br/>当年分红：' + fmtMoney(divMap[y] || 0);
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: years.map(String),
+                    axisLine: { lineStyle: { color: '#e5e7eb' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#9ca3af', fontSize: 10, interval: labelInterval }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#9ca3af', fontSize: 10, formatter: function(v){ return fmtMileVal(v); } },
+                    splitLine: { lineStyle: { color: '#f3f4f6' } }
+                },
+                series: [{
+                    name: '累计分红',
+                    type: 'line',
+                    data: cumData,
+                    smooth: false,
+                    symbol: 'circle',
+                    symbolSize: 5,
+                    lineStyle: { color: '#8b5cf6', width: 2.5 },
+                    itemStyle: { color: '#8b5cf6' },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(139,92,246,0.30)' },
+                            { offset: 1, color: 'rgba(139,92,246,0.02)' }
+                        ])
+                    },
+                    markPoint: {
+                        symbol: 'circle',
+                        symbolSize: 9,
+                        itemStyle: { color: '#f6c453', borderColor: '#fff', borderWidth: 2, shadowBlur: 6, shadowColor: 'rgba(246,196,83,0.6)' },
+                        label: { show: false },
+                        data: lastYear ? [{ coord: [String(lastYear), lastVal] }] : []
+                    }
+                }]
+            };
+            msChart.setOption(option, true);
+        }
+
+        // 里程碑设置弹窗
+        function renderMilestoneModal(){
+            const list = document.querySelector('#msModalList');
+            const milestones = getMilestones();
+            let html = '';
+            milestones.forEach(function(m, i){
+                const wan = m % 10000 === 0 ? String(m / 10000) : (m / 10000).toFixed(2);
+                html += `
+                <div class="flex items-center gap-2">
+                    <input type="number" class="ms-milestone-input flex-1 border-2 border-gray-100 rounded-xl px-3 py-2.5 text-sm font-semibold text-accent focus:border-accent outline-none bg-gray-50" value="${wan}" step="any" placeholder="例如 5">
+                    <span class="text-sm text-gray-400">万元</span>
+                    <button type="button" class="ms-del-row w-8 h-8 rounded-full bg-red-50 text-red-400 flex items-center justify-center active:scale-95 transition-transform"><i class="fa fa-trash-o text-xs"></i></button>
+                </div>`;
+            });
+            list.innerHTML = html;
+            list.querySelectorAll('.ms-del-row').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    if(list.querySelectorAll('.ms-milestone-input').length <= 1){
+                        showToast('至少保留一个里程碑节点');
+                        return;
+                    }
+                    this.closest('.flex').remove();
+                });
+            });
+        }
+        function openMilestoneModal(){
+            renderMilestoneModal();
+            const modal = document.querySelector('#milestoneModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMilestoneModal(){
+            const modal = document.querySelector('#milestoneModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+        function saveMilestoneModal(){
+            const inputs = document.querySelectorAll('#msModalList .ms-milestone-input');
+            const vals = [];
+            inputs.forEach(function(inp){
+                const v = Number(inp.value);
+                if(v > 0) vals.push(Math.round(v * 10000));
+            });
+            if(!vals.length){ showToast('请输入有效的里程碑金额'); return; }
+            vals.sort(function(a, b){ return a - b; });
+            saveMilestones(vals);
+            closeMilestoneModal();
+            renderMilestonePage();
+            showToast('里程碑节点已保存');
+        }
+        // 里程碑相关事件绑定（在init末尾调用一次）
+        function initMilestoneEvents(){
+            document.querySelector('#milestoneSettingBtn').addEventListener('click', openMilestoneModal);
+            document.querySelector('#msModalClose').addEventListener('click', closeMilestoneModal);
+            document.querySelector('#msCancel').addEventListener('click', closeMilestoneModal);
+            document.querySelector('#msSave').addEventListener('click', saveMilestoneModal);
+            document.querySelector('#msAddRow').addEventListener('click', function(){
+                const list = document.querySelector('#msModalList');
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2';
+                div.innerHTML = '<input type="number" class="ms-milestone-input flex-1 border-2 border-gray-100 rounded-xl px-3 py-2.5 text-sm font-semibold text-accent focus:border-accent outline-none bg-gray-50" step="any" placeholder="例如 10"><span class="text-sm text-gray-400">万元</span><button type="button" class="ms-del-row w-8 h-8 rounded-full bg-red-50 text-red-400 flex items-center justify-center active:scale-95 transition-transform"><i class="fa fa-trash-o text-xs"></i></button>';
+                list.appendChild(div);
+                div.querySelector('.ms-del-row').addEventListener('click', function(){
+                    if(list.querySelectorAll('.ms-milestone-input').length <= 1){
+                        showToast('至少保留一个里程碑节点');
+                        return;
+                    }
+                    div.remove();
+                });
+                div.querySelector('input').focus();
+            });
+            // 里程碑图表跟随窗口大小变化自适应（旋转/分屏等）
+            window.addEventListener('resize', function(){
+                if(msChartInited && msChart && activeTab === 'milestone') msChart.resize();
+            });
+        }
+        // 里程碑当前目标脉冲动画
+        if(!document.querySelector('#msPulseStyle')){
+            const st = document.createElement('style');
+            st.id = 'msPulseStyle';
+            st.textContent = '@keyframes msPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(212,83,41,0.25); } 50% { box-shadow: 0 0 0 6px rgba(212,83,41,0); } }';
+            document.head.appendChild(st);
+        }
+
         // 卡片模式渲染
         function renderHoldCardMode(sorted, sum){
             const holdListDom = document.querySelector('#holdList');
@@ -4159,6 +4605,11 @@
             } else {
                 analysisChartsRendered = false; // 数据变化，下次切换到分析页时重新渲染
             }
+            // 里程碑页：历史分红数据可能被修改，失效当天渲染标记（下次切换或分红拉取时重渲染）
+            localStorage.removeItem(MILESTONE_RENDER_KEY);
+            if(activeTab === 'milestone'){
+                renderMilestonePage();
+            }
         }
 
         // 添加新年份到总资产列表（往历史方向添加，取最小年份减1）
@@ -4282,12 +4733,13 @@
             const historyData = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
             const hkFxRate = localStorage.getItem('dividendHkFx') || null;
             const exportObj = {
-                version: '1.0',
+                version: '1.1',
                 exportTime: new Date().toISOString(),
                 app: '细水长流-股息持仓记录',
                 holdData: holdData,
                 historyData: historyData,
-                hkFxRate: hkFxRate
+                hkFxRate: hkFxRate,
+                milestones: getMilestones()
             };
             const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
@@ -4362,6 +4814,9 @@
                     if(hkFxRate){
                         confirmMsg += '\n含港币汇率：' + hkFxRate;
                     }
+                    if(parsed && Array.isArray(parsed.milestones) && parsed.milestones.length){
+                        confirmMsg += '\n含里程碑节点：' + parsed.milestones.length + '个';
+                    }
                     confirmMsg += '\n导入后将覆盖现有数据！';
 
                     // 确认导入
@@ -4381,10 +4836,20 @@
                             localStorage.setItem('dividendHkFx', String(hkFxRate));
                             hkFxRate = Number(hkFxRate);
                         }
+                        // 保存里程碑节点（如果有）
+                        if(parsed && Array.isArray(parsed.milestones)){
+                            saveMilestones(parsed.milestones);
+                        }
                         // 重置分红缓存，重新拉取
                         Object.keys(divCacheMap).forEach(function(k){ delete divCacheMap[k]; });
                         historyYearlyComputed = false;
                         analysisChartsRendered = false;
+                        // 里程碑页数据可能变化，失效当天渲染标记
+                        localStorage.removeItem(MILESTONE_RENDER_KEY);
+                        if(msChartInited){
+                            msChartInited = false;
+                            if(msChart){ msChart.dispose(); msChart = null; }
+                        }
                         // 重新渲染
                         renderPage();
                         // 主动刷新数据
@@ -4408,6 +4873,11 @@
             if(confirm('确定要清空所有持仓数据吗？此操作不可恢复！')){
                 localStorage.removeItem(STORAGE_KEY);
                 localStorage.removeItem('dividendHistory');
+                localStorage.removeItem(MILESTONE_RENDER_KEY);
+                if(msChartInited){
+                    msChartInited = false;
+                    if(msChart){ msChart.dispose(); msChart = null; }
+                }
                 holdDataList = [];
                 renderPage();
                 showToast('数据已清空');

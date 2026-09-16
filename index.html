@@ -469,6 +469,11 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">买卖数量</label>
                     <input type="number" step="any" min="0" id="tradeQty" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base tabular-nums" placeholder="输入交易数量（股）">
+                    <div id="tradeQtyQuickRow" class="flex gap-1.5 mt-2" style="display:none">
+                        <button type="button" class="trade-qty-quick flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium active:bg-accent active:text-white transition-colors" data-ratio="0.25">1/4</button>
+                        <button type="button" class="trade-qty-quick flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium active:bg-accent active:text-white transition-colors" data-ratio="0.5">1/2</button>
+                        <button type="button" class="trade-qty-quick flex-1 py-1.5 rounded-lg bg-gradient-to-r from-[#00c987] to-[#00a56c] text-white text-xs font-semibold shadow-sm active:scale-95 transition-transform" data-ratio="1">全仓</button>
+                    </div>
                 </div>
                 <!-- 预估金额 / 成本预览 -->
                 <div class="bg-gray-50 rounded-xl px-3.5 py-3 space-y-2 text-sm">
@@ -480,11 +485,11 @@
                         <span class="text-gray-400">买入后成本</span>
                         <span id="tradeCostPreview" class="font-semibold text-gray-800 tabular-nums">--</span>
                     </div>
-                    <div id="tradeAfterRow" class="hidden flex justify-between">
+                    <div id="tradeAfterRow" class="flex justify-between" style="display:none">
                         <span class="text-gray-400">卖出后持仓</span>
                         <span id="tradeAfter" class="font-semibold text-gray-800 tabular-nums">--</span>
                     </div>
-                    <div id="tradeSellCostRow" class="hidden flex justify-between">
+                    <div id="tradeSellCostRow" class="flex justify-between" style="display:none">
                         <span class="text-gray-400">卖出后成本</span>
                         <span id="tradeSellCost" class="font-semibold text-gray-800 tabular-nums">--</span>
                     </div>
@@ -738,7 +743,7 @@
                     <span class="text-base font-semibold text-gray-800">盈亏排行</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-[11px] text-gray-400">按累计盈亏 · 收盘后更新</span>
+                    <span class="text-[11px] text-gray-400">按累计盈亏 · 含已清仓 · 收盘后更新</span>
                     <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
                 </div>
             </div>
@@ -2237,7 +2242,7 @@
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], portfolioStartYear: null };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], closedStocks: [], portfolioStartYear: null };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
@@ -2258,6 +2263,7 @@
                     historyData.manualYearlyReturn = parsed.manualYearlyReturn || {};
                     historyData.manualYearlyDivAsOf = parsed.manualYearlyDivAsOf || {};
                     historyData.assetHighs = parsed.assetHighs || [];
+                    historyData.closedStocks = parsed.closedStocks || [];
                     if(parsed.portfolioStartYear) historyData.portfolioStartYear = parsed.portfolioStartYear;
                 }
             }catch(e){}
@@ -2885,6 +2891,36 @@
             if(item.marketType === 'HK') pnl = pnl * hkFxRate;
             return pnl;
         }
+        // 记录清仓/删除的股票盈亏快照（永久保留：曾经持仓过、有过盈亏记录就一直保留在盈亏排行中）
+        // tradePrice：清仓卖出时的实际成交价（按真实交易计算盈亏）；删除时传空，按最新市场价计算
+        function recordClosedStock(item, tradePrice){
+            if(!item) return;
+            const isHk = item.marketType === 'HK';
+            const closePx = (tradePrice != null && tradePrice > 0) ? tradePrice : (Number(item.nowPrice) || 0);
+            const count = Number(item.count) || 0;
+            const cost = Number(item.costPrice) || 0;
+            let pnl = (closePx - cost) * count;
+            if(isHk) pnl = pnl * hkFxRate;
+            const costTotal = count * cost * (isHk ? hkFxRate : 1);
+            const pnlPct = costTotal !== 0 ? (pnl / costTotal * 100) : 0;
+            const rec = {
+                id: item.id,
+                marketType: item.marketType,
+                code: item.code,
+                name: item.name,
+                industry: item.industry || '其他',
+                closeDate: todayStr(),
+                count: count,
+                costPrice: cost,
+                nowPrice: Number(item.nowPrice) || 0,
+                closePrice: Number(closePx.toFixed(4)),
+                pnl: Number(pnl.toFixed(2)),
+                pnlPct: Number(pnlPct.toFixed(2))
+            };
+            if(!historyData.closedStocks) historyData.closedStocks = [];
+            historyData.closedStocks.push(rec);
+            saveHistory();
+        }
 
         // 金额格式化：不加千分位逗号；超过10万以"万"为单位（如 38.28万）
         function fmtMoney(v){
@@ -3093,6 +3129,8 @@
             const item = holdDataList.find(it => it.id === id);
             const name = item ? item.name : '这只股票';
             showConfirm('确定要删除「' + name + '」吗？删除后无法恢复。', function(){
+                // 删除前记录盈亏快照（曾经持仓过的盈亏记录永久保留在盈亏排行中）
+                if(item) recordClosedStock(item);
                 holdDataList = holdDataList.filter(item=>item.id !== id);
                 saveLocal();
                 renderPage();
@@ -3126,9 +3164,10 @@
             priceInput.value = item.nowPrice != null && item.nowPrice > 0 ? item.nowPrice : '';
             priceInput.step = isEtfCode(item.code) ? '0.001' : '0.01';
             document.querySelector('#tradeQty').value = '';
-            document.querySelector('#tradeCostPreviewRow').style.display = mode === 'buy' ? '' : 'none';
-            document.querySelector('#tradeAfterRow').style.display = mode === 'sell' ? '' : 'none';
-            document.querySelector('#tradeSellCostRow').style.display = mode === 'sell' ? '' : 'none';
+            document.querySelector('#tradeCostPreviewRow').style.display = mode === 'buy' ? 'flex' : 'none';
+            document.querySelector('#tradeAfterRow').style.display = mode === 'sell' ? 'flex' : 'none';
+            document.querySelector('#tradeSellCostRow').style.display = mode === 'sell' ? 'flex' : 'none';
+            document.querySelector('#tradeQtyQuickRow').style.display = mode === 'sell' ? 'flex' : 'none';
             const cfm = document.querySelector('#tradeConfirm');
             cfm.innerText = mode === 'buy' ? '确认买入' : '确认卖出';
             cfm.className = mode === 'buy'
@@ -3234,6 +3273,8 @@
                 if(newCount <= 0){
                     // 清仓：确认后移除持仓
                     showConfirm('卖出后将清仓「' + name + '」，确定卖出全部 ' + oldCount + ' 股吗？', function(){
+                        // 清仓前记录盈亏快照：按实际卖出价计算盈亏（曾经持仓过的盈亏记录永久保留在盈亏排行中）
+                        recordClosedStock(item, price);
                         holdDataList = holdDataList.filter(it => it.id !== tradeItemId);
                         saveLocal();
                         renderPage();
@@ -3281,6 +3322,22 @@
                 else if(type === 'high10') v = base * 1.10;
                 const priceInput = document.querySelector('#tradePrice');
                 priceInput.value = Number(v.toFixed(isEtfCode(item.code) || item.marketType === 'HK' ? 3 : 2));
+                updateTradePreview();
+            });
+        });
+        // 卖出数量快捷：1/4、1/2、全仓（参考券商常用设计，一键填入对应数量）
+        document.querySelectorAll('.trade-qty-quick').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                const item = holdDataList.find(it => it.id === tradeItemId);
+                if(!item) return;
+                const ratio = Number(btn.getAttribute('data-ratio')) || 0;
+                const total = Number(item.count) || 0;
+                const qtyInput = document.querySelector('#tradeQty');
+                if(ratio >= 1){
+                    qtyInput.value = total; // 全仓：全部可卖数量
+                } else {
+                    qtyInput.value = Math.floor(total * ratio * 100) / 100;
+                }
                 updateTradePreview();
             });
         });
@@ -3860,7 +3917,8 @@
                 const pnlRankTotalEl = document.querySelector('#pnlRankTotal');
                 const pnlRankWinEl = document.querySelector('#pnlRankWinCount');
                 const pnlRankLoseEl = document.querySelector('#pnlRankLoseCount');
-                if(!holdDataList.length){
+                const closedList = historyData.closedStocks || [];
+                if(!holdDataList.length && !closedList.length){
                     pnlRankListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>';
                     pnlRankTotalEl.innerText = '--';
                     pnlRankTotalEl.className = 'text-base font-bold tabular-nums text-gray-800';
@@ -3868,11 +3926,31 @@
                     pnlRankLoseEl.innerText = '0';
                 } else {
                     // 计算每只股票累计盈亏（与持仓页累计盈亏口径一致）并降序排序
-                    const pnlRanks = holdDataList.map(function(it){
-                        const pnl = getPnl(it);
+                    // 数据源 = 当前持仓 + 历史清仓/删除记录（曾经持仓过的盈亏记录一直保留）
+                    // 同一只股票（代码+市场）当前持仓与历史清仓记录合并为一条：盈亏合计、正常显示（不显示清仓字眼）
+                    const closedList = historyData.closedStocks || [];
+                    const mergedMap = {};
+                    // 1. 当前持仓
+                    holdDataList.forEach(function(it){
+                        const key = (it.code || '') + '|' + (it.marketType || '');
                         const costTotal = (Number(it.count)||0) * (Number(it.costPrice)||0) * (it.marketType === 'HK' ? hkFxRate : 1);
-                        const pnlPct = costTotal !== 0 ? (pnl / costTotal * 100) : 0;
-                        return { item: it, pnl: pnl, pnlPct: pnlPct };
+                        mergedMap[key] = { item: it, rec: null, pnl: getPnl(it), costTotal: costTotal, hasHold: true };
+                    });
+                    // 2. 历史清仓/删除记录：已有当前持仓则合并盈亏与成本；无持仓则独立成条（多次清仓同股票也合并）
+                    closedList.forEach(function(r){
+                        const key = (r.code || '') + '|' + (r.marketType || '');
+                        const recCost = (Number(r.count)||0) * (Number(r.costPrice)||0) * (r.marketType === 'HK' ? hkFxRate : 1);
+                        if(mergedMap[key]){
+                            mergedMap[key].pnl += Number(r.pnl) || 0;
+                            mergedMap[key].costTotal += recCost;
+                        } else {
+                            mergedMap[key] = { item: null, rec: r, pnl: Number(r.pnl) || 0, costTotal: recCost, hasHold: false };
+                        }
+                    });
+                    const pnlRanks = Object.keys(mergedMap).map(function(key){
+                        const e = mergedMap[key];
+                        const pnlPct = e.costTotal !== 0 ? (e.pnl / e.costTotal * 100) : 0;
+                        return { item: e.item, rec: e.rec, pnl: e.pnl, pnlPct: pnlPct, closed: !e.hasHold };
                     }).sort(function(a, b){ return b.pnl - a.pnl; });
                     // 汇总：盈利/亏损只数 + 累计盈亏总额
                     let winCount = 0, loseCount = 0, totalPnl = 0;
@@ -3891,7 +3969,9 @@
                     let rankHtml = '';
                     pnlRanks.forEach(function(x, idx){
                         const it = x.item;
-                        const isHk = it.marketType === 'HK';
+                        const rec = x.rec;
+                        const isHk = x.closed ? rec.marketType === 'HK' : it.marketType === 'HK';
+                        const nameStr = x.closed ? (rec.name || rec.code) : it.name;
                         const pnlCls = x.pnl > 0.01 ? 'text-[#ff4d4f]' : (x.pnl < -0.01 ? 'text-[#00d68f]' : 'text-gray-500');
                         const rankCls = idx === 0
                             ? 'bg-gradient-to-br from-red-400 to-red-500 text-white'
@@ -3903,6 +3983,10 @@
                         const tagHtml = isHk
                             ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">港</span>'
                             : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">A</span>';
+                        // 已清仓记录：名字后加灰色"已清仓"小标签
+                        const closedTag = x.closed
+                            ? '<span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full ml-1 flex-shrink-0 whitespace-nowrap">已清仓</span>'
+                            : '';
                         const pnlText = (x.pnl >= 0 ? '+' : '') + fmtMoney(x.pnl);
                         const pctText = (x.pnlPct >= 0 ? '+' : '') + x.pnlPct.toFixed(2) + '%';
                         const barW = Math.max(3, Math.min(100, Math.abs(x.pnl) / maxAbs * 100));
@@ -3913,8 +3997,9 @@
                             + '<div class="w-6 h-6 rounded-full ' + rankCls + ' flex items-center justify-center text-[11px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                             + '<div class="flex-1 min-w-0">'
                             + '<div class="flex items-center gap-1.5 min-w-0">'
-                            + '<span class="text-[14px] font-medium text-gray-800 truncate">' + it.name + '</span>'
+                            + '<span class="text-[14px] font-medium text-gray-800 truncate">' + nameStr + '</span>'
                             + tagHtml
+                            + closedTag
                             + '</div>'
                             + '<div class="h-1 mt-1.5 bg-gray-100 rounded-full overflow-hidden">'
                             + '<div class="h-full rounded-full transition-all duration-500" style="width:' + barW + '%;background:' + barBg + '"></div>'

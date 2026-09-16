@@ -414,6 +414,103 @@
         </div>
     </div>
 
+    <!-- 买入/卖出交易弹窗（券商风格：买入红色主题 / 卖出绿色主题，摊薄成本法预览） -->
+    <div id="tradeModalMask" class="fixed inset-0 mask-bg z-50 hidden flex justify-center items-end md:items-center">
+        <div class="bg-pageBg w-full max-w-2xl rounded-t-2xl md:rounded-2xl p-5 max-h-[88vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="tradeModalTitle" class="text-lg font-semibold">买入</h3>
+                <button id="tradeModalClose" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
+            </div>
+            <!-- 股票信息卡 -->
+            <div class="bg-white rounded-xl px-4 py-3 mb-3.5 flex justify-between items-center">
+                <div>
+                    <div id="tradeStockName" class="text-base font-semibold text-gray-800"></div>
+                    <div id="tradeStockCode" class="text-xs text-gray-400 mt-0.5"></div>
+                </div>
+                <div class="text-right">
+                    <div id="tradeNowPrice" class="text-base font-semibold text-gray-800 tabular-nums"></div>
+                    <div id="tradeHoldInfo" class="text-[10px] text-gray-400 mt-0.5 tabular-nums"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl px-4 py-3.5 space-y-3.5">
+                <!-- 交易价格 -->
+                <div>
+                    <label id="tradePriceLabel" class="block text-sm font-medium text-gray-700 mb-1.5">买入价格(元)</label>
+                    <input type="number" step="any" min="0" id="tradePrice" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base tabular-nums" placeholder="输入交易价格">
+                    <div class="flex gap-1.5 mt-2">
+                        <button type="button" class="trade-price-quick flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium active:bg-accent active:text-white transition-colors" data-type="market">市价</button>
+                        <button type="button" class="trade-price-quick flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium active:bg-accent active:text-white transition-colors" data-type="low5">跌5%</button>
+                        <button type="button" class="trade-price-quick flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium active:bg-accent active:text-white transition-colors" data-type="low10">跌10%</button>
+                        <button type="button" class="trade-price-quick flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium active:bg-accent active:text-white transition-colors" data-type="high5">涨5%</button>
+                        <button type="button" class="trade-price-quick flex-1 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium active:bg-accent active:text-white transition-colors" data-type="high10">涨10%</button>
+                    </div>
+                </div>
+                <!-- 交易数量 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">买卖数量</label>
+                    <input type="number" step="any" min="0" id="tradeQty" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base tabular-nums" placeholder="输入交易数量（股）">
+                </div>
+                <!-- 预估金额 / 成本预览 -->
+                <div class="bg-gray-50 rounded-xl px-3.5 py-3 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">预估金额</span>
+                        <span id="tradeAmount" class="font-semibold text-gray-800 tabular-nums">--</span>
+                    </div>
+                    <div id="tradeCostPreviewRow" class="flex justify-between">
+                        <span class="text-gray-400">买入后成本</span>
+                        <span id="tradeCostPreview" class="font-semibold text-gray-800 tabular-nums">--</span>
+                    </div>
+                    <div id="tradeAfterRow" class="hidden flex justify-between">
+                        <span class="text-gray-400">卖出后持仓</span>
+                        <span id="tradeAfter" class="font-semibold text-gray-800 tabular-nums">--</span>
+                    </div>
+                    <div id="tradeSellCostRow" class="hidden flex justify-between">
+                        <span class="text-gray-400">卖出后成本</span>
+                        <span id="tradeSellCost" class="font-semibold text-gray-800 tabular-nums">--</span>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-4 flex gap-3">
+                <button type="button" id="tradeCancel" class="flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 transition-colors">取消</button>
+                <button type="button" id="tradeConfirm" class="flex-1 py-3 rounded-xl text-white font-medium shadow-lg bg-gradient-to-r from-[#ff4d4f] to-[#e03434] shadow-red-200">确认买入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交易/分红流水弹窗（买卖流水 + 除权到账流水时间线） -->
+    <div id="tradeLogModalMask" class="fixed inset-0 mask-bg z-50 hidden flex justify-center items-end md:items-center">
+        <div class="bg-pageBg w-full max-w-2xl rounded-t-2xl md:rounded-2xl p-5 max-h-[88vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">交易明细</h3>
+                    <div id="tradeLogStockInfo" class="text-xs text-gray-400 mt-0.5"></div>
+                </div>
+                <button id="tradeLogClose" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
+            </div>
+            <!-- 汇总卡 -->
+            <div class="bg-white rounded-2xl px-4 py-3.5 mb-4 grid grid-cols-4 gap-2">
+                <div class="text-center">
+                    <div class="text-[10px] text-gray-400">累计买入</div>
+                    <div id="logBuyTotal" class="text-sm font-semibold text-[#ff4d4f] mt-1 tabular-nums">--</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] text-gray-400">累计卖出</div>
+                    <div id="logSellTotal" class="text-sm font-semibold text-[#00b57a] mt-1 tabular-nums">--</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] text-gray-400">分红到账</div>
+                    <div id="logDivTotal" class="text-sm font-semibold text-accent mt-1 tabular-nums">--</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-[10px] text-gray-400">净投入</div>
+                    <div id="logNetTotal" class="text-sm font-semibold text-gray-800 mt-1 tabular-nums">--</div>
+                </div>
+            </div>
+            <!-- 时间线列表 -->
+            <div id="tradeLogList" class="space-y-0"></div>
+        </div>
+    </div>
+
     <!-- 资产分析页面：总资产 / 分红收入 / 总收益率 三个走势图 -->
     <div id="pageAnalysis" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -1545,6 +1642,124 @@
             }catch(e){}
         }
 
+        // ==================== 今年涨幅（年初至今 YTD）机制 ====================
+        // 基础价 = 今年第一个交易日收盘价（前复权，东财K线接口每天拉一次缓存），
+        // YTD = 当前现价 / 基础价 - 1（盘中随现价每2秒实时变化，基础价每天只拉一次）
+        const YTD_BASE_KEY = 'dividendYtdBase';
+        let ytdBaseMap = null; // { year: "2026", stocks: { code: { close: 年初收盘价 } } }
+
+        function loadYtdBase(){
+            try{
+                const raw = localStorage.getItem(YTD_BASE_KEY);
+                if(raw) ytdBaseMap = JSON.parse(raw);
+            }catch(e){ ytdBaseMap = null; }
+        }
+        function saveYtdBase(){
+            try{
+                localStorage.setItem(YTD_BASE_KEY, JSON.stringify(ytdBaseMap));
+            }catch(e){}
+        }
+
+        // 东财 secid：A股 沪=1.代码 深=0.代码；港股=116.代码；ETF 159=深市 其余=沪市
+        function getSecid(it){
+            if(it.marketType === 'HK') return '116.' + it.code;
+            const c = String(it.code);
+            if(isEtfCode(c)){
+                return c.indexOf('159') === 0 ? '0.' + c : '1.' + c;
+            }
+            return c.indexOf('6') === 0 ? '1.' + c : '0.' + c;
+        }
+
+        // 拉取今年第一个交易日收盘价（前复权），每天一次，全部股票并行
+        function fetchYtdBase(){
+            if(!holdDataList.length) return;
+            const curYear = String(new Date().getFullYear());
+            if(ytdBaseMap && ytdBaseMap.year === curYear) return;  // 今年已拉取过
+            if(!ytdBaseMap || ytdBaseMap.year !== curYear) ytdBaseMap = { year: curYear, stocks: ytdBaseMap && ytdBaseMap.stocks ? ytdBaseMap.stocks : {} };
+            const beg = curYear + '0101';
+            const end = curYear + '0131';
+            const tasks = [];
+            const cbNameBase = '__ytdCb';
+            let cbIdx = 0;
+            holdDataList.forEach(function(it){
+                const secid = getSecid(it);
+                if(!secid) return;
+                const cbName = cbNameBase + (cbIdx++);
+                tasks.push(new Promise(function(res){
+                    const timer = setTimeout(function(){
+                        if(window[cbName]){ delete window[cbName]; }
+                        res();
+                    }, 8000);
+                    window[cbName] = function(data){
+                        clearTimeout(timer);
+                        try{
+                            const d = data && data.data;
+                            if(d && d.klines && d.klines.length){
+                                const parts = String(d.klines[0]).split(',');
+                                const close = Number(parts[2]); // f53 收盘价
+                                if(close > 0){
+                                    if(!ytdBaseMap.stocks) ytdBaseMap.stocks = {};
+                                    ytdBaseMap.stocks[it.code] = { close: close };
+                                }
+                            }
+                        }catch(e){}
+                        delete window[cbName];
+                        res();
+                    };
+                    const s = document.createElement('script');
+                    s.src = 'https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=' + secid
+                        + '&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58'
+                        + '&klt=101&fqt=1&beg=' + beg + '&end=' + end + '&cb=' + cbName;
+                    s.onerror = function(){ clearTimeout(timer); delete window[cbName]; res(); };
+                    document.head.appendChild(s);
+                }));
+            });
+            Promise.all(tasks).then(function(){
+                saveYtdBase();
+                // 基础价就绪后立即刷新页面（YTD 需要显示）
+                if(document.visibilityState !== 'hidden') renderPage();
+            });
+        }
+
+        // 单只股票今年涨幅（%）：现价 / 年初收盘价 - 1
+        function getYtdPct(item){
+            if(!ytdBaseMap || !ytdBaseMap.stocks || !ytdBaseMap.stocks[item.code]) return null;
+            const base = Number(ytdBaseMap.stocks[item.code].close);
+            const price = Number(item.nowPrice);
+            if(!base || !price) return null;
+            return (price / base - 1) * 100;
+        }
+
+        // 单只股票今年盈亏额（券商主流算法：今年盈亏 = 当前市值 - 年初市值 - 今年净流入）
+        // 年初市值 = 年初股数 × 年初收盘价；今年净流入 = Σ(今年内交易流水 delta×成交价，正=买入 负=卖出)
+        // 交易流水 item.transactions 在新增（建仓）和编辑（股数变化）时自动记录，老数据无流水时按"年初股数=当前股数"计算
+        function getYtdPnl(item){
+            const fx = item.marketType === 'HK' ? hkFxRate : 1;
+            const curMarket = getMarketValue(item); // 现价 × 当前股数 × 汇率
+            if(!(item.nowPrice > 0) || !item.count) return null;
+            const base = ytdBaseMap && ytdBaseMap.stocks && ytdBaseMap.stocks[item.code] ? Number(ytdBaseMap.stocks[item.code].close) : null;
+            if(!base || base <= 0) return null; // 年初价未拉到，无法计算
+            const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
+            // 今年内交易流水：净买入股数 + 净流入金额
+            let netBuyShares = 0, netInflow = 0;
+            const tx = item.transactions || [];
+            tx.forEach(function(t){
+                if(Number(t.t) >= yearStart){
+                    netBuyShares += Number(t.delta);
+                    netInflow += Number(t.delta) * Number(t.price);
+                }
+            });
+            // 年初股数 = 当前股数 - 今年净买入股数
+            let yearStartShares = item.count - netBuyShares;
+            if(yearStartShares < 0) yearStartShares = 0;
+            // 无交易流水且今年才建仓 → 年初无持仓，年初市值 = 0
+            if(!tx.length && item.createdAt && new Date(item.createdAt).getTime() >= yearStart){
+                yearStartShares = 0;
+            }
+            const yearStartMarket = yearStartShares * base * fx;
+            return curMarket - yearStartMarket - netInflow;
+        }
+
         // 判断当前是否已收盘（交易日16:00后）
         function isMarketClosed(){
             const now = new Date();
@@ -1681,6 +1896,8 @@
                     }
                 });
                 await Promise.all(divTasks);
+                // 3.5) 今年涨幅基础价：每天拉取一次（年初首个交易日收盘价，前复权）
+                fetchYtdBase();
                 // 4) 分红除权：A股现金分红除权除息日到期后，自动下调成本价（真实净成本）
                 // 只除权用户建仓日之后的分红，建仓日之前的历史分红不除权（用户未收到）
                 const curDateStr = todayStr();
@@ -1725,6 +1942,15 @@
                         const perShare = per10 / 10;
                         it.costPrice = Number((it.costPrice - perShare).toFixed(4));
                         it.processedDivDates.push(divKey);
+                        // 记录除权（分红到账）流水：真实收到分红的金额 = 每股分红 × 当时股数
+                        if(!it.exDivRecords) it.exDivRecords = [];
+                        it.exDivRecords.push({
+                            date: divDate,
+                            perShare: perShare,
+                            count: it.count,
+                            amount: Number((perShare * it.count).toFixed(2)),
+                            divKey: divKey
+                        });
                         changed = true;
                     });
                 });
@@ -1855,6 +2081,8 @@
             }
             // 加载仓位分布收盘快照
             loadPositionSnapshot();
+            // 加载今年涨幅基础价缓存
+            loadYtdBase();
             // 加载资产分析历史数据，记录今日总资产，归档已过去月份
             loadHistory();
             recordDailyAssets();
@@ -2457,6 +2685,7 @@
                 }
             }
             // 编辑模式：更新该股票的股数、成本、每股分红、行业（港股可改税率）
+            // 注意：编辑是数据修正（不记录买卖流水，流水只由买入/卖出交易产生）
             if(editingId != null){
                 const item = holdDataList.find(it => it.id === editingId);
                 if(item){
@@ -2503,6 +2732,11 @@
                 existing.costPrice = costPrice;
                 existing.nowPrice = nowPrice;
                 existing.divPerShare = divPerShare;
+                // 覆盖更新是数据修正（不产生买卖流水）；若无交易流水则补一条原建仓流水，保证今年盈亏额按年初持仓计算
+                if(!existing.transactions || !existing.transactions.length){
+                    const origCreated = existing.createdAt ? new Date(existing.createdAt).getTime() : Date.now();
+                    existing.transactions = [{ t: origCreated, delta: count, price: costPrice }];
+                }
                 // 覆盖更新时，更新建仓日为当前时间，并清空已处理分红日期
                 // 让分红除权基于新成本和新建仓日重新计算，避免历史除权记录影响新成本
                 existing.createdAt = new Date().toISOString();
@@ -2538,6 +2772,8 @@
                 costPrice,
                 nowPrice,
                 divPerShare,
+                // 建仓交易流水（用于今年盈亏额精确计算：买入股数 + 建仓成本价）
+                transactions: [{ t: Date.now(), delta: count, price: costPrice }],
                 createdAt: new Date().toISOString()
             }
             // 港股：保存分红税率（默认按所选税率扣税）
@@ -2568,6 +2804,277 @@
                 // 注意：股票删除不影响历史图表数据（已过去的年份/月份数据固定），不重新渲染分析页图表
             });
         }
+
+        // ==================== 买入 / 卖出交易（券商摊薄成本法） ====================
+        // 买入：新成本 = (原成本×原股数 + 买入数量×买入价格) / (原股数+买入数量)（摊薄成本）
+        // 卖出：成本不变，只减少股数；卖出全部即清仓移除
+        // 交易流水 transactions 同步记录，用于今年盈亏额精确计算（当前市值-年初市值-今年净流入）
+        let tradeMode = 'buy';
+        let tradeItemId = null;
+        function openTradeModal(id, mode){
+            const item = holdDataList.find(it => it.id === id);
+            if(!item) return;
+            tradeMode = mode;
+            tradeItemId = id;
+            const isHk = item.marketType === 'HK';
+            const pxUnit = isHk ? '港币' : '元';
+            const titleEl = document.querySelector('#tradeModalTitle');
+            titleEl.innerText = mode === 'buy' ? '买入' : '卖出';
+            titleEl.className = 'text-lg font-semibold ' + (mode === 'buy' ? 'text-[#ff4d4f]' : 'text-[#00b57a]');
+            document.querySelector('#tradeStockName').innerText = item.name;
+            document.querySelector('#tradeStockCode').innerText = item.code + (item.marketType === 'HK' ? ' · 港股' : ' · A股');
+            document.querySelector('#tradeNowPrice').innerHTML = (isHk ? 'HK$' : '') + fmtPrice(item.nowPrice, item.code);
+            document.querySelector('#tradeHoldInfo').innerText = '当前持仓 ' + item.count + ' 股 · 成本 ' + (isHk ? 'HK$' : '') + item.costPrice;
+            document.querySelector('#tradePriceLabel').innerText = (mode === 'buy' ? '买入' : '卖出') + '价格(' + pxUnit + ')';
+            const priceInput = document.querySelector('#tradePrice');
+            priceInput.value = item.nowPrice != null && item.nowPrice > 0 ? item.nowPrice : '';
+            priceInput.step = isEtfCode(item.code) ? '0.001' : '0.01';
+            document.querySelector('#tradeQty').value = '';
+            document.querySelector('#tradeCostPreviewRow').style.display = mode === 'buy' ? '' : 'none';
+            document.querySelector('#tradeAfterRow').style.display = mode === 'sell' ? '' : 'none';
+            document.querySelector('#tradeSellCostRow').style.display = mode === 'sell' ? '' : 'none';
+            const cfm = document.querySelector('#tradeConfirm');
+            cfm.innerText = mode === 'buy' ? '确认买入' : '确认卖出';
+            cfm.className = mode === 'buy'
+                ? 'flex-1 py-3 rounded-xl text-white font-medium shadow-lg bg-gradient-to-r from-[#ff4d4f] to-[#e03434] shadow-red-200'
+                : 'flex-1 py-3 rounded-xl text-white font-medium shadow-lg bg-gradient-to-r from-[#00c987] to-[#00a56c] shadow-green-200';
+            document.querySelector('#tradeModalMask').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            updateTradePreview();
+            setTimeout(function(){ document.querySelector('#tradeQty').focus(); }, 100);
+        }
+        function closeTradeModal(){
+            document.querySelector('#tradeModalMask').classList.add('hidden');
+            document.body.style.overflow = '';
+            tradeItemId = null;
+        }
+        // 实时预览：预估金额 / 买入后成本 / 卖出后持仓
+        function updateTradePreview(){
+            const item = holdDataList.find(it => it.id === tradeItemId);
+            if(!item) return;
+            const isHk = item.marketType === 'HK';
+            const px = Number(document.querySelector('#tradePrice').value);
+            const qty = Number(document.querySelector('#tradeQty').value);
+            const validPx = px > 0;
+            const validQty = qty > 0;
+            const amountEl = document.querySelector('#tradeAmount');
+            if(validPx && validQty){
+                const amount = px * qty;
+                amountEl.innerText = fmtMoney(amount) + (isHk ? '(港币)' : '');
+            } else {
+                amountEl.innerText = '--';
+            }
+            if(tradeMode === 'buy'){
+                const costPreviewEl = document.querySelector('#tradeCostPreview');
+                if(validPx && validQty){
+                    const oldCost = Number(item.costPrice) || 0;
+                    const oldCount = Number(item.count) || 0;
+                    const newCount = oldCount + qty;
+                    const newCost = (oldCost * oldCount + qty * px) / newCount;
+                    costPreviewEl.innerHTML = (isHk ? 'HK$' : '') + newCost.toFixed(4);
+                } else {
+                    costPreviewEl.innerText = '--';
+                }
+            } else {
+                const afterEl = document.querySelector('#tradeAfter');
+                if(validQty){
+                    const remain = item.count - qty;
+                    afterEl.innerText = remain > 0 ? remain + ' 股' : '清仓';
+                } else {
+                    afterEl.innerText = '--';
+                }
+                // 卖出后成本 = (原成本×原股数 - 数量×价格) ÷ 剩余股数
+                const sellCostEl = document.querySelector('#tradeSellCost');
+                if(validPx && validQty && qty < item.count){
+                    const oldCostTotal = (Number(item.costPrice) || 0) * item.count;
+                    const newCost = (oldCostTotal - qty * px) / (item.count - qty);
+                    sellCostEl.innerHTML = (isHk ? 'HK$' : '') + newCost.toFixed(4);
+                } else {
+                    sellCostEl.innerText = qty >= item.count ? '--' : '--';
+                }
+            }
+        }
+        function confirmTrade(){
+            const item = holdDataList.find(it => it.id === tradeItemId);
+            if(!item) return;
+            const price = Number(document.querySelector('#tradePrice').value);
+            const qty = Number(document.querySelector('#tradeQty').value);
+            if(!(qty > 0)){ showToast('请输入有效的买卖数量'); return; }
+            if(!(price > 0)){ showToast('请输入有效的交易价格'); return; }
+            if(tradeMode === 'buy'){
+                // 买入：摊薄成本法
+                const oldCost = Number(item.costPrice) || 0;
+                const oldCount = Number(item.count) || 0;
+                const newCount = oldCount + qty;
+                const newCost = (oldCost * oldCount + qty * price) / newCount;
+                item.count = newCount;
+                item.costPrice = newCost;
+                if(!item.transactions) item.transactions = [];
+                item.transactions.push({ t: Date.now(), delta: qty, price: price });
+                saveLocal();
+                renderPage();
+                closeTradeModal();
+                showToast('已买入 ' + qty + ' 股「' + item.name + '」，成本 ' + newCost.toFixed(4));
+                syncAfterTrade();
+            } else {
+                // 卖出：卖出冲减成本法（券商主流口径，如东方财富/同花顺）
+                // 卖出后成本 = (原成本×原股数 - 卖出数量×卖出价格) ÷ 剩余股数
+                // 盈利卖出会降低剩余成本，亏损卖出会抬高剩余成本；全部回收后成本可为负（已回本）
+                if(qty > item.count){
+                    showToast('卖出数量不能超过当前持仓 ' + item.count + ' 股');
+                    return;
+                }
+                const oldCount = item.count;
+                const newCount = oldCount - qty;
+                if(!item.transactions) item.transactions = [];
+                item.transactions.push({ t: Date.now(), delta: -qty, price: price });
+                const name = item.name;
+                if(newCount <= 0){
+                    // 清仓：确认后移除持仓
+                    showConfirm('卖出后将清仓「' + name + '」，确定卖出全部 ' + oldCount + ' 股吗？', function(){
+                        holdDataList = holdDataList.filter(it => it.id !== tradeItemId);
+                        saveLocal();
+                        renderPage();
+                        closeTradeModal();
+                        showToast('已清仓「' + name + '」');
+                        syncAfterTrade();
+                    });
+                    return;
+                }
+                const oldCostTotal = (Number(item.costPrice) || 0) * oldCount;
+                const newCost = (oldCostTotal - qty * price) / newCount;
+                item.count = newCount;
+                item.costPrice = newCost;
+                saveLocal();
+                renderPage();
+                closeTradeModal();
+                showToast('已卖出 ' + qty + ' 股「' + name + '」，剩余 ' + newCount + ' 股，成本 ' + newCost.toFixed(4));
+                syncAfterTrade();
+            }
+        }
+        // 交易后同步：更新今日总资产点（分析页当年数据），刷新分析页图表
+        function syncAfterTrade(){
+            if(activeTab === 'analysis'){
+                recordDailyAssets();
+                renderAnalysisCharts();
+            }
+        }
+        // 交易弹窗事件绑定
+        document.querySelector('#tradeModalClose').addEventListener('click', closeTradeModal);
+        document.querySelector('#tradeCancel').addEventListener('click', closeTradeModal);
+        document.querySelector('#tradeConfirm').addEventListener('click', confirmTrade);
+        document.querySelector('#tradeModalMask').addEventListener('click', function(e){
+            if(e.target === this) closeTradeModal();
+        });
+        document.querySelector('#tradePrice').addEventListener('input', updateTradePreview);
+        document.querySelector('#tradeQty').addEventListener('input', updateTradePreview);
+        document.querySelectorAll('.trade-price-quick').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                const item = holdDataList.find(it => it.id === tradeItemId);
+                if(!item) return;
+                const base = Number(item.nowPrice) || 0;
+                if(!base) return;
+                const type = btn.getAttribute('data-type');
+                let v = base;
+                if(type === 'low5') v = base * 0.95;
+                else if(type === 'low10') v = base * 0.90;
+                else if(type === 'high5') v = base * 1.05;
+                else if(type === 'high10') v = base * 1.10;
+                const priceInput = document.querySelector('#tradePrice');
+                priceInput.value = Number(v.toFixed(isEtfCode(item.code) ? 3 : 2));
+                updateTradePreview();
+            });
+        });
+
+        // ==================== 交易/分红流水查看 ====================
+        function openTradeLogModal(id){
+            const item = holdDataList.find(it => it.id === id);
+            if(!item) return;
+            const isHk = item.marketType === 'HK';
+            document.querySelector('#tradeLogStockInfo').innerText = item.name + ' · ' + item.code + (isHk ? ' · 港股' : ' · A股');
+            // 汇总：买卖流水 + 除权到账流水
+            let buyTotal = 0, sellTotal = 0;
+            const txList = item.transactions || [];
+            txList.forEach(function(t){
+                const delta = Number(t.delta);
+                const amt = delta * Number(t.price);
+                if(delta > 0) buyTotal += amt;
+                else sellTotal += Math.abs(amt);
+            });
+            let divTotal = 0;
+            const exList = item.exDivRecords || [];
+            exList.forEach(function(r){ divTotal += Number(r.amount) || 0; });
+            const netIn = buyTotal - sellTotal;
+            document.querySelector('#logBuyTotal').innerText = fmtMoney(buyTotal);
+            document.querySelector('#logSellTotal').innerText = fmtMoney(sellTotal);
+            document.querySelector('#logDivTotal').innerText = fmtMoney(divTotal);
+            document.querySelector('#logNetTotal').innerText = fmtMoney(netIn);
+            // 合并流水按时间倒序
+            const events = [];
+            txList.forEach(function(t, i){
+                events.push({
+                    time: Number(t.t),
+                    type: Number(t.delta) > 0 ? 'buy' : 'sell',
+                    title: (Number(t.delta) > 0 ? '买入 ' : '卖出 ') + Math.abs(Number(t.delta)) + ' 股',
+                    detail: '成交价 ' + (isHk ? 'HK$' : '') + Number(t.price).toFixed(isEtfCode(item.code) ? 3 : 2),
+                    amount: Number(t.delta) * Number(t.price)
+                });
+            });
+            exList.forEach(function(r){
+                events.push({
+                    time: new Date(String(r.date).substring(0, 10) + 'T18:00:00').getTime(),
+                    type: 'div',
+                    title: '分红到账 ' + Math.round(Number(r.count)) + ' 股',
+                    detail: '每股 ' + Number(r.perShare).toFixed(4) + ' 元',
+                    amount: Number(r.amount)
+                });
+            });
+            events.sort(function(a, b){ return b.time - a.time; });
+            // 渲染时间线
+            const listDom = document.querySelector('#tradeLogList');
+            if(!events.length){
+                listDom.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">暂无流水记录<br><span class="text-xs">买入、卖出和分红到账记录会显示在这里</span></div>';
+            } else {
+                let html = '<div class="relative pl-6">';
+                html += '<div class="absolute left-[5px] top-2 bottom-2 w-px bg-gray-200"></div>';
+                events.forEach(function(ev){
+                    const dotColor = ev.type === 'buy' ? 'bg-[#ff4d4f]' : (ev.type === 'sell' ? 'bg-[#00b57a]' : 'bg-accent');
+                    const badgeCls = ev.type === 'buy'
+                        ? 'bg-[#fff1f0] text-[#ff4d4f]'
+                        : (ev.type === 'sell' ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-orange-50 text-accent');
+                    const badgeText = ev.type === 'buy' ? '买入' : (ev.type === 'sell' ? '卖出' : '分红');
+                    const amtCls = ev.type === 'buy' ? 'text-[#ff4d4f]' : (ev.type === 'sell' ? 'text-[#00b57a]' : 'text-accent');
+                    const d = new Date(ev.time);
+                    const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+                    html += '<div class="relative pb-4">';
+                    html += '<div class="absolute left-[-19px] top-1 w-2.5 h-2.5 rounded-full ' + dotColor + ' ring-4 ring-white"></div>';
+                    html += '<div class="bg-white rounded-xl px-3.5 py-2.5 flex justify-between items-center">';
+                    html += '<div class="flex items-center gap-2.5 min-w-0">';
+                    html += '<span class="' + badgeCls + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0">' + badgeText + '</span>';
+                    html += '<div class="min-w-0">';
+                    html += '<div class="text-sm font-semibold text-gray-800 truncate">' + ev.title + '</div>';
+                    html += '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + ev.detail + '</div>';
+                    html += '</div></div>';
+                    html += '<div class="text-right shrink-0 ml-2">';
+                    html += '<div class="text-sm font-semibold ' + amtCls + ' tabular-nums">' + (ev.amount > 0 ? '+' : '') + fmtMoney(ev.amount) + '</div>';
+                    html += '<div class="text-[10px] text-gray-400 mt-0.5 tabular-nums">' + dateStr + ' ' + timeStr + '</div>';
+                    html += '</div></div></div>';
+                });
+                html += '</div>';
+                listDom.innerHTML = html;
+            }
+            document.querySelector('#tradeLogModalMask').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeTradeLogModal(){
+            document.querySelector('#tradeLogModalMask').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        document.querySelector('#tradeLogClose').addEventListener('click', closeTradeLogModal);
+        document.querySelector('#tradeLogModalMask').addEventListener('click', function(e){
+            if(e.target === this) closeTradeLogModal();
+        });
 
         // ==================== 资产分析弹窗 ====================
         let analysisCharts = [];
@@ -4263,6 +4770,27 @@
                 const itemPnlClass = pnlClass(itemPnl, false);
                 const pnlPct = itemCostTotal !== 0 ? (itemPnl / itemCostTotal * 100) : 0;
                 const pnlPctText = (pnlPct>0?'+':(pnlPct<0?'-':'')) + Math.abs(pnlPct).toFixed(2) + '%';
+                // 当日盈亏（券商标准，与列表模式/统计页口径一致：金额+百分比，红涨绿跌）
+                const dayPct = getEffectiveChangePct(item.changePct);
+                let dayPnl = 0;
+                let dayPnlText = '--';
+                let dayPnlClass = 'text-gray-400';
+                let dayPnlPctText = '--';
+                if(dayPct != null && !isNaN(dayPct) && item.nowPrice && item.count){
+                    const fx = isHk ? hkFxRate : 1;
+                    dayPnl = item.nowPrice * item.count * fx * dayPct / (100 + dayPct);
+                    if(dayPnl > 0){
+                        dayPnlText = '+' + fmtMoney(dayPnl);
+                        dayPnlClass = 'text-[#ff4d4f]';
+                    } else if(dayPnl < 0){
+                        dayPnlText = fmtMoney(dayPnl);
+                        dayPnlClass = 'text-[#00d68f]';
+                    } else {
+                        dayPnlText = '0.00';
+                        dayPnlClass = 'text-gray-500';
+                    }
+                    dayPnlPctText = (dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%';
+                }
                 // 持仓占比：当前股票市值 / 总资产
                 const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1):0;
                 // 市场标签文字、样式
@@ -4290,8 +4818,36 @@
                     ? '<span class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium shadow-sm flex items-center gap-0.5"><i class="fa fa-trophy text-[8px]"></i>已回本</span>'
                     : '';
                 const rowBgClass = isCostRecovered
-                    ? 'bg-purple-50/70 mx-3 rounded-xl grid grid-cols-4 border border-purple-100'
-                    : 'bg-pageBg mx-3 rounded-xl grid grid-cols-4';
+                    ? 'bg-purple-50/70 mx-3 rounded-xl grid grid-cols-5 border border-purple-100'
+                    : 'bg-pageBg mx-3 rounded-xl grid grid-cols-5';
+                // 今年涨幅（年初至今，东财K线前复权基础价 + 实时现价）与今年盈亏额（券商算法：当前市值-年初市值-今年净流入）
+                const ytdPct = getYtdPct(item);
+                const ytdPnl = getYtdPnl(item);
+                let ytdText = '--';
+                let ytdPnlText = '--';
+                let ytdClass = 'text-gray-400';
+                let ytdPnlClass = 'text-gray-400';
+                if(ytdPct != null && !isNaN(ytdPct)){
+                    ytdText = (ytdPct >= 0 ? '+' : '') + ytdPct.toFixed(2) + '%';
+                    ytdClass = ytdPct > 0 ? 'text-[#ff4d4f]' : (ytdPct < 0 ? 'text-[#00d68f]' : 'text-gray-500');
+                }
+                if(ytdPnl != null && !isNaN(ytdPnl)){
+                    ytdPnlText = formatPnl(ytdPnl);
+                    ytdPnlClass = ytdPnl > 0 ? 'text-[#ff4d4f]' : (ytdPnl < 0 ? 'text-[#00d68f]' : 'text-gray-500');
+                }
+                // 最新涨幅列：上行当日涨跌额，下行涨跌幅%（涨红跌绿，交易日9点后接口未更新显示0）
+                let effChange = item.change;
+                if(isTradingTimeStarted() && (effChange == null || isNaN(effChange))) effChange = 0;
+                let dayChangeAmtText = '--';
+                let dayChangePctText = '--';
+                let dayChangeClass = 'text-gray-400';
+                if(effChange != null && !isNaN(effChange)){
+                    const chgPct = dayPct != null && !isNaN(dayPct) ? dayPct : 0;
+                    const sign = effChange > 0 ? '+' : '';
+                    dayChangeAmtText = sign + Number(effChange).toFixed(isEtfCode(item.code) ? 3 : 2);
+                    dayChangePctText = (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%';
+                    dayChangeClass = effChange > 0 ? 'text-[#ff4d4f]' : (effChange < 0 ? 'text-[#00d68f]' : 'text-gray-500');
+                }
                 htmlStr += `
                 <div class="${cardOuterClass}">
                     ${topBanner}
@@ -4315,48 +4871,63 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 第一行：个股仓位 | 持仓市值 | 成本 | 股价息率 -->
+                    <!-- 第一行：个股仓位 | 持仓市值 | 持仓占比 | 持仓成本 | 累计收息 -->
                     <div class="${rowBgClass}">
-                        <div class="px-1.5 py-2 text-center">
+                        <div class="px-1 py-2 text-center">
                             <div class="text-[10px] text-gray-400">个股仓位</div>
                             <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${item.count}</div>
                         </div>
-                        <div class="px-1.5 py-2 text-center split-line">
+                        <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">持仓市值</div>
                             <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${fmtMoney(itemMarketTotal)}</div>
                         </div>
-                        <div class="px-1.5 py-2 text-center split-line">
-                            <div class="text-[10px] text-gray-400">成本</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${item.costPrice}</div>
-                        </div>
-                        <div class="px-1.5 py-2 text-center split-line">
-                            <div class="text-[10px] text-gray-400">股价息率</div>
-                            <div class="text-sm font-semibold mt-0.5 text-accent tabular-nums">${stockYield}%</div>
-                        </div>
-                    </div>
-                    <!-- 第二行：持仓占比 | 累计收息 | 现价 | 累计盈亏 -->
-                    <div class="${rowBgClass} mt-1.5">
-                        <div class="px-1.5 py-2 text-center">
+                        <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">持仓占比</div>
                             <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${holdPct}%</div>
                         </div>
-                        <div class="px-1.5 py-2 text-center split-line">
+                        <div class="px-1 py-2 text-center split-line">
+                            <div class="text-[10px] text-gray-400">持仓成本</div>
+                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${item.costPrice}</div>
+                        </div>
+                        <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计收息</div>
-                            <div class="text-sm font-semibold mt-0.5 text-accent tabular-nums">${fmtMoney(itemTotalReceived)}</div>
+                            <div class="text-sm font-semibold mt-0.5 text-gray-800 tabular-nums">${fmtMoney(itemTotalReceived)}</div>
                         </div>
-                        <div class="px-1.5 py-2 text-center split-line">
-                            <div class="text-[10px] text-gray-400">现价</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
+                    </div>
+                    <!-- 第二行：今年涨幅 | 累计盈亏 | 现价/息率 | 最新涨幅 | 当日盈亏 -->
+                    <div class="${rowBgClass} mt-1.5">
+                        <div class="px-1 py-2 text-center">
+                            <div class="text-[10px] text-gray-400">今年涨幅</div>
+                            <div class="text-sm font-semibold mt-0.5 ${ytdPnlClass} tabular-nums">${ytdPnlText}</div>
+                            <div class="text-[10px] font-medium mt-0.5 ${ytdClass} tabular-nums">${ytdText}</div>
                         </div>
-                        <div class="px-1.5 py-2 text-center split-line">
+                        <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计盈亏</div>
                             <div class="text-sm font-semibold mt-0.5 ${itemPnlClass} tabular-nums">${formatPnl(itemPnl)}</div>
                             <div class="text-[10px] font-medium mt-0.5 ${itemPnlClass} tabular-nums">${pnlPctText}</div>
                         </div>
+                        <div class="px-1 py-2 text-center split-line">
+                            <div class="text-[10px] text-gray-400">现价/息率</div>
+                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
+                            <div class="text-[10px] font-medium mt-0.5 text-gray-800 tabular-nums">${stockYield}%</div>
+                        </div>
+                        <div class="px-1 py-2 text-center split-line">
+                            <div class="text-[10px] text-gray-400">最新涨幅</div>
+                            <div class="text-sm font-semibold mt-0.5 ${dayChangeClass} tabular-nums">${dayChangeAmtText}</div>
+                            <div class="text-[10px] font-medium mt-0.5 ${dayChangeClass} tabular-nums">${dayChangePctText}</div>
+                        </div>
+                        <div class="px-1 py-2 text-center split-line">
+                            <div class="text-[10px] text-gray-400">当日盈亏</div>
+                            <div class="text-sm font-semibold mt-0.5 ${dayPnlClass} tabular-nums">${dayPnlText}</div>
+                            <div class="text-[10px] font-medium mt-0.5 ${dayPnlClass} tabular-nums">${dayPnlPctText}</div>
+                        </div>
                     </div>
-                    <div class="flex justify-end gap-5 px-3 py-2">
+                    <div class="flex justify-end items-center gap-2.5 px-3 py-2">
+                        <button onclick="openTradeModal(${item.id},'buy')" class="px-3.5 py-1 rounded-lg bg-red-50 text-[#ff4d4f] text-xs font-semibold active:scale-95 transition-transform">买入</button>
+                        <button onclick="openTradeModal(${item.id},'sell')" class="px-3.5 py-1 rounded-lg bg-green-50 text-[#00b57a] text-xs font-semibold active:scale-95 transition-transform">卖出</button>
+                        <button onclick="openTradeLogModal(${item.id})" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold active:scale-95 transition-transform"><i class="fa fa-list-ul text-[10px] mr-1"></i>流水</button>
                         <button onclick="editItem(${item.id})" class="text-gray-500 text-xs active:text-gray-700 transition-colors">编辑</button>
-                        <button onclick="deleteItem(${item.id})" class="text-red-500 text-xs active:text-red-700 transition-colors">删除</button>
+                        <button onclick="deleteItem(${item.id})" class="text-gray-400 text-xs active:text-gray-600 transition-colors">删除</button>
                     </div>
                 </div>
                 `
@@ -5159,10 +5730,10 @@
             const day = now.getDay(); // 0=周日, 6=周六
             if(day === 0 || day === 6) return false;
             const timeMin = now.getHours() * 60 + now.getMinutes();
-            // 交易时间：9:15集合竞价开始 - 16:00收盘
+            // 交易时间：9:00开始拉取最新行情（9:00-9:15集合竞价前接口返回涨跌幅0，符合券商显示）
             // 9:15-9:25集合竞价，9:30-11:30上午连续竞价，13:00-15:00下午连续竞价
             // 午休11:30-13:00行情不变，可停止刷新以节省资源
-            if(timeMin >= 9 * 60 + 15 && timeMin <= 11 * 60 + 30) return true;
+            if(timeMin >= 9 * 60 && timeMin <= 11 * 60 + 30) return true;
             if(timeMin >= 13 * 60 && timeMin <= 16 * 60) return true;
             return false;
         }

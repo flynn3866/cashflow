@@ -609,19 +609,24 @@
             资产分析
         </h2>
 
-        <!-- 顶部关键指标 -->
-        <div class="grid grid-cols-3 gap-3 mb-4">
-            <div class="bg-white rounded-2xl p-3.5 card-shadow text-center">
-                <div class="text-[11px] text-gray-400 mb-1">当前总资产</div>
-                <div id="analysisTotalAsset" class="text-base font-bold text-gray-800 tabular-nums">--</div>
-            </div>
-            <div class="bg-white rounded-2xl p-3.5 card-shadow text-center">
-                <div class="text-[11px] text-gray-400 mb-1">今年分红</div>
-                <div id="analysisYearDiv" class="text-base font-bold text-accent tabular-nums">--</div>
-            </div>
-            <div class="bg-white rounded-2xl p-3.5 card-shadow text-center">
-                <div class="text-[11px] text-gray-400 mb-1">今年收益率</div>
-                <div id="analysisYearReturn" class="text-base font-bold tabular-nums">--</div>
+        <!-- 顶部关键指标（大卡片：深棕金渐变，参考"年度投资报告"菜单背景） -->
+        <div class="relative overflow-hidden rounded-2xl p-4 text-white card-shadow mb-4" style="background: linear-gradient(135deg,#2b2217 0%,#4a3218 55%,#6b451f 100%);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+            <div class="relative z-10 grid grid-cols-3">
+                <div class="text-center px-1">
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">当前总资产</div>
+                    <div id="analysisTotalAsset" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                </div>
+                <div class="text-center px-1 border-l border-white/10">
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">今年分红</div>
+                    <div id="analysisYearDiv" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                </div>
+                <div class="text-center px-1 border-l border-white/10">
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">今年收益率</div>
+                    <div id="analysisYearReturn" class="text-lg font-bold tabular-nums">--</div>
+                </div>
             </div>
         </div>
 
@@ -1090,6 +1095,31 @@
                         <div class="text-base font-semibold tabular-nums" id="arDivGainAmount">--</div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 分红 · 月度节奏：报告年每月分红 vs 去年同月 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">分红 · 月度节奏</span>
+                <span class="text-[10px] text-gray-400 ml-auto" id="arMonthDivTag">今年 · 已到账</span>
+            </div>
+            <div class="px-5 py-4">
+                <!-- 月均分红 / 较去年月均 两栏对比（金紫双框） -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 text-center">
+                        <div class="text-[11px] text-amber-600 font-semibold mb-1.5"><i class="fa fa-calendar-o mr-1"></i>月均分红</div>
+                        <div class="text-lg font-bold tabular-nums" id="arMonthDivAvg" style="color:#b8860b">--</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 text-center">
+                        <div class="text-[11px] text-violet-500 font-semibold mb-1.5"><i class="fa fa-exchange mr-1"></i>较去年月均</div>
+                        <div class="text-lg font-bold tabular-nums" id="arMonthDivVs">--</div>
+                        <div class="text-[10px] font-semibold tabular-nums mt-0.5" id="arMonthDivVsPct"></div>
+                    </div>
+                </div>
+                <div id="chartMonthlyDiv" style="width:100%;height:230px;"></div>
+                <div class="text-[10px] text-gray-400 mt-2 leading-relaxed" id="arMonthDivNote">金色为本年每月已到账分红，淡紫为去年同月；月度明细按当前持仓的到账流水统计。</div>
             </div>
         </div>
 
@@ -2361,7 +2391,7 @@
                         const yrA = sumA.yearReturnRate || 0;
                         const retElA = document.querySelector('#analysisYearReturn');
                         retElA.innerText = (yrA >= 0 ? '+' : '') + yrA.toFixed(2) + '%';
-                        retElA.className = 'text-base font-bold tabular-nums ' + (yrA >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+                        retElA.className = 'text-lg font-bold tabular-nums ' + (yrA >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
                         // 只有月度数据新增时才重新渲染图表（避免每2秒重复渲染）
                         if(monthlyAfter > monthlyBefore){
                             renderAnalysisCharts();
@@ -3800,7 +3830,7 @@
                 const yr = sum.yearReturnRate || 0;
                 const retEl = document.querySelector('#analysisYearReturn');
                 retEl.innerText = (yr >= 0 ? '+' : '') + yr.toFixed(2) + '%';
-                retEl.className = 'text-base font-bold tabular-nums ' + (yr >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+                retEl.className = 'text-lg font-bold tabular-nums ' + (yr >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
                 // 只有首次切换到分析页面时才渲染图表，之后切换不重复渲染
                 if(!analysisChartsRendered){
                     setTimeout(renderAnalysisCharts, 120);
@@ -4040,6 +4070,102 @@
             } else {
                 dgaEl.innerText = '--';
                 dgaEl.className = 'text-base font-semibold tabular-nums text-amber-100/70';
+            }
+            // 分红 · 月度节奏：报告年每月分红 vs 去年同月（图表仅打开/切年时渲染一次）
+            const aggMonth = function(yrStr){
+                const m = {};
+                holdDataList.forEach(function(it){
+                    (it.exDivRecords || []).forEach(function(r){
+                        const d = String(r.date || '');
+                        if(d.indexOf(yrStr + '-') === 0){
+                            const mm = parseInt(d.slice(5, 7), 10);
+                            if(mm >= 1 && mm <= 12) m[mm] = (m[mm] || 0) + (Number(r.amount) || 0);
+                        }
+                    });
+                });
+                return m;
+            };
+            const monthCur = aggMonth(reportYStr);
+            const monthLast = aggMonth(lastYStr);
+            const curMonths = Object.keys(monthCur).map(Number);
+            const hasMonthDetail = curMonths.length > 0;
+            const mdTagEl = document.querySelector('#arMonthDivTag');
+            if(mdTagEl) mdTagEl.innerText = isCurYear ? ('今年 · 已到账 ' + curMonths.length + ' 个月') : (reportYStr + '年' + (hasMonthDetail ? ' · 到账 ' + curMonths.length + ' 个月' : ' · 已归档'));
+            // 顶部对比：月均分红（今年 vs 去年月均），双框展示，金额与百分比分两行
+            const avgThis = divThisYear > 0 ? divThisYear / 12 : 0;
+            const avgLast = divLastYear > 0 ? divLastYear / 12 : 0;
+            document.querySelector('#arMonthDivAvg').innerText = avgThis > 0 ? fmtMoney(avgThis) : '--';
+            const mdVsEl = document.querySelector('#arMonthDivVs');
+            const mdVsPctEl = document.querySelector('#arMonthDivVsPct');
+            if(avgThis > 0 && avgLast > 0){
+                const avgDiff = avgThis - avgLast;
+                const avgPct = avgDiff / avgLast * 100;
+                mdVsEl.innerText = (avgDiff >= 0 ? '+' : '') + fmtMoney(avgDiff);
+                mdVsPctEl.innerText = (avgPct >= 0 ? '+' : '') + avgPct.toFixed(1) + '%';
+                mdVsEl.className = 'text-lg font-bold tabular-nums ' + (avgDiff >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+                mdVsPctEl.className = 'text-[10px] font-semibold tabular-nums mt-0.5 ' + (avgDiff >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+            } else if(avgThis > 0){
+                mdVsEl.innerText = '去年暂无';
+                mdVsPctEl.innerText = '';
+                mdVsEl.className = 'text-lg font-bold tabular-nums text-amber-600';
+                mdVsPctEl.className = 'text-[10px] font-semibold tabular-nums mt-0.5';
+            } else {
+                mdVsEl.innerText = '--';
+                mdVsPctEl.innerText = '';
+                mdVsEl.className = 'text-lg font-bold tabular-nums text-gray-300';
+                mdVsPctEl.className = 'text-[10px] font-semibold tabular-nums mt-0.5';
+            }
+            const mdNoteEl = document.querySelector('#arMonthDivNote');
+            if(!hasMonthDetail){
+                mdNoteEl.innerText = isCurYear ? '暂无逐月到账明细，柱形仅展示有到账记录的月份。' : (reportYStr + '年仅归档年度总额，暂无逐月到账明细；该年分红以年度总额为准。');
+            }
+            const mdChartEl = document.querySelector('#chartMonthlyDiv');
+            if(mdChartEl && typeof echarts !== 'undefined'){
+                const mdInst = echarts.getInstanceByDom(mdChartEl);
+                if(mdInst) mdInst.dispose();
+                if(hasMonthDetail || isCurYear){
+                    const monthsArr = [], curData = [], lastData = [];
+                    for(let mi = 1; mi <= 12; mi++){
+                        monthsArr.push(mi + '月');
+                        curData.push(monthCur[mi] ? Math.round(monthCur[mi] * 100) / 100 : 0);
+                        lastData.push(monthLast[mi] ? Math.round(monthLast[mi] * 100) / 100 : 0);
+                    }
+                    const mdNew = echarts.init(mdChartEl);
+                    mdNew.setOption({
+                        tooltip: {
+                            trigger: 'axis',
+                            backgroundColor: 'rgba(255,255,255,0.96)',
+                            borderColor: '#eee',
+                            borderWidth: 1,
+                            textStyle: { color: '#333', fontSize: 12 },
+                            padding: [8, 12],
+                            formatter: function(params){
+                                let h = params[0].axisValue + ' 到账分红<br>';
+                                params.forEach(function(p){
+                                    h += p.marker + p.seriesName + '：' + (p.value > 0 ? fmtMoney(p.value) : '--') + '<br>';
+                                });
+                                const cv = params[0].value || 0, lv = params[1].value || 0;
+                                if(lv > 0){
+                                    const diff = cv - lv, pct = diff / lv * 100;
+                                    h += '较去年：<b style="color:' + (diff >= 0 ? '#ff4d4f' : '#00d68f') + '">' + (diff >= 0 ? '+' : '') + fmtMoney(diff) + '（' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%）</b>';
+                                } else if(cv > 0){
+                                    h += '较去年：去年同月无到账';
+                                } else {
+                                    h += '较去年：--';
+                                }
+                                return h;
+                            }
+                        },
+                        legend: { data: [reportYStr + '年', lastYStr + '年'], right: 0, top: 0, itemWidth: 10, itemHeight: 10, textStyle: { fontSize: 10, color: '#888' } },
+                        grid: { left: 8, right: 8, top: 26, bottom: 0, containLabel: true },
+                        xAxis: { type: 'category', data: monthsArr, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false }, axisLabel: { fontSize: 10, color: '#999', interval: 0 } },
+                        yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f3f3f3' } }, axisLabel: { fontSize: 10, color: '#bbb', formatter: function(v){ return v >= 10000 ? (v / 10000) + '万' : v; } } },
+                        series: [
+                            { name: reportYStr + '年', type: 'bar', data: curData, barWidth: '30%', itemStyle: { borderRadius: [3, 3, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#f5c97b' }, { offset: 1, color: '#d89b3f' }] } } },
+                            { name: lastYStr + '年', type: 'bar', data: lastData, barWidth: '30%', itemStyle: { borderRadius: [3, 3, 0, 0], color: '#cbb8e8' } }
+                        ]
+                    });
+                }
             }
             // 分红贡献榜：报告年已到账分红（exDivRecords 按年份过滤），降序
             const divRankTagEl = document.querySelector('#arDivRankTag');

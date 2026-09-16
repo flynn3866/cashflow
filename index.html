@@ -1674,14 +1674,20 @@
         function fetchYtdBase(){
             if(!holdDataList.length) return;
             const curYear = String(new Date().getFullYear());
-            if(ytdBaseMap && ytdBaseMap.year === curYear) return;  // 今年已拉取过
-            if(!ytdBaseMap || ytdBaseMap.year !== curYear) ytdBaseMap = { year: curYear, stocks: ytdBaseMap && ytdBaseMap.stocks ? ytdBaseMap.stocks : {} };
+            if(!ytdBaseMap || ytdBaseMap.year !== curYear){
+                ytdBaseMap = { year: curYear, stocks: (ytdBaseMap && ytdBaseMap.stocks) ? ytdBaseMap.stocks : {} };
+            }
+            // 缺少年初基础价的持仓代码（当天已拉取过也增量补拉新增股票或之前拉取失败的）
+            const missing = holdDataList.filter(function(it){
+                return !(ytdBaseMap.stocks && ytdBaseMap.stocks[it.code] && Number(ytdBaseMap.stocks[it.code].close) > 0);
+            });
+            if(!missing.length) return;  // 全部已就绪
             const beg = curYear + '0101';
             const end = curYear + '0131';
             const tasks = [];
             const cbNameBase = '__ytdCb';
             let cbIdx = 0;
-            holdDataList.forEach(function(it){
+            missing.forEach(function(it){
                 const secid = getSecid(it);
                 if(!secid) return;
                 const cbName = cbNameBase + (cbIdx++);
@@ -2710,6 +2716,8 @@
                 if(holdDataList.some(it => it.marketType === 'A')){
                     setTimeout(function(){ refreshAll(); }, 300);
                 }
+                // 编辑后立即为这只股票补拉今年涨幅基础价（如刚切换市场/代码或之前拉取失败）
+                fetchYtdBase();
                 // 注意：股票编辑不影响历史图表数据（已过去的年份/月份数据固定），不重新渲染分析页图表
                 showToast('修改成功');
                 return;
@@ -2751,6 +2759,8 @@
                 if(holdDataList.some(it => it.marketType === 'A')){
                     setTimeout(function(){ refreshAll(); }, 300);
                 }
+                // 覆盖更新后立即为这只股票补拉今年涨幅基础价
+                fetchYtdBase();
                 // 持仓变化后同步更新分析页
                 if(activeTab === 'analysis'){
                     recordDailyAssets();
@@ -2788,6 +2798,8 @@
             if(holdDataList.some(it => it.marketType === 'A')){
                 setTimeout(function(){ refreshAll(); }, 300);
             }
+            // 新增后立即为这只股票补拉今年涨幅基础价（当天已拉取过也会增量补拉新代码）
+            fetchYtdBase();
             // 注意：股票新增不影响历史图表数据（已过去的年份/月份数据固定），不重新渲染分析页图表
             showToast('添加成功');
         })

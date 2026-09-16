@@ -653,6 +653,17 @@
                 </div>
                 <div id="chartYearlyDiv" style="width:100%;height:260px;"></div>
             </div>
+            <!-- 月均分红收入趋势 -->
+            <div class="bg-white rounded-2xl p-4 card-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa fa-calendar-o text-[#8b5cf6] text-sm"></i>
+                        <span class="text-sm font-semibold text-gray-700">月均分红收入趋势</span>
+                    </div>
+                    <span id="analysisLatestAvgDiv" class="text-[11px] text-gray-400">--</span>
+                </div>
+                <div id="chartYearlyAvgDiv" style="width:100%;height:260px;"></div>
+            </div>
             <!-- 总收益率趋势 -->
             <div class="bg-white rounded-2xl p-4 card-shadow">
                 <div class="flex items-center justify-between mb-2">
@@ -5449,6 +5460,27 @@
             });
             analysisCharts.push(c2);
 
+            // ===== 图4：每年月均分红收入趋势（年度分红/12，紫色线呼应整站紫金风） =====
+            const avgDivValues = years.map(function(y){ return ((historyData.yearlyDiv[y] || 0) / 12); });
+            const latestAvgDiv = avgDivValues.length ? avgDivValues[avgDivValues.length - 1] : 0;
+            document.querySelector('#analysisLatestAvgDiv').innerText = '最新：' + fmtTooltipMoney(latestAvgDiv);
+            // X轴标签优化：与图2同一套年份动态间隔（避免几十年数据重叠）
+            const c4 = echarts.init(document.querySelector('#chartYearlyAvgDiv'));
+            c4.setOption({
+                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '年<br/><span style="color:#8b5cf6">●</span> 月均分红：' + fmtTooltipMoney(p[0].value); } }),
+                grid: { left: 60, right: 20, top: 20, bottom: divXRotate > 0 ? 45 : 30 },
+                xAxis: { type: 'category', data: years, axisLabel: { fontSize: 11, color: '#999', interval: divXInterval, rotate: divXRotate }, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false } },
+                yAxis: { type: 'value', axisLabel: { fontSize: 11, color: '#999', formatter: function(v){ return v >= 10000 ? (v/10000).toFixed(0)+'万' : v; } }, splitLine: { lineStyle: { color: '#f5f5f5' } } },
+                series: [{
+                    type: 'line', data: avgDivValues, smooth: true, symbol: 'circle', symbolSize: divSymbolSize,
+                    lineStyle: { color: '#8b5cf6', width: 2.5 },
+                    itemStyle: { color: '#8b5cf6', borderColor: '#fff', borderWidth: 2 },
+                    areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(139,92,246,0.20)' }, { offset: 1, color: 'rgba(139,92,246,0.02)' }] } },
+                    emphasis: { focus: 'series', itemStyle: { shadowBlur: 10, shadowColor: 'rgba(139,92,246,0.5)' } }
+                }]
+            });
+            analysisCharts.push(c4);
+
             // ===== 图3：总收益率趋势 =====
             // 当前年份始终实时计算最新收益率（每次渲染取最新一天数据，每天覆盖更新），历史年份用存储值（仅手动编辑可改）
             const retCurY = String(new Date().getFullYear());
@@ -5495,20 +5527,91 @@
             else if(retYearCount > 20){ retXInterval = 1; retSymbolSize = 6; }
             else if(retYearCount > 10){ retXRotate = 30; retSymbolSize = 7; }
             const c3 = echarts.init(document.querySelector('#chartYearlyReturn'));
+            const baseReturnSeries = {
+                name: '总收益率',
+                type: 'line', data: retValues, smooth: true, symbol: 'circle', symbolSize: retSymbolSize,
+                lineStyle: { color: '#ff4d4f', width: 3 },
+                itemStyle: { color: function(p){ return p.value >= 0 ? '#ff4d4f' : '#00d68f'; }, borderColor: '#fff', borderWidth: 2 },
+                markLine: { silent: true, symbol: 'none', lineStyle: { color: '#ddd', type: 'dashed', width: 1 }, data: [{ yAxis: 0 }], label: { show: false } },
+                emphasis: { focus: 'series' }
+            };
             c3.setOption({
-                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){ return p[0].name + '年<br/><span style="color:' + (p[0].value >= 0 ? '#ff4d4f' : '#00d68f') + '">●</span> 总收益率：' + (p[0].value >= 0 ? '+' : '') + p[0].value + '%'; } }),
-                grid: { left: 50, right: 20, top: 20, bottom: retXRotate > 0 ? 45 : 30 },
+                tooltip: Object.assign({}, tooltipStyle, { formatter: function(p){
+                    let h = p[0].name + '年<br/>';
+                    p.forEach(function(pp){
+                        if(pp.value == null || isNaN(pp.value)){ h += pp.marker + pp.seriesName + '：--<br/>'; return; }
+                        const v = Number(pp.value);
+                        const col = pp.seriesName === '沪深300' ? '#94a3b8' : (v >= 0 ? '#ff4d4f' : '#00d68f');
+                        h += '<span style="color:' + col + '">●</span> ' + pp.seriesName + '：' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%<br/>';
+                    });
+                    return h;
+                } }),
+                grid: { left: 50, right: 20, top: 24, bottom: retXRotate > 0 ? 45 : 30 },
                 xAxis: { type: 'category', data: retYears, axisLabel: { fontSize: 11, color: '#999', interval: retXInterval, rotate: retXRotate }, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false } },
                 yAxis: { type: 'value', axisLabel: { fontSize: 11, color: '#999', formatter: '{value}%' }, splitLine: { lineStyle: { color: '#f5f5f5' } } },
-                series: [{
-                    type: 'line', data: retValues, smooth: true, symbol: 'circle', symbolSize: retSymbolSize,
-                    lineStyle: { color: '#ff4d4f', width: 3 },
-                    itemStyle: { color: function(p){ return p.value >= 0 ? '#ff4d4f' : '#00d68f'; }, borderColor: '#fff', borderWidth: 2 },
-                    markLine: { silent: true, symbol: 'none', lineStyle: { color: '#ddd', type: 'dashed', width: 1 }, data: [{ yAxis: 0 }], label: { show: false } },
-                    emphasis: { focus: 'series' }
-                }]
+                series: [baseReturnSeries]
             });
             analysisCharts.push(c3);
+
+            // 沪深300每年收益率对比线（异步拉取东财日线，缓存当天；失败则静默不显示）
+            const hs300Today = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+            let hs300Cache = null;
+            try { hs300Cache = JSON.parse(localStorage.getItem('dividendHs300Yearly') || 'null'); } catch(e){ hs300Cache = null; }
+            const buildHs300Series = function(hs300Map){
+                if(!hs300Map) return;
+                const hs300Values = retYears.map(function(y){ return (hs300Map[y] != null && isFinite(hs300Map[y])) ? Number(hs300Map[y].toFixed(2)) : null; });
+                c3.setOption({
+                    legend: { data: ['总收益率', '沪深300'], right: 0, top: 0, itemWidth: 12, itemHeight: 8, textStyle: { fontSize: 10, color: '#888' } },
+                    series: [baseReturnSeries, {
+                        name: '沪深300',
+                        type: 'line', data: hs300Values, smooth: true, symbol: 'circle', symbolSize: 5, connectNulls: false,
+                        lineStyle: { color: '#94a3b8', width: 2, type: 'dashed' },
+                        itemStyle: { color: '#94a3b8', borderColor: '#fff', borderWidth: 1 },
+                        emphasis: { focus: 'series' }
+                    }]
+                });
+            };
+            if(hs300Cache && hs300Cache.fetchedDate === hs300Today && hs300Cache.data){
+                buildHs300Series(hs300Cache.data);
+            } else {
+                const cbName = '__hs300cb' + Math.floor(Math.random() * 1e8);
+                window[cbName] = function(res){
+                    try {
+                        const klines = (res && res.data && res.data.klines) || [];
+                        const lastByYear = {};
+                        klines.forEach(function(k){
+                            const arr = String(k).split(',');
+                            const y = arr[0].substring(0, 4);
+                            if(y && arr[1] != null) lastByYear[y] = Number(arr[1]);
+                        });
+                        const ys = Object.keys(lastByYear).sort();
+                        const rates = {};
+                        for(let i = 1; i < ys.length; i++){
+                            if(lastByYear[ys[i-1]] > 0) rates[ys[i]] = (lastByYear[ys[i]] / lastByYear[ys[i-1]] - 1) * 100;
+                        }
+                        const curY = String(new Date().getFullYear());
+                        const prevY = String(new Date().getFullYear() - 1);
+                        if(lastByYear[prevY] > 0 && klines.length){
+                            const lastClose = lastByYear[curY] || Number(String(klines[klines.length-1]).split(',')[1]);
+                            rates[curY] = (lastClose / lastByYear[prevY] - 1) * 100;
+                        }
+                        try { localStorage.setItem('dividendHs300Yearly', JSON.stringify({ data: rates, fetchedDate: hs300Today })); } catch(e){}
+                        buildHs300Series(rates);
+                    } catch(e){
+                        buildHs300Series(null);
+                    }
+                    try {
+                        delete window[cbName];
+                        const sc = document.getElementById(cbName);
+                        if(sc) sc.remove();
+                    } catch(e){}
+                };
+                const sc = document.createElement('script');
+                sc.id = cbName;
+                sc.src = 'https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.000300&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f53&klt=101&fqt=1&beg=20040101&end=20500101&cb=' + cbName;
+                sc.onerror = function(){ try { buildHs300Series(null); delete window[cbName]; } catch(e){} };
+                document.body.appendChild(sc);
+            }
         }
 
         // 今年已收分红（与设置页"每年分红收入"当年值一致）

@@ -57,6 +57,9 @@
             .card-shadow {
                 box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             }
+            .card-shadow-soft {
+                box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 10px 24px rgba(0,0,0,0.12);
+            }
             .mask-bg {
                 background-color: rgba(0,0,0,0.45);
             }
@@ -148,12 +151,7 @@
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
-    <div id="pageHold" class="relative max-w-xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 消息通知入口：右上角铃铛（全站统一） -->
-        <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
-            <i class="fa fa-bell text-[16px]"></i>
-            <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
-        </button>
+    <div id="pageHold" class="max-w-xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 品牌标题：水滴图标 + 衬线渐变文字 + 装饰线副标题 -->
         <div class="text-center mb-6">
             <div class="inline-flex items-center gap-2.5">
@@ -171,6 +169,11 @@
 
         <!-- 顶部汇总卡片 - 暖色调渐变，紧凑精致设计 -->
         <div class="relative text-white rounded-3xl p-4 shadow-2xl mb-4 overflow-hidden card-shimmer" style="background: linear-gradient(135deg, #C46137 0%, #A04E2C 50%, #7A3A20 100%);">
+            <!-- 消息通知入口：右上角铃铛（与其他导航页一致，置于卡片右上角） -->
+            <button class="notif-bell absolute right-3 top-3 w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shadow-lg shadow-black/15 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+                <i class="fa fa-bell text-[15px]"></i>
+                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+            </button>
             <!-- 顶部高光线 -->
             <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-200/30 to-transparent"></div>
             <!-- 内发光边框 -->
@@ -612,7 +615,7 @@
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             资产分析
-            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow-soft flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
@@ -695,7 +698,7 @@
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             统计
-            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow-soft flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
@@ -710,7 +713,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span id="statsDayPnlSummary" class="text-[12px] font-semibold tabular-nums">--</span>
-                    <span id="statsUpdateTime" class="text-[11px] text-gray-400">交易时段每2秒 · -- 更新</span>
+                    <span id="statsUpdateTime" class="text-[11px] text-gray-400">-- 更新</span>
                     <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
                 </div>
             </div>
@@ -775,7 +778,6 @@
                     <span class="text-base font-semibold text-gray-800">盈亏排行</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-[11px] text-gray-400">按累计盈亏 · 含已清仓</span>
                     <span id="statsPnlRefreshTime" class="text-[10px] text-gray-400">收盘后更新 · -- 更新</span>
                     <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
                 </div>
@@ -828,7 +830,6 @@
                     <span class="text-base font-semibold text-gray-800">分红升降对比</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-[11px] text-gray-400">今年 vs 去年</span>
                     <span id="statsDivCompareRefreshTime" class="text-[10px] text-gray-400">每日更新 · -- 更新</span>
                     <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
                 </div>
@@ -875,7 +876,7 @@
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             我的
-            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow-soft flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
@@ -1386,7 +1387,7 @@
                 分红里程碑
             </h2>
             <div class="flex items-center gap-2">
-                <button class="notif-bell w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform relative flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
+                <button class="notif-bell w-10 h-10 rounded-full bg-white card-shadow-soft flex items-center justify-center text-gray-600 active:scale-95 transition-transform relative flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
                     <i class="fa fa-bell text-[16px]"></i>
                     <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
                 </button>
@@ -5279,7 +5280,7 @@
             }
             // 更新时间
             const now = new Date();
-            document.querySelector('#statsUpdateTime').innerText = '交易时段每2秒 · ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' 更新';
+            document.querySelector('#statsUpdateTime').innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' 更新';
 
             // 当日盈亏总额和百分比（标题栏右侧显示）
             const dayPnlSummaryEl = document.querySelector('#statsDayPnlSummary');

@@ -148,7 +148,12 @@
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
-    <div id="pageHold" class="max-w-xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageHold" class="relative max-w-xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 消息通知入口：右上角铃铛（全站统一） -->
+        <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <i class="fa fa-bell text-[16px]"></i>
+            <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+        </button>
         <!-- 品牌标题：水滴图标 + 衬线渐变文字 + 装饰线副标题 -->
         <div class="text-center mb-6">
             <div class="inline-flex items-center gap-2.5">
@@ -604,9 +609,13 @@
 
     <!-- 资产分析页面：总资产 / 分红收入 / 总收益率 三个走势图 -->
     <div id="pageAnalysis" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             资产分析
+            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+                <i class="fa fa-bell text-[16px]"></i>
+                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+            </button>
         </h2>
 
         <!-- 顶部关键指标（大卡片：深棕金渐变，参考"年度投资报告"菜单背景） -->
@@ -683,9 +692,13 @@
 
     <!-- 统计页面 -->
     <div id="pageStats" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             统计
+            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+                <i class="fa fa-bell text-[16px]"></i>
+                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+            </button>
         </h2>
 
         <!-- 今日涨跌幅排行榜 -->
@@ -697,7 +710,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span id="statsDayPnlSummary" class="text-[12px] font-semibold tabular-nums">--</span>
-                    <span id="statsUpdateTime" class="text-[11px] text-gray-400">--</span>
+                    <span id="statsUpdateTime" class="text-[11px] text-gray-400">交易时段每2秒 · -- 更新</span>
                     <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
                 </div>
             </div>
@@ -715,7 +728,10 @@
                     <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     <span class="text-base font-semibold text-gray-800">仓位分布</span>
                 </div>
-                <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                <div class="flex items-center gap-2">
+                    <span id="statsPositionRefreshTime" class="text-[11px] text-gray-400">收盘后更新 · -- 更新</span>
+                    <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                </div>
             </div>
             <div id="statsPositionWrap" class="stats-collapse-content">
                 <!-- 行业仓位占比：环形图 + 行业列表 -->
@@ -759,7 +775,8 @@
                     <span class="text-base font-semibold text-gray-800">盈亏排行</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-[11px] text-gray-400">按累计盈亏 · 含已清仓 · 收盘后更新</span>
+                    <span class="text-[11px] text-gray-400">按累计盈亏 · 含已清仓</span>
+                    <span id="statsPnlRefreshTime" class="text-[10px] text-gray-400">收盘后更新 · -- 更新</span>
                     <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
                 </div>
             </div>
@@ -791,7 +808,10 @@
                     <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     <span class="text-base font-semibold text-gray-800">分红派发日程</span>
                 </div>
-                <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                <div class="flex items-center gap-2">
+                    <span id="statsDividendRefreshTime" class="text-[11px] text-gray-400">每日更新 · -- 更新</span>
+                    <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                </div>
             </div>
             <div id="statsDividendWrap" class="stats-collapse-content">
                 <div id="statsDividendList" class="divide-y divide-gray-50">
@@ -809,6 +829,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-[11px] text-gray-400">今年 vs 去年</span>
+                    <span id="statsDivCompareRefreshTime" class="text-[10px] text-gray-400">每日更新 · -- 更新</span>
                     <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
                 </div>
             </div>
@@ -851,9 +872,13 @@
 
     <!-- 我的页面 -->
     <div id="pageMine" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             我的
+            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+                <i class="fa fa-bell text-[16px]"></i>
+                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+            </button>
         </h2>
         <!-- 用户信息卡片 -->
         <div class="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-2xl p-5 card-shadow mb-4 relative overflow-hidden">
@@ -924,6 +949,18 @@
                     <i class="fa fa-chevron-right text-amber-100/50 text-xs"></i>
                 </div>
             </button>
+            <button id="watchBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
+                <span><i class="fa fa-eye mr-2 text-gray-400"></i>关注
+                    <span class="text-[10px] text-gray-400 ml-1" id="mineWatchCount">0只</span>
+                </span>
+                <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
+            </button>
+            <button id="notifCenterBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
+                <span><i class="fa fa-bell-o mr-2 text-gray-400"></i>消息中心
+                    <span id="mineNotifBadge" class="hidden ml-1.5 text-[10px] font-bold text-white bg-[#ff4d4f] rounded-full px-1.5 py-0.5 align-middle">0</span>
+                </span>
+                <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
+            </button>
             <button id="settingsBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
                 <span><i class="fa fa-cog mr-2 text-gray-400"></i>设置</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
@@ -945,6 +982,103 @@
         <div class="text-[11px] text-gray-400 mt-4 text-center leading-relaxed">
             数据保存在浏览器本地，清除浏览器数据会丢失<br>
             行情来源：腾讯财经 · 分红来源：东方财富
+        </div>
+    </div>
+
+    <!-- 消息中心页面：当日重要信息（除权提醒 + 股息率提醒），券商级消息推送 -->
+    <div id="pageNotifCenter" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+        <!-- 顶部导航 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <button id="notifBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    消息中心
+                </h2>
+            </div>
+            <button id="notifReadAllBtn" class="text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 active:scale-95 transition-transform">
+                <i class="fa fa-check-circle text-[11px]"></i>全部已读
+            </button>
+        </div>
+
+        <!-- 今日概览横幅 -->
+        <div class="relative overflow-hidden rounded-2xl p-4 text-white shadow-xl mb-4" style="background: linear-gradient(135deg,#2b2217 0%,#4a3218 55%,#6b451f 100%);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+            <div class="relative z-10 flex items-center justify-between">
+                <div>
+                    <div class="text-[11px] text-amber-100/60 mb-1"><i class="fa fa-bell-o mr-1"></i>今日重要消息</div>
+                    <div class="text-[22px] font-bold text-amber-200 tabular-nums" id="notifTodayCount">0 条</div>
+                </div>
+                <div class="text-right space-y-1">
+                    <div class="text-[11px] text-amber-100/60">除权动态 <span class="text-amber-200 font-semibold" id="notifExdivCount">0</span></div>
+                    <div class="text-[11px] text-amber-100/60">股息率提醒 <span class="text-amber-200 font-semibold" id="notifYieldCount">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 消息列表 -->
+        <div id="notifList" class="space-y-3"></div>
+        <div class="text-center text-[11px] text-gray-400 mt-6">除权提醒随分红数据每日更新 · 关注股息率突破 4%/5%/6% 各提醒一次</div>
+    </div>
+
+    <!-- 关注页面：自选股票行情 + 股息率阶梯提醒数据源 -->
+    <div id="pageWatchList" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <button id="watchBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    关注
+                </h2>
+            </div>
+            <button id="watchAddBtn" class="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform" title="添加关注">
+                <i class="fa fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- 添加关注卡片（默认隐藏） -->
+        <div id="watchAddCard" class="hidden bg-white rounded-2xl card-shadow p-4 mb-4">
+            <div class="flex items-center gap-1.5 mb-3">
+                <i class="fa fa-plus-circle text-accent text-sm"></i>
+                <span class="text-sm font-semibold text-gray-700">添加关注股票</span>
+            </div>
+            <div class="flex gap-2 mb-3">
+                <button type="button" data-market="A" class="watch-market-btn flex-1 py-2 rounded-xl border-2 font-medium text-sm bg-accent text-white border-accent">A股</button>
+                <button type="button" data-market="HK" class="watch-market-btn flex-1 py-2 rounded-xl border-2 font-medium text-sm bg-white text-gray-500 border-gray-200">港股</button>
+            </div>
+            <div class="relative mb-3">
+                <input id="watchCodeInput" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="输入 6 位 A股 / 5 位港股代码">
+                <i class="fa fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+            </div>
+            <div class="flex gap-2">
+                <button id="watchCancelBtn" class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium text-sm active:bg-gray-50">取消</button>
+                <button id="watchConfirmBtn" class="flex-1 py-2.5 rounded-xl bg-accent text-white font-medium text-sm active:opacity-90">添加</button>
+            </div>
+            <div id="watchAddHint" class="mt-2 text-xs text-gray-400">输入代码后自动获取名称与最新价</div>
+        </div>
+
+        <!-- 关注列表 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">关注列表</span>
+                <span class="text-[10px] text-gray-400 ml-auto" id="watchCountTag">0 只</span>
+            </div>
+            <div id="watchListEl" class="divide-y divide-gray-50">
+                <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无关注股票</div>
+            </div>
+        </div>
+
+        <div class="text-[11px] text-gray-400 text-center leading-relaxed">
+            关注股票达 4% / 5% / 6% 股息率时，消息中心提醒一次<br>
+            行情随持仓页每 2 秒刷新 · 股息率仅 A 股可自动计算
         </div>
     </div>
 
@@ -1251,9 +1385,15 @@
                 <div class="w-1 h-5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
                 分红里程碑
             </h2>
-            <button id="milestoneSettingBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-500 active:scale-95 transition-transform" title="设置里程碑节点">
-                <i class="fa fa-cog"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <button class="notif-bell w-10 h-10 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform relative flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
+                    <i class="fa fa-bell text-[16px]"></i>
+                    <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff4d4f] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+                </button>
+                <button id="milestoneSettingBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-500 active:scale-95 transition-transform" title="设置里程碑节点">
+                    <i class="fa fa-cog"></i>
+                </button>
+            </div>
         </div>
 
         <!-- 深色荣誉横幅 -->
@@ -2269,9 +2409,12 @@
                         try{ localStorage.setItem('dividendHkFx', String(rate)); }catch(e){}
                     }
                 }
-                // 2) 批量拉取所有持仓最新价格
+                // 2) 批量拉取所有持仓 + 关注股票最新价格
+                const watchListNow = loadWatchList();
+                const quoteList = holdDataList.map(it => ({market: it.marketType, code: it.code}));
+                watchListNow.forEach(function(w){ quoteList.push({market: w.market, code: w.code}); });
                 const quotes = await new Promise(function(res){
-                    fetchQuotesBatch(holdDataList.map(it => ({market: it.marketType, code: it.code})), function(q){ res(q); });
+                    fetchQuotesBatch(quoteList, function(q){ res(q); });
                 });
                 let changed = false;
                 holdDataList.forEach(function(it){
@@ -2291,24 +2434,46 @@
                         changed = true;
                     }
                 });
-                // 3) A股分红：按天缓存刷新最新分红数据（拉取失败的1小时后重试）
+                // 更新关注股票行情（内存 + 本地持久化）
+                let watchChanged = false;
+                watchListNow.forEach(function(w){
+                    const q = quotes[getTencentPrefix(w.market, w.code)];
+                    if(q && q.price != null && !isNaN(q.price) && q.price > 0){
+                        if(!watchQuotes[w.code] || watchQuotes[w.code].price !== q.price || watchQuotes[w.code].changePct !== q.changePct){
+                            watchChanged = true;
+                        }
+                        watchQuotes[w.code] = {
+                            name: q.name || w.name || w.code,
+                            price: q.price,
+                            changePct: q.changePct,
+                            change: q.change,
+                            prevClose: q.prevClose
+                        };
+                    }
+                });
+                if(watchChanged) saveWatchQuotes();
+                // 3) A股分红：持仓 + 关注列表（按天缓存刷新最新分红数据，拉取失败的1小时后重试）
                 const divTasks = [];
-                holdDataList.forEach(function(it){
-                    if(it.marketType !== 'A') return;
-                    const cache = divCacheMap[it.code];
+                const divScanList = holdDataList.map(function(it){ return {market: it.marketType, code: it.code}; });
+                watchListNow.forEach(function(w){ divScanList.push({market: w.market, code: w.code}); });
+                divScanList.forEach(function(ent){
+                    if(ent.market !== 'A') return;
+                    const cache = divCacheMap[ent.code];
                     const needRefresh = !cache
                         || (cache.records == null && Date.now() - cache.t > 3600*1000)      // 拉取失败，1小时重试
                         || (!cache.records || !cache.records.length) && Date.now() - cache.t > 3600*1000 // 空数据，1小时重试
                         || Date.now() - cache.t > 24*3600*1000;                                  // 正常24小时刷新
                     if(needRefresh){
                         divTasks.push(new Promise(function(res){
-                            fetchADiv(it.code, function(records){
-                                divCacheMap[it.code] = { t: Date.now(), records: records || null };
+                            fetchADiv(ent.code, function(records){
+                                divCacheMap[ent.code] = { t: Date.now(), records: records || null };
                                 if(records && records.length){
                                     const avg = calcAvgDiv(records, 1);
                                     if(avg != null){
                                         const v = Number(avg.toFixed(4));
-                                        if(v > 0) it.divPerShare = v;
+                                        // 持仓股：同步预测每股分红；关注股：只用于股息率计算
+                                        const hold = holdDataList.find(function(h){ return h.code === ent.code; });
+                                        if(hold && v > 0) hold.divPerShare = v;
                                     }
                                 }
                                 res();
@@ -2317,6 +2482,8 @@
                     }
                 });
                 await Promise.all(divTasks);
+                // 分红数据拉取后：更新除权提醒（今天登记/除权）与未读角标
+                if(divTasks.length) collectExdivNotif();
                 // 3.5) 今年涨幅基础价：每天拉取一次（年初首个交易日收盘价，前复权）
                 fetchYtdBase();
                 // 4) 分红除权：A股现金分红除权除息日到期后，自动下调成本价（真实净成本）
@@ -2381,8 +2548,10 @@
                     computeYearlyReturn();
                     historyYearlyComputed = true;
                 }
-                if(changed || fxUpdated || divTasks.length){
+                if(changed || fxUpdated || divTasks.length || watchChanged){
                     saveLocal();
+                    // 行情刷新后：更新关注股息率阶梯提醒（突破 4%/5%/6% 各提醒一次）
+                    updateYieldNotif();
                     renderPage();
                     // 如果当前在统计页，同步刷新统计数据
                     if(activeTab === 'stats'){
@@ -3799,13 +3968,15 @@
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
-            // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告），等效于点击左上角返回
+            // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心），等效于点击左上角返回
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageTradeLog').classList.add('hidden');
             document.querySelector('#pageStockEdit').classList.add('hidden');
             document.querySelector('#pageTrade').classList.add('hidden');
             document.querySelector('#pageAssetHigh').classList.add('hidden');
             document.querySelector('#pageAnnualReport').classList.add('hidden');
+            document.querySelector('#pageNotifCenter').classList.add('hidden');
+            document.querySelector('#pageWatchList').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
@@ -3883,6 +4054,9 @@
             document.querySelector('#mineTotalAsset').innerText = fmtMoney(Number(sum.totalMarket));
             document.querySelector('#mineYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
             document.querySelector('#mineTotalDiv').innerText = fmtMoney(Number(sum.totalDivReceived));
+            // 关注数量
+            const mcEl = document.querySelector('#mineWatchCount');
+            if(mcEl) mcEl.innerText = loadWatchList().length + '只';
             // A股/港股数量
             document.querySelector('#mineAShare').innerText = sum.aShareNum;
             document.querySelector('#mineHKShare').innerText = sum.hkShareNum;
@@ -3907,6 +4081,455 @@
         let arIndexCache = { shPrice: null, hs300Price: null, shBase: null, hs300Base: null, fetchedDate: null };
         // 当前查看的报告年度：null=当年（打开报告时重置为当年，可左右切换回看往年）
         let arReportYear = null;
+        // ==================== 消息中心（除权提醒 + 股息率提醒） ====================
+        let notifReturnTab = 'hold';
+        // 股息率关注阶梯：达到 4% / 5% / 6% 各提醒一次（突破瞬间定格，之后不再重复）
+        const notifYieldLevels = [4, 5, 6];
+        // ---- 关注列表（我的页 - 关注） ----
+        function loadWatchList(){
+            try{ const w = JSON.parse(localStorage.getItem('dividendWatchList') || '[]'); return Array.isArray(w) ? w : []; }catch(e){ return []; }
+        }
+        function saveWatchList(list){
+            try{ localStorage.setItem('dividendWatchList', JSON.stringify(list)); }catch(e){}
+        }
+        // 关注股票最新行情缓存（内存 + 本地持久，跨会话显示上次数据）
+        let watchQuotes = {};
+        try{ watchQuotes = JSON.parse(localStorage.getItem('dividendWatchQuotes') || '{}') || {}; }catch(e){ watchQuotes = {}; }
+        function saveWatchQuotes(){
+            try{ localStorage.setItem('dividendWatchQuotes', JSON.stringify(watchQuotes)); }catch(e){}
+        }
+        // 股息率阶梯已提醒记录（跨会话永久：每个阶梯只提醒一次）
+        function loadNotifFired(){
+            try{ return JSON.parse(localStorage.getItem('dividendNotifFired') || '{}') || {}; }catch(e){ return {}; }
+        }
+        function saveNotifFired(f){
+            try{ localStorage.setItem('dividendNotifFired', JSON.stringify(f)); }catch(e){}
+        }
+        // 消息存储：{ date: 'YYYY-MM-DD', items: [{type:'exdiv'|'yield', code, market, name, ...}], readAt: 时间戳 }
+        function getNotifStore(){
+            try{ return JSON.parse(localStorage.getItem('dividendNotifications') || '{"date":"","items":[]}'); }catch(e){}
+            return { date: '', items: [] };
+        }
+        function saveNotifStore(s){
+            try{ localStorage.setItem('dividendNotifications', JSON.stringify(s)); }catch(e){}
+        }
+        function notifNowTime(){
+            const d = new Date();
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+        // 除权提醒：扫描分红缓存，今天股权登记 / 今天除权除息 的股票生成提醒（每日更新，同日去重）
+        function collectExdivNotif(){
+            if(!holdDataList || !holdDataList.length) return;
+            const store = getNotifStore();
+            const today = todayStr();
+            if(store.date !== today){
+                store.date = today;
+                store.items = [];
+            }
+            const curYear = String(new Date().getFullYear());
+            holdDataList.forEach(function(it){
+                if(it.marketType !== 'A') return;
+                const cache = divCacheMap[it.code];
+                if(!cache || !cache.records || !cache.records.length) return;
+                cache.records.forEach(function(r){
+                    const per10 = Number(r.PRETAX_BONUS_RMB);
+                    if(isNaN(per10) || per10 <= 0) return;
+                    const equityDate = String(r.EQUITY_RECORD_DATE || '').substring(0, 10);
+                    const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0, 10);
+                    const perShare = per10 / 10;
+                    const count = Number(it.count) || 0;
+                    const amount = Number((perShare * count).toFixed(2));
+                    const exYear = exDate ? exDate.substring(0, 4) : (equityDate ? equityDate.substring(0, 4) : '');
+                    // 今日股权登记
+                    if(equityDate === today && exYear === curYear){
+                        const key = it.code + '|exdiv|reg';
+                        let item = store.items.find(function(x){ return x.key === key; });
+                        if(!item){
+                            store.items.push({
+                                key: key, type: 'exdiv', code: it.code, market: it.marketType, name: it.name,
+                                sub: 'reg', perShare: perShare, amount: amount, time: notifNowTime()
+                            });
+                        } else {
+                            item.perShare = perShare; item.amount = amount; item.time = notifNowTime();
+                        }
+                    }
+                    // 今日除权除息
+                    if(exDate === today && exYear === curYear){
+                        const key = it.code + '|exdiv|ex';
+                        let item = store.items.find(function(x){ return x.key === key; });
+                        if(!item){
+                            store.items.push({
+                                key: key, type: 'exdiv', code: it.code, market: it.marketType, name: it.name,
+                                sub: 'ex', perShare: perShare, amount: amount, time: notifNowTime()
+                            });
+                        } else {
+                            item.perShare = perShare; item.amount = amount; item.time = notifNowTime();
+                        }
+                    }
+                });
+            });
+            saveNotifStore(store);
+            updateNotifBadge();
+        }
+        // 股息率提醒：仅关注列表的 A 股，达到 4%/5%/6% 阶梯的瞬间提醒一次（定格突破那一刻的数据，之后不重复）
+        function updateYieldNotif(){
+            const watchList = loadWatchList();
+            const store = getNotifStore();
+            const today = todayStr();
+            if(store.date !== today){
+                store.date = today;
+                store.items = [];
+            }
+            const fired = loadNotifFired();
+            let changed = false;
+            watchList.forEach(function(w){
+                if(w.market !== 'A') return; // 港股无自动分红数据，不参与股息率提醒
+                const q = watchQuotes[w.code];
+                if(!q || !q.price || !(q.price > 0)) return;
+                const cache = divCacheMap[w.code];
+                if(!cache || !cache.records || !cache.records.length) return;
+                const avg = calcAvgDiv(cache.records, 1);
+                if(avg == null || !(avg > 0)) return;
+                const annualPer = Number(avg);
+                const yieldPct = annualPer / q.price * 100;
+                notifYieldLevels.forEach(function(level){
+                    if(yieldPct < level - 1e-9) return;
+                    const fireKey = w.code + '|' + level;
+                    if(fired[fireKey]) return; // 该阶梯已提醒过一次，永久不再重复
+                    fired[fireKey] = today;
+                    const key = w.code + '|yield|' + level;
+                    store.items.push({
+                        key: key, type: 'yield', code: w.code, market: w.market, name: q.name || w.code,
+                        level: level, yieldPct: yieldPct, annualPer: annualPer, price: q.price, time: notifNowTime()
+                    });
+                    changed = true;
+                });
+            });
+            if(changed){
+                saveNotifFired(fired);
+                saveNotifStore(store);
+                updateNotifBadge();
+            }
+        }
+        // 更新全站铃铛角标 + 我的页入口角标
+        function updateNotifBadge(){
+            const store = getNotifStore();
+            const today = todayStr();
+            const unread = (store.date === today) ? store.items.filter(function(x){ return !x.read; }).length : 0;
+            const badgeText = unread > 99 ? '99+' : String(unread);
+            document.querySelectorAll('.notif-badge').forEach(function(b){
+                b.classList.toggle('hidden', unread <= 0);
+                b.innerText = badgeText;
+            });
+            const mineBadge = document.querySelector('#mineNotifBadge');
+            if(mineBadge){
+                mineBadge.classList.toggle('hidden', unread <= 0);
+                mineBadge.innerText = badgeText;
+            }
+        }
+        // 渲染消息中心页面
+        function renderNotifCenter(){
+            const store = getNotifStore();
+            const today = todayStr();
+            if(store.date !== today){
+                store.date = today;
+                store.items = [];
+                saveNotifStore(store);
+            }
+            const items = store.items;
+            const exdivItems = items.filter(function(x){ return x.type === 'exdiv'; });
+            const yieldItems = items.filter(function(x){ return x.type === 'yield'; });
+            document.querySelector('#notifExdivCount').innerText = String(exdivItems.length);
+            document.querySelector('#notifYieldCount').innerText = String(yieldItems.length);
+            document.querySelector('#notifTodayCount').innerText = items.length + ' 条';
+            const listEl = document.querySelector('#notifList');
+            if(!items.length){
+                listEl.innerHTML = '<div class="bg-white rounded-2xl card-shadow px-5 py-10 text-center">'
+                    + '<div class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-3"><i class="fa fa-bell-slash-o text-accent/60 text-xl"></i></div>'
+                    + '<div class="text-gray-500 text-sm font-medium">今日暂无重要消息</div>'
+                    + '<div class="text-[11px] text-gray-400 mt-1">安心收息，静待花开</div>'
+                    + '</div>';
+                return;
+            }
+            let html = '';
+            // 除权动态分组
+            if(exdivItems.length){
+                html += '<div class="flex items-center gap-1.5 mb-2 mt-1">'
+                    + '<div class="w-1 h-3.5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>'
+                    + '<span class="text-[12px] font-semibold text-gray-600">除权动态</span>'
+                    + '<span class="text-[10px] text-gray-400">今日登记 / 除权</span>'
+                    + '</div>';
+                exdivItems.forEach(function(m){
+                    const isReg = m.sub === 'reg';
+                    const badgeText = isReg ? '今日登记' : '今日除权';
+                    const badgeClass = isReg ? 'bg-accent/10 text-accent' : 'bg-purple-50 text-purple-600';
+                    const iconBg = isReg ? 'bg-orange-50' : 'bg-purple-50';
+                    const iconCls = isReg ? 'text-accent' : 'text-purple-500';
+                    const icon = isReg ? 'fa-calendar-check-o' : 'fa-exchange';
+                    const tagHtml = m.market === 'HK'
+                        ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">港</span>'
+                        : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
+                    html += '<div class="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 active:bg-gray-50">'
+                        + '<div class="w-11 h-11 rounded-2xl ' + iconBg + ' flex items-center justify-center flex-shrink-0"><i class="fa ' + icon + ' ' + iconCls + ' text-lg"></i></div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5 min-w-0">'
+                        + '<span class="text-[15px] font-semibold text-gray-800 truncate">' + m.name + '</span>' + tagHtml
+                        + '<span class="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ' + badgeClass + '">' + badgeText + '</span>'
+                        + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + m.code + ' · 每股分红 <span class="text-gray-600 font-medium">' + m.perShare.toFixed(3) + '</span> 元</div>'
+                        + '<div class="flex items-center justify-between mt-1.5">'
+                        + '<span class="text-[11px] text-gray-500">' + (isReg ? '登记后待除权' : '今日除权到账') + ' · 预计 <span class="text-[15px] font-bold text-accent tabular-nums">' + fmtMoney(m.amount) + '</span></span>'
+                        + '<span class="text-[10px] text-gray-300">' + m.time + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</div>';
+                });
+            }
+            // 股息率提醒分组（仅关注股票，突破阶梯瞬间定格提醒一次）
+            if(yieldItems.length){
+                html += '<div class="flex items-center gap-1.5 mb-2 mt-4">'
+                    + '<div class="w-1 h-3.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>'
+                    + '<span class="text-[12px] font-semibold text-gray-600">关注 · 股息率提醒</span>'
+                    + '<span class="text-[10px] text-gray-400">突破 4%/5%/6% 各提醒一次</span>'
+                    + '</div>';
+                yieldItems.forEach(function(m){
+                    // 兼容旧数据：早期版本消息无 level 字段，按股息率推导所在档位并一次性补写
+                    if(m.level == null){
+                        m.level = notifYieldLevels[0];
+                        notifYieldLevels.forEach(function(lv){
+                            if(m.yieldPct >= lv - 1e-9) m.level = lv;
+                        });
+                        const curStore = getNotifStore();
+                        curStore.items.forEach(function(x){
+                            if(x.key === m.key && x.level == null){
+                                x.level = m.level;
+                            }
+                        });
+                        saveNotifStore(curStore);
+                    }
+                    const tagHtml = m.market === 'HK'
+                        ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">港</span>'
+                        : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
+                    const isHkPrice = m.market === 'HK';
+                    html += '<div class="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 overflow-hidden relative active:bg-gray-50">'
+                        + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg,#f59e0b,#d97706);"></div>'
+                        + '<div class="w-14 h-14 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white text-[14px] font-bold flex-shrink-0 shadow-lg shadow-amber-300/40 tabular-nums">' + m.yieldPct.toFixed(2) + '%</div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5 min-w-0">'
+                        + '<span class="text-[15px] font-semibold text-gray-800 truncate">' + m.name + '</span>' + tagHtml
+                        + '<span class="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 whitespace-nowrap">突破 ' + m.level + '% 关注价</span>'
+                        + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + m.code + ' · 年度每股分红 <span class="text-gray-600 font-medium">' + fmtMoney(m.annualPer) + '</span> 元 · 现价 <span class="text-gray-600 font-medium">' + (isHkPrice ? 'HK$' : '') + fmtMoney(m.price) + '</span></div>'
+                        + '<div class="flex items-center justify-between mt-1.5">'
+                        + '<span class="text-[11px] text-accent"><i class="fa fa-bullseye mr-1"></i>股息率达标，可关注买入时机</span>'
+                        + '<span class="text-[10px] text-gray-300">' + m.time + '</span>'
+                        + '</div>'
+                        + '</div>'
+                        + '</div>';
+                });
+            }
+            listEl.innerHTML = html;
+        }
+        // 全部标记已读
+        function markAllNotifRead(){
+            const store = getNotifStore();
+            const today = todayStr();
+            if(store.date === today){
+                store.items.forEach(function(x){ x.read = true; });
+                saveNotifStore(store);
+            }
+            updateNotifBadge();
+            // 若当前在消息中心页面，刷新未读视觉（红点提示已消失）
+            const page = document.querySelector('#pageNotifCenter');
+            if(page && !page.classList.contains('hidden')){
+                renderNotifCenter();
+            }
+        }
+        // 打开消息中心（从任意页面进入，返回时回到原页面）
+        function openNotifCenter(){
+            notifReturnTab = activeTab || 'hold';
+            const pageEl = document.querySelector('#' + (notifReturnTab === 'hold' ? 'pageHold' : notifReturnTab === 'stats' ? 'pageStats' : notifReturnTab === 'analysis' ? 'pageAnalysis' : notifReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
+            if(pageEl) pageEl.classList.add('hidden');
+            document.querySelector('#pageNotifCenter').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
+            renderNotifCenter();
+            // 进入即已读（券商惯例）
+            markAllNotifRead();
+        }
+        function closeNotifCenter(){
+            document.querySelector('#pageNotifCenter').classList.add('hidden');
+            const pageEl = document.querySelector('#' + (notifReturnTab === 'hold' ? 'pageHold' : notifReturnTab === 'stats' ? 'pageStats' : notifReturnTab === 'analysis' ? 'pageAnalysis' : notifReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
+            if(pageEl) pageEl.classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.toggle('hidden', notifReturnTab !== 'hold');
+            renderPage();
+        }
+
+        // ==================== 关注列表（我的页 - 关注） ====================
+        let watchReturnTab = 'mine';
+        // 打开关注页面
+        function openWatchPage(){
+            watchReturnTab = activeTab || 'mine';
+            const pageEl = document.querySelector('#' + (watchReturnTab === 'hold' ? 'pageHold' : watchReturnTab === 'stats' ? 'pageStats' : watchReturnTab === 'analysis' ? 'pageAnalysis' : watchReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
+            if(pageEl) pageEl.classList.add('hidden');
+            document.querySelector('#pageWatchList').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
+            renderWatchPage();
+        }
+        function closeWatchPage(){
+            document.querySelector('#pageWatchList').classList.add('hidden');
+            const pageEl = document.querySelector('#' + (watchReturnTab === 'hold' ? 'pageHold' : watchReturnTab === 'stats' ? 'pageStats' : watchReturnTab === 'analysis' ? 'pageAnalysis' : watchReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
+            if(pageEl) pageEl.classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.toggle('hidden', watchReturnTab !== 'hold');
+            renderPage();
+        }
+        // 渲染关注列表
+        function renderWatchPage(){
+            const list = loadWatchList();
+            const listEl = document.querySelector('#watchListEl');
+            const countTag = document.querySelector('#watchCountTag');
+            const mineCount = document.querySelector('#mineWatchCount');
+            if(countTag) countTag.innerText = list.length + ' 只';
+            if(mineCount) mineCount.innerText = list.length + '只';
+            if(!list.length){
+                listEl.innerHTML = '<div class="px-5 py-10 text-center">'
+                    + '<div class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-3"><i class="fa fa-eye text-accent/60 text-xl"></i></div>'
+                    + '<div class="text-gray-500 text-sm font-medium">暂无关注股票</div>'
+                    + '<div class="text-[11px] text-gray-400 mt-1">点击右上角 + 添加关注，股息率达标自动提醒</div>'
+                    + '</div>';
+                return;
+            }
+            // 按涨跌幅降序（参考当日涨跌幅榜）
+            const sorted = list.slice().sort(function(a, b){
+                const qa = watchQuotes[a.code]; const qb = watchQuotes[b.code];
+                const pa = qa && qa.changePct != null && !isNaN(qa.changePct) ? qa.changePct : -999;
+                const pb = qb && qb.changePct != null && !isNaN(qb.changePct) ? qb.changePct : -999;
+                return pb - pa;
+            });
+            let html = '';
+            sorted.forEach(function(w){
+                const q = watchQuotes[w.code];
+                const nameStr = q && q.name ? q.name : (w.name || w.code);
+                const tagHtml = w.market === 'HK'
+                    ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">港</span>'
+                    : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
+                // 现价与涨跌幅（涨红跌绿；无数据显示 --）
+                let priceText = '--', priceCls = 'text-gray-400';
+                let diffText = '--', diffCls = 'text-gray-400';
+                let pctText = '--', pctCls = 'text-gray-400';
+                let yieldText = '息率 --';
+                if(q && q.price != null && !isNaN(q.price) && q.price > 0){
+                    const decimals = (w.market === 'HK' || /^\d{6}$/.test(w.code) && /^(1[5-9]|5[0-9])/.test(w.code)) ? 3 : 2;
+                    priceText = (w.market === 'HK' ? 'HK$' : '') + fmtMoney(q.price);
+                    const pct = q.changePct;
+                    if(pct != null && !isNaN(pct)){
+                        if(pct > 0){ pctText = '+' + pct.toFixed(2) + '%'; pctCls = 'text-[#ff4d4f]'; }
+                        else if(pct < 0){ pctText = pct.toFixed(2) + '%'; pctCls = 'text-[#00d68f]'; }
+                        else { pctText = '0.00%'; pctCls = 'text-gray-500'; }
+                        if(pct > 0) priceCls = 'text-[#ff4d4f]';
+                        else if(pct < 0) priceCls = 'text-[#00d68f]';
+                        else priceCls = 'text-gray-800';
+                    }
+                    if(q.change != null && !isNaN(q.change)){
+                        if(q.change > 0){ diffText = '+' + q.change.toFixed(decimals); diffCls = 'text-[#ff4d4f]'; }
+                        else if(q.change < 0){ diffText = q.change.toFixed(decimals); diffCls = 'text-[#00d68f]'; }
+                        else { diffText = '0.00'; diffCls = 'text-gray-500'; }
+                    }
+                    // 股息率（A股有分红缓存时显示）
+                    if(w.market === 'A'){
+                        const cache = divCacheMap[w.code];
+                        if(cache && cache.records && cache.records.length){
+                            const avg = calcAvgDiv(cache.records, 1);
+                            if(avg != null && avg > 0){
+                                const yp = avg / q.price * 100;
+                                yieldText = '息率 ' + yp.toFixed(2) + '%';
+                            }
+                        }
+                    }
+                }
+                html += '<div class="px-4 py-3 flex items-center gap-3 active:bg-gray-50" data-watch="' + w.code + '">'
+                    + '<div class="flex-1 min-w-0">'
+                    + '<div class="flex items-center gap-1.5 min-w-0">'
+                    + '<span class="text-[15px] font-semibold text-gray-800 truncate">' + nameStr + '</span>' + tagHtml
+                    + '<button class="ml-auto w-7 h-7 rounded-full bg-red-50 text-red-400 flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform" data-del="' + w.code + '" title="取消关注"><i class="fa fa-trash-o text-[11px]"></i></button>'
+                    + '</div>'
+                    + '<div class="text-[11px] text-gray-400 mt-0.5">' + w.code + '</div>'
+                    + '</div>'
+                    + '<div class="text-right flex-shrink-0 ml-1">'
+                    + '<div class="text-[15px] font-semibold tabular-nums whitespace-nowrap ' + priceCls + '">' + priceText + '</div>'
+                    + '<div class="text-[11px] mt-0.5 tabular-nums whitespace-nowrap ' + diffCls + '">' + diffText + '</div>'
+                    + '</div>'
+                    + '<div class="text-right flex-shrink-0 ml-2" style="width:76px;">'
+                    + '<div class="text-[13px] font-semibold tabular-nums whitespace-nowrap ' + pctCls + '">' + pctText + '</div>'
+                    + '<div class="text-[10px] mt-0.5 text-gray-400 whitespace-nowrap">' + yieldText + '</div>'
+                    + '</div>'
+                    + '</div>';
+            });
+            listEl.innerHTML = html;
+            // 绑定删除
+            listEl.querySelectorAll('[data-del]').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    const code = this.getAttribute('data-del');
+                    showConfirm('确定取消关注 ' + code + ' 吗？', function(){
+                        const cur = loadWatchList();
+                        saveWatchList(cur.filter(function(x){ return x.code !== code; }));
+                        delete watchQuotes[code];
+                        saveWatchQuotes();
+                        // 保留已触发的阶梯提醒记录，不删除
+                        renderWatchPage();
+                        renderMinePage();
+                    });
+                });
+            });
+        }
+        // 添加关注：先拉行情验证代码，成功则加入列表
+        function addWatchStock(){
+            const code = document.querySelector('#watchCodeInput').value.replace(/\s+/g, '');
+            const hint = document.querySelector('#watchAddHint');
+            if(!/^\d{5,6}$/.test(code)){
+                hint.innerText = '请输入 5 位港股或 6 位 A 股代码';
+                hint.className = 'mt-2 text-xs text-red-500';
+                return;
+            }
+            const market = document.querySelector('.watch-market-btn[data-market="A"]').classList.contains('bg-accent') ? 'A' : 'HK';
+            const cur = loadWatchList();
+            if(cur.some(function(x){ return x.code === code; })){
+                hint.innerText = '该股票已在关注列表中';
+                hint.className = 'mt-2 text-xs text-orange-500';
+                return;
+            }
+            hint.innerText = '正在获取行情...';
+            hint.className = 'mt-2 text-xs text-gray-400';
+            fetchQuotesBatch([{market: market, code: code}], function(q){
+                const key = getTencentPrefix(market, code);
+                const quote = q[key];
+                if(quote && quote.price != null && !isNaN(quote.price) && quote.price > 0){
+                    cur.push({ code: code, market: market, name: quote.name || code });
+                    saveWatchList(cur);
+                    watchQuotes[code] = {
+                        name: quote.name || code,
+                        price: quote.price,
+                        changePct: quote.changePct,
+                        change: quote.change,
+                        prevClose: quote.prevClose
+                    };
+                    saveWatchQuotes();
+                    hint.innerText = '已添加：' + (quote.name || code);
+                    hint.className = 'mt-2 text-xs text-green-500';
+                    document.querySelector('#watchCodeInput').value = '';
+                    document.querySelector('#watchAddCard').classList.add('hidden');
+                    renderWatchPage();
+                    renderMinePage();
+                    // 触发一次刷新：让关注股分红缓存尽快就绪（股息率计算用）
+                    refreshAll();
+                } else {
+                    hint.innerText = '未找到该股票，请检查代码或市场类型';
+                    hint.className = 'mt-2 text-xs text-red-500';
+                }
+            });
+        }
+
         function openAnnualReport(){
             arReportYear = new Date().getFullYear();
             document.querySelector('#pageMine').classList.add('hidden');
@@ -4458,7 +5081,41 @@
         let pnlRankRendered = false;
         let pnlRankRenderDate = null;
         // 渲染统计页面
+        // 统计页各板块刷新时间记录（持久化，跨会话延用；分红类每日保留首次时间，行情类每次真实刷新都更新）
+        function statsRefreshNow(){
+            const d = new Date();
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0') + ':' + d.getSeconds().toString().padStart(2, '0');
+        }
+        function markStatsRefresh(key, elId, mechanism, keepFirstOfDay){
+            const now = new Date();
+            const t = statsRefreshNow();
+            const date = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            let log = {};
+            try { log = JSON.parse(localStorage.getItem('dividendStatsRefreshLog') || '{}'); } catch(e){ log = {}; }
+            if(keepFirstOfDay && log[key + 'Date'] === date) return; // 分红类同一天只保留首次更新
+            log[key] = t;
+            log[key + 'Date'] = date;
+            try { localStorage.setItem('dividendStatsRefreshLog', JSON.stringify(log)); } catch(e){}
+            const el = document.querySelector(elId);
+            if(el) el.innerText = mechanism + ' · ' + t + ' 更新';
+        }
+        function initStatsRefreshTags(){
+            let log = {};
+            try { log = JSON.parse(localStorage.getItem('dividendStatsRefreshLog') || '{}'); } catch(e){ log = {}; }
+            [
+                ['position', '#statsPositionRefreshTime', '收盘后更新'],
+                ['pnl', '#statsPnlRefreshTime', '收盘后更新'],
+                ['dividend', '#statsDividendRefreshTime', '每日更新'],
+                ['compare', '#statsDivCompareRefreshTime', '每日更新']
+            ].forEach(function(m){
+                const el = document.querySelector(m[1]);
+                if(el) el.innerText = m[2] + ' · ' + (log[m[0]] || '--') + ' 更新';
+            });
+        }
+
         function renderStatsPage(){
+            // 恢复各板块上次刷新时间（持久化，跨会话延用）
+            initStatsRefreshTags();
             // 主动加载分红数据：有A股持仓但divCacheMap为空时，主动触发refreshAll
             const hasAStockForDiv = holdDataList.some(it => it.marketType === 'A');
             const divCacheEmpty = hasAStockForDiv && holdDataList.some(it => it.marketType === 'A' && !divCacheMap[it.code]);
@@ -4622,7 +5279,7 @@
             }
             // 更新时间
             const now = new Date();
-            document.querySelector('#statsUpdateTime').innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' 更新';
+            document.querySelector('#statsUpdateTime').innerText = '交易时段每2秒 · ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' 更新';
 
             // 当日盈亏总额和百分比（标题栏右侧显示）
             const dayPnlSummaryEl = document.querySelector('#statsDayPnlSummary');
@@ -4769,6 +5426,7 @@
                 stockPositionListEl.innerHTML = stockHtml;
             }
             } // end if(needRenderPosition)
+            markStatsRefresh('position', '#statsPositionRefreshTime', '收盘后更新', false);
 
             // ===== 1.6 盈亏排行：按累计盈亏额降序 =====
             // 刷新机制与仓位分布一致：首次渲染一次，之后只有收盘后且今天没渲染过才刷新，
@@ -4880,6 +5538,7 @@
                     pnlRankListEl.innerHTML = rankHtml;
                 }
             }
+            markStatsRefresh('pnl', '#statsPnlRefreshTime', '收盘后更新', false);
 
             // ===== 2. 分红预计派发时间表（仅今年，分即将派发/已派发两部分）=====
             const divList = document.querySelector('#statsDividendList');
@@ -5060,6 +5719,8 @@
                     }
                 }
                 divList.innerHTML = html;
+                // 分红日程数据来自每日刷新的分红缓存，标记当日首次更新即可
+                markStatsRefresh('dividend', '#statsDividendRefreshTime', '每日更新', true);
                 // 绑定子部分折叠点击事件
                 divList.querySelectorAll('.stats-sub-collapse').forEach(function(header){
                     header.addEventListener('click', function(){
@@ -5305,6 +5966,8 @@
                     }
                 }
                 compareList.innerHTML = html;
+                // 分红升降对比数据同样来自每日刷新的分红缓存
+                markStatsRefresh('compare', '#statsDivCompareRefreshTime', '每日更新', true);
                 // 绑定子部分折叠点击事件
                 compareList.querySelectorAll('.stats-sub-collapse').forEach(function(header){
                     header.addEventListener('click', function(){
@@ -6955,6 +7618,46 @@
         // 我的页面：导出数据
         document.querySelector('#annualReportBtn').addEventListener('click', openAnnualReport);
         document.querySelector('#annualReportBackBtn').addEventListener('click', closeAnnualReport);
+        // 消息中心：入口/返回/全部已读
+        document.querySelector('#notifCenterBtn').addEventListener('click', openNotifCenter);
+        document.querySelector('#notifBackBtn').addEventListener('click', closeNotifCenter);
+        document.querySelector('#notifReadAllBtn').addEventListener('click', markAllNotifRead);
+        // 关注列表：入口/返回/添加/删除/市场切换
+        document.querySelector('#watchBtn').addEventListener('click', openWatchPage);
+        document.querySelector('#watchBackBtn').addEventListener('click', closeWatchPage);
+        document.querySelector('#watchAddBtn').addEventListener('click', function(){
+            document.querySelector('#watchAddCard').classList.toggle('hidden');
+            if(!document.querySelector('#watchAddCard').classList.contains('hidden')){
+                const hint = document.querySelector('#watchAddHint');
+                hint.innerText = '输入代码后自动获取名称与最新价';
+                hint.className = 'mt-2 text-xs text-gray-400';
+                document.querySelector('#watchCodeInput').focus();
+            }
+        });
+        document.querySelector('#watchCancelBtn').addEventListener('click', function(){
+            document.querySelector('#watchAddCard').classList.add('hidden');
+        });
+        document.querySelector('#watchConfirmBtn').addEventListener('click', addWatchStock);
+        document.querySelector('#watchCodeInput').addEventListener('keydown', function(e){
+            if(e.key === 'Enter'){ e.preventDefault(); addWatchStock(); }
+        });
+        document.querySelectorAll('.watch-market-btn').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                document.querySelectorAll('.watch-market-btn').forEach(function(b){
+                    b.classList.remove('bg-accent', 'text-white', 'border-accent');
+                    b.classList.add('bg-white', 'text-gray-500', 'border-gray-200');
+                });
+                this.classList.remove('bg-white', 'text-gray-500', 'border-gray-200');
+                this.classList.add('bg-accent', 'text-white', 'border-accent');
+            });
+        });
+        // 页面加载后：初始化消息角标（除权/股息率消息跨会话恢复）
+        updateNotifBadge();
+        // 我的页关注数量
+        (function(){
+            const mc = document.querySelector('#mineWatchCount');
+            if(mc) mc.innerText = loadWatchList().length + '只';
+        })();
         // 年度报告年份切换：左右切换查看往年报告
         document.querySelector('#arPrevYearBtn').addEventListener('click', function(){
             const minY = historyData.portfolioStartYear || new Date().getFullYear();

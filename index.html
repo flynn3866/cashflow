@@ -291,12 +291,19 @@
     </div>
 
     <!-- 新增股票弹窗，max‑2xl同步加宽弹窗最大宽度；背景与主页一致，高度可控可滚动 -->
-    <div id="modalMask" class="fixed inset-0 mask-bg z-50 hidden flex justify-center items-end md:items-center">
-        <div class="bg-pageBg w-full max-w-2xl rounded-t-2xl md:rounded-2xl p-5 max-h-[88vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="modalTitle" class="text-lg font-semibold">新增持仓股票</h3>
-                <button id="closeModalBtn" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
-            </div>
+    <!-- 新增/编辑持仓独立页面 -->
+    <div id="pageStockEdit" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航 -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="stockEditBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <h3 id="modalTitle" class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                新增持仓股票
+            </h3>
+        </div>
+        <div class="bg-white rounded-2xl card-shadow p-5">
             <form id="stockForm" class="space-y-3.5">
                 <!-- 市场类型 -->
                 <div>
@@ -418,13 +425,19 @@
         </div>
     </div>
 
-    <!-- 买入/卖出交易弹窗（券商风格：买入红色主题 / 卖出绿色主题，摊薄成本法预览） -->
-    <div id="tradeModalMask" class="fixed inset-0 mask-bg z-50 hidden flex justify-center items-end md:items-center">
-        <div class="bg-pageBg w-full max-w-2xl rounded-t-2xl md:rounded-2xl p-5 max-h-[88vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="tradeModalTitle" class="text-lg font-semibold">买入</h3>
-                <button id="tradeModalClose" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
-            </div>
+    <!-- 买入/卖出交易独立页面（券商风格：买入红色主题 / 卖出绿色主题，摊薄成本法预览） -->
+    <div id="pageTrade" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航 -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="tradeBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <h3 id="tradeModalTitle" class="text-xl font-semibold flex items-center gap-2">
+                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-[#ff4d4f] to-[#e03434]"></div>
+                买入
+            </h3>
+        </div>
+        <div class="space-y-3.5">
             <!-- 股票信息卡 -->
             <div class="bg-white rounded-xl px-4 py-3 mb-3.5 flex justify-between items-center">
                 <div>
@@ -543,21 +556,24 @@
         </div>
     </div>
 
-    <!-- 资产新高记录弹窗（金色皇冠 · 每次破新高的里程碑轨迹） -->
-    <div id="assetHighModalMask" class="fixed inset-0 mask-bg z-50 hidden flex justify-center items-end md:items-center">
-        <div class="bg-pageBg w-full max-w-2xl rounded-t-2xl md:rounded-2xl p-5 max-h-[88vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm shadow-amber-300"><i class="fa fa-trophy text-xs"></i></span>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-800">资产新高记录</h3>
-                        <div class="text-[11px] text-gray-400">每一次总资产刷新历史最高点</div>
-                    </div>
+    <!-- 资产新高记录独立页面（金色皇冠 · 每次破新高的里程碑轨迹） -->
+    <div id="pageAssetHigh" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航 -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="assetHighBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm shadow-amber-300"><i class="fa fa-trophy text-sm"></i></span>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">资产新高记录</h3>
+                    <div class="text-[11px] text-gray-400">每一次总资产刷新历史最高点</div>
                 </div>
-                <button id="assetHighClose" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
             </div>
+        </div>
+        <div class="space-y-4">
             <!-- 汇总卡（2列：历史最高金色加粗 + 最近新高） -->
-            <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl px-4 py-4 mb-4 grid grid-cols-2 gap-3">
+            <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl px-4 py-4 grid grid-cols-2 gap-3">
                 <div class="text-center border-r border-amber-100">
                     <div class="text-[10px] text-amber-500/70">历史最高</div>
                     <div id="ahMax" class="text-base font-bold text-amber-600 mt-1 tabular-nums">--</div>
@@ -568,11 +584,13 @@
                 </div>
             </div>
             <!-- 破新高时间线（倒序，最新5条） -->
-            <div class="flex items-center justify-between px-1 mb-2">
-                <div class="text-xs text-gray-400">破新高记录</div>
-                <div id="ahCount" class="text-[10px] text-gray-400 bg-white/60 rounded-full px-2 py-0.5">--</div>
+            <div>
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <div class="text-xs text-gray-400">破新高记录</div>
+                    <div id="ahCount" class="text-[10px] text-gray-400 bg-white/60 rounded-full px-2 py-0.5">--</div>
+                </div>
+                <div id="assetHighList" class="space-y-0"></div>
             </div>
-            <div id="assetHighList" class="space-y-0"></div>
         </div>
     </div>
 
@@ -1174,9 +1192,8 @@
         let holdDataList = [];
 
         // dom元素
-        const modalMask = document.querySelector('#modalMask');
         const openModalBtn = document.querySelector('#openModalBtn');
-        const closeModalBtn = document.querySelector('#closeModalBtn');
+        const stockEditBackBtn = document.querySelector('#stockEditBackBtn');
         const cancelBtn = document.querySelector('#cancelBtn');
         const stockForm = document.querySelector('#stockForm');
         const holdListDom = document.querySelector('#holdList');
@@ -2382,17 +2399,19 @@
                 html += '</div>';
                 listDom.innerHTML = html;
             }
-            document.querySelector('#assetHighModalMask').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // 打开资产新高页面（隐藏持仓页）
+            document.querySelector('#pageHold').classList.add('hidden');
+            document.querySelector('#pageAssetHigh').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
         }
         function closeAssetHighModal(){
-            document.querySelector('#assetHighModalMask').classList.add('hidden');
-            document.body.style.overflow = '';
+            // 关闭资产新高页面，恢复持仓页
+            document.querySelector('#pageAssetHigh').classList.add('hidden');
+            document.querySelector('#pageHold').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.remove('hidden');
         }
-        document.querySelector('#assetHighClose').addEventListener('click', closeAssetHighModal);
-        document.querySelector('#assetHighModalMask').addEventListener('click', function(e){
-            if(e.target === this) closeAssetHighModal();
-        });
+        document.querySelector('#assetHighBackBtn').addEventListener('click', closeAssetHighModal);
         // 月底归档：对已过去的月份，取该月最后一天的 dailyAssets 作为 monthlyAssets
         // （软件不常开时，次月初打开会自动补归档）
         function finalizePastMonths(){
@@ -2568,20 +2587,21 @@
 
         // 弹窗打开关闭
         openModalBtn.addEventListener('click', ()=>{
-            modalMask.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // 打开新增持仓页面（隐藏持仓页，页面顶部返回）
             editingId = null;
             stockForm.reset();
             setModalMode(false);
             resetFetchUI();
+            document.querySelector('#pageHold').classList.add('hidden');
+            document.querySelector('#pageStockEdit').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
         })
-        // 编辑持仓：打开同一弹窗，填充当前值，仅股数/成本可改
+        // 编辑持仓：打开同一页面，填充当前值，仅股数/成本可改
         function editItem(id){
             const item = holdDataList.find(it => it.id === id);
             if(!item) return;
             editingId = id;
-            modalMask.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
             marketTypeEl.value = item.marketType;
             // 更新市场类型按钮状态
             document.querySelectorAll('.market-type-btn').forEach(function(b){
@@ -2625,16 +2645,21 @@
                 setTaxActive();
             }
             setModalMode(true);
+            // 打开编辑页面（隐藏持仓页）
+            document.querySelector('#pageHold').classList.add('hidden');
+            document.querySelector('#pageStockEdit').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
         }
         function closeModal(){
-            modalMask.classList.add('hidden');
-            document.body.style.overflow = '';
+            // 关闭编辑页面，恢复持仓页
+            document.querySelector('#pageStockEdit').classList.add('hidden');
+            document.querySelector('#pageHold').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.remove('hidden');
+            renderPage();
         }
-        closeModalBtn.addEventListener('click', closeModal);
+        stockEditBackBtn.addEventListener('click', closeModal);
         cancelBtn.addEventListener('click', closeModal);
-        modalMask.addEventListener('click', (e)=>{
-            if(e.target === modalMask) closeModal();
-        })
 
         // 单只持仓市值（人民币口径）：A股=股数×现价；港股=股数×港币现价×汇率
         function getMarketValue(item){
@@ -3053,15 +3078,21 @@
             cfm.className = mode === 'buy'
                 ? 'flex-1 py-3 rounded-xl text-white font-medium shadow-lg bg-gradient-to-r from-[#ff4d4f] to-[#e03434] shadow-red-200'
                 : 'flex-1 py-3 rounded-xl text-white font-medium shadow-lg bg-gradient-to-r from-[#00c987] to-[#00a56c] shadow-green-200';
-            document.querySelector('#tradeModalMask').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // 打开交易页面（隐藏持仓页，顶部返回）
+            document.querySelector('#pageHold').classList.add('hidden');
+            document.querySelector('#pageTrade').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
             updateTradePreview();
             setTimeout(function(){ document.querySelector('#tradeQty').focus(); }, 100);
         }
         function closeTradeModal(){
-            document.querySelector('#tradeModalMask').classList.add('hidden');
-            document.body.style.overflow = '';
+            // 关闭交易页面，恢复持仓页
+            document.querySelector('#pageTrade').classList.add('hidden');
+            document.querySelector('#pageHold').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.remove('hidden');
             tradeItemId = null;
+            renderPage();
         }
         // 实时预览：预估金额 / 买入后成本 / 卖出后持仓
         function updateTradePreview(){
@@ -3174,13 +3205,10 @@
                 renderAnalysisCharts();
             }
         }
-        // 交易弹窗事件绑定
-        document.querySelector('#tradeModalClose').addEventListener('click', closeTradeModal);
+        // 交易页面事件绑定
+        document.querySelector('#tradeBackBtn').addEventListener('click', closeTradeModal);
         document.querySelector('#tradeCancel').addEventListener('click', closeTradeModal);
         document.querySelector('#tradeConfirm').addEventListener('click', confirmTrade);
-        document.querySelector('#tradeModalMask').addEventListener('click', function(e){
-            if(e.target === this) closeTradeModal();
-        });
         document.querySelector('#tradePrice').addEventListener('input', updateTradePreview);
         document.querySelector('#tradeQty').addEventListener('input', updateTradePreview);
         document.querySelectorAll('.trade-price-quick').forEach(function(btn){
@@ -3333,9 +3361,12 @@
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
-            // 切换底部导航时同时收起设置页和交易明细页（二级页面），等效于点击左上角返回
+            // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高），等效于点击左上角返回
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageTradeLog').classList.add('hidden');
+            document.querySelector('#pageStockEdit').classList.add('hidden');
+            document.querySelector('#pageTrade').classList.add('hidden');
+            document.querySelector('#pageAssetHigh').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
@@ -5124,51 +5155,51 @@
                     <div class="${rowBgClass}">
                         <div class="px-1 py-2 text-center">
                             <div class="text-[10px] text-gray-400">个股仓位</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${item.count}</div>
+                            <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums">${item.count}</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">持仓市值</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${fmtMoney(itemMarketTotal)}</div>
+                            <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums">${fmtMoney(itemMarketTotal)}</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">持仓占比</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums">${holdPct}%</div>
+                            <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums">${holdPct}%</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">持仓成本</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${item.costPrice}</div>
+                            <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[8px] font-medium">${pricePrefix}</span>${item.costPrice}</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计收息</div>
-                            <div class="text-sm font-semibold mt-0.5 text-gray-800 tabular-nums">${fmtMoney(itemTotalReceived)}</div>
+                            <div class="text-xs font-semibold mt-0.5 text-gray-800 tabular-nums">${fmtMoney(itemTotalReceived)}</div>
                         </div>
                     </div>
                     <!-- 第二行：今年涨幅 | 累计盈亏 | 现价/息率 | 最新涨幅 | 当日盈亏 -->
                     <div class="${rowBgClass} mt-1.5">
                         <div class="px-1 py-2 text-center">
                             <div class="text-[10px] text-gray-400">今年涨幅</div>
-                            <div class="text-sm font-semibold mt-0.5 ${ytdPnlClass} tabular-nums">${ytdPnlText}</div>
-                            <div class="text-[10px] font-medium mt-0.5 ${ytdClass} tabular-nums">${ytdText}</div>
+                            <div class="text-xs font-semibold mt-0.5 ${ytdPnlClass} tabular-nums">${ytdPnlText}</div>
+                            <div class="text-[11px] font-medium mt-0.5 ${ytdClass} tabular-nums">${ytdText}</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">累计盈亏</div>
-                            <div class="text-sm font-semibold mt-0.5 ${itemPnlClass} tabular-nums">${formatPnl(itemPnl)}</div>
-                            <div class="text-[10px] font-medium mt-0.5 ${itemPnlClass} tabular-nums">${pnlPctText}</div>
+                            <div class="text-xs font-semibold mt-0.5 ${itemPnlClass} tabular-nums">${formatPnl(itemPnl)}</div>
+                            <div class="text-[11px] font-medium mt-0.5 ${itemPnlClass} tabular-nums">${pnlPctText}</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">现价/息率</div>
-                            <div class="text-sm font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[10px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
-                            <div class="text-[10px] font-medium mt-0.5 text-gray-800 tabular-nums">${stockYield}%</div>
+                            <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
+                            <div class="text-[11px] font-medium mt-0.5 text-gray-800 tabular-nums">${stockYield}%</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">最新涨幅</div>
-                            <div class="text-sm font-semibold mt-0.5 ${dayChangeClass} tabular-nums">${dayChangeAmtText}</div>
-                            <div class="text-[10px] font-medium mt-0.5 ${dayChangeClass} tabular-nums">${dayChangePctText}</div>
+                            <div class="text-xs font-semibold mt-0.5 ${dayChangeClass} tabular-nums">${dayChangeAmtText}</div>
+                            <div class="text-[11px] font-medium mt-0.5 ${dayChangeClass} tabular-nums">${dayChangePctText}</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">当日盈亏</div>
-                            <div class="text-sm font-semibold mt-0.5 ${dayPnlClass} tabular-nums">${dayPnlText}</div>
-                            <div class="text-[10px] font-medium mt-0.5 ${dayPnlClass} tabular-nums">${dayPnlPctText}</div>
+                            <div class="text-xs font-semibold mt-0.5 ${dayPnlClass} tabular-nums">${dayPnlText}</div>
+                            <div class="text-[11px] font-medium mt-0.5 ${dayPnlClass} tabular-nums">${dayPnlPctText}</div>
                         </div>
                     </div>
                     <div class="flex justify-end items-center gap-2.5 px-3 py-2">

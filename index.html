@@ -235,6 +235,10 @@
                     <div class="pt-2.5 pr-2.5 pb-0.5">
                         <div class="text-orange-100/70 text-[11px] mb-1">总资产</div>
                         <div class="text-[14px] font-semibold tabular-nums num-transition text-white" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
+                        <!-- 资产新高（金色皇冠徽章，点击查看完整破新高记录） -->
+                        <button id="assetHighLine" onclick="openAssetHighModal()" class="mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 bg-white/10 text-amber-200 active:scale-95 transition-transform">
+                            <i class="fa fa-trophy text-[9px]"></i><span id="assetHighText">新高 --</span>
+                        </button>
                     </div>
                     <div class="pt-2.5 px-2.5 pb-0.5 relative">
                         <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
@@ -477,37 +481,98 @@
         </div>
     </div>
 
-    <!-- 交易/分红流水弹窗（买卖流水 + 除权到账流水时间线） -->
-    <div id="tradeLogModalMask" class="fixed inset-0 mask-bg z-50 hidden flex justify-center items-end md:items-center">
+    <!-- 交易明细独立页面（买卖流水 + 分红到账时间线；手机上独立页面比弹窗体验更好，记录多时分页加载） -->
+    <div id="pageTradeLog" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航 -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="tradeLogBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    交易明细
+                </h2>
+                <div id="tradeLogStockInfo" class="text-xs text-gray-400 mt-0.5 truncate"></div>
+            </div>
+            <span id="tradeLogMarketTag" class="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-500 shrink-0"></span>
+        </div>
+
+        <!-- 汇总卡（渐变卡片 + 图标） -->
+        <div class="bg-white rounded-2xl card-shadow px-4 py-4 mb-5 grid grid-cols-4 gap-2">
+            <div class="text-center">
+                <div class="w-7 h-7 rounded-full bg-[#fff1f0] flex items-center justify-center mx-auto mb-1.5">
+                    <i class="fa fa-arrow-down text-[10px] text-[#ff4d4f]"></i>
+                </div>
+                <div class="text-[10px] text-gray-400">累计买入</div>
+                <div id="logBuyTotal" class="text-sm font-bold text-[#ff4d4f] mt-1 tabular-nums">--</div>
+            </div>
+            <div class="text-center">
+                <div class="w-7 h-7 rounded-full bg-[#e8faf3] flex items-center justify-center mx-auto mb-1.5">
+                    <i class="fa fa-arrow-up text-[10px] text-[#00b57a]"></i>
+                </div>
+                <div class="text-[10px] text-gray-400">累计卖出</div>
+                <div id="logSellTotal" class="text-sm font-bold text-[#00b57a] mt-1 tabular-nums">--</div>
+            </div>
+            <div class="text-center">
+                <div class="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-1.5">
+                    <i class="fa fa-gift text-[10px] text-accent"></i>
+                </div>
+                <div class="text-[10px] text-gray-400">分红到账</div>
+                <div id="logDivTotal" class="text-sm font-bold text-accent mt-1 tabular-nums">--</div>
+            </div>
+            <div class="text-center">
+                <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-1.5">
+                    <i class="fa fa-wallet text-[10px] text-gray-500"></i>
+                </div>
+                <div class="text-[10px] text-gray-400">净投入</div>
+                <div id="logNetTotal" class="text-sm font-bold text-gray-800 mt-1 tabular-nums">--</div>
+            </div>
+        </div>
+
+        <!-- 时间线标题 -->
+        <div class="flex items-center justify-between mb-2 px-1">
+            <div class="text-xs text-gray-400">资金与分红流水</div>
+            <div id="tradeLogCount" class="text-[10px] text-gray-400 bg-white/60 rounded-full px-2 py-0.5">--</div>
+        </div>
+        <!-- 时间线列表 -->
+        <div id="tradeLogList" class="space-y-0"></div>
+        <!-- 加载更多 -->
+        <div id="tradeLogMoreWrap" class="hidden mt-2">
+            <button id="tradeLogMoreBtn" class="w-full py-3 rounded-xl bg-white card-shadow text-gray-500 text-sm font-medium active:scale-95 transition-transform">加载更多</button>
+        </div>
+    </div>
+
+    <!-- 资产新高记录弹窗（金色皇冠 · 每次破新高的里程碑轨迹） -->
+    <div id="assetHighModalMask" class="fixed inset-0 mask-bg z-50 hidden flex justify-center items-end md:items-center">
         <div class="bg-pageBg w-full max-w-2xl rounded-t-2xl md:rounded-2xl p-5 max-h-[88vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-800">交易明细</h3>
-                    <div id="tradeLogStockInfo" class="text-xs text-gray-400 mt-0.5"></div>
+                <div class="flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm shadow-amber-300"><i class="fa fa-trophy text-xs"></i></span>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">资产新高记录</h3>
+                        <div class="text-[11px] text-gray-400">每一次总资产刷新历史最高点</div>
+                    </div>
                 </div>
-                <button id="tradeLogClose" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
+                <button id="assetHighClose" class="text-gray-500 text-xl"><i class="fa fa-times"></i></button>
             </div>
-            <!-- 汇总卡 -->
-            <div class="bg-white rounded-2xl px-4 py-3.5 mb-4 grid grid-cols-4 gap-2">
-                <div class="text-center">
-                    <div class="text-[10px] text-gray-400">累计买入</div>
-                    <div id="logBuyTotal" class="text-sm font-semibold text-[#ff4d4f] mt-1 tabular-nums">--</div>
+            <!-- 汇总卡（2列：历史最高金色加粗 + 最近新高） -->
+            <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl px-4 py-4 mb-4 grid grid-cols-2 gap-3">
+                <div class="text-center border-r border-amber-100">
+                    <div class="text-[10px] text-amber-500/70">历史最高</div>
+                    <div id="ahMax" class="text-base font-bold text-amber-600 mt-1 tabular-nums">--</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-[10px] text-gray-400">累计卖出</div>
-                    <div id="logSellTotal" class="text-sm font-semibold text-[#00b57a] mt-1 tabular-nums">--</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-[10px] text-gray-400">分红到账</div>
-                    <div id="logDivTotal" class="text-sm font-semibold text-accent mt-1 tabular-nums">--</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-[10px] text-gray-400">净投入</div>
-                    <div id="logNetTotal" class="text-sm font-semibold text-gray-800 mt-1 tabular-nums">--</div>
+                    <div class="text-[10px] text-amber-500/70">最近新高</div>
+                    <div id="ahLast" class="text-sm font-semibold text-gray-800 mt-1">--</div>
                 </div>
             </div>
-            <!-- 时间线列表 -->
-            <div id="tradeLogList" class="space-y-0"></div>
+            <!-- 破新高时间线（倒序，最新5条） -->
+            <div class="flex items-center justify-between px-1 mb-2">
+                <div class="text-xs text-gray-400">破新高记录</div>
+                <div id="ahCount" class="text-[10px] text-gray-400 bg-white/60 rounded-full px-2 py-0.5">--</div>
+            </div>
+            <div id="assetHighList" class="space-y-0"></div>
         </div>
     </div>
 
@@ -2005,6 +2070,9 @@
                 // 收盘后更新仓位分布快照（每天只更新一次）
                 if(isMarketClosed()){
                     updatePositionSnapshot();
+                    // 收盘后记录总资产是否破新高（每天一次，正式入册）
+                    recordAssetHigh();
+                    renderAssetHigh();
                 }
             }catch(e){
                 // 单次刷新失败不影响下一次
@@ -2146,7 +2214,7 @@
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, portfolioStartYear: null };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], portfolioStartYear: null };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
@@ -2166,6 +2234,7 @@
                     historyData.manualYearlyDiv = parsed.manualYearlyDiv || {};
                     historyData.manualYearlyReturn = parsed.manualYearlyReturn || {};
                     historyData.manualYearlyDivAsOf = parsed.manualYearlyDivAsOf || {};
+                    historyData.assetHighs = parsed.assetHighs || [];
                     if(parsed.portfolioStartYear) historyData.portfolioStartYear = parsed.portfolioStartYear;
                 }
             }catch(e){}
@@ -2190,6 +2259,140 @@
             historyData.dailyAssets[ts] = Number(total.toFixed(2));
             saveHistory();
         }
+
+        // ==================== 总资产新高（金色皇冠 · 里程碑轨迹） ====================
+        // 当前总资产
+        function totalAssetNow(){
+            let total = 0;
+            holdDataList.forEach(function(it){ total += getMarketValue(it); });
+            return total;
+        }
+        // 从历史资产快照（每日 + 每月归档 + 已记录新高）推导每次破新高的轨迹（升序）
+        // 历史数据固定不随持仓增删改变化，与设置页/分析页历史口径一致
+        function buildAssetHighs(){
+            const points = {};
+            Object.keys(historyData.dailyAssets || {}).forEach(function(d){
+                points[d] = Math.max(points[d] || 0, Number(historyData.dailyAssets[d]) || 0);
+            });
+            Object.keys(historyData.monthlyAssets || {}).forEach(function(m){
+                points[m + '-01'] = Math.max(points[m + '-01'] || 0, Number(historyData.monthlyAssets[m]) || 0);
+            });
+            (historyData.assetHighs || []).forEach(function(h){
+                if(h && h.date) points[h.date] = Math.max(points[h.date] || 0, Number(h.amount) || 0);
+            });
+            const dates = Object.keys(points).filter(function(d){ return /^\d{4}-\d{2}-\d{2}$/.test(d); }).sort();
+            const highs = [];
+            let maxV = -1;
+            dates.forEach(function(d){
+                const v = points[d];
+                if(v > maxV){ maxV = v; highs.push({ date: d, amount: v }); }
+            });
+            return highs;
+        }
+        // 资产新高状态：{ highs, histMax, histDate, cur, isNewHigh }
+        function getAssetHighState(){
+            const highs = buildAssetHighs();
+            const cur = totalAssetNow();
+            let histMax = 0, histDate = '';
+            if(highs.length){
+                histMax = highs[highs.length - 1].amount;
+                histDate = highs[highs.length - 1].date;
+            }
+            return { highs: highs, histMax: histMax, histDate: histDate, cur: cur, isNewHigh: cur > histMax && cur > 0 };
+        }
+        // 收盘后记录破新高（每天最多一条；盘中触及新高只显示徽章，收盘后才正式入册）
+        function recordAssetHigh(){
+            if(!holdDataList.length) return;
+            const cur = totalAssetNow();
+            if(!(cur > 0)) return false;
+            const highs = buildAssetHighs();
+            const histMax = highs.length ? highs[highs.length - 1].amount : 0;
+            const today = todayStr();
+            const arr = historyData.assetHighs || [];
+            const lastRec = arr.length ? arr[arr.length - 1] : null;
+            if(lastRec && lastRec.date === today) return false; // 今天已记录
+            if(cur > histMax){
+                arr.push({ date: today, amount: Number(cur.toFixed(2)) });
+                historyData.assetHighs = arr;
+                saveHistory();
+                return true;
+            }
+            return false;
+        }
+        // 渲染顶部总资产下的新高徽章
+        function renderAssetHigh(){
+            const el = document.querySelector('#assetHighLine');
+            const txt = document.querySelector('#assetHighText');
+            if(!el || !txt) return;
+            const st = getAssetHighState();
+            if(st.isNewHigh){
+                // 当前触及历史新高（金色高亮）
+                el.className = 'mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-sm shadow-amber-300 active:scale-95 transition-transform';
+                txt.innerText = '新高 ' + fmtMoney(st.cur) + ' · 今日';
+            } else if(st.histMax > 0){
+                el.className = 'mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 bg-white/10 text-amber-200 active:scale-95 transition-transform';
+                txt.innerText = '新高 ' + fmtMoney(st.histMax) + ' · ' + (st.histDate ? st.histDate.substring(5) : '');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+        // 资产新高记录弹窗（金色时间线，倒序显示最新5条）
+        function openAssetHighModal(){
+            const st = getAssetHighState();
+            const highs = st.highs;
+            const cur = st.cur;
+            // 当前触及新高也计入展示（未入册但实时）
+            const displayAll = highs.slice();
+            if(st.isNewHigh){
+                displayAll.push({ date: todayStr(), amount: Number(cur.toFixed(2)), isLive: true });
+            }
+            // 汇总：历史最高 + 最近新高
+            document.querySelector('#ahMax').innerText = fmtMoney(st.isNewHigh ? cur : st.histMax);
+            document.querySelector('#ahLast').innerText = displayAll.length
+                ? displayAll[displayAll.length - 1].date.substring(0, 4) + '.' + displayAll[displayAll.length - 1].date.substring(5, 7) + '.' + displayAll[displayAll.length - 1].date.substring(8, 10)
+                : '--';
+            // 倒序（最新在上），只显示最近5条
+            const descList = displayAll.slice().reverse();
+            const showList = descList.slice(0, 5);
+            document.querySelector('#ahCount').innerText = '共 ' + displayAll.length + ' 次' + (displayAll.length > 5 ? ' · 显示最近 5 次' : '');
+            const listDom = document.querySelector('#assetHighList');
+            if(!displayAll.length){
+                listDom.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">暂无资产新高记录<br><span class="text-xs">每天收盘后自动记录总资产刷新历史最高点的时刻</span></div>';
+            } else {
+                let html = '<div class="relative pl-6">';
+                html += '<div class="absolute left-[5px] top-2 bottom-2 w-px bg-gradient-to-b from-amber-300 via-amber-200 to-transparent"></div>';
+                showList.forEach(function(h, i){
+                    const isLive = !!h.isLive;
+                    const dotCls = isLive
+                        ? 'bg-gradient-to-br from-amber-400 to-yellow-500 ring-4 ring-amber-100'
+                        : 'bg-amber-300';
+                    const dateStr = h.date.substring(0, 4) + '年' + Number(h.date.substring(5, 7)) + '月' + Number(h.date.substring(8, 10)) + '日';
+                    html += '<div class="relative pb-4">';
+                    html += '<div class="absolute left-[-19px] top-1.5 w-2.5 h-2.5 rounded-full ' + dotCls + '"></div>';
+                    html += '<div class="bg-white rounded-xl px-3.5 py-2.5 flex justify-between items-center">';
+                    html += '<div class="flex items-center gap-2 min-w-0">';
+                    html += '<span class="' + (isLive ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white' : 'bg-amber-50 text-amber-600') + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0"><i class="fa fa-trophy text-[8px] mr-0.5"></i>' + (isLive ? '今日新高' : '破新高') + '</span>';
+                    html += '<div class="text-sm font-semibold text-gray-800">' + dateStr + '</div>';
+                    html += '</div>';
+                    html += '<div class="text-right shrink-0 ml-2">';
+                    html += '<div class="text-sm font-bold text-amber-600 tabular-nums">' + fmtMoney(h.amount) + '</div>';
+                    html += '<div class="text-[10px] text-gray-400 mt-0.5">' + (isLive ? '实时 · 收盘后入册' : '总资产峰值') + '</div>';
+                    html += '</div></div></div>';
+                });
+                html += '</div>';
+                listDom.innerHTML = html;
+            }
+            document.querySelector('#assetHighModalMask').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeAssetHighModal(){
+            document.querySelector('#assetHighModalMask').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        document.querySelector('#assetHighClose').addEventListener('click', closeAssetHighModal);
+        document.querySelector('#assetHighModalMask').addEventListener('click', function(e){
+            if(e.target === this) closeAssetHighModal();
+        });
         // 月底归档：对已过去的月份，取该月最后一天的 dailyAssets 作为 monthlyAssets
         // （软件不常开时，次月初打开会自动补归档）
         function finalizePastMonths(){
@@ -2999,11 +3202,20 @@
         });
 
         // ==================== 交易/分红流水查看 ====================
-        function openTradeLogModal(id){
+        // ==================== 交易明细独立页面（买卖流水 + 分红到账时间线） ====================
+        // 手机上独立页面比弹窗体验更好：空间大、滚动流畅、支持分页；记录多时分批加载（每批50条）
+        let tradeLogItemId = null;
+        let tradeLogPageCount = 50;
+        function openTradeLogPage(id){
             const item = holdDataList.find(it => it.id === id);
             if(!item) return;
+            tradeLogItemId = id;
+            tradeLogPageCount = 50;
             const isHk = item.marketType === 'HK';
-            document.querySelector('#tradeLogStockInfo').innerText = item.name + ' · ' + item.code + (isHk ? ' · 港股' : ' · A股');
+            document.querySelector('#tradeLogStockInfo').innerText = item.name + ' · ' + item.code;
+            const tagEl = document.querySelector('#tradeLogMarketTag');
+            tagEl.innerText = isHk ? '港股' : 'A股';
+            tagEl.className = 'text-[10px] px-2 py-1 rounded-full shrink-0 ' + (isHk ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-accent');
             // 汇总：买卖流水 + 除权到账流水
             let buyTotal = 0, sellTotal = 0;
             const txList = item.transactions || [];
@@ -3023,7 +3235,7 @@
             document.querySelector('#logNetTotal').innerText = fmtMoney(netIn);
             // 合并流水按时间倒序
             const events = [];
-            txList.forEach(function(t, i){
+            txList.forEach(function(t){
                 events.push({
                     time: Number(t.t),
                     type: Number(t.delta) > 0 ? 'buy' : 'sell',
@@ -3042,50 +3254,72 @@
                 });
             });
             events.sort(function(a, b){ return b.time - a.time; });
-            // 渲染时间线
-            const listDom = document.querySelector('#tradeLogList');
-            if(!events.length){
-                listDom.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">暂无流水记录<br><span class="text-xs">买入、卖出和分红到账记录会显示在这里</span></div>';
-            } else {
-                let html = '<div class="relative pl-6">';
-                html += '<div class="absolute left-[5px] top-2 bottom-2 w-px bg-gray-200"></div>';
-                events.forEach(function(ev){
-                    const dotColor = ev.type === 'buy' ? 'bg-[#ff4d4f]' : (ev.type === 'sell' ? 'bg-[#00b57a]' : 'bg-accent');
-                    const badgeCls = ev.type === 'buy'
-                        ? 'bg-[#fff1f0] text-[#ff4d4f]'
-                        : (ev.type === 'sell' ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-orange-50 text-accent');
-                    const badgeText = ev.type === 'buy' ? '买入' : (ev.type === 'sell' ? '卖出' : '分红');
-                    const amtCls = ev.type === 'buy' ? 'text-[#ff4d4f]' : (ev.type === 'sell' ? 'text-[#00b57a]' : 'text-accent');
-                    const d = new Date(ev.time);
-                    const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                    const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-                    html += '<div class="relative pb-4">';
-                    html += '<div class="absolute left-[-19px] top-1 w-2.5 h-2.5 rounded-full ' + dotColor + ' ring-4 ring-white"></div>';
-                    html += '<div class="bg-white rounded-xl px-3.5 py-2.5 flex justify-between items-center">';
-                    html += '<div class="flex items-center gap-2.5 min-w-0">';
-                    html += '<span class="' + badgeCls + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0">' + badgeText + '</span>';
-                    html += '<div class="min-w-0">';
-                    html += '<div class="text-sm font-semibold text-gray-800 truncate">' + ev.title + '</div>';
-                    html += '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + ev.detail + '</div>';
-                    html += '</div></div>';
-                    html += '<div class="text-right shrink-0 ml-2">';
-                    html += '<div class="text-sm font-semibold ' + amtCls + ' tabular-nums">' + (ev.amount > 0 ? '+' : '') + fmtMoney(ev.amount) + '</div>';
-                    html += '<div class="text-[10px] text-gray-400 mt-0.5 tabular-nums">' + dateStr + ' ' + timeStr + '</div>';
-                    html += '</div></div></div>';
-                });
-                html += '</div>';
-                listDom.innerHTML = html;
+            window._tradeLogEvents = events;
+            // 显示页面
+            document.querySelector('#pageHold').classList.add('hidden');
+            document.querySelector('#pageTradeLog').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
+            renderTradeLogList();
+        }
+        function closeTradeLogPage(){
+            document.querySelector('#pageTradeLog').classList.add('hidden');
+            document.querySelector('#pageHold').classList.remove('hidden');
+            // 恢复新增按钮（仅持仓页显示）
+            if(activeTab === 'hold'){
+                document.querySelector('#openModalBtn').classList.remove('hidden');
             }
-            document.querySelector('#tradeLogModalMask').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            renderPage();
         }
-        function closeTradeLogModal(){
-            document.querySelector('#tradeLogModalMask').classList.add('hidden');
-            document.body.style.overflow = '';
+        // 渲染流水列表（分页：每批50条，倒序）
+        function renderTradeLogList(){
+            const events = window._tradeLogEvents || [];
+            const listDom = document.querySelector('#tradeLogList');
+            const countEl = document.querySelector('#tradeLogCount');
+            const moreWrap = document.querySelector('#tradeLogMoreWrap');
+            if(!events.length){
+                countEl.innerText = '共 0 条';
+                moreWrap.classList.add('hidden');
+                listDom.innerHTML = '<div class="text-center py-14 text-gray-400 text-sm">暂无流水记录<br><span class="text-xs">买入、卖出和分红到账记录会显示在这里</span></div>';
+                return;
+            }
+            countEl.innerText = '共 ' + events.length + ' 条';
+            const slice = events.slice(0, tradeLogPageCount);
+            const showMore = events.length > tradeLogPageCount;
+            moreWrap.classList.toggle('hidden', !showMore);
+            let html = '<div class="relative pl-6">';
+            html += '<div class="absolute left-[5px] top-2 bottom-2 w-px bg-gradient-to-b from-gray-200 to-transparent"></div>';
+            slice.forEach(function(ev){
+                const dotColor = ev.type === 'buy' ? 'bg-[#ff4d4f]' : (ev.type === 'sell' ? 'bg-[#00b57a]' : 'bg-accent');
+                const badgeCls = ev.type === 'buy'
+                    ? 'bg-[#fff1f0] text-[#ff4d4f]'
+                    : (ev.type === 'sell' ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-orange-50 text-accent');
+                const badgeText = ev.type === 'buy' ? '买入' : (ev.type === 'sell' ? '卖出' : '分红');
+                const amtCls = ev.type === 'buy' ? 'text-[#ff4d4f]' : (ev.type === 'sell' ? 'text-[#00b57a]' : 'text-accent');
+                const d = new Date(ev.time);
+                const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+                html += '<div class="relative pb-3.5">';
+                html += '<div class="absolute left-[-19px] top-1 w-2.5 h-2.5 rounded-full ' + dotColor + ' ring-4 ring-white"></div>';
+                html += '<div class="bg-white rounded-xl card-shadow-sm px-3.5 py-2.5 flex justify-between items-center">';
+                html += '<div class="flex items-center gap-2.5 min-w-0">';
+                html += '<span class="' + badgeCls + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0">' + badgeText + '</span>';
+                html += '<div class="min-w-0">';
+                html += '<div class="text-sm font-semibold text-gray-800 truncate">' + ev.title + '</div>';
+                html += '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + ev.detail + '</div>';
+                html += '</div></div>';
+                html += '<div class="text-right shrink-0 ml-2">';
+                html += '<div class="text-sm font-semibold ' + amtCls + ' tabular-nums">' + (ev.amount > 0 ? '+' : '') + fmtMoney(ev.amount) + '</div>';
+                html += '<div class="text-[10px] text-gray-400 mt-0.5 tabular-nums">' + dateStr + ' ' + timeStr + '</div>';
+                html += '</div></div></div>';
+            });
+            html += '</div>';
+            listDom.innerHTML = html;
         }
-        document.querySelector('#tradeLogClose').addEventListener('click', closeTradeLogModal);
-        document.querySelector('#tradeLogModalMask').addEventListener('click', function(e){
-            if(e.target === this) closeTradeLogModal();
+        document.querySelector('#tradeLogBackBtn').addEventListener('click', closeTradeLogPage);
+        document.querySelector('#tradeLogMoreBtn').addEventListener('click', function(){
+            tradeLogPageCount += 50;
+            renderTradeLogList();
         });
 
         // ==================== 资产分析弹窗 ====================
@@ -3099,8 +3333,9 @@
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
-            // 切换底部导航时同时收起设置页（二级页面），等效于点击左上角返回
+            // 切换底部导航时同时收起设置页和交易明细页（二级页面），等效于点击左上角返回
             document.querySelector('#pageSettings').classList.add('hidden');
+            document.querySelector('#pageTradeLog').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
@@ -4404,6 +4639,8 @@
             totalPnlEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlClass(pnlVal, true);
             // 总资产
             document.querySelector('#totalMarket').innerText = fmtMoney(Number(sum.totalMarket));
+            // 资产新高（金色皇冠徽章，点击查看破新高记录）
+            renderAssetHigh();
             // 总收益率
             const trrEl = document.querySelector('#totalReturnRate');
             const trrVal = Number(sum.totalReturnRate);
@@ -4937,7 +5174,7 @@
                     <div class="flex justify-end items-center gap-2.5 px-3 py-2">
                         <button onclick="openTradeModal(${item.id},'buy')" class="px-3.5 py-1 rounded-lg bg-red-50 text-[#ff4d4f] text-xs font-semibold active:scale-95 transition-transform">买入</button>
                         <button onclick="openTradeModal(${item.id},'sell')" class="px-3.5 py-1 rounded-lg bg-green-50 text-[#00b57a] text-xs font-semibold active:scale-95 transition-transform">卖出</button>
-                        <button onclick="openTradeLogModal(${item.id})" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold active:scale-95 transition-transform"><i class="fa fa-list-ul text-[10px] mr-1"></i>流水</button>
+                        <button onclick="openTradeLogPage(${item.id})" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold active:scale-95 transition-transform"><i class="fa fa-list-ul text-[10px] mr-1"></i>流水</button>
                         <button onclick="editItem(${item.id})" class="text-gray-500 text-xs active:text-gray-700 transition-colors">编辑</button>
                         <button onclick="deleteItem(${item.id})" class="text-gray-400 text-xs active:text-gray-600 transition-colors">删除</button>
                     </div>

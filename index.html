@@ -232,24 +232,27 @@
                     <div class="col-span-3 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);"></div>
 
                     <!-- 第三行 -->
-                    <div class="pt-2.5 pr-2.5 pb-0.5">
+                    <div class="pt-2.5 pr-2.5">
                         <div class="text-orange-100/70 text-[11px] mb-1">总资产</div>
                         <div class="text-[14px] font-semibold tabular-nums num-transition text-white" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
-                        <!-- 资产新高（金色皇冠徽章，点击查看完整破新高记录） -->
-                        <button id="assetHighLine" onclick="openAssetHighModal()" class="mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 bg-white/10 text-amber-200 active:scale-95 transition-transform">
-                            <i class="fa fa-trophy text-[9px]"></i><span id="assetHighText">新高 --</span>
-                        </button>
                     </div>
-                    <div class="pt-2.5 px-2.5 pb-0.5 relative">
+                    <div class="pt-2.5 px-2.5 relative">
                         <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
                         <div class="text-orange-100/70 text-[11px] mb-1">持仓盈亏</div>
                         <div class="text-[14px] font-bold tabular-nums num-transition" id="totalPnl">0.00</div>
                     </div>
-                    <div class="pt-2.5 pl-2.5 pb-0.5 relative">
+                    <div class="pt-2.5 pl-2.5 relative">
                         <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
                         <div class="text-orange-100/70 text-[11px] mb-1">总收益率</div>
                         <div class="text-[14px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                     </div>
+                    <!-- 资产新高（玻璃拟态横幅：自适应宽度、左对齐、金色皇冠，点击查看完整破新高记录） -->
+                    <button id="assetHighLine" onclick="openAssetHighModal()" class="hidden col-span-3 mt-2.5 mb-0.5 w-fit flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 border border-white/10 active:scale-95 transition-transform">
+                        <span id="assetHighCrown" class="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm flex-shrink-0"><i class="fa fa-trophy text-[9px]"></i></span>
+                        <span class="text-[10px] font-medium text-amber-200/60 whitespace-nowrap">资产新高</span>
+                        <span id="assetHighText" class="text-[12px] font-bold text-amber-200 tabular-nums whitespace-nowrap">--</span>
+                        <span id="assetHighDate" class="text-[10px] font-medium text-amber-200/50 whitespace-nowrap">--</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1578,7 +1581,7 @@
                         if(q.price != null && !isNaN(q.price) && isFinite(q.price)) {
                             nowPriceEl.value = Number(q.price).toString();
                         }
-                        codeHintEl.innerText = '已自动获取：' + q.name + (q.price ? '，现价 ' + (isEtfCode(code) ? Number(q.price).toFixed(3) : Number(q.price).toFixed(2)) : '');
+                        codeHintEl.innerText = '已自动获取：' + q.name + (q.price ? '，现价 ' + (isEtfCode(code) || market === 'HK' ? Number(q.price).toFixed(3) : Number(q.price).toFixed(2)) : '');
                         codeHintEl.className = 'mt-1.5 text-xs text-green-600';
                         // 自动获取行业信息
                         fetchIndustry(code, market, function(industry){
@@ -2084,10 +2087,13 @@
                         renderMilestonePage();
                     }
                 }
+                // 盘中实时破新高：任何时刻总资产超过历史最高立即记录并显示（不等收盘）
+                recordAssetHighRealTime();
+                renderAssetHigh();
                 // 收盘后更新仓位分布快照（每天只更新一次）
                 if(isMarketClosed()){
                     updatePositionSnapshot();
-                    // 收盘后记录总资产是否破新高（每天一次，正式入册）
+                    // 收盘后记录总资产是否破新高（每天一次，正式入册；当天已有实时记录则跳过）
                     recordAssetHigh();
                     renderAssetHigh();
                 }
@@ -2315,7 +2321,10 @@
                 histMax = highs[highs.length - 1].amount;
                 histDate = highs[highs.length - 1].date;
             }
-            return { highs: highs, histMax: histMax, histDate: histDate, cur: cur, isNewHigh: cur > histMax && cur > 0 };
+            // 当天已破过新高（盘中实时记录或收盘入册）→ 持续显示"今日新高"高亮，直到次日
+            const today = todayStr();
+            const todayHigh = histDate === today && histMax > 0;
+            return { highs: highs, histMax: histMax, histDate: histDate, cur: cur, isNewHigh: (cur > histMax && cur > 0) || todayHigh };
         }
         // 收盘后记录破新高（每天最多一条；盘中触及新高只显示徽章，收盘后才正式入册）
         function recordAssetHigh(){
@@ -2336,35 +2345,82 @@
             }
             return false;
         }
-        // 渲染顶部总资产下的新高徽章
+        // 渲染顶部卡片底部的资产新高横幅（玻璃拟态：自适应宽度、左对齐、金色皇冠，具体信息一眼可见）
         function renderAssetHigh(){
             const el = document.querySelector('#assetHighLine');
             const txt = document.querySelector('#assetHighText');
-            if(!el || !txt) return;
+            const dateEl = document.querySelector('#assetHighDate');
+            const crown = document.querySelector('#assetHighCrown');
+            if(!el || !txt || !dateEl || !crown) return;
             const st = getAssetHighState();
             if(st.isNewHigh){
-                // 当前触及历史新高（金色高亮）
-                el.className = 'mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-sm shadow-amber-300 active:scale-95 transition-transform';
-                txt.innerText = '新高 ' + fmtMoney(st.cur) + ' · 今日';
+                // 当前触及历史新高（金框高亮，不换背景色；皇冠与文字提亮）
+                el.className = 'col-span-3 mt-2.5 mb-0.5 w-fit flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 border border-amber-300/40 active:scale-95 transition-transform';
+                crown.className = 'w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm shadow-amber-400/40 flex-shrink-0';
+                txt.className = 'text-[12px] font-bold text-amber-300 tabular-nums whitespace-nowrap';
+                // 当天已破新高则显示当天最高点（盘中记录值），未记录瞬间显示当前值
+                txt.innerText = fmtMoney(st.histDate === todayStr() ? st.histMax : st.cur);
+                dateEl.className = 'text-[10px] font-semibold text-amber-300/90 whitespace-nowrap';
+                dateEl.innerText = '今日新高';
             } else if(st.histMax > 0){
-                el.className = 'mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-1.5 py-0.5 bg-white/10 text-amber-200 active:scale-95 transition-transform';
-                txt.innerText = '新高 ' + fmtMoney(st.histMax) + ' · ' + (st.histDate ? st.histDate.substring(5) : '');
+                // 历史最高（常规玻璃拟态）
+                el.className = 'col-span-3 mt-2.5 mb-0.5 w-fit flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 border border-white/10 active:scale-95 transition-transform';
+                crown.className = 'w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm flex-shrink-0';
+                txt.className = 'text-[12px] font-bold text-amber-200 tabular-nums whitespace-nowrap';
+                txt.innerText = fmtMoney(st.histMax);
+                dateEl.className = 'text-[10px] font-medium text-amber-200/50 whitespace-nowrap';
+                dateEl.innerText = st.histDate ? st.histDate.substring(5) : '';
             } else {
                 el.classList.add('hidden');
+                return;
             }
+            el.classList.remove('hidden');
+        }
+        // 盘中实时破新高：任何时刻当前总资产超过历史最高，立即记录该新高点（不等收盘）
+        // 与收盘后 recordAssetHigh 兼容：当天已有记录时不重复入册
+        function recordAssetHighRealTime(){
+            if(!holdDataList.length) return false;
+            const cur = totalAssetNow();
+            if(!(cur > 0)) return false;
+            const highs = buildAssetHighs();
+            const histMax = highs.length ? highs[highs.length - 1].amount : 0;
+            if(cur > histMax){
+                const arr = historyData.assetHighs || [];
+                const last = arr.length ? arr[arr.length - 1] : null;
+                const today = todayStr();
+                if(last && last.date === today){
+                    // 当天已有实时记录：若金额更高则原地更新为盘中最高点（当天只保留一条）
+                    if(Number(last.amount) >= cur) return false;
+                    last.amount = Number(cur.toFixed(2));
+                    last.isLive = true;
+                    saveHistory();
+                    return true;
+                }
+                arr.push({ date: today, amount: Number(cur.toFixed(2)), isLive: true });
+                historyData.assetHighs = arr;
+                saveHistory();
+                return true;
+            }
+            return false;
         }
         // 资产新高记录弹窗（金色时间线，倒序显示最新5条）
         function openAssetHighModal(){
             const st = getAssetHighState();
             const highs = st.highs;
             const cur = st.cur;
-            // 当前触及新高也计入展示（未入册但实时）
+            const today = todayStr();
+            // 当前触及新高也计入展示（盘中实时记录已在 assetHighs 中，避免重复）
             const displayAll = highs.slice();
-            if(st.isNewHigh){
-                displayAll.push({ date: todayStr(), amount: Number(cur.toFixed(2)), isLive: true });
+            const lastH = displayAll.length ? displayAll[displayAll.length - 1] : null;
+            if(st.isNewHigh && !(lastH && lastH.date === today)){
+                displayAll.push({ date: today, amount: Number(cur.toFixed(2)), isLive: true });
             }
-            // 汇总：历史最高 + 最近新高
-            document.querySelector('#ahMax').innerText = fmtMoney(st.isNewHigh ? cur : st.histMax);
+            // 今天的记录统一标记为实时（盘中记录 isLive 在快照推导中会丢失，用日期兜底）
+            displayAll.forEach(function(h){
+                if(h.date === today) h.isLive = true;
+            });
+            // 汇总：历史最高 + 最近新高（当天已破新高则最高点即当天记录值）
+            document.querySelector('#ahMax').innerText = fmtMoney(st.isNewHigh ? (st.histDate === today ? st.histMax : cur) : st.histMax);
             document.querySelector('#ahLast').innerText = displayAll.length
                 ? displayAll[displayAll.length - 1].date.substring(0, 4) + '.' + displayAll[displayAll.length - 1].date.substring(5, 7) + '.' + displayAll[displayAll.length - 1].date.substring(8, 10)
                 : '--';
@@ -2879,11 +2935,11 @@
             const c = String(code || '');
             return etfPrefixes.some(function(p){ return c.indexOf(p) === 0; });
         }
-        // 每股价格格式化：ETF三位小数（券商口径），其他保留2位小数，不加逗号
-        function fmtPrice(v, code){
+        // 每股价格格式化：港股、ETF三位小数（券商口径），其他保留2位小数，不加逗号
+        function fmtPrice(v, code, isHk){
             const n = Number(v);
             if(isNaN(n)) return '-';
-            return isEtfCode(code) ? n.toFixed(3) : n.toFixed(2);
+            return (isEtfCode(code) || isHk) ? n.toFixed(3) : n.toFixed(2);
         }
         // 盈亏格式化：盈利带 +，与券商一致（红涨绿跌）
         function formatPnl(v){
@@ -3063,7 +3119,7 @@
             titleEl.className = 'text-lg font-semibold ' + (mode === 'buy' ? 'text-[#ff4d4f]' : 'text-[#00b57a]');
             document.querySelector('#tradeStockName').innerText = item.name;
             document.querySelector('#tradeStockCode').innerText = item.code + (item.marketType === 'HK' ? ' · 港股' : ' · A股');
-            document.querySelector('#tradeNowPrice').innerHTML = (isHk ? 'HK$' : '') + fmtPrice(item.nowPrice, item.code);
+            document.querySelector('#tradeNowPrice').innerHTML = (isHk ? 'HK$' : '') + fmtPrice(item.nowPrice, item.code, isHk);
             document.querySelector('#tradeHoldInfo').innerText = '当前持仓 ' + item.count + ' 股 · 成本 ' + (isHk ? 'HK$' : '') + item.costPrice;
             document.querySelector('#tradePriceLabel').innerText = (mode === 'buy' ? '买入' : '卖出') + '价格(' + pxUnit + ')';
             const priceInput = document.querySelector('#tradePrice');
@@ -3224,7 +3280,7 @@
                 else if(type === 'high5') v = base * 1.05;
                 else if(type === 'high10') v = base * 1.10;
                 const priceInput = document.querySelector('#tradePrice');
-                priceInput.value = Number(v.toFixed(isEtfCode(item.code) ? 3 : 2));
+                priceInput.value = Number(v.toFixed(isEtfCode(item.code) || item.marketType === 'HK' ? 3 : 2));
                 updateTradePreview();
             });
         });
@@ -3268,7 +3324,7 @@
                     time: Number(t.t),
                     type: Number(t.delta) > 0 ? 'buy' : 'sell',
                     title: (Number(t.delta) > 0 ? '买入 ' : '卖出 ') + Math.abs(Number(t.delta)) + ' 股',
-                    detail: '成交价 ' + (isHk ? 'HK$' : '') + Number(t.price).toFixed(isEtfCode(item.code) ? 3 : 2),
+                    detail: '成交价 ' + (isHk ? 'HK$' : '') + Number(t.price).toFixed(isEtfCode(item.code) || isHk ? 3 : 2),
                     amount: Number(t.delta) * Number(t.price)
                 });
             });
@@ -3575,11 +3631,12 @@
                     let effChange = it.change;
                     if(isTradingTimeStarted() && (effChange == null || isNaN(effChange))) effChange = 0;
                     if(effChange != null && !isNaN(effChange)){
+                        const chgDecimals = isEtfCode(it.code) || it.marketType === 'HK' ? 3 : 2;
                         if(effChange > 0){
-                            changeDiffText = '+' + effChange.toFixed(2);
+                            changeDiffText = '+' + effChange.toFixed(chgDecimals);
                             changeDiffClass = 'text-[#ff4d4f]';
                         } else if(effChange < 0){
-                            changeDiffText = effChange.toFixed(2);
+                            changeDiffText = effChange.toFixed(chgDecimals);
                             changeDiffClass = 'text-[#00d68f]';
                         } else {
                             changeDiffText = '0.00';
@@ -3602,7 +3659,7 @@
                         + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + heavyBadge + '</div>'
                         + '</div>'
                         + '<div class="w-[92px] text-right flex-shrink-0 ml-1">'
-                        + '<div class="text-[13px] font-bold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? fmtPrice(it.nowPrice, it.code) : '--') + '</div>'
+                        + '<div class="text-[13px] font-bold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? fmtPrice(it.nowPrice, it.code, it.marketType === 'HK') : '--') + '</div>'
                         + '<div class="text-[11px] font-semibold mt-0.5 ' + changeDiffClass + ' tabular-nums whitespace-nowrap">' + changeDiffText + '</div>'
                         + '</div>'
                         + '<div class="w-[96px] text-right flex-shrink-0 ml-2">'
@@ -5124,7 +5181,7 @@
                 if(effChange != null && !isNaN(effChange)){
                     const chgPct = dayPct != null && !isNaN(dayPct) ? dayPct : 0;
                     const sign = effChange > 0 ? '+' : '';
-                    dayChangeAmtText = sign + Number(effChange).toFixed(isEtfCode(item.code) ? 3 : 2);
+                    dayChangeAmtText = sign + Number(effChange).toFixed(isEtfCode(item.code) || item.marketType === 'HK' ? 3 : 2);
                     dayChangePctText = (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%';
                     dayChangeClass = effChange > 0 ? 'text-[#ff4d4f]' : (effChange < 0 ? 'text-[#00d68f]' : 'text-gray-500');
                 }
@@ -5188,7 +5245,7 @@
                         </div>
                         <div class="px-1 py-2 text-center split-line">
                             <div class="text-[10px] text-gray-400">现价/息率</div>
-                            <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
+                            <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
                             <div class="text-[11px] font-medium mt-0.5 text-gray-800 tabular-nums">${stockYield}%</div>
                         </div>
                         <div class="px-1 py-2 text-center split-line">
@@ -5361,7 +5418,7 @@
                         </div>
                         <div class="text-center px-0.5">
                             <div class="text-xs font-semibold text-gray-700 tabular-nums"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${item.costPrice}</div>
-                            <div class="text-xs font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code)}</div>
+                            <div class="text-xs font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
                         </div>
                         <div class="text-center px-0.5">
                             <div class="text-xs font-bold ${itemPnlClass2} tabular-nums">${formatPnl(itemPnl2)}</div>

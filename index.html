@@ -894,6 +894,20 @@
         </div>
         <!-- 功能列表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <!-- 年度投资报告入口：年度账单式沉浸报告 -->
+            <button id="annualReportBtn" class="w-full text-left relative overflow-hidden rounded-2xl p-4 text-white shadow-lg active:scale-[0.98] transition-transform mb-3 mt-3" style="background: linear-gradient(135deg,#2b2217 0%,#4a3218 55%,#6b451f 100%);">
+                <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+                <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-20 h-20 bg-accent/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                <div class="flex items-center gap-3 relative z-10">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/30"><i class="fa fa-file-text-o text-lg"></i></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-serif text-base font-semibold tracking-wide">年度投资报告</div>
+                        <div class="text-[11px] text-amber-100/60 mt-0.5" id="arEntrySub">--年度 · 收益率 / 归因 / 分红 / 持仓</div>
+                    </div>
+                    <i class="fa fa-chevron-right text-amber-100/50 text-xs"></i>
+                </div>
+            </button>
             <button id="settingsBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
                 <span><i class="fa fa-cog mr-2 text-gray-400"></i>设置</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
@@ -915,6 +929,276 @@
         <div class="text-[11px] text-gray-400 mt-4 text-center leading-relaxed">
             数据保存在浏览器本地，清除浏览器数据会丢失<br>
             行情来源：腾讯财经 · 分红来源：东方财富
+        </div>
+    </div>
+
+    <!-- 年度投资报告页面（年度账单式沉浸报告） -->
+    <div id="pageAnnualReport" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+        <!-- 顶部返回 -->
+        <div class="flex items-center justify-between mb-4">
+            <button id="annualReportBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-500 active:scale-95 transition-transform">
+                <i class="fa fa-chevron-left text-sm"></i>
+            </button>
+            <h2 class="text-base font-semibold text-gray-800">年度投资报告</h2>
+            <div class="w-9"></div>
+        </div>
+
+        <!-- 封面：品牌水滴 + 报告期间 + 年末总资产大数字（参考平安年度账单） -->
+        <div class="relative rounded-3xl overflow-hidden mb-4 text-white shadow-2xl" style="background: linear-gradient(160deg,#151028 0%,#2b1b33 42%,#4a2c1f 100%);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+            <div class="absolute top-0 right-0 w-40 h-40 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute top-1/3 left-0 w-44 h-44 bg-purple-500/10 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-accent/15 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+            <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 26px 26px;"></div>
+            <div class="relative z-10 px-6 py-9 text-center">
+                <div class="flex items-center justify-center gap-2.5 mb-5">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-400 via-purple-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/40 ring-1 ring-white/20">
+                        <i class="fa fa-tint text-white text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-serif text-lg font-semibold tracking-wide leading-tight">细水长流</div>
+                        <div class="text-[10px] tracking-[0.3em] text-violet-200/60">股息持仓账户</div>
+                    </div>
+                </div>
+                <div class="text-[10px] tracking-[0.4em] text-violet-200/70 mb-2">ANNUAL REVIEW</div>
+                <!-- 报告年度切换器：可回看往年年报 -->
+                <div class="flex items-center justify-center gap-4 mb-5">
+                    <button id="arPrevYearBtn" class="w-9 h-9 rounded-full bg-white/10 border border-violet-200/25 text-violet-100 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-25 disabled:active:scale-100" title="上一年度报告">
+                        <i class="fa fa-chevron-left text-xs"></i>
+                    </button>
+                    <div class="min-w-[120px]">
+                        <div class="text-[9px] tracking-[0.35em] text-violet-200/50 mb-0.5">报告年度</div>
+                        <div class="text-xl font-bold tracking-widest tabular-nums" id="arYearLabel">2026</div>
+                    </div>
+                    <button id="arNextYearBtn" class="w-9 h-9 rounded-full bg-white/10 border border-violet-200/25 text-violet-100 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-25 disabled:active:scale-100" title="下一年度报告">
+                        <i class="fa fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+                <div class="font-serif text-2xl font-bold tracking-wide leading-snug mb-5" id="arCoverTitle">2026年度投资回顾</div>
+                <!-- 年末总资产大数字 -->
+                <div class="text-[11px] text-gray-400 mb-1">我的年末总资产</div>
+                <div class="text-4xl font-bold tabular-nums tracking-tight mb-6" id="arCoverAsset" style="color:#f7cf8f">--</div>
+                <!-- 净转入 / 总收益 两行 -->
+                <div class="max-w-xs mx-auto space-y-2.5">
+                    <div class="flex justify-between items-center px-5 py-2.5 rounded-xl bg-white/5">
+                        <span class="text-xs text-gray-400">净转入</span>
+                        <span class="text-sm font-semibold text-amber-100 tabular-nums" id="arCoverNetInflow">--</span>
+                    </div>
+                    <div class="flex justify-between items-center px-5 py-2.5 rounded-xl bg-white/5">
+                        <span class="text-xs text-gray-400">总收益</span>
+                        <span class="text-sm font-semibold tabular-nums" id="arCoverGain">--</span>
+                    </div>
+                    <div class="flex justify-between items-center px-5 py-2.5 rounded-xl bg-white/5">
+                        <span class="text-xs text-gray-400">总分红</span>
+                        <span class="text-sm font-semibold tabular-nums" id="arCoverDiv" style="color:#f7cf8f">--</span>
+                    </div>
+                </div>
+                <div class="mt-6 flex items-center justify-center gap-2 text-[10px] text-gray-500">
+                    <span class="h-px w-8 bg-gradient-to-r from-transparent to-amber-200/30"></span>
+                    <span class="tracking-widest" id="arCoverDate">--</span>
+                    <span class="h-px w-8 bg-gradient-to-l from-transparent to-amber-200/30"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 业绩摘要 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-violet-500 to-purple-700 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">业绩摘要</span>
+                <span class="text-[10px] text-gray-400 ml-auto" id="arDataTag">数据实时</span>
+            </div>
+            <div class="px-5 py-4">
+                <div class="text-center mb-4">
+                    <div class="text-[11px] text-gray-400 mb-1">今年收益率</div>
+                    <div class="text-4xl font-bold tabular-nums" id="arYearReturn">--</div>
+                </div>
+                <div class="space-y-2.5">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500">对比 · 上证指数</span>
+                        <span class="text-sm font-semibold tabular-nums" id="arIndexSH">加载中…</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500">对比 · 沪深300</span>
+                        <span class="text-sm font-semibold tabular-nums" id="arIndex300">加载中…</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500">跑赢 / 跑输（沪深300）</span>
+                        <span class="text-sm font-semibold tabular-nums" id="arVsIndex">--</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500">年内最大回撤</span>
+                        <span class="text-sm font-semibold tabular-nums" id="arMaxDrawdown">--</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500">期末总资产</span>
+                        <span class="text-sm font-semibold tabular-nums" id="arTotalAsset">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 资产增长：今年资产增加 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-violet-500 to-purple-700 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">资产增长</span>
+                <span class="text-[10px] text-gray-400 ml-auto">年初 → 年末</span>
+            </div>
+            <div class="px-5 py-4">
+                <div class="text-center mb-4">
+                    <div class="text-[11px] text-gray-400 mb-1">今年资产增加</div>
+                    <div class="text-3xl font-bold tabular-nums" id="arAssetGain">--</div>
+                    <div class="text-[11px] mt-1 tabular-nums" id="arAssetGainPct">--</div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-50 rounded-xl p-3 text-center">
+                        <div class="text-[10px] text-gray-400 mb-1">年初总资产</div>
+                        <div class="text-base font-semibold text-gray-800 tabular-nums" id="arAssetStart">--</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-3 text-center">
+                        <div class="text-[10px] text-orange-300 mb-1">年末总资产</div>
+                        <div class="text-base font-semibold text-accent tabular-nums" id="arAssetEnd">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分红增长：今年 vs 去年（重点板块） -->
+        <div class="relative rounded-2xl overflow-hidden mb-4 text-white shadow-lg" style="background: linear-gradient(135deg,#3a2410 0%,#553017 60%,#6e3c1a 100%);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.5), transparent);"></div>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute -bottom-10 -left-10 w-36 h-36 bg-purple-500/10 rounded-full"></div>
+            <div class="relative z-10 px-5 py-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-1 h-4 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full"></div>
+                    <span class="text-base font-semibold">分红增长</span>
+                    <span class="text-[10px] text-amber-100/50 ml-auto">现金分红 · 收息复利</span>
+                </div>
+                <div class="text-center mb-4">
+                    <div class="text-[11px] text-amber-100/60 mb-1">今年分红收入</div>
+                    <div class="text-4xl font-bold tabular-nums" id="arDivThisYear" style="color:#f7cf8f">--</div>
+                    <div class="text-[12px] mt-2 font-semibold tabular-nums" id="arDivGrow">--</div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white/5 rounded-xl p-3 text-center">
+                        <div class="text-[10px] text-amber-100/50 mb-1">去年分红（<span id="arDivLastYearLabel">--</span>）</div>
+                        <div class="text-base font-semibold text-amber-100 tabular-nums" id="arDivLastYear">--</div>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-3 text-center">
+                        <div class="text-[10px] text-amber-100/50 mb-1">分红增长</div>
+                        <div class="text-base font-semibold tabular-nums" id="arDivGainAmount">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分红贡献榜：今年分红主要贡献股票 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">分红贡献榜</span>
+                <span class="text-[10px] text-gray-400 ml-auto" id="arDivRankTag">今年已到账分红</span>
+            </div>
+            <div id="arDivRankList" class="px-5 py-3 space-y-2.5"></div>
+        </div>
+
+        <!-- 持仓变化：今年新增 / 清仓 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-violet-400 to-purple-600 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">持仓变化</span>
+                <span class="text-[10px] text-gray-400 ml-auto" id="arHoldChangeTag">今年</span>
+            </div>
+            <div class="px-5 py-3.5 space-y-3">
+                <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-red-50 text-[#ff4d4f] flex items-center justify-center flex-shrink-0"><i class="fa fa-plus text-[11px]"></i></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[13px] font-medium text-gray-800"><span id="arNewLabel">今年新增</span> <span id="arNewCount" class="text-[#ff4d4f] font-semibold">0</span> 只</div>
+                        <div class="text-[11px] text-gray-400 mt-1 leading-relaxed" id="arNewList">--</div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 pt-2.5 border-t border-gray-50">
+                    <div class="w-7 h-7 rounded-full bg-green-50 text-[#00b57a] flex items-center justify-center flex-shrink-0"><i class="fa fa-minus text-[11px]"></i></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[13px] font-medium text-gray-800"><span id="arClosedLabel">今年清仓</span> <span id="arClosedCount" class="text-[#00b57a] font-semibold">0</span> 只</div>
+                        <div class="text-[11px] text-gray-400 mt-1 leading-relaxed" id="arClosedList">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收益归因：明星股 vs 坑爹股 顶部对比 + 前五榜 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-violet-500 to-purple-700 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">收益归因 · 今年贡献</span>
+                <span class="text-[10px] text-gray-400 ml-auto">按今年盈亏额</span>
+            </div>
+            <div class="px-5 py-4">
+                <!-- 顶部：明星股 / 坑爹股 两栏对比 -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-4">
+                        <div class="text-[11px] text-[#ff4d4f] font-semibold mb-1"><i class="fa fa-trophy mr-1"></i>明星股</div>
+                        <div class="text-lg font-bold text-gray-800 truncate" id="arStarName">--</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5 truncate" id="arStarReason">--</div>
+                        <div class="text-lg font-bold text-[#ff4d4f] mt-1.5 tabular-nums" id="arStarPnl">--</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-4">
+                        <div class="text-[11px] text-[#00d68f] font-semibold mb-1"><i class="fa fa-bug mr-1"></i>坑爹股</div>
+                        <div class="text-lg font-bold text-gray-800 truncate" id="arBadName">--</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5 truncate" id="arBadReason">--</div>
+                        <div class="text-lg font-bold text-[#00d68f] mt-1.5 tabular-nums" id="arBadPnl">--</div>
+                    </div>
+                </div>
+                <!-- 明星股榜：盈利前五 -->
+                <div class="pt-1">
+                    <div class="text-[11px] font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
+                        <i class="fa fa-trophy text-[10px] text-[#ff4d4f]"></i>明星股 · 盈利前五
+                    </div>
+                    <div id="arStarList" class="space-y-2.5"></div>
+                </div>
+                <!-- 坑爹股榜：亏损前五 -->
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <div class="text-[11px] font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
+                        <i class="fa fa-bug text-[10px] text-[#00d68f]"></i>坑爹股 · 亏损前五
+                    </div>
+                    <div id="arBadList" class="space-y-2.5"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 税费与费用 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-violet-400 to-purple-600 rounded-full"></div>
+                <span class="text-base font-semibold text-gray-800">税费与费用</span>
+                <span class="text-[10px] text-gray-400 ml-auto">摩擦成本</span>
+            </div>
+            <div class="px-5 py-3.5 space-y-2.5 text-sm">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400">印花税（卖出）</span>
+                    <span class="font-semibold text-gray-800 tabular-nums" id="arStampTax">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400">佣金（双边）</span>
+                    <span class="font-semibold text-gray-800 tabular-nums" id="arCommission">--</span>
+                </div>
+                <div class="flex justify-between items-center border-t border-gray-100 pt-2.5 mt-1">
+                    <span class="text-gray-500 font-medium">摩擦成本合计</span>
+                    <span class="font-bold tabular-nums" id="arFeeTotal">--</span>
+                </div>
+                <div class="text-[10px] text-gray-300 mt-1.5 leading-relaxed">估算口径：A股印花税0.05%（卖出）、佣金万2.5双边；港股印花税0.13%、佣金万2.5双边。实际费用以券商账单为准。</div>
+            </div>
+        </div>
+
+        <!-- 报告底部 -->
+        <div class="text-center text-[10px] text-gray-300 mt-6 pb-2">
+            <div class="inline-flex items-center gap-1.5 mb-1">
+                <i class="fa fa-tint text-violet-500 text-[10px]"></i>
+                <span class="tracking-widest">细水长流 · 股息投资</span>
+            </div>
+            <div class="text-gray-200/60">每年一份 · 记录复利生长的足迹</div>
         </div>
     </div>
 
@@ -3474,12 +3758,13 @@
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
-            // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高），等效于点击左上角返回
+            // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告），等效于点击左上角返回
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageTradeLog').classList.add('hidden');
             document.querySelector('#pageStockEdit').classList.add('hidden');
             document.querySelector('#pageTrade').classList.add('hidden');
             document.querySelector('#pageAssetHigh').classList.add('hidden');
+            document.querySelector('#pageAnnualReport').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
@@ -3574,6 +3859,450 @@
             retEl.className = 'text-[11px] mt-0.5 ' + (ret >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
             document.querySelector('#mineCostYield').innerText = sum.costYield + '%';
             document.querySelector('#mineMarketYield').innerText = sum.marketYield + '%';
+        }
+
+        // ==================== 年度投资报告 ====================
+        // 指数缓存：现价 + 年初收盘（报告页打开时拉取一次，当天有效）
+        let arIndexCache = { shPrice: null, hs300Price: null, shBase: null, hs300Base: null, fetchedDate: null };
+        // 当前查看的报告年度：null=当年（打开报告时重置为当年，可左右切换回看往年）
+        let arReportYear = null;
+        function openAnnualReport(){
+            arReportYear = new Date().getFullYear();
+            document.querySelector('#pageMine').classList.add('hidden');
+            document.querySelector('#pageAnnualReport').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.add('hidden');
+            window.scrollTo(0, 0);
+            renderAnnualReport();
+            fetchAnnualIndex();
+        }
+        function closeAnnualReport(){
+            document.querySelector('#pageAnnualReport').classList.add('hidden');
+            document.querySelector('#pageMine').classList.remove('hidden');
+            document.querySelector('#openModalBtn').classList.remove('hidden');
+            renderPage();
+        }
+        // 获取某年年初市值：上年年终总资产（yearlyAssets → monthlyAssets 12月 → dailyAssets 12月31日 → yearStart 快照兜底）
+        function getYearStartMarket(yrStr){
+            const prevY = String(Number(yrStr) - 1);
+            if(historyData.yearlyAssets && historyData.yearlyAssets[prevY] > 0) return Number(historyData.yearlyAssets[prevY]) || 0;
+            if(historyData.monthlyAssets && historyData.monthlyAssets[prevY + '-12'] > 0) return Number(historyData.monthlyAssets[prevY + '-12']) || 0;
+            if(historyData.dailyAssets && historyData.dailyAssets[prevY + '-12-31'] > 0) return Number(historyData.dailyAssets[prevY + '-12-31']) || 0;
+            return 0;
+        }
+        // 获取某年年末总资产：当年终值优先（yearlyAssets → monthlyAssets 12月 → dailyAssets 12月31日），当年未结束则用当前总市值
+        function getYearEndMarket(yrStr, isCurYear, totalMarketNow){
+            if(!isCurYear){
+                if(historyData.yearlyAssets && historyData.yearlyAssets[yrStr] > 0) return Number(historyData.yearlyAssets[yrStr]) || 0;
+                if(historyData.monthlyAssets && historyData.monthlyAssets[yrStr + '-12'] > 0) return Number(historyData.monthlyAssets[yrStr + '-12']) || 0;
+                if(historyData.dailyAssets && historyData.dailyAssets[yrStr + '-12-31'] > 0) return Number(historyData.dailyAssets[yrStr + '-12-31']) || 0;
+                return 0;
+            }
+            return totalMarketNow;
+        }
+        // 年内最大回撤：基于指定年份每日总资产快照计算（当年实时数据，历史年份用已归档快照）
+        function calcMaxDrawdown(yrStr){
+            const pts = [];
+            const da = historyData.dailyAssets || {};
+            Object.keys(da).forEach(function(d){
+                if(d.indexOf(yrStr + '-') === 0 && da[d] > 0){
+                    pts.push({ d: d, v: Number(da[d]) });
+                }
+            });
+            pts.sort(function(a, b){ return a.d < b.d ? -1 : 1; });
+            if(pts.length < 2) return null;
+            let peak = pts[0].v, peakDate = pts[0].d, maxDd = 0, ddDate = pts[0].d;
+            pts.forEach(function(p){
+                if(p.v > peak){ peak = p.v; peakDate = p.d; }
+                const dd = (peak - p.v) / peak * 100;
+                if(dd > maxDd){ maxDd = dd; ddDate = p.d; }
+            });
+            return { pct: maxDd, peakDate: peakDate, ddDate: ddDate };
+        }
+        // 指定年份税费估算：基于该年交易流水（A股印花税0.05%卖出 + 佣金万2.5双边；港股印花税0.13% + 佣金万2.5双边）
+        function calcAnnualFees(yrNum){
+            const yearStart = new Date(yrNum, 0, 1).getTime();
+            const yearEnd = new Date(yrNum + 1, 0, 1).getTime();
+            let stamp = 0, commission = 0;
+            holdDataList.forEach(function(it){
+                (it.transactions || []).forEach(function(t){
+                    const ts = Number(t.t);
+                    if(!(ts >= yearStart && ts < yearEnd)) return;
+                    const amt = Math.abs(Number(t.delta)) * Number(t.price);
+                    if(amt <= 0) return;
+                    const isHk = it.marketType === 'HK';
+                    if(isHk){
+                        stamp += amt * 0.0013;          // 港股印花税0.13%
+                        commission += amt * 0.00025 * 2; // 佣金万2.5双边
+                    } else {
+                        if(Number(t.delta) < 0) stamp += amt * 0.0005; // A股印花税卖出0.05%
+                        commission += amt * 0.00025 * 2;
+                    }
+                });
+            });
+            return { stamp: stamp, commission: commission, total: stamp + commission };
+        }
+        // 渲染年度投资报告
+        function renderAnnualReport(){
+            const curY = new Date().getFullYear();
+            // 报告年度：默认当年；切换到往年则用历史归档数据
+            const reportY = arReportYear || curY;
+            const reportYStr = String(reportY);
+            const lastYStr = String(reportY - 1);
+            const isCurYear = reportY === curY;
+            // 年份切换器状态
+            const minY = historyData.portfolioStartYear || curY;
+            document.querySelector('#arYearLabel').innerText = reportYStr;
+            const prevBtn = document.querySelector('#arPrevYearBtn');
+            const nextBtn = document.querySelector('#arNextYearBtn');
+            if(prevBtn) prevBtn.disabled = reportY <= minY;
+            if(nextBtn) nextBtn.disabled = reportY >= curY;
+            // 数据基线：当年用实时汇总，历史年份用归档快照
+            const sum = calcSummary();
+            const totalMarketNow = Number(sum.totalMarket) || 0;
+            const yearEndMarket = getYearEndMarket(reportYStr, isCurYear, totalMarketNow);
+            const yearStartMarket = getYearStartMarket(reportYStr);
+            const periodNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[reportYStr]) || 0;
+            const yearTotalGain = (yearEndMarket > 0 && yearStartMarket > 0) ? (yearEndMarket - yearStartMarket - periodNetInflow) : 0;
+            // 封面
+            document.querySelector('#arCoverTitle').innerText = reportYStr + '年度投资回顾';
+            document.querySelector('#arCoverDate').innerText = isCurYear ? ('报告生成于 ' + todayStr()) : ('报告期间 · ' + reportYStr + ' 年度');
+            document.querySelector('#arCoverAsset').innerText = yearEndMarket > 0 ? fmtMoney(yearEndMarket) : '--';
+            const niEl = document.querySelector('#arCoverNetInflow');
+            niEl.innerText = (periodNetInflow >= 0 ? '+' : '') + fmtMoney(periodNetInflow);
+            niEl.className = 'text-sm font-semibold tabular-nums ' + (periodNetInflow >= 0 ? 'text-amber-100' : 'text-[#00d68f]');
+            const gEl = document.querySelector('#arCoverGain');
+            gEl.innerText = yearStartMarket > 0 ? ((yearTotalGain >= 0 ? '+' : '') + fmtMoney(yearTotalGain)) : '--';
+            gEl.className = 'text-sm font-semibold tabular-nums ' + (yearTotalGain >= 0 ? 'text-[#ff8a8c]' : 'text-[#00d68f]');
+            // 报告年总分红：当年用今年已收实时口径（手动基准 + 后续到账累加），历史年份用归档值
+            const divThisYear = isCurYear ? getCurYearReceived() : ((historyData.yearlyDiv && historyData.yearlyDiv[reportYStr]) || 0);
+            const cdEl = document.querySelector('#arCoverDiv');
+            if(cdEl){
+                cdEl.innerText = divThisYear > 0 ? fmtMoney(divThisYear) : '--';
+            }
+            // 业绩摘要数据标签：历史年份显示"已归档数据"
+            const dtEl = document.querySelector('#arDataTag');
+            if(dtEl) dtEl.innerText = isCurYear ? '数据实时' : '已归档数据';
+            // 业绩摘要：收益率（当年实时券商口径；历史年份用归档的每年收益率）
+            let yr = null;
+            if(isCurYear){
+                yr = Number(sum.yearReturnRate);
+            } else {
+                const yv = Number(historyData.yearlyReturn && historyData.yearlyReturn[reportYStr]);
+                if(isFinite(yv) && yv !== 0) yr = yv;
+            }
+            const yrEl = document.querySelector('#arYearReturn');
+            if(yr != null && !isNaN(yr)){
+                yrEl.innerText = (yr >= 0 ? '+' : '') + yr.toFixed(2) + '%';
+                yrEl.className = 'text-4xl font-bold tabular-nums ' + (yr >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+            } else {
+                yrEl.innerText = '--';
+                yrEl.className = 'text-4xl font-bold tabular-nums text-gray-300';
+            }
+            document.querySelector('#arTotalAsset').innerText = yearEndMarket > 0 ? fmtMoney(yearEndMarket) : '--';
+            // 资产增长板块
+            const assetGain = (yearEndMarket > 0 && yearStartMarket > 0) ? (yearEndMarket - yearStartMarket) : null;
+            const assetGainPct = (yearEndMarket > 0 && yearStartMarket > 0) ? (assetGain / yearStartMarket * 100) : 0;
+            const agEl = document.querySelector('#arAssetGain');
+            if(assetGain != null){
+                agEl.innerText = (assetGain >= 0 ? '+' : '') + fmtMoney(assetGain);
+                agEl.className = 'text-3xl font-bold tabular-nums ' + (assetGain >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+            } else {
+                agEl.innerText = '--';
+                agEl.className = 'text-3xl font-bold tabular-nums text-gray-300';
+            }
+            const agpEl = document.querySelector('#arAssetGainPct');
+            agpEl.innerText = (yearEndMarket > 0 && yearStartMarket > 0) ? ('含净转入 · 较年初 ' + (assetGainPct >= 0 ? '+' : '') + assetGainPct.toFixed(2) + '%') : '年初数据不足';
+            agpEl.className = 'text-[11px] mt-1 tabular-nums text-gray-400';
+            document.querySelector('#arAssetStart').innerText = yearStartMarket > 0 ? fmtMoney(yearStartMarket) : '--';
+            document.querySelector('#arAssetEnd').innerText = yearEndMarket > 0 ? fmtMoney(yearEndMarket) : '--';
+            // 分红增长板块：报告年分红 vs 上年分红（divThisYear 已在封面统一计算）
+            const divLastYear = (historyData.yearlyDiv && historyData.yearlyDiv[lastYStr]) || 0;
+            document.querySelector('#arDivThisYear').innerText = divThisYear > 0 ? fmtMoney(divThisYear) : '--';
+            document.querySelector('#arDivLastYearLabel').innerText = lastYStr;
+            document.querySelector('#arDivLastYear').innerText = divLastYear > 0 ? fmtMoney(divLastYear) : '--';
+            const divGain = divThisYear - divLastYear;
+            const divGrowPct = divLastYear > 0 ? (divGain / divLastYear * 100) : 0;
+            const dgEl = document.querySelector('#arDivGrow');
+            if(divThisYear > 0 && divLastYear > 0){
+                dgEl.innerText = '较去年 ' + (divGain >= 0 ? '增长 +' : '下降 ') + Math.abs(divGain).toFixed(2) + ' · ' + (divGrowPct >= 0 ? '+' : '') + divGrowPct.toFixed(1) + '%';
+                dgEl.className = 'text-[12px] mt-2 font-semibold tabular-nums ' + (divGain >= 0 ? 'text-[#ff8a8c]' : 'text-[#00d68f]');
+            } else if(divThisYear > 0){
+                dgEl.innerText = '去年暂无分红数据，' + reportYStr + '是收息新起点';
+                dgEl.className = 'text-[12px] mt-2 font-semibold tabular-nums text-amber-100/70';
+            } else {
+                dgEl.innerText = reportYStr + '年暂无分红记录';
+                dgEl.className = 'text-[12px] mt-2 font-semibold tabular-nums text-amber-100/70';
+            }
+            const dgaEl = document.querySelector('#arDivGainAmount');
+            if(divThisYear > 0 && divLastYear > 0){
+                dgaEl.innerText = (divGain >= 0 ? '+' : '') + fmtMoney(divGain);
+                dgaEl.className = 'text-base font-semibold tabular-nums ' + (divGain >= 0 ? 'text-[#ff8a8c]' : 'text-[#00d68f]');
+            } else {
+                dgaEl.innerText = '--';
+                dgaEl.className = 'text-base font-semibold tabular-nums text-amber-100/70';
+            }
+            // 分红贡献榜：报告年已到账分红（exDivRecords 按年份过滤），降序
+            const divRankTagEl = document.querySelector('#arDivRankTag');
+            if(divRankTagEl) divRankTagEl.innerText = isCurYear ? '今年已到账分红' : (reportYStr + '年已到账 · 仅含在持仓');
+            const divRankList = [];
+            holdDataList.forEach(function(it){
+                let y = 0;
+                (it.exDivRecords || []).forEach(function(r){
+                    const d = String(r.date || '');
+                    if(d.indexOf(reportYStr + '-') === 0) y += Number(r.amount) || 0;
+                });
+                if(y > 0) divRankList.push({ item: it, amount: y });
+            });
+            divRankList.sort(function(a, b){ return b.amount - a.amount; });
+            const divRankEl = document.querySelector('#arDivRankList');
+            if(divRankList.length){
+                const maxDiv = divRankList[0].amount || 1;
+                const totalDivRank = divRankList.reduce(function(s, y){ return s + y.amount; }, 0);
+                let h = '';
+                divRankList.forEach(function(x, i){
+                    const pct = maxDiv > 0 ? (x.amount / maxDiv * 100) : 0;
+                    // 前三名徽章用高贵的紫金渐变，其余保持金色
+                    const badgeCls = i < 3
+                        ? 'bg-gradient-to-br from-violet-500 via-purple-500 to-purple-700 shadow shadow-violet-300/40'
+                        : 'bg-gradient-to-br from-amber-400 to-amber-600';
+                    h += '<div class="flex items-center gap-2.5">'
+                        + '<div class="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 ' + badgeCls + '">' + (i + 1) + '</div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5">'
+                        + '<span class="text-[13px] font-medium text-gray-800 truncate">' + x.item.name + '</span>'
+                        + '<span class="text-[9px] ' + (x.item.marketType === 'HK' ? 'text-blue-500 bg-blue-50' : 'text-accent bg-orange-50') + ' px-1 py-0.5 rounded flex-shrink-0">' + (x.item.marketType === 'HK' ? '港' : 'A') + '</span>'
+                        + '</div>'
+                        + '<div class="h-1 mt-1.5 bg-amber-50 rounded-full overflow-hidden">'
+                        + '<div class="h-full rounded-full" style="width:' + Math.max(4, Math.min(100, pct)) + '%;background:linear-gradient(90deg,#f5c97b,#d89b3f)"></div>'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="text-right flex-shrink-0"><div class="text-[13px] font-semibold text-amber-600 tabular-nums">' + fmtMoney(x.amount) + '</div>'
+                        + '<div class="text-[10px] text-gray-400 tabular-nums mt-0.5">占 ' + (totalDivRank > 0 ? (x.amount / totalDivRank * 100) : 0).toFixed(0) + '%</div></div>'
+                        + '</div>';
+                });
+                divRankEl.innerHTML = h;
+            } else {
+                divRankEl.innerHTML = '<div class="text-center text-gray-300 text-xs py-3">' + (isCurYear ? '今年暂无到账分红' : reportYStr + '年分红记录已归档') + '</div>';
+            }
+            // 持仓变化：报告年新增 / 清仓（同一股票多次买卖只显示一次，按代码去重）
+            const newStocks = [];
+            const seenNew = {};
+            holdDataList.forEach(function(it){
+                if(it.createdAt && new Date(it.createdAt).getFullYear() === reportY){
+                    const key = String(it.code || '') + '|' + (it.marketType || '');
+                    if(seenNew[key]) return;
+                    seenNew[key] = true;
+                    newStocks.push(it);
+                }
+            });
+            const closedStocks = [];
+            const seenClosed = {};
+            (historyData.closedStocks || []).forEach(function(r){
+                if(String(r.closeDate || '').indexOf(reportYStr + '-') === 0){
+                    const key = String(r.code || '') + '|' + (r.marketType || '');
+                    if(seenClosed[key]) return;
+                    seenClosed[key] = true;
+                    closedStocks.push(r);
+                }
+            });
+            // 持仓变化标签：历史年份显示对应年份
+            const hcTagEl = document.querySelector('#arHoldChangeTag');
+            if(hcTagEl) hcTagEl.innerText = isCurYear ? '今年' : reportYStr + '年';
+            const newLabelEl = document.querySelector('#arNewLabel');
+            if(newLabelEl) newLabelEl.innerText = isCurYear ? '今年新增' : reportYStr + '新增';
+            const closedLabelEl = document.querySelector('#arClosedLabel');
+            if(closedLabelEl) closedLabelEl.innerText = isCurYear ? '今年清仓' : reportYStr + '清仓';
+            document.querySelector('#arNewCount').innerText = newStocks.length;
+            document.querySelector('#arNewList').innerText = newStocks.length ? newStocks.map(function(x){ return x.name; }).join('、') : (reportYStr + '年暂无新增持仓');
+            document.querySelector('#arClosedCount').innerText = closedStocks.length;
+            document.querySelector('#arClosedList').innerText = closedStocks.length ? closedStocks.map(function(x){ return x.name; }).join('、') : (reportYStr + '年暂无清仓记录');
+            // 基准对比（仅当年实时拉取显示；历史年份无归档指数数据）
+            if(isCurYear){
+                const shPct = (arIndexCache.shPrice > 0 && arIndexCache.shBase > 0) ? ((arIndexCache.shPrice / arIndexCache.shBase - 1) * 100) : null;
+                const hsPct = (arIndexCache.hs300Price > 0 && arIndexCache.hs300Base > 0) ? ((arIndexCache.hs300Price / arIndexCache.hs300Base - 1) * 100) : null;
+                document.querySelector('#arIndexSH').innerText = shPct != null ? ((shPct >= 0 ? '+' : '') + shPct.toFixed(2) + '%') : '加载中…';
+                document.querySelector('#arIndex300').innerText = hsPct != null ? ((hsPct >= 0 ? '+' : '') + hsPct.toFixed(2) + '%') : '加载中…';
+                if(hsPct != null && yr != null){
+                    const vs = yr - hsPct;
+                    const vsEl = document.querySelector('#arVsIndex');
+                    vsEl.innerText = (vs >= 0 ? '跑赢 +' : '跑输 ') + Math.abs(vs).toFixed(2) + '%';
+                    vsEl.className = 'text-sm font-semibold tabular-nums ' + (vs >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+                } else {
+                    const vsEl = document.querySelector('#arVsIndex');
+                    vsEl.innerText = '--';
+                    vsEl.className = 'text-sm font-semibold tabular-nums text-gray-800';
+                }
+            } else {
+                document.querySelector('#arIndexSH').innerText = '--';
+                document.querySelector('#arIndex300').innerText = '--';
+                const vsEl = document.querySelector('#arVsIndex');
+                vsEl.innerText = '--';
+                vsEl.className = 'text-sm font-semibold tabular-nums text-gray-800';
+            }
+            // 最大回撤（按报告年每日资产快照计算）
+            const mdd = calcMaxDrawdown(reportYStr);
+            const mddEl = document.querySelector('#arMaxDrawdown');
+            if(mdd && mdd.pct > 0){
+                mddEl.innerText = '-' + mdd.pct.toFixed(2) + '%';
+                mddEl.className = 'text-sm font-semibold tabular-nums text-[#00d68f]';
+            } else {
+                mddEl.innerText = '--';
+                mddEl.className = 'text-sm font-semibold tabular-nums text-gray-800';
+            }
+            // 收益归因与榜单：仅当年实时计算；历史年份的持仓明细已归档，仅保留年度汇总
+            const starEl = document.querySelector('#arStarName');
+            const starReasonEl = document.querySelector('#arStarReason');
+            const starPnlEl = document.querySelector('#arStarPnl');
+            const badEl = document.querySelector('#arBadName');
+            const badReasonEl = document.querySelector('#arBadReason');
+            const badPnlEl = document.querySelector('#arBadPnl');
+            const starListEl = document.querySelector('#arStarList');
+            const badListEl = document.querySelector('#arBadList');
+            if(!isCurYear){
+                starEl.innerText = '已归档';
+                starReasonEl.innerText = '往年持仓明细不参与实时归因';
+                starPnlEl.innerText = '--';
+                badEl.innerText = '已归档';
+                badReasonEl.innerText = '往年持仓明细不参与实时归因';
+                badPnlEl.innerText = '--';
+                starListEl.innerHTML = '<div class="text-center text-gray-300 text-xs py-3">' + reportYStr + '年度持仓盈亏明细已归档，仅保留年度汇总</div>';
+                badListEl.innerHTML = '';
+                // 税费与费用：按报告年交易流水计算
+                const fees = calcAnnualFees(reportY);
+                document.querySelector('#arStampTax').innerText = (fees.stamp > 0 || fees.commission > 0) ? fmtMoney(fees.stamp) : '--';
+                document.querySelector('#arCommission').innerText = (fees.stamp > 0 || fees.commission > 0) ? fmtMoney(fees.commission) : '--';
+                const feeTotalEl = document.querySelector('#arFeeTotal');
+                feeTotalEl.innerText = (fees.stamp > 0 || fees.commission > 0) ? fmtMoney(fees.total) : '--';
+                feeTotalEl.className = 'font-bold tabular-nums text-gray-800';
+                return;
+            }
+            // 当年：收益归因与榜单（按今年盈亏额排序，有年初基础价的股票才可计算）
+            const ranked = [];
+            holdDataList.forEach(function(it){
+                const ytd = getYtdPnl(it);
+                if(ytd == null || isNaN(ytd)) return;
+                const pct = getYtdPct(it);
+                ranked.push({ item: it, pnl: ytd, pct: pct });
+            });
+            ranked.sort(function(a, b){ return b.pnl - a.pnl; });
+            const stars = ranked.filter(function(x){ return x.pnl > 0; }).slice(0, 5);
+            const bads = ranked.filter(function(x){ return x.pnl < 0; }).slice(0, 5);
+            // 明星股 / 坑爹股卡片
+            if(stars.length){
+                const s = stars[0];
+                starEl.innerText = s.item.name;
+                starReasonEl.innerText = (s.pct != null ? '今年涨幅 ' + (s.pct >= 0 ? '+' : '') + s.pct.toFixed(2) + '%' : '年初基础价未获取');
+                starPnlEl.innerText = '+' + fmtMoney(s.pnl);
+            } else {
+                starEl.innerText = '暂无';
+                starReasonEl.innerText = '今年无盈利持仓';
+                starPnlEl.innerText = '--';
+            }
+            if(bads.length){
+                const b = bads[bads.length - 1];
+                badEl.innerText = b.item.name;
+                badReasonEl.innerText = (b.pct != null ? '今年涨幅 ' + (b.pct >= 0 ? '+' : '') + b.pct.toFixed(2) + '%' : '年初基础价未获取');
+                badPnlEl.innerText = fmtMoney(b.pnl);
+            } else {
+                badEl.innerText = '暂无';
+                badReasonEl.innerText = '今年无亏损持仓';
+                badPnlEl.innerText = '--';
+            }
+            // 明星股榜 / 坑爹股榜
+            if(stars.length){
+                let h = '';
+                stars.forEach(function(x, i){
+                    h += '<div class="flex items-center gap-2.5">'
+                        + '<div class="w-5 h-5 rounded-full bg-gradient-to-br from-red-400 to-red-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">' + (i + 1) + '</div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5">'
+                        + '<span class="text-[13px] font-medium text-gray-800 truncate">' + x.item.name + '</span>'
+                        + '<span class="text-[9px] ' + (x.item.marketType === 'HK' ? 'text-blue-500 bg-blue-50' : 'text-accent bg-orange-50') + ' px-1 py-0.5 rounded flex-shrink-0">' + (x.item.marketType === 'HK' ? '港' : 'A') + '</span>'
+                        + '</div>'
+                        + (x.pct != null ? '<div class="text-[10px] text-gray-400 mt-0.5">今年涨幅 ' + (x.pct >= 0 ? '+' : '') + x.pct.toFixed(2) + '%</div>' : '')
+                        + '</div>'
+                        + '<div class="text-right flex-shrink-0"><div class="text-[13px] font-semibold text-[#ff4d4f] tabular-nums">+' + fmtMoney(x.pnl) + '</div></div>'
+                        + '</div>';
+                });
+                starListEl.innerHTML = h;
+            } else {
+                starListEl.innerHTML = '<div class="text-center text-gray-300 text-xs py-3">今年暂无盈利持仓（或年初基础价未获取）</div>';
+            }
+            if(bads.length){
+                let h = '';
+                bads.forEach(function(x, i){
+                    h += '<div class="flex items-center gap-2.5">'
+                        + '<div class="w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">' + (i + 1) + '</div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5">'
+                        + '<span class="text-[13px] font-medium text-gray-800 truncate">' + x.item.name + '</span>'
+                        + '<span class="text-[9px] ' + (x.item.marketType === 'HK' ? 'text-blue-500 bg-blue-50' : 'text-accent bg-orange-50') + ' px-1 py-0.5 rounded flex-shrink-0">' + (x.item.marketType === 'HK' ? '港' : 'A') + '</span>'
+                        + '</div>'
+                        + (x.pct != null ? '<div class="text-[10px] text-gray-400 mt-0.5">今年涨幅 ' + (x.pct >= 0 ? '+' : '') + x.pct.toFixed(2) + '%</div>' : '')
+                        + '</div>'
+                        + '<div class="text-right flex-shrink-0"><div class="text-[13px] font-semibold text-[#00d68f] tabular-nums">' + fmtMoney(x.pnl) + '</div></div>'
+                        + '</div>';
+                });
+                badListEl.innerHTML = h;
+            } else {
+                badListEl.innerHTML = '<div class="text-center text-gray-300 text-xs py-3">今年暂无亏损持仓（或年初基础价未获取）</div>';
+            }
+            // 税费与费用
+            const fees = calcAnnualFees(curY);
+            document.querySelector('#arStampTax').innerText = fmtMoney(fees.stamp);
+            document.querySelector('#arCommission').innerText = fmtMoney(fees.commission);
+            const feeTotalEl = document.querySelector('#arFeeTotal');
+            feeTotalEl.innerText = fmtMoney(fees.total);
+            feeTotalEl.className = 'font-bold tabular-nums text-gray-800';
+        }
+        // 拉取上证指数与沪深300：现价（腾讯行情）+ 年初收盘（东财kline），当天缓存
+        function fetchAnnualIndex(){
+            const today = todayStr();
+            if(arIndexCache.fetchedDate === today && arIndexCache.shPrice > 0 && arIndexCache.hs300Price > 0 && arIndexCache.shBase > 0 && arIndexCache.hs300Base > 0) return;
+            const curYear = String(new Date().getFullYear());
+            // 1. 现价：腾讯行情（接口直接返回 v_sh000001="..." 赋值语句，加载后读取全局变量）
+            const script = document.createElement('script');
+            script.src = 'https://qt.gtimg.cn/q=sh000001,sh000300';
+            script.onload = function(){
+                try{
+                    const p1 = String(window.v_sh000001 || '').split('~');
+                    const p2 = String(window.v_sh000300 || '').split('~');
+                    if(p1.length > 3 && Number(p1[3]) > 0) arIndexCache.shPrice = Number(p1[3]);
+                    if(p2.length > 3 && Number(p2[3]) > 0) arIndexCache.hs300Price = Number(p2[3]);
+                }catch(e){}
+                renderAnnualReport();
+            };
+            script.onerror = function(){};
+            document.head.appendChild(script);
+            // 2. 年初收盘：东财kline（上证1.000001 / 沪深300 1.000300）
+            const beg = curYear + '0101';
+            const end = curYear + '0131';
+            ['sh', 'hs300'].forEach(function(k, i){
+                const secid = i === 0 ? '1.000001' : '1.000300';
+                const cbName = '__arBaseCb' + k;
+                window[cbName] = function(data){
+                    try{
+                        const d = data && data.data;
+                        if(d && d.klines && d.klines.length){
+                            const parts = String(d.klines[0]).split(',');
+                            const close = Number(parts[2]);
+                            if(close > 0){
+                                if(k === 'sh') arIndexCache.shBase = close;
+                                else arIndexCache.hs300Base = close;
+                            }
+                        }
+                    }catch(e){}
+                    delete window[cbName];
+                    arIndexCache.fetchedDate = today;
+                    renderAnnualReport();
+                };
+                const s = document.createElement('script');
+                s.src = 'https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=' + secid
+                    + '&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58'
+                    + '&klt=101&fqt=1&beg=' + beg + '&end=' + end + '&cb=' + cbName;
+                s.onerror = function(){ delete window[cbName]; };
+                document.head.appendChild(s);
+            });
         }
         // 统计页上一次的数值和排名，用于检测变化触发动画
         const statsPrevValues = { ranks: {}, pcts: {}, dayPnls: {} };
@@ -5994,6 +6723,29 @@
             });
         });
 
+        // 我的页面：导出数据
+        document.querySelector('#annualReportBtn').addEventListener('click', openAnnualReport);
+        document.querySelector('#annualReportBackBtn').addEventListener('click', closeAnnualReport);
+        // 年度报告年份切换：左右切换查看往年报告
+        document.querySelector('#arPrevYearBtn').addEventListener('click', function(){
+            const minY = historyData.portfolioStartYear || new Date().getFullYear();
+            if((arReportYear || new Date().getFullYear()) - 1 < minY) return;
+            arReportYear = (arReportYear || new Date().getFullYear()) - 1;
+            renderAnnualReport();
+            window.scrollTo(0, 0);
+        });
+        document.querySelector('#arNextYearBtn').addEventListener('click', function(){
+            const maxY = new Date().getFullYear();
+            if((arReportYear || maxY) + 1 > maxY) return;
+            arReportYear = (arReportYear || maxY) + 1;
+            renderAnnualReport();
+            window.scrollTo(0, 0);
+        });
+        // 年度报告入口副标题年份
+        (function(){
+            const entrySub = document.querySelector('#arEntrySub');
+            if(entrySub) entrySub.innerText = new Date().getFullYear() + '年度 · 收益率 / 归因 / 分红 / 持仓';
+        })();
         // 我的页面：导出数据
         document.querySelector('#exportDataBtn').addEventListener('click', function(){
             // 导出所有重要数据：持仓数据 + 历史数据 + 港币汇率

@@ -236,7 +236,12 @@
                     </div>
                     <div class="py-2.5 px-2.5 relative">
                         <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
-                        <div class="text-orange-100/70 text-[11px] mb-1">累计分红总额</div>
+                        <div class="text-orange-100/70 text-[11px] mb-1 flex items-center gap-1">
+                            <span>累计分红总额</span>
+                            <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="w-4 h-4 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-amber-200/90 active:scale-90 transition-transform">
+                                <i class="fa fa-info text-[7px]"></i>
+                            </button>
+                        </div>
                         <div class="text-[14px] font-semibold tabular-nums num-transition" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-white">0.00</span></div>
                     </div>
                     <div class="py-2.5 pl-2.5 relative">
@@ -3314,14 +3319,33 @@
             return false;
         }
 
+        // 集合竞价前（交易日 9:00-9:15）：尚无当日数据，显示"--"（两条横杆，券商逻辑）
+        function isPreOpen(){
+            if(!isTradingTimeStarted()) return false;
+            const now = new Date();
+            const timeMin = now.getHours() * 60 + now.getMinutes();
+            return timeMin < 9 * 60 + 15;
+        }
+
         // 获取有效的涨跌幅：
-        // 交易日9点后 → 取最新实时数据，接口尚未更新（无数据）则显示0
+        // 交易日9:00-9:15（集合竞价前）→ 尚无当日数据，返回 null（显示"--"）
+        // 交易日9:15后 → 取最新实时数据；接口仍未更新（无数据）也返回 null（显示"--"）
         // 其他时间（9点前/周末/节假日）→ 显示前一个交易日的数据（接口返回的最近收盘数据）
         function getEffectiveChangePct(pct){
             if(isTradingTimeStarted()){
-                return (pct == null || isNaN(pct)) ? 0 : pct;
+                if(isPreOpen()) return null;
+                return (pct == null || isNaN(pct)) ? null : pct;
             }
             return pct;
+        }
+
+        // 获取有效的涨跌额：逻辑与 getEffectiveChangePct 一致（-- 用 null 表示）
+        function getEffectiveChange(change){
+            if(isTradingTimeStarted()){
+                if(isPreOpen()) return null;
+                return (change == null || isNaN(change)) ? null : change;
+            }
+            return change;
         }
 
         // 单只持仓年度分红收入（人民币口径）= 年度每股分红 × 持仓股数
@@ -4458,9 +4482,62 @@
             document.querySelector('#openModalBtn').classList.toggle('hidden', divDetailReturnTab !== 'hold');
             renderPage();
         }
-        // 渲染分红明细：received=今年已收（getCurYearReceived 口径）/ year=年度分红收入（getAnnualDiv 口径）
+        // 渲染分红明细：received=今年已收 / year=年度分红收入 / total=累计分红总额（历年）
         function renderDivDetail(){
-            const isYear = divDetailMode === 'year';
+            const mode = divDetailMode;
+            if(mode === 'total'){
+                // ===== 累计分红总额：按年份列出历年已收到分红 =====
+                document.querySelector('#divDetailTag').innerText = '累计分红总额';
+                document.querySelector('#divDetailTitle').innerHTML = '<i class="fa fa-coins mr-1"></i>累计分红总额';
+                document.querySelector('#divDetailHint').innerText = '历年已收到的分红合计 · 历史年份=设置录入/系统归档 · 当年=今年已收口径';
+                const curYStr = String(new Date().getFullYear());
+                const curVal = getCurYearReceived();
+                const yearVals = historyData.yearlyDiv || {};
+                const years = Object.keys(yearVals).sort(function(a, b){ return b.localeCompare(a); });
+                const entries = [];
+                if(years.indexOf(curYStr) >= 0 || curVal > 0){
+                    entries.push({ y: curYStr, amount: curVal, cur: true, manual: historyData.manualYearlyDiv && historyData.manualYearlyDiv[curYStr] });
+                }
+                years.forEach(function(y){
+                    if(y === curYStr) return;
+                    const amt = Number(yearVals[y]) || 0;
+                    if(amt <= 0) return;
+                    entries.push({ y: y, amount: amt, cur: false, manual: historyData.manualYearlyDiv && historyData.manualYearlyDiv[y] });
+                });
+                entries.sort(function(a, b){ return b.y.localeCompare(a.y); });
+                let sumT = 0;
+                entries.forEach(function(e){ sumT += e.amount; });
+                const listElT = document.querySelector('#divDetailList');
+                document.querySelector('#divDetailTotal').innerText = fmtMoney(sumT);
+                document.querySelector('#divDetailCount').innerText = entries.length + ' 笔';
+                document.querySelector('#divDetailStocks').innerText = entries.length + ' 年';
+                if(!entries.length){
+                    listElT.innerHTML = '<div class="text-center py-12 text-gray-400"><i class="fa fa-inbox text-3xl mb-3 block opacity-40"></i><div class="text-[13px]">暂无累计分红</div><div class="text-[11px] mt-1 opacity-70">收到分红或录入历史年份后显示</div></div>';
+                    return;
+                }
+                let htmlT = '';
+                entries.forEach(function(e){
+                    const sub = e.cur
+                        ? (e.manual ? '今年已收 · 手动基准 + 自动到账' : '今年已收 · 系统自动除权到账')
+                        : (e.manual ? '设置中手动录入的历史年份' : '系统归档数据');
+                    const isCur = e.cur;
+                    htmlT += '<div class="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 overflow-hidden relative">'
+                        + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg,#f59e0b,#d97706);"></div>'
+                        + '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-md"><i class="fa fa-calendar text-[13px]"></i></div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5"><span class="text-[14px] font-semibold text-gray-800">' + e.y + ' 年</span>'
+                        + (isCur ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">今年</span>' : '')
+                        + (e.manual && !isCur ? '<span class="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded whitespace-nowrap">手动</span>' : '')
+                        + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + sub + '</div>'
+                        + '</div>'
+                        + '<div class="text-right flex-shrink-0"><div class="text-[15px] font-bold text-accent tabular-nums">' + fmtMoney(e.amount) + '</div><div class="text-[10px] text-gray-400 mt-0.5">' + (isCur ? '今年已收' : e.y + ' 年分红') + '</div></div>'
+                        + '</div>';
+                });
+                listElT.innerHTML = htmlT;
+                return;
+            }
+            const isYear = mode === 'year';
             document.querySelector('#divDetailTag').innerText = isYear ? '年度分红收入' : '今年已收';
             document.querySelector('#divDetailTitle').innerHTML = '<i class="fa fa-coins mr-1"></i>' + (isYear ? '年度分红收入' : '今年已收分红');
             document.querySelector('#divDetailHint').innerText = isYear
@@ -5394,8 +5471,9 @@
                 });
                 byMVList.slice(0, 10).forEach(function(it, idx){ heavyCodes[it.code] = true; heavyRank[it.code] = idx + 1; });
                 const sorted = holdDataList.slice().sort(function(a, b){
-                    const ap = a.changePct != null ? getEffectiveChangePct(a.changePct) : -999;
-                    const bp = b.changePct != null ? getEffectiveChangePct(b.changePct) : -999;
+                    // 排序用原始涨跌幅（9点前/竞价前无当日数据时按上一交易日收盘涨跌幅排，显示仍为 --）
+                    const ap = a.changePct != null && !isNaN(a.changePct) ? a.changePct : -999;
+                    const bp = b.changePct != null && !isNaN(b.changePct) ? b.changePct : -999;
                     return bp - ap;
                 });
                 // 保存新的排名
@@ -5459,8 +5537,7 @@
                     // 交易日9点后接口尚未更新时显示0，其他时间显示前一个交易日数据
                     let changeDiffText = '--';
                     let changeDiffClass = 'text-gray-400';
-                    let effChange = it.change;
-                    if(isTradingTimeStarted() && (effChange == null || isNaN(effChange))) effChange = 0;
+                    let effChange = getEffectiveChange(it.change);
                     if(effChange != null && !isNaN(effChange)){
                         const chgDecimals = isEtfCode(it.code) || it.marketType === 'HK' ? 3 : 2;
                         if(effChange > 0){
@@ -5537,9 +5614,11 @@
             if(holdDataList.length){
                 let totalDayPnl = 0;
                 let totalMarketValue = 0;
+                let hasValidDayPct = false;
                 holdDataList.forEach(function(it){
                     const effPct = getEffectiveChangePct(it.changePct);
                     if(effPct != null && !isNaN(effPct) && it.nowPrice && it.count){
+                        hasValidDayPct = true;
                         const fx = it.marketType === 'HK' ? hkFxRate : 1;
                         const mv = it.nowPrice * it.count * fx;
                         const dayPnl = mv * effPct / (100 + effPct);
@@ -5547,19 +5626,25 @@
                         totalMarketValue += mv;
                     }
                 });
-                const yesterdayMarketValue = totalMarketValue - totalDayPnl;
-                const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
                 let summaryText = '';
                 let summaryClass = '';
-                if(totalDayPnl > 0.01){
-                    summaryText = '+' + fmtMoney(totalDayPnl) + '（+' + dayPnlPct.toFixed(2) + '%）';
-                    summaryClass = 'text-[#ff4d4f]';
-                } else if(totalDayPnl < -0.01){
-                    summaryText = fmtMoney(totalDayPnl) + '（' + dayPnlPct.toFixed(2) + '%）';
-                    summaryClass = 'text-[#00d68f]';
+                // 集合竞价前（9:00-9:15）尚无当日数据：显示"--"
+                if(!hasValidDayPct){
+                    summaryText = '--';
+                    summaryClass = 'text-gray-400';
                 } else {
-                    summaryText = '0.00（0.00%）';
-                    summaryClass = 'text-gray-500';
+                    const yesterdayMarketValue = totalMarketValue - totalDayPnl;
+                    const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
+                    if(totalDayPnl > 0.01){
+                        summaryText = '+' + fmtMoney(totalDayPnl) + '（+' + dayPnlPct.toFixed(2) + '%）';
+                        summaryClass = 'text-[#ff4d4f]';
+                    } else if(totalDayPnl < -0.01){
+                        summaryText = fmtMoney(totalDayPnl) + '（' + dayPnlPct.toFixed(2) + '%）';
+                        summaryClass = 'text-[#00d68f]';
+                    } else {
+                        summaryText = '0.00（0.00%）';
+                        summaryClass = 'text-gray-500';
+                    }
                 }
                 dayPnlSummaryEl.innerText = summaryText;
                 dayPnlSummaryEl.className = 'text-[12px] font-semibold tabular-nums ' + summaryClass;
@@ -7172,8 +7257,7 @@
                     ytdPnlClass = ytdPnl > 0 ? 'text-[#ff4d4f]' : (ytdPnl < 0 ? 'text-[#00d68f]' : 'text-gray-500');
                 }
                 // 最新涨幅列：上行当日涨跌额，下行涨跌幅%（涨红跌绿，交易日9点后接口未更新显示0）
-                let effChange = item.change;
-                if(isTradingTimeStarted() && (effChange == null || isNaN(effChange))) effChange = 0;
+                let effChange = getEffectiveChange(item.change);
                 let dayChangeAmtText = '--';
                 let dayChangePctText = '--';
                 let dayChangeClass = 'text-gray-400';

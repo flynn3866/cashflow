@@ -737,6 +737,31 @@
             </div>
         </div>
 
+        <!-- 现价股息排行：持仓 + 关注（A股），复用 refreshAll 已拉取的行情与分红缓存，交易时间内每2秒实时刷新 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsYieldRankWrap">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    <span class="text-base font-semibold text-gray-800">现价股息排行</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="statsYieldRankTime" class="text-[11px] text-gray-400">-- 更新</span>
+                    <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                </div>
+            </div>
+            <div id="statsYieldRankWrap" class="stats-collapse-content">
+                <!-- 三列表头：股票 / 现价 / 股息率 -->
+                <div class="px-4 py-2 border-b border-gray-100 flex items-center text-[11px] text-gray-400">
+                    <span class="flex-1">股票</span>
+                    <span class="w-24 text-right">现价</span>
+                    <span class="w-24 text-right">股息率</span>
+                </div>
+                <div id="statsYieldRankList" class="px-4 py-3 space-y-2.5">
+                    <div class="text-center text-gray-400 text-xs py-4">暂无股息数据</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 仓位分布：行业环形图 + 个股仓位占比简洁列表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsPositionWrap">
@@ -812,6 +837,39 @@
                 <!-- 盈亏排行榜 -->
                 <div id="statsPnlRankList" class="px-4 py-3 space-y-2.5">
                     <div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 累计分红排行：所有持仓（含已清仓）累计分红收入排行（刷新机制与盈亏排行一致：交易日6:00/20:00各构建一次并存储） -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsDivRankWrap">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    <span class="text-base font-semibold text-gray-800">累计分红排行</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="statsDivRankRefreshTime" class="text-[11px] text-gray-400">每日更新 · -- 更新</span>
+                    <i class="fa fa-chevron-up text-xs text-gray-400 stats-collapse-icon"></i>
+                </div>
+            </div>
+            <div id="statsDivRankWrap" class="stats-collapse-content">
+                <!-- 汇总条：只数 + 累计分红总额 -->
+                <div class="px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50/60 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-[11px] text-gray-400">共 <span id="divRankCount" class="text-accent font-semibold">0</span> 只</span>
+                            <span class="text-[11px] text-gray-400">含已清仓</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[11px] text-gray-400 mb-0.5">累计分红总额</div>
+                            <div id="divRankTotal" class="text-base font-bold tabular-nums text-accent">--</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 排行列表 -->
+                <div id="statsDivRankList" class="px-4 py-3 space-y-2.5">
+                    <div class="text-center text-gray-400 text-xs py-4">暂无分红数据</div>
                 </div>
             </div>
         </div>
@@ -2251,9 +2309,23 @@
         });
 
         // ============ 每5秒自动刷新最新行情 / 分红 / 汇率 ============
-        const divCacheMap = {};     // A股分红记录缓存：code -> {t, records}，按天刷新
+        const divCacheMap = {};     // A股分红记录缓存：code -> {t, period, records}，每个交易日6:00/20:00刷新
+        const DIV_CACHE_KEY = 'dividendDivCache'; // 分红缓存持久化：当天其余时间直接读存储，不重复请求
+        function loadDivCache(){
+            try{
+                const raw = localStorage.getItem(DIV_CACHE_KEY);
+                if(raw){
+                    const parsed = JSON.parse(raw);
+                    Object.keys(parsed).forEach(function(k){ divCacheMap[k] = parsed[k]; });
+                }
+            }catch(e){}
+        }
+        function saveDivCache(){
+            try{ localStorage.setItem(DIV_CACHE_KEY, JSON.stringify(divCacheMap)); }catch(e){}
+        }
         let lastFxAt = 0;           // 最近一次拉取港币汇率时间
         let refreshing = false;     // 防止并发
+        let quoteFetchLastOk = false; // 本会话是否至少成功拉取过一次行情（统计页日快照据此决定是否固化）
         // ==================== 仓位分布收盘快照机制 ====================
         // 仓位分布数据不需要每2秒刷新，每天收盘后更新一次，交易时间内使用上一交易日快照
         const POSITION_SNAPSHOT_KEY = 'dividendPositionSnapshot';
@@ -2497,6 +2569,7 @@
                 holdDataList.forEach(function(it){
                     const q = quotes[getTencentPrefix(it.marketType, it.code)];
                     if(q && q.price != null && !isNaN(q.price) && q.price > 0){
+                        quoteFetchLastOk = true;
                         it.nowPrice = q.price;
                         if(q.changePct != null && !isNaN(q.changePct)){
                             it.changePct = q.changePct;
@@ -2536,18 +2609,17 @@
                 divScanList.forEach(function(ent){
                     if(ent.market !== 'A') return;
                     const cache = divCacheMap[ent.code];
-                    // 每日同步一次：缓存日期不是今天（自然日跨天后首次检查即刷新，等效每个交易日0点后开始同步）；
-                    // 拉取失败/空数据时1小时重试
-                    const cacheDay = cache ? new Date(cache.t).toDateString() : '';
-                    const todayDay = new Date().toDateString();
+                    // 每个交易日 6:00 / 20:00 两个刷新点各拉取一次并覆盖存储（period 键判断）；
+                    // 拉取失败/空数据时1小时重试（非交易时段另有30分钟补偿定时器）
+                    const curPeriodKey = getStatsPeriodKey();
                     const needRefresh = !cache
+                        || cache.period !== curPeriodKey                                   // 跨刷新期（交易日6点/20点）
                         || (cache.records == null && Date.now() - cache.t > 3600*1000)      // 拉取失败，1小时重试
-                        || (!cache.records || !cache.records.length) && Date.now() - cache.t > 3600*1000 // 空数据，1小时重试
-                        || cacheDay !== todayDay;                                            // 每个自然日刷新一次
+                        || (!cache.records || !cache.records.length) && Date.now() - cache.t > 3600*1000; // 空数据，1小时重试
                     if(needRefresh){
                         divTasks.push(new Promise(function(res){
                             fetchADiv(ent.code, function(records){
-                                divCacheMap[ent.code] = { t: Date.now(), records: records || null };
+                                divCacheMap[ent.code] = { t: Date.now(), period: curPeriodKey, records: records || null };
                                 if(records && records.length){
                                     const avg = calcAvgDiv(records, 1);
                                     if(avg != null){
@@ -2563,10 +2635,28 @@
                     }
                 });
                 await Promise.all(divTasks);
+                // 分红拉取完成 → 持久化缓存（当天其余时间直接读存储）
+                if(divTasks.length) saveDivCache();
                 // 分红数据拉取后：更新除权提醒（今天登记/除权）与未读角标
                 if(divTasks.length) collectExdivNotif();
                 // 固化已到账分红（按除权日当天实际持股数），历史数据不随后续持股数变化
                 ensureDivPaidRecords();
+                // 统计页"分红派发日程/分红升降对比"当日更新时间：每天首次成功拉取时记录（当天只记一次，失败不记）
+                if(divTasks.length){
+                    const curPeriodKeyD = getStatsPeriodKey();
+                    const anySuccessToday = divScanList.some(function(ent){
+                        if(ent.market !== 'A') return false;
+                        const c = divCacheMap[ent.code];
+                        return c && c.records && c.records.length && c.period === curPeriodKeyD;
+                    });
+                    if(anySuccessToday){
+                        const snapD = loadStatsDaily();
+                        const tD = statsRefreshNow();
+                        if(!(snapD.dividend && snapD.dividend.key === curPeriodKeyD)) snapD.dividend = { key: curPeriodKeyD, time: tD };
+                        if(!(snapD.compare && snapD.compare.key === curPeriodKeyD)) snapD.compare = { key: curPeriodKeyD, time: tD };
+                        saveStatsDaily(snapD);
+                    }
+                }
                 // 3.5) 今年涨幅基础价：每天拉取一次（年初首个交易日收盘价，前复权）
                 fetchYtdBase();
                 // 4) 分红除权：A股现金分红除权除息日到期后，自动下调成本价（真实净成本）
@@ -2762,6 +2852,8 @@
             loadPositionSnapshot();
             // 加载今年涨幅基础价缓存
             loadYtdBase();
+            // 恢复分红记录缓存（当天同一刷新期内直接读取存储，不重复请求）
+            loadDivCache();
             // 加载资产分析历史数据，记录今日总资产，归档已过去月份
             loadHistory();
             recordDailyAssets();
@@ -3473,6 +3565,126 @@
             return total;
         }
 
+        // ==================== 股票公司 Logo（本地优先 + 在线自动拉取缓存） ====================
+        // 图标几乎不变：本地 logos/{key}.png 优先（手机部署时随 logos 文件夹一起上传，离线也能显示）；
+        // 本地没有该文件时，运行时从同花顺公司页提取 logo → base64 缓存到 localStorage（dividendStockLogos），永久生效
+        // 港股无独立 logo：用关联 A 股代码取同一公司 logo（如 00941→600941 中国移动、01339→601319 中国人保、03988→601988 中国银行）；
+        // ETF 无 logo → 显示股票名首字徽章占位
+        const STOCK_LOGO_KEY = 'dividendStockLogos';
+        const LOGO_FAIL_KEY = 'dividendLogoFailed';
+        const HK_A_MAP = { '00941': '600941', '01339': '601319', '03988': '601988', '02380': '02380', '02460': '02460' };
+        let stockLogoCache = {};
+        let logoFailed = {};
+        try{ stockLogoCache = JSON.parse(localStorage.getItem(STOCK_LOGO_KEY) || '{}') || {}; }catch(e){}
+        try{ logoFailed = JSON.parse(localStorage.getItem(LOGO_FAIL_KEY) || '{}') || {}; }catch(e){}
+        function saveStockLogoCache(){ try{ localStorage.setItem(STOCK_LOGO_KEY, JSON.stringify(stockLogoCache)); }catch(e){} }
+        function saveLogoFailed(){ try{ localStorage.setItem(LOGO_FAIL_KEY, JSON.stringify(logoFailed)); }catch(e){} }
+        // 取 logo 关联的 A 股代码：A股返回原码；港股查映射；其他（ETF等）返回 null
+        function getLogoAKey(item){
+            const market = (item.marketType || item.market || 'A');
+            const code = String(item.code || '');
+            if(!code) return null;
+            if(isEtfCode(code)) return null; // ETF 无公司 logo，走首字徽章
+            if(market === 'A') return code;
+            if(market === 'HK') return HK_A_MAP[code] || null;
+            return null;
+        }
+        // 从同花顺公司页提取 logo 图片 URL（运行时兜底）
+        function fetchLogoUrlFromThs(code, cb){
+            try{
+                const x = new XMLHttpRequest();
+                x.open('GET', 'https://basic.10jqka.com.cn/' + code + '/company.html', true);
+                x.onreadystatechange = function(){
+                    if(x.readyState !== 4) return;
+                    if(x.status !== 200){ cb(null); return; }
+                    const m = x.responseText.match(/https?:\/\/[^"']*(?:ai_data\/logo|logo\/company)[^"']*\.png/)
+                        || x.responseText.match(/\/\/[^"']*(?:ai_data\/logo|logo\/company)[^"']*\.png/);
+                    cb(m ? (m[0].indexOf('//') === 0 ? 'https:' + m[0] : m[0]) : null);
+                };
+                x.onerror = function(){ cb(null); };
+                x.send();
+            }catch(e){ cb(null); }
+        }
+        // 下载 logo 二进制并转 base64（绕过 img 防盗链：同域 XHR 直接取字节）
+        function fetchLogoBase64(url, cb){
+            try{
+                const x = new XMLHttpRequest();
+                x.open('GET', url, true);
+                x.responseType = 'arraybuffer';
+                x.onreadystatechange = function(){
+                    if(x.readyState !== 4) return;
+                    if(x.status !== 200 || !x.response || !x.response.byteLength){ cb(null); return; }
+                    const bytes = new Uint8Array(x.response);
+                    let bin = '';
+                    for(let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+                    cb('data:image/png;base64,' + btoa(bin));
+                };
+                x.onerror = function(){ cb(null); };
+                x.send();
+            }catch(e){ cb(null); }
+        }
+        // 确保某 A 股代码的 logo 已缓存（异步）；拉取失败记录时间，7天内不重复请求
+        function ensureStockLogo(aCode, cb){
+            cb = cb || function(){};
+            if(stockLogoCache[aCode]){ cb(stockLogoCache[aCode]); return; }
+            const fail = logoFailed[aCode];
+            if(fail && (Date.now() - fail) < 7 * 24 * 3600 * 1000){ cb(null); return; }
+            fetchLogoUrlFromThs(aCode, function(url){
+                if(!url){
+                    logoFailed[aCode] = Date.now();
+                    saveLogoFailed();
+                    cb(null);
+                    return;
+                }
+                fetchLogoBase64(url, function(b64){
+                    if(b64){
+                        stockLogoCache[aCode] = b64;
+                        saveStockLogoCache();
+                        cb(b64);
+                    } else {
+                        logoFailed[aCode] = Date.now();
+                        saveLogoFailed();
+                        cb(null);
+                    }
+                });
+            });
+        }
+        // 生成 logo HTML：本地文件优先 → 缓存 base64 兜底 → 无 logo 时首字徽章
+        function stockLogoHtml(item, sizePx){
+            const key = getLogoAKey(item);
+            const name = item.name || item.code || '';
+            const escName = name.replace(/"/g, '&quot;');
+            const sz = sizePx || 18;
+            if(key){
+                return '<span class="inline-flex align-middle flex-shrink-0" style="width:' + sz + 'px;height:' + sz + 'px">'
+                    + '<img data-logo-key="' + key + '" src="logos/' + key + '.png" alt=""'
+                    + ' style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;object-fit:cover;background:#fff"'
+                    + ' onerror="onLogoErr(this,\'' + key + '\',' + sz + ')">'
+                    + '</span>';
+            }
+            return '<span class="inline-flex items-center justify-center rounded-full bg-orange-50 text-accent font-bold flex-shrink-0"'
+                + ' style="width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz * 0.5) + 'px">' + (escName.charAt(0) || '股') + '</span>';
+        }
+        // 本地 img 加载失败：切换为缓存的 base64；缓存没有则异步拉取；拉不到保持隐藏
+        function onLogoErr(img, key, sz){
+            try{
+                if(!img) return;
+                img.style.display = 'none';
+                const b64 = stockLogoCache[key];
+                if(b64){
+                    img.src = b64;
+                    img.onload = function(){ img.style.display = ''; };
+                    return;
+                }
+                ensureStockLogo(key, function(b64b){
+                    if(b64b && img){
+                        img.src = b64b;
+                        img.onload = function(){ img.style.display = ''; };
+                    }
+                });
+            }catch(e){}
+        }
+
         // 单只持仓持有盈亏（人民币口径）= (现价 - 成本) × 股数；港股换算成人民币
         function getPnl(item){
             let pnl = ((Number(item.nowPrice) || 0) - (Number(item.costPrice) || 0)) * (Number(item.count) || 0);
@@ -3503,7 +3715,8 @@
                 nowPrice: Number(item.nowPrice) || 0,
                 closePrice: Number(closePx.toFixed(4)),
                 pnl: Number(pnl.toFixed(2)),
-                pnlPct: Number(pnlPct.toFixed(2))
+                pnlPct: Number(pnlPct.toFixed(2)),
+                totalReceived: Number(getItemTotalReceived(item).toFixed(2)) // 清仓时刻累计已收分红（累计分红排行用）
             };
             if(!historyData.closedStocks) historyData.closedStocks = [];
             historyData.closedStocks.push(rec);
@@ -4145,20 +4358,37 @@
         // 渲染我的页面
         function renderMinePage(){
             const sum = calcSummary();
-            // 顶部4个指标
-            document.querySelector('#mineStockNum').innerText = sum.holdLen + '只';
-            document.querySelector('#mineTotalAsset').innerText = fmtMoney(Number(sum.totalMarket));
-            document.querySelector('#mineYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
-            document.querySelector('#mineTotalDiv').innerText = fmtMoney(Number(sum.totalDivReceived));
+            // 我的页按天数据（今年分红/累计分红/数量等）：每个交易日 6:00 / 20:00 刷新一次并存储，
+            // 其他时间直接读取存储展示（不随点击导航变化）；总资产与实时股价相关，保持实时计算
+            const minePeriodKey = getStatsPeriodKey();
+            const mineSnapC = loadStatsDaily().mine || {};
+            if(mineSnapC.key !== minePeriodKey){
+                const snapM = loadStatsDaily();
+                snapM.mine = {
+                    key: minePeriodKey,
+                    time: statsRefreshNow(),
+                    holdLen: sum.holdLen,
+                    yearDiv: sum.totalYearDiv,
+                    totalDiv: sum.totalDivReceived,
+                    watchCount: loadWatchList().length,
+                    aShareNum: sum.aShareNum,
+                    hkShareNum: sum.hkShareNum
+                };
+                saveStatsDaily(snapM);
+            }
+            const mS = loadStatsDaily().mine || {};
+            document.querySelector('#mineStockNum').innerText = (mS.holdLen != null ? mS.holdLen : sum.holdLen) + '只';
+            document.querySelector('#mineTotalAsset').innerText = fmtMoney(Number(sum.totalMarket)); // 总资产实时
+            document.querySelector('#mineYearDiv').innerText = fmtMoney(Number(mS.yearDiv != null ? mS.yearDiv : sum.totalYearDiv));
+            document.querySelector('#mineTotalDiv').innerText = fmtMoney(Number(mS.totalDiv != null ? mS.totalDiv : sum.totalDivReceived));
             // 关注数量
             const mcEl = document.querySelector('#mineWatchCount');
-            if(mcEl) mcEl.innerText = loadWatchList().length + '只';
+            if(mcEl) mcEl.innerText = (mS.watchCount != null ? mS.watchCount : loadWatchList().length) + '只';
             // A股/港股数量
-            document.querySelector('#mineAShare').innerText = sum.aShareNum;
-            document.querySelector('#mineHKShare').innerText = sum.hkShareNum;
-            // 更新时间
-            const now = new Date();
-            document.querySelector('#mineUpdateTime').innerText = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+            document.querySelector('#mineAShare').innerText = mS.aShareNum != null ? mS.aShareNum : sum.aShareNum;
+            document.querySelector('#mineHKShare').innerText = mS.hkShareNum != null ? mS.hkShareNum : sum.hkShareNum;
+            // 更新时间：显示存储快照的真实更新时间
+            document.querySelector('#mineUpdateTime').innerText = (mS.time || '--');
             // 持仓概览
             const pnl = Number(sum.totalPnl);
             const pnlEl = document.querySelector('#mineTotalPnl');
@@ -5409,35 +5639,65 @@
         let pnlRankRendered = false;
         let pnlRankRenderDate = null;
         // 渲染统计页面
+        // 是否交易日（周一~周五；节假日按交易日处理，数据沿用不影响展示）
+        function isTradingDay(d){
+            const day = d.getDay();
+            return day !== 0 && day !== 6;
+        }
+        // 按天数据（统计页四板块 / 分红 / 我的页等）的刷新期键：
+        // 每个交易日两个刷新点——早上 6:00 与晚上 20:00（拉取/计算并覆盖存储），
+        // 其他时间直接读取对应刷新期已存储的数据展示，不随每2秒刷新或点击导航变化。
+        // 返回如 "2026-09-17#06" / "2026-09-17#20"；非交易日或今天6点前沿用最近一个交易日20点期。
+        function getStatsPeriodKey(){
+            const now = new Date();
+            const timeMin = now.getHours() * 60 + now.getMinutes();
+            const dayBase = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            for(let i = 0; i < 10; i++){
+                const d = new Date(dayBase.getTime() - i * 86400000);
+                if(!isTradingDay(d)) continue;
+                const ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                if(i === 0){
+                    if(timeMin >= 20 * 60) return ds + '#20';
+                    if(timeMin >= 6 * 60) return ds + '#06';
+                    // 今天6点前：继续往前找上一个交易日
+                    continue;
+                }
+                return ds + '#20';
+            }
+            return todayStr() + '#20';
+        }
         // 统计页各板块刷新时间记录（持久化，跨会话延用；分红类每日保留首次时间，行情类每次真实刷新都更新）
         function statsRefreshNow(){
             const d = new Date();
             return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0') + ':' + d.getSeconds().toString().padStart(2, '0');
         }
-        function markStatsRefresh(key, elId, mechanism, keepFirstOfDay){
-            const now = new Date();
-            const t = statsRefreshNow();
-            const date = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-            let log = {};
-            try { log = JSON.parse(localStorage.getItem('dividendStatsRefreshLog') || '{}'); } catch(e){ log = {}; }
-            if(keepFirstOfDay && log[key + 'Date'] === date) return; // 分红类同一天只保留首次更新
-            log[key] = t;
-            log[key + 'Date'] = date;
-            try { localStorage.setItem('dividendStatsRefreshLog', JSON.stringify(log)); } catch(e){}
+        // 统计页非实时板块（仓位分布/盈亏排行/分红派发日程/分红升降对比）的日快照存储：
+        // 每天构建一次（首次打开/切到统计页时，用当时最新数据）并持久化，当天其余时间直接读存储渲染；
+        // time = 数据真实构建/拉取的时间，板块右侧显示的就是这个存储时间，不会随点击导航变化。
+        function loadStatsDaily(){
+            try{ return JSON.parse(localStorage.getItem('dividendStatsDaily') || '{}'); }catch(e){ return {}; }
+        }
+        function saveStatsDaily(s){
+            try{ localStorage.setItem('dividendStatsDaily', JSON.stringify(s)); }catch(e){}
+        }
+        function markStatsRefresh(key, elId, mechanism){
+            // 只显示存储快照中的真实更新时间（数据构建时写入），这里不更新当前时间
+            const snap = loadStatsDaily();
+            const entry = snap && snap[key];
             const el = document.querySelector(elId);
-            if(el) el.innerText = mechanism + ' · ' + t + ' 更新';
+            if(el) el.innerText = mechanism + ' · ' + (entry && entry.time ? entry.time : '--') + ' 更新';
         }
         function initStatsRefreshTags(){
-            let log = {};
-            try { log = JSON.parse(localStorage.getItem('dividendStatsRefreshLog') || '{}'); } catch(e){ log = {}; }
+            const snap = loadStatsDaily();
             [
-                ['position', '#statsPositionRefreshTime', '收盘后更新'],
-                ['pnl', '#statsPnlRefreshTime', '收盘后更新'],
+                ['position', '#statsPositionRefreshTime', '每日更新'],
+                ['pnl', '#statsPnlRefreshTime', '每日更新'],
+                ['divRank', '#statsDivRankRefreshTime', '每日更新'],
                 ['dividend', '#statsDividendRefreshTime', '每日更新'],
                 ['compare', '#statsDivCompareRefreshTime', '每日更新']
             ].forEach(function(m){
                 const el = document.querySelector(m[1]);
-                if(el) el.innerText = m[2] + ' · ' + (log[m[0]] || '--') + ' 更新';
+                if(el) el.innerText = m[2] + ' · ' + ((snap && snap[m[0]] && snap[m[0]].time) || '--') + ' 更新';
             });
         }
 
@@ -5607,7 +5867,79 @@
             }
             // 更新时间
             const now = new Date();
-            document.querySelector('#statsUpdateTime').innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' 更新';
+            const updateTimeText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' 更新';
+            document.querySelector('#statsUpdateTime').innerText = updateTimeText;
+            // 现价股息排行时间标签（同一刷新周期）
+            const yieldTimeEl = document.querySelector('#statsYieldRankTime');
+            if(yieldTimeEl) yieldTimeEl.innerText = updateTimeText;
+
+            // ===== 现价股息排行：持仓 + 关注（A股），交易时间内每2秒实时刷新 =====
+            // 数据全部复用 refreshAll 已拉取好的行情（持仓 nowPrice / 关注 watchQuotes）与分红缓存（近1年每股分红），不额外发请求
+            // 股息率 = 近1年每股分红 ÷ 最新现价 × 100%，按股息率降序；持仓与关注同代码时都显示（不合并）
+            try{
+                // 同一股票（市场+代码）持仓与关注合并为一行，不重复显示（持仓优先）
+                const yieldMap = {};
+                holdDataList.forEach(function(it){
+                    const price = Number(it.nowPrice) || 0;
+                    const per = Number(it.divPerShare) || 0;
+                    if(price > 0 && per > 0){
+                        const key = it.marketType + '|' + it.code;
+                        yieldMap[key] = { code: it.code, marketType: it.marketType, name: it.name, price: price, yield: per / price * 100, watch: false };
+                    }
+                });
+                const watchListY = loadWatchList();
+                watchListY.forEach(function(w){
+                    if(w.market !== 'A') return; // 关注股股息率仅 A 股可自动计算（港股无自动分红数据）
+                    const q = watchQuotes[w.code];
+                    if(!q || !q.price || !(q.price > 0)) return;
+                    const cacheY = divCacheMap[w.code];
+                    if(!cacheY || !cacheY.records || !cacheY.records.length) return;
+                    const avgY = calcAvgDiv(cacheY.records, 1);
+                    if(avgY == null || !(avgY > 0)) return;
+                    const keyY = w.market + '|' + w.code;
+                    if(yieldMap[keyY]) return; // 持仓已存在，关注不重复显示
+                    yieldMap[keyY] = { code: w.code, marketType: w.market, name: q.name || w.name || w.code, price: q.price, yield: avgY / q.price * 100, watch: true };
+                });
+                const yieldList = Object.keys(yieldMap).map(function(k){ return yieldMap[k]; });
+                yieldList.sort(function(a, b){ return b.yield - a.yield; });
+                const yieldListEl = document.querySelector('#statsYieldRankList');
+                if(!yieldList.length){
+                    yieldListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无股息数据</div>';
+                } else {
+                    const maxYield = yieldList[0].yield || 0;
+                    let yieldHtml = '';
+                    yieldList.forEach(function(x){
+                        const isHk = x.marketType === 'HK';
+                        const tagHtml = x.watch
+                            ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">关注</span>'
+                            : (isHk
+                                ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">港</span>'
+                                : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">A</span>');
+                        const barW = maxYield > 0 ? Math.max(3, Math.min(100, x.yield / maxYield * 100)) : 0;
+                        const barBg = 'linear-gradient(90deg,#f5c97b,#D45329)';
+                        const priceText = fmtPrice(x.price, x.code, isHk);
+                        yieldHtml += '<div class="flex items-center gap-3">'
+                            + '<div class="flex-1 min-w-0">'
+                            + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + '<span class="text-[14px] font-medium text-gray-800 truncate">' + x.name + '</span>'
+                            + tagHtml
+                            + '</div>'
+                            + '<div class="text-[11px] text-gray-400 tabular-nums mt-0.5 truncate">' + x.code + '</div>'
+                            + '<div class="h-0.5 mt-1.5 bg-gray-100 rounded-full overflow-hidden">'
+                            + '<div class="h-full rounded-full transition-all duration-500" style="width:' + barW + '%;background:' + barBg + '"></div>'
+                            + '</div>'
+                            + '</div>'
+                            + '<div class="w-24 text-right flex-shrink-0">'
+                            + '<div class="text-[14px] font-medium text-gray-700 tabular-nums whitespace-nowrap">' + priceText + '</div>'
+                            + '</div>'
+                            + '<div class="w-24 text-right flex-shrink-0">'
+                            + '<div class="text-[15px] font-bold text-accent tabular-nums whitespace-nowrap">' + x.yield.toFixed(2) + '%</div>'
+                            + '</div>'
+                            + '</div>';
+                    });
+                    yieldListEl.innerHTML = yieldHtml;
+                }
+            }catch(e){}
 
             // 当日盈亏总额和百分比（标题栏右侧显示）
             const dayPnlSummaryEl = document.querySelector('#statsDayPnlSummary');
@@ -5654,65 +5986,131 @@
             }
 
             // ===== 1.5 仓位分布：行业占比汇总 + 个股仓位占比倒序 =====
-            // 严格控制刷新频率：第一次渲染一次，之后只有收盘后且今天没渲染过才刷新
-            // 其他时间（包括交易时间内）一律不刷新，延用上次渲染的数据
+            // 每天构建一次并持久化：当天首次（3点后/打开时发现无当天数据）用最新数据计算并存储，
+            // 当天其余时间直接读取存储的数据渲染，不再重新计算；更新时间显示存储时的真实时间
             const posTodayStr = todayStr();
-            const needRenderPosition = !positionRendered ||
-                                        (isMarketClosed() && positionRenderDate !== posTodayStr);
-            if(needRenderPosition){
-                positionRendered = true;
-                positionRenderDate = posTodayStr;
-                // 收盘后先更新快照，确保使用当日最新收盘数据
+            const posPeriodKey = getStatsPeriodKey();
+            const posSnapC = loadStatsDaily().position || {};
+            // 行情尚未拉取成功过的快照标记 stale：不当作已固化，下次渲染自动重建重试
+            if(posSnapC.key !== posPeriodKey || posSnapC.stale){
+                // ---- 当天首次：构建并存储快照 ----
                 if(isMarketClosed()){
                     updatePositionSnapshot();
                 }
-            const positionData = getPositionData();
-            const industryListEl = document.querySelector('#statsIndustryList');
-            const stockPositionListEl = document.querySelector('#statsStockPositionList');
-            if(!positionData.length){
-                industryListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
-                stockPositionListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
-            } else {
-                // 计算每个股票的市值（人民币）和总市值
-                const stockMV = positionData.map(function(it){
-                    return { item: it, mv: getMarketValue(it) };
-                });
-                const totalMV = stockMV.reduce(function(sum, x){ return sum + x.mv; }, 0);
-                // 行业颜色调色板（柔和专业的配色）
-                const industryColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
-                // 按行业分组
-                const industryMap = {};
-                stockMV.forEach(function(x){
-                    const ind = x.item.industry || '其他';
-                    if(!industryMap[ind]) industryMap[ind] = { name: ind, mv: 0, count: 0 };
-                    industryMap[ind].mv += x.mv;
-                    industryMap[ind].count += 1;
-                });
-                const industryArr = Object.values(industryMap).sort(function(a, b){ return b.mv - a.mv; });
-                // 渲染行业列表（简洁样式：彩色圆点+行业名+百分比，参考券商环形图右侧）
-                let indHtml = '';
-                industryArr.forEach(function(ind, idx){
-                    const pct = totalMV > 0 ? (ind.mv / totalMV * 100) : 0;
-                    const color = industryColors[idx % industryColors.length];
-                    indHtml += '<div class="flex items-center justify-between gap-2">'
-                        + '<div class="flex items-center gap-1.5 min-w-0">'
-                        + '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + color + '"></span>'
-                        + '<span class="text-[12px] text-gray-600 truncate">' + ind.name + '</span>'
-                        + '</div>'
-                        + '<span class="text-[13px] font-semibold text-gray-800 tabular-nums flex-shrink-0">' + pct.toFixed(2) + '%</span>'
-                        + '</div>';
-                });
-                industryListEl.innerHTML = indHtml;
+                const positionData = getPositionData();
+                const industryListEl = document.querySelector('#statsIndustryList');
+                const stockPositionListEl = document.querySelector('#statsStockPositionList');
+                if(!positionData.length){
+                    industryListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                    stockPositionListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                    const snapE = loadStatsDaily();
+                    snapE.position = { key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: false };
+                    saveStatsDaily(snapE);
+                } else {
+                    // 计算每个股票的市值（人民币）和总市值
+                    const stockMV = positionData.map(function(it){
+                        return { item: it, mv: getMarketValue(it) };
+                    });
+                    const totalMV = stockMV.reduce(function(sum, x){ return sum + x.mv; }, 0);
+                    // 行业颜色调色板（柔和专业的配色）
+                    const industryColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
+                    // 按行业分组
+                    const industryMap = {};
+                    stockMV.forEach(function(x){
+                        const ind = x.item.industry || '其他';
+                        if(!industryMap[ind]) industryMap[ind] = { name: ind, mv: 0, count: 0 };
+                        industryMap[ind].mv += x.mv;
+                        industryMap[ind].count += 1;
+                    });
+                    const industryArr = Object.values(industryMap).sort(function(a, b){ return b.mv - a.mv; });
+                    // 渲染行业列表（简洁样式：彩色圆点+行业名+百分比，参考券商环形图右侧）
+                    let indHtml = '';
+                    industryArr.forEach(function(ind, idx){
+                        const pct = totalMV > 0 ? (ind.mv / totalMV * 100) : 0;
+                        const color = industryColors[idx % industryColors.length];
+                        indHtml += '<div class="flex items-center justify-between gap-2">'
+                            + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + color + '"></span>'
+                            + '<span class="text-[12px] text-gray-600 truncate">' + ind.name + '</span>'
+                            + '</div>'
+                            + '<span class="text-[13px] font-semibold text-gray-800 tabular-nums flex-shrink-0">' + pct.toFixed(2) + '%</span>'
+                            + '</div>';
+                    });
+                    industryListEl.innerHTML = indHtml;
 
-                // 渲染ECharts环形图
+                    // 环形图数据（存储快照，当天不变）
+                    let pieData = [];
+                    if(typeof echarts !== 'undefined'){
+                        pieData = industryArr.map(function(ind, idx){
+                            return { name: ind.name, value: ind.mv, itemStyle: { color: industryColors[idx % industryColors.length] } };
+                        });
+                        const pieEl = document.querySelector('#industryPieChart');
+                        if(pieEl){
+                            if(pieEl._chart) pieEl._chart.dispose();
+                            const chart = echarts.init(pieEl);
+                            chart.setOption({
+                                series: [{
+                                    type: 'pie',
+                                    radius: ['55%', '75%'],
+                                    center: ['50%', '50%'],
+                                    avoidLabelOverlap: true,
+                                    label: { show: false },
+                                    labelLine: { show: false },
+                                    data: pieData,
+                                    emphasis: { scale: false }
+                                }],
+                                graphic: [{
+                                    type: 'text',
+                                    left: 'center',
+                                    top: 'center',
+                                    style: {
+                                        text: '持仓行业',
+                                        fontSize: 11,
+                                        fill: '#9CA3AF',
+                                        textAlign: 'center'
+                                    }
+                                }]
+                            });
+                            pieEl._chart = chart;
+                        }
+                    }
+
+                    // 渲染个股仓位占比简洁列表（参考券商风格：股票名+代码+百分比+红色进度条）
+                    const sortedStockMV = stockMV.slice().sort(function(a, b){ return b.mv - a.mv; });
+                    let stockHtml = '';
+                    sortedStockMV.forEach(function(x, idx){
+                        const pct = totalMV > 0 ? (x.mv / totalMV * 100) : 0;
+                        const it = x.item;
+                        stockHtml += '<div class="stock-position-row">'
+                            + '<div class="flex items-center justify-between mb-1">'
+                            + '<div class="flex items-baseline gap-1.5 min-w-0">'
+                            + '<span class="text-[14px] font-medium text-gray-800 truncate">' + it.name + '</span>'
+                            + '<span class="text-[11px] text-gray-400 flex-shrink-0">' + it.code + '</span>'
+                            + '</div>'
+                            + '<span class="text-[15px] font-semibold text-gray-800 tabular-nums flex-shrink-0 ml-2">' + pct.toFixed(2) + '%</span>'
+                            + '</div>'
+                            + '<div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">'
+                            + '<div class="h-full rounded-full transition-all duration-500" style="width:' + Math.min(pct, 100) + '%;background:#D45329"></div>'
+                            + '</div>'
+                            + '</div>';
+                    });
+                    stockPositionListEl.innerHTML = stockHtml;
+
+                    // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
+                    // 若本会话行情从未拉取成功（数据可能陈旧），标记 stale=true：下次渲染自动重建重试
+                    const snapF = loadStatsDaily();
+                    snapF.position = { key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, indHtml: indHtml, stockHtml: stockHtml, pieData: pieData };
+                    saveStatsDaily(snapF);
+                }
+            } else if(posSnapC.hasData){
+                // ---- 当天已有快照：直接读取存储渲染（不再请求/重算）----
+                document.querySelector('#statsIndustryList').innerHTML = posSnapC.indHtml;
+                document.querySelector('#statsStockPositionList').innerHTML = posSnapC.stockHtml;
                 if(typeof echarts !== 'undefined'){
                     const pieEl = document.querySelector('#industryPieChart');
                     if(pieEl){
                         if(pieEl._chart) pieEl._chart.dispose();
                         const chart = echarts.init(pieEl);
-                        const pieData = industryArr.map(function(ind, idx){
-                            return { name: ind.name, value: ind.mv, itemStyle: { color: industryColors[idx % industryColors.length] } };
-                        });
                         chart.setOption({
                             series: [{
                                 type: 'pie',
@@ -5721,7 +6119,7 @@
                                 avoidLabelOverlap: true,
                                 label: { show: false },
                                 labelLine: { show: false },
-                                data: pieData,
+                                data: posSnapC.pieData || [],
                                 emphasis: { scale: false }
                             }],
                             graphic: [{
@@ -5739,51 +6137,35 @@
                         pieEl._chart = chart;
                     }
                 }
-
-                // 渲染个股仓位占比简洁列表（参考券商风格：股票名+代码+百分比+红色进度条）
-                const sortedStockMV = stockMV.slice().sort(function(a, b){ return b.mv - a.mv; });
-                let stockHtml = '';
-                sortedStockMV.forEach(function(x, idx){
-                    const pct = totalMV > 0 ? (x.mv / totalMV * 100) : 0;
-                    const it = x.item;
-                    stockHtml += '<div class="stock-position-row">'
-                        + '<div class="flex items-center justify-between mb-1">'
-                        + '<div class="flex items-baseline gap-1.5 min-w-0">'
-                        + '<span class="text-[14px] font-medium text-gray-800 truncate">' + it.name + '</span>'
-                        + '<span class="text-[11px] text-gray-400 flex-shrink-0">' + it.code + '</span>'
-                        + '</div>'
-                        + '<span class="text-[15px] font-semibold text-gray-800 tabular-nums flex-shrink-0 ml-2">' + pct.toFixed(2) + '%</span>'
-                        + '</div>'
-                        + '<div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">'
-                        + '<div class="h-full rounded-full transition-all duration-500" style="width:' + Math.min(pct, 100) + '%;background:#D45329"></div>'
-                        + '</div>'
-                        + '</div>';
-                });
-                stockPositionListEl.innerHTML = stockHtml;
+            } else {
+                // 当天空快照：保留空态
+                document.querySelector('#statsIndustryList').innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                document.querySelector('#statsStockPositionList').innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
             }
-            } // end if(needRenderPosition)
-            markStatsRefresh('position', '#statsPositionRefreshTime', '收盘后更新', false);
+            markStatsRefresh('position', '#statsPositionRefreshTime', '每日更新');
 
             // ===== 1.6 盈亏排行：按累计盈亏额降序 =====
-            // 刷新机制与仓位分布一致：首次渲染一次，之后只有收盘后且今天没渲染过才刷新，
-            // 其他时间（包括交易时间内）一律不刷新，延用上次渲染的数据
+            // 每天构建一次并持久化（与仓位分布同机制）：当天首次计算（含历史清仓记录）并存储，
+            // 当天其余时间直接读取存储的数据渲染；更新时间显示存储时的真实时间
             const pnlRankTodayStr = todayStr();
-            const needRenderPnlRank = !pnlRankRendered ||
-                                        (isMarketClosed() && pnlRankRenderDate !== pnlRankTodayStr);
-            if(needRenderPnlRank){
-                pnlRankRendered = true;
-                pnlRankRenderDate = pnlRankTodayStr;
+            const pnlPeriodKey = getStatsPeriodKey();
+            const pnlSnapC = loadStatsDaily().pnl || {};
+            if(pnlSnapC.key !== pnlPeriodKey || pnlSnapC.stale){
+                // ---- 当天首次：构建并存储快照 ----
                 const pnlRankListEl = document.querySelector('#statsPnlRankList');
                 const pnlRankTotalEl = document.querySelector('#pnlRankTotal');
                 const pnlRankWinEl = document.querySelector('#pnlRankWinCount');
                 const pnlRankLoseEl = document.querySelector('#pnlRankLoseCount');
-                const closedList = historyData.closedStocks || [];
-                if(!holdDataList.length && !closedList.length){
+                const closedList0 = historyData.closedStocks || [];
+                if(!holdDataList.length && !closedList0.length){
                     pnlRankListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>';
                     pnlRankTotalEl.innerText = '--';
                     pnlRankTotalEl.className = 'text-base font-bold tabular-nums text-gray-800';
                     pnlRankWinEl.innerText = '0';
                     pnlRankLoseEl.innerText = '0';
+                    const snapE = loadStatsDaily();
+                    snapE.pnl = { key: pnlPeriodKey, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: false };
+                    saveStatsDaily(snapE);
                 } else {
                     // 计算每只股票累计盈亏（与持仓页累计盈亏口径一致）并降序排序
                     // 数据源 = 当前持仓 + 历史清仓/删除记录（曾经持仓过的盈亏记录一直保留）
@@ -5821,8 +6203,10 @@
                     });
                     pnlRankWinEl.innerText = String(winCount);
                     pnlRankLoseEl.innerText = String(loseCount);
-                    pnlRankTotalEl.innerText = (totalPnl >= 0 ? '+' : '') + fmtMoney(totalPnl);
-                    pnlRankTotalEl.className = 'text-base font-bold tabular-nums ' + (totalPnl >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+                    const totalText = (totalPnl >= 0 ? '+' : '') + fmtMoney(totalPnl);
+                    const totalClass = totalPnl >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]';
+                    pnlRankTotalEl.innerText = totalText;
+                    pnlRankTotalEl.className = 'text-base font-bold tabular-nums ' + totalClass;
                     // 最大盈亏绝对值（用于进度条宽度比例，保持视觉统一）
                     const maxAbs = Math.max.apply(null, pnlRanks.map(function(x){ return Math.abs(x.pnl); })) || 1;
                     // 排行榜行
@@ -5872,9 +6256,140 @@
                             + '</div>';
                     });
                     pnlRankListEl.innerHTML = rankHtml;
+                    // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
+                    // 行情未就绪标记 stale=true：下次渲染自动重建重试
+                    const snapF = loadStatsDaily();
+                    snapF.pnl = { key: pnlPeriodKey, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, listHtml: rankHtml, totalText: totalText, totalClass: totalClass, winText: String(winCount), loseText: String(loseCount) };
+                    saveStatsDaily(snapF);
                 }
+            } else if(pnlSnapC.hasData){
+                // ---- 当天已有快照：直接读取存储渲染 ----
+                document.querySelector('#statsPnlRankList').innerHTML = pnlSnapC.listHtml;
+                const tEl = document.querySelector('#pnlRankTotal');
+                tEl.innerText = pnlSnapC.totalText;
+                tEl.className = 'text-base font-bold tabular-nums ' + pnlSnapC.totalClass;
+                document.querySelector('#pnlRankWinCount').innerText = pnlSnapC.winText;
+                document.querySelector('#pnlRankLoseCount').innerText = pnlSnapC.loseText;
+            } else {
+                // 当天空快照：保留空态
+                document.querySelector('#statsPnlRankList').innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>';
+                document.querySelector('#pnlRankTotal').innerText = '--';
+                document.querySelector('#pnlRankTotal').className = 'text-base font-bold tabular-nums text-gray-800';
+                document.querySelector('#pnlRankWinCount').innerText = '0';
+                document.querySelector('#pnlRankLoseCount').innerText = '0';
             }
-            markStatsRefresh('pnl', '#statsPnlRefreshTime', '收盘后更新', false);
+            markStatsRefresh('pnl', '#statsPnlRefreshTime', '每日更新');
+
+            // ===== 1.7 累计分红排行：所有持仓（含已清仓）累计分红收入排行 =====
+            // 刷新机制与盈亏排行一致：交易日 6:00/20:00 各构建一次并持久化，其余时间直接读存储
+            const divRankPeriodKey = getStatsPeriodKey();
+            const divRankSnapC = loadStatsDaily().divRank || {};
+            if(divRankSnapC.key !== divRankPeriodKey || divRankSnapC.stale){
+                // ---- 当期首次：构建并存储快照 ----
+                const divRankListEl = document.querySelector('#statsDivRankList');
+                const divRankTotalEl = document.querySelector('#divRankTotal');
+                const divRankCountEl = document.querySelector('#divRankCount');
+                const closedListDr = historyData.closedStocks || [];
+                if(!holdDataList.length && !closedListDr.length){
+                    divRankListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无分红数据</div>';
+                    divRankTotalEl.innerText = '--';
+                    divRankTotalEl.className = 'text-base font-bold tabular-nums text-gray-800';
+                    divRankCountEl.innerText = '0';
+                    const snapE = loadStatsDaily();
+                    snapE.divRank = { key: divRankPeriodKey, time: statsRefreshNow(), hasData: false, stale: false };
+                    saveStatsDaily(snapE);
+                } else {
+                    // 合并当前持仓 + 历史清仓：同一股票（代码+市场）累计分红合并（多次清仓/再买入也合并）
+                    const divMap = {};
+                    holdDataList.forEach(function(it){
+                        const key = (it.code || '') + '|' + (it.marketType || '');
+                        divMap[key] = { item: it, rec: null, total: getItemTotalReceived(it), hasHold: true };
+                    });
+                    closedListDr.forEach(function(r){
+                        const key = (r.code || '') + '|' + (r.marketType || '');
+                        const recTotal = Number(r.totalReceived) || 0;
+                        if(divMap[key]){
+                            divMap[key].total += recTotal;
+                        } else {
+                            divMap[key] = { item: null, rec: r, total: recTotal, hasHold: false };
+                        }
+                    });
+                    const divRanks = Object.keys(divMap).map(function(key){
+                        return { item: divMap[key].item, rec: divMap[key].rec, total: divMap[key].total, closed: !divMap[key].hasHold };
+                    }).sort(function(a, b){ return b.total - a.total; });
+                    // 汇总：只数 + 累计分红总额
+                    let grandTotal = 0;
+                    divRanks.forEach(function(x){ grandTotal += x.total; });
+                    divRankTotalEl.innerText = fmtMoney(grandTotal);
+                    divRankTotalEl.className = 'text-base font-bold tabular-nums text-accent';
+                    divRankCountEl.innerText = String(divRanks.length);
+                    // 最大分红绝对值（进度条宽度比例，保持视觉统一）
+                    const maxDiv = Math.max.apply(null, divRanks.map(function(x){ return x.total; })) || 1;
+                    // 排行行（参考盈亏排行样式：排名圆点 + 名称/A港标签 + 已清仓标签 + 进度条 + 金额/占比）
+                    let divRankHtml = '';
+                    divRanks.forEach(function(x, idx){
+                        const it = x.item;
+                        const rec = x.rec;
+                        const isHk = x.closed ? rec.marketType === 'HK' : it.marketType === 'HK';
+                        const nameStr = x.closed ? (rec.name || rec.code) : it.name;
+                        const rankCls = idx === 0
+                            ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-white'
+                            : idx === 1
+                                ? 'bg-gradient-to-br from-yellow-300 to-amber-400 text-white'
+                                : idx === 2
+                                    ? 'bg-gradient-to-br from-orange-300 to-orange-400 text-white'
+                                    : 'bg-gray-100 text-gray-400';
+                        const tagHtml = isHk
+                            ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">港</span>'
+                            : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">A</span>';
+                        // 已清仓记录：名字后加灰色"已清仓"小标签
+                        const closedTag = x.closed
+                            ? '<span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full ml-1 flex-shrink-0 whitespace-nowrap">已清仓</span>'
+                            : '';
+                        const divText = fmtMoney(x.total);
+                        const sharePct = grandTotal > 0 ? (x.total / grandTotal * 100) : 0;
+                        const shareText = sharePct.toFixed(2) + '%';
+                        const barW = Math.max(3, Math.min(100, x.total / maxDiv * 100));
+                        const barBg = 'linear-gradient(90deg,#f5c97b,#D45329)';
+                        divRankHtml += '<div class="flex items-center gap-3">'
+                            + '<div class="w-6 h-6 rounded-full ' + rankCls + ' flex items-center justify-center text-[11px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
+                            + '<div class="flex-1 min-w-0">'
+                            + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + '<span class="text-[14px] font-medium text-gray-800 truncate">' + nameStr + '</span>'
+                            + tagHtml
+                            + closedTag
+                            + '</div>'
+                            + '<div class="h-1 mt-1.5 bg-gray-100 rounded-full overflow-hidden">'
+                            + '<div class="h-full rounded-full transition-all duration-500" style="width:' + barW + '%;background:' + barBg + '"></div>'
+                            + '</div>'
+                            + '</div>'
+                            + '<div class="text-right flex-shrink-0 ml-2">'
+                            + '<div class="text-[15px] font-semibold text-accent tabular-nums whitespace-nowrap">' + divText + '</div>'
+                            + '<div class="text-[11px] font-medium mt-0.5 text-gray-400 tabular-nums whitespace-nowrap">' + shareText + '</div>'
+                            + '</div>'
+                            + '</div>';
+                    });
+                    divRankListEl.innerHTML = divRankHtml;
+                    // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
+                    const snapF = loadStatsDaily();
+                    snapF.divRank = { key: divRankPeriodKey, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, listHtml: divRankHtml, totalText: fmtMoney(grandTotal), countText: String(divRanks.length) };
+                    saveStatsDaily(snapF);
+                }
+            } else if(divRankSnapC.hasData){
+                // ---- 当期已有快照：直接读取存储渲染 ----
+                document.querySelector('#statsDivRankList').innerHTML = divRankSnapC.listHtml;
+                const tElDr = document.querySelector('#divRankTotal');
+                tElDr.innerText = divRankSnapC.totalText;
+                tElDr.className = 'text-base font-bold tabular-nums text-accent';
+                document.querySelector('#divRankCount').innerText = divRankSnapC.countText;
+            } else {
+                // 当期空快照：保留空态
+                document.querySelector('#statsDivRankList').innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无分红数据</div>';
+                document.querySelector('#divRankTotal').innerText = '--';
+                document.querySelector('#divRankTotal').className = 'text-base font-bold tabular-nums text-gray-800';
+                document.querySelector('#divRankCount').innerText = '0';
+            }
+            markStatsRefresh('divRank', '#statsDivRankRefreshTime', '每日更新');
 
             // ===== 2. 分红预计派发时间表（仅今年，分即将派发/已派发两部分）=====
             const divList = document.querySelector('#statsDividendList');
@@ -6056,7 +6571,7 @@
                 }
                 divList.innerHTML = html;
                 // 分红日程数据来自每日刷新的分红缓存，标记当日首次更新即可
-                markStatsRefresh('dividend', '#statsDividendRefreshTime', '每日更新', true);
+                markStatsRefresh('dividend', '#statsDividendRefreshTime', '每日更新');
                 // 绑定子部分折叠点击事件
                 divList.querySelectorAll('.stats-sub-collapse').forEach(function(header){
                     header.addEventListener('click', function(){
@@ -6303,7 +6818,7 @@
                 }
                 compareList.innerHTML = html;
                 // 分红升降对比数据同样来自每日刷新的分红缓存
-                markStatsRefresh('compare', '#statsDivCompareRefreshTime', '每日更新', true);
+                markStatsRefresh('compare', '#statsDivCompareRefreshTime', '每日更新');
                 // 绑定子部分折叠点击事件
                 compareList.querySelectorAll('.stats-sub-collapse').forEach(function(header){
                     header.addEventListener('click', function(){
@@ -7278,6 +7793,7 @@
                                 <div class="${seqClass}">${index+1}</div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
+                                        ${stockLogoHtml(item, 20)}
                                         <span class="text-base ${nameClass}">${item.name}</span>
                                         ${badgeHtml}
                                         <span class="${tagClass} text-[10px] px-1 py-0.5 rounded">${tagText}</span>
@@ -7489,6 +8005,7 @@
                         </div>
                         <div class="text-center px-0.5">
                             <div class="flex items-center justify-center gap-1 flex-wrap">
+                                ${stockLogoHtml(item, 16)}
                                 <span class="text-xs font-semibold ${isCostRecovered ? 'text-purple-600 font-bold' : 'text-gray-800'}">${shortName}</span>
                                 ${recoveredBadge}
                                 <span class="${tagClass} text-[8px] px-1 py-0.5 rounded flex-shrink-0">${tagText}</span>
@@ -8254,6 +8771,15 @@
         setTimeout(refreshAll, 500);
         // 启动智能刷新
         startSmartRefresh();
+        // 非交易时段失败补偿：每天一次类数据（分红/YTD/汇率）在交易时段拉取失败后，
+        // 交易时段的2秒刷新会重试；但非交易时段刷新已停止，这里每30分钟补拉一次，
+        // 直到成功（refreshAll 内部自带失败条件判断与防并发，幂等安全）
+        let offHoursTimer = null;
+        setInterval(function(){
+            if(!holdDataList.length) return;
+            if(isTradingTime()) return; // 交易时段由2秒刷新负责
+            refreshAll();
+        }, 30 * 60 * 1000);
         // 每10秒检查一次交易时间，动态启停刷新（及时响应开盘/收盘/午休）
         setInterval(startSmartRefresh, 10000);
     </script>

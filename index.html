@@ -5702,6 +5702,9 @@
         }
 
         function renderStatsPage(){
+            // 统计页日快照版本号：版本升级（如新增logo等渲染结构变化）时强制重建当天快照，
+            // 避免手机上继续展示旧版无logo的缓存HTML；同版本内仍按 6:00/20:00 双刷新点 + 其余读存储
+            const STATS_SNAP_VERSION = 2;
             // 恢复各板块上次刷新时间（持久化，跨会话延用）
             initStatsRefreshTags();
             // 主动加载分红数据：有A股持仓但divCacheMap为空时，主动触发refreshAll
@@ -5721,15 +5724,18 @@
             if(!holdDataList.length){
                 changeList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无持仓数据</div>';
             } else {
-                // 市值前十名（重仓标志）：A股=股数×现价，港股=股数×现价×汇率（人民币口径）；前3名紫色徽章，4~10名金色徽章
+                // 三级重仓标识（按持仓占比，人民币口径）：≥10% 星仓（紫）/ 5%~10% 重仓（金）/ 2.5%~5% 观察（蓝）
                 const heavyCodes = {};
-                const heavyRank = {};
-                const byMVList = holdDataList.slice().sort(function(a, b){
-                    const ma = (Number(a.count)||0) * (Number(a.nowPrice)||0) * (a.marketType === 'HK' ? hkFxRate : 1);
-                    const mb = (Number(b.count)||0) * (Number(b.nowPrice)||0) * (b.marketType === 'HK' ? hkFxRate : 1);
-                    return mb - ma;
+                const heavyL2 = {};
+                const heavyL3 = {};
+                const totalMVAll = Number(calcSummary().totalMarket) || 1;
+                holdDataList.forEach(function(it){
+                    const mvIt = (Number(it.count)||0) * (Number(it.nowPrice)||0) * (it.marketType === 'HK' ? hkFxRate : 1);
+                    const pctIt = totalMVAll > 0 ? (mvIt / totalMVAll * 100) : 0;
+                    if(pctIt >= 10) heavyCodes[it.code] = true;
+                    else if(pctIt >= 5) heavyL2[it.code] = true;
+                    else if(pctIt >= 2.5) heavyL3[it.code] = true;
                 });
-                byMVList.slice(0, 10).forEach(function(it, idx){ heavyCodes[it.code] = true; heavyRank[it.code] = idx + 1; });
                 const sorted = holdDataList.slice().sort(function(a, b){
                     // 排序用原始涨跌幅（9点前/竞价前无当日数据时按上一交易日收盘涨跌幅排，显示仍为 --）
                     const ap = a.changePct != null && !isNaN(a.changePct) ? a.changePct : -999;
@@ -5768,12 +5774,18 @@
                     const marketTag = it.marketType === 'HK'
                         ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5">港</span>'
                         : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5">A</span>';
-                    // 市值前十名重仓徽章：前3名紫色渐变（更尊贵醒目），4~10名金色渐变（放在股票代码右边，精致不占位）
+                    // 三级重仓徽章（放在股票代码右边，精致不占位）：
+                    // 第一层 ≥10%：紫色渐变+星形"星仓"（最尊贵醒目）
+                    // 第二层 5%~10%：金色渐变+星形"重仓"
+                    // 第三层 2.5%~5%：蓝色渐变+眼睛"观察"
+                    // 星数代表层级：第一层★★★★★、第二层★★★、第三层★（纯星星徽章，不带文字，层次一眼可辨）
                     let heavyBadge = '';
                     if(heavyCodes[it.code]){
-                        heavyBadge = heavyRank[it.code] <= 3
-                            ? '<span class="inline-flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-purple-500 to-purple-600 ml-1.5 align-middle shadow-sm shadow-purple-300"><i class="fa fa-star text-[7px]"></i>重仓</span>'
-                            : '<span class="inline-flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-amber-500 to-orange-500 ml-1.5 align-middle shadow-sm"><i class="fa fa-star text-[7px]"></i>重仓</span>';
+                        heavyBadge = '<span class="inline-flex items-center justify-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-purple-500 to-purple-600 ml-1.5 align-middle shadow-sm shadow-purple-300">★★★★★</span>';
+                    } else if(heavyL2[it.code]){
+                        heavyBadge = '<span class="inline-flex items-center justify-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-amber-500 to-orange-500 ml-1.5 align-middle shadow-sm">★★★</span>';
+                    } else if(heavyL3[it.code]){
+                        heavyBadge = '<span class="inline-flex items-center justify-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-sky-500 to-blue-500 ml-1.5 align-middle shadow-sm">★</span>';
                     }
                     // 当日盈亏金额（券商标准）
                     let dayPnl = 0;
@@ -5823,7 +5835,7 @@
                     html += '<div class="px-5 py-3 flex items-center gap-3 active:bg-gray-50 stock-row" data-code="' + it.code + '">'
                         + '<div class="w-6 h-6 rounded-full ' + rankClass + ' flex items-center justify-center text-xs font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
-                        + '<div class="text-sm font-medium text-gray-800 truncate">' + it.name + marketTag + '</div>'
+                        + '<div class="flex items-center gap-1.5 min-w-0">' + stockLogoHtml(it, 16) + '<span class="text-sm font-medium text-gray-800 truncate">' + it.name + '</span>' + marketTag + '</div>'
                         + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + heavyBadge + '</div>'
                         + '</div>'
                         + '<div class="w-[92px] text-right flex-shrink-0 ml-1">'
@@ -5921,6 +5933,7 @@
                         yieldHtml += '<div class="flex items-center gap-3">'
                             + '<div class="flex-1 min-w-0">'
                             + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + stockLogoHtml(x, 16)
                             + '<span class="text-[14px] font-medium text-gray-800 truncate">' + x.name + '</span>'
                             + tagHtml
                             + '</div>'
@@ -5992,7 +6005,7 @@
             const posPeriodKey = getStatsPeriodKey();
             const posSnapC = loadStatsDaily().position || {};
             // 行情尚未拉取成功过的快照标记 stale：不当作已固化，下次渲染自动重建重试
-            if(posSnapC.key !== posPeriodKey || posSnapC.stale){
+            if(posSnapC.v !== STATS_SNAP_VERSION || posSnapC.key !== posPeriodKey || posSnapC.stale){
                 // ---- 当天首次：构建并存储快照 ----
                 if(isMarketClosed()){
                     updatePositionSnapshot();
@@ -6004,8 +6017,10 @@
                     industryListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
                     stockPositionListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
                     const snapE = loadStatsDaily();
-                    snapE.position = { key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: false };
+                    snapE.position = { v: STATS_SNAP_VERSION, key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: false };
                     saveStatsDaily(snapE);
+                    positionRendered = true;
+                    positionRenderDate = posTodayStr;
                 } else {
                     // 计算每个股票的市值（人民币）和总市值
                     const stockMV = positionData.map(function(it){
@@ -6083,7 +6098,8 @@
                         const it = x.item;
                         stockHtml += '<div class="stock-position-row">'
                             + '<div class="flex items-center justify-between mb-1">'
-                            + '<div class="flex items-baseline gap-1.5 min-w-0">'
+                            + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + stockLogoHtml(it, 16)
                             + '<span class="text-[14px] font-medium text-gray-800 truncate">' + it.name + '</span>'
                             + '<span class="text-[11px] text-gray-400 flex-shrink-0">' + it.code + '</span>'
                             + '</div>'
@@ -6099,48 +6115,60 @@
                     // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
                     // 若本会话行情从未拉取成功（数据可能陈旧），标记 stale=true：下次渲染自动重建重试
                     const snapF = loadStatsDaily();
-                    snapF.position = { key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, indHtml: indHtml, stockHtml: stockHtml, pieData: pieData };
+                    snapF.position = { v: STATS_SNAP_VERSION, key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, indHtml: indHtml, stockHtml: stockHtml, pieData: pieData };
                     saveStatsDaily(snapF);
+                    // 标记当天已渲染完成：此后每2秒刷新只更新实时板块，饼图不再重复渲染
+                    positionRendered = true;
+                    positionRenderDate = posTodayStr;
                 }
             } else if(posSnapC.hasData){
                 // ---- 当天已有快照：直接读取存储渲染（不再请求/重算）----
-                document.querySelector('#statsIndustryList').innerHTML = posSnapC.indHtml;
-                document.querySelector('#statsStockPositionList').innerHTML = posSnapC.stockHtml;
-                if(typeof echarts !== 'undefined'){
-                    const pieEl = document.querySelector('#industryPieChart');
-                    if(pieEl){
-                        if(pieEl._chart) pieEl._chart.dispose();
-                        const chart = echarts.init(pieEl);
-                        chart.setOption({
-                            series: [{
-                                type: 'pie',
-                                radius: ['55%', '75%'],
-                                center: ['50%', '50%'],
-                                avoidLabelOverlap: true,
-                                label: { show: false },
-                                labelLine: { show: false },
-                                data: posSnapC.pieData || [],
-                                emphasis: { scale: false }
-                            }],
-                            graphic: [{
-                                type: 'text',
-                                left: 'center',
-                                top: 'center',
-                                style: {
-                                    text: '持仓行业',
-                                    fontSize: 11,
-                                    fill: '#9CA3AF',
-                                    textAlign: 'center'
-                                }
-                            }]
-                        });
-                        pieEl._chart = chart;
+                // 当天已渲染过则跳过（DOM与canvas保持，每2秒刷新不重复渲染饼图，避免闪烁与性能消耗）
+                if(positionRendered && positionRenderDate === posTodayStr){
+                    // 已渲染，跳过
+                } else {
+                    document.querySelector('#statsIndustryList').innerHTML = posSnapC.indHtml;
+                    document.querySelector('#statsStockPositionList').innerHTML = posSnapC.stockHtml;
+                    if(typeof echarts !== 'undefined'){
+                        const pieEl = document.querySelector('#industryPieChart');
+                        if(pieEl){
+                            if(pieEl._chart) pieEl._chart.dispose();
+                            const chart = echarts.init(pieEl);
+                            chart.setOption({
+                                series: [{
+                                    type: 'pie',
+                                    radius: ['55%', '75%'],
+                                    center: ['50%', '50%'],
+                                    avoidLabelOverlap: true,
+                                    label: { show: false },
+                                    labelLine: { show: false },
+                                    data: posSnapC.pieData || [],
+                                    emphasis: { scale: false }
+                                }],
+                                graphic: [{
+                                    type: 'text',
+                                    left: 'center',
+                                    top: 'center',
+                                    style: {
+                                        text: '持仓行业',
+                                        fontSize: 11,
+                                        fill: '#9CA3AF',
+                                        textAlign: 'center'
+                                    }
+                                }]
+                            });
+                            pieEl._chart = chart;
+                        }
                     }
+                    positionRendered = true;
+                    positionRenderDate = posTodayStr;
                 }
             } else {
                 // 当天空快照：保留空态
                 document.querySelector('#statsIndustryList').innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
                 document.querySelector('#statsStockPositionList').innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                positionRendered = true;
+                positionRenderDate = posTodayStr;
             }
             markStatsRefresh('position', '#statsPositionRefreshTime', '每日更新');
 
@@ -6150,7 +6178,7 @@
             const pnlRankTodayStr = todayStr();
             const pnlPeriodKey = getStatsPeriodKey();
             const pnlSnapC = loadStatsDaily().pnl || {};
-            if(pnlSnapC.key !== pnlPeriodKey || pnlSnapC.stale){
+            if(pnlSnapC.v !== STATS_SNAP_VERSION || pnlSnapC.key !== pnlPeriodKey || pnlSnapC.stale){
                 // ---- 当天首次：构建并存储快照 ----
                 const pnlRankListEl = document.querySelector('#statsPnlRankList');
                 const pnlRankTotalEl = document.querySelector('#pnlRankTotal');
@@ -6164,7 +6192,7 @@
                     pnlRankWinEl.innerText = '0';
                     pnlRankLoseEl.innerText = '0';
                     const snapE = loadStatsDaily();
-                    snapE.pnl = { key: pnlPeriodKey, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: false };
+                    snapE.pnl = { v: STATS_SNAP_VERSION, key: pnlPeriodKey, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: false };
                     saveStatsDaily(snapE);
                 } else {
                     // 计算每只股票累计盈亏（与持仓页累计盈亏口径一致）并降序排序
@@ -6237,10 +6265,12 @@
                         const barBg = x.pnl > 0.01
                             ? 'linear-gradient(90deg,#ff8a8c,#ff4d4f)'
                             : (x.pnl < -0.01 ? 'linear-gradient(90deg,#00b37e,#00d68f)' : '#d1d5db');
+                        const logoItem = x.closed ? { code: rec.code, marketType: rec.marketType, name: nameStr } : it;
                         rankHtml += '<div class="flex items-center gap-3">'
                             + '<div class="w-6 h-6 rounded-full ' + rankCls + ' flex items-center justify-center text-[11px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                             + '<div class="flex-1 min-w-0">'
                             + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + stockLogoHtml(logoItem, 16)
                             + '<span class="text-[14px] font-medium text-gray-800 truncate">' + nameStr + '</span>'
                             + tagHtml
                             + closedTag
@@ -6259,7 +6289,7 @@
                     // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
                     // 行情未就绪标记 stale=true：下次渲染自动重建重试
                     const snapF = loadStatsDaily();
-                    snapF.pnl = { key: pnlPeriodKey, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, listHtml: rankHtml, totalText: totalText, totalClass: totalClass, winText: String(winCount), loseText: String(loseCount) };
+                    snapF.pnl = { v: STATS_SNAP_VERSION, key: pnlPeriodKey, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, listHtml: rankHtml, totalText: totalText, totalClass: totalClass, winText: String(winCount), loseText: String(loseCount) };
                     saveStatsDaily(snapF);
                 }
             } else if(pnlSnapC.hasData){
@@ -6284,7 +6314,7 @@
             // 刷新机制与盈亏排行一致：交易日 6:00/20:00 各构建一次并持久化，其余时间直接读存储
             const divRankPeriodKey = getStatsPeriodKey();
             const divRankSnapC = loadStatsDaily().divRank || {};
-            if(divRankSnapC.key !== divRankPeriodKey || divRankSnapC.stale){
+            if(divRankSnapC.v !== STATS_SNAP_VERSION || divRankSnapC.key !== divRankPeriodKey || divRankSnapC.stale){
                 // ---- 当期首次：构建并存储快照 ----
                 const divRankListEl = document.querySelector('#statsDivRankList');
                 const divRankTotalEl = document.querySelector('#divRankTotal');
@@ -6296,7 +6326,7 @@
                     divRankTotalEl.className = 'text-base font-bold tabular-nums text-gray-800';
                     divRankCountEl.innerText = '0';
                     const snapE = loadStatsDaily();
-                    snapE.divRank = { key: divRankPeriodKey, time: statsRefreshNow(), hasData: false, stale: false };
+                    snapE.divRank = { v: STATS_SNAP_VERSION, key: divRankPeriodKey, time: statsRefreshNow(), hasData: false, stale: false };
                     saveStatsDaily(snapE);
                 } else {
                     // 合并当前持仓 + 历史清仓：同一股票（代码+市场）累计分红合并（多次清仓/再买入也合并）
@@ -6351,10 +6381,12 @@
                         const shareText = sharePct.toFixed(2) + '%';
                         const barW = Math.max(3, Math.min(100, x.total / maxDiv * 100));
                         const barBg = 'linear-gradient(90deg,#f5c97b,#D45329)';
+                        const divLogoItem = x.closed ? { code: rec.code, marketType: rec.marketType, name: nameStr } : it;
                         divRankHtml += '<div class="flex items-center gap-3">'
                             + '<div class="w-6 h-6 rounded-full ' + rankCls + ' flex items-center justify-center text-[11px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                             + '<div class="flex-1 min-w-0">'
                             + '<div class="flex items-center gap-1.5 min-w-0">'
+                            + stockLogoHtml(divLogoItem, 16)
                             + '<span class="text-[14px] font-medium text-gray-800 truncate">' + nameStr + '</span>'
                             + tagHtml
                             + closedTag
@@ -6372,7 +6404,7 @@
                     divRankListEl.innerHTML = divRankHtml;
                     // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
                     const snapF = loadStatsDaily();
-                    snapF.divRank = { key: divRankPeriodKey, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, listHtml: divRankHtml, totalText: fmtMoney(grandTotal), countText: String(divRanks.length) };
+                    snapF.divRank = { v: STATS_SNAP_VERSION, key: divRankPeriodKey, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, listHtml: divRankHtml, totalText: fmtMoney(grandTotal), countText: String(divRanks.length) };
                     saveStatsDaily(snapF);
                 }
             } else if(divRankSnapC.hasData){
@@ -7981,8 +8013,8 @@
                     const rankClass = isCostRecovered
                         ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-sm shadow-purple-300'
                         : 'bg-gray-100 text-gray-400';
-                    // 股票名称最多显示4个字，超出用...代替
-                    const shortName = item.name.length > 4 ? item.name.substring(0, 4) + '...' : item.name;
+                    // 股票名称：4字以内完整显示；超出显示3字+…（省字防手机端换行）
+                    const shortName = item.name.length > 4 ? item.name.substring(0, 3) + '…' : item.name;
                     // 已回本徽章：已去掉（港股名字过长导致换行）
                     const recoveredBadge = '';
                     // 行风格：已回本股票使用淡紫色渐变背景，更加醒目；普通股票使用bg-pageBg
@@ -7991,24 +8023,21 @@
                         : 'bg-pageBg';
                     // 市值颜色：已回本股票显示紫色
                     const marketValueClass = isCostRecovered ? 'text-purple-600' : 'text-gray-500';
-                    // 市值数字与股票名左对齐（渲染时直接内联偏移，避免渲染后测量导致的闪烁）
+                    // 市值数字与股票名左对齐（名称行左对齐贴序号后，数字固定缩进logo+gap宽度）
                     const mvText = fmtMoney(itemMarketTotal);
-                    const mvW = estListTextW(mvText);
-                    const nameRowW = estListTextW(shortName) + 4 + 21; // 名字宽+gap(4px)+A/港标签宽(约21px)
-                    // 居中文本移动量=margin/2，向右视觉偏移1px需margin+2px（当前+8=视觉右移4px）
-                    const mvMargin = (mvW >= nameRowW ? 0 : -(nameRowW - mvW)) + 8;
+                    const mvMargin = 18;
                     // 行风格：和卡片视图的两行一致（bg-pageBg rounded-xl），列表模式不可点击编辑
                     htmlStr += `
                     <div class="hold-row ${rowBgClass} mx-2 mt-1 mb-1 rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" style="grid-template-columns:24px 1.55fr 0.8fr 1.05fr 1.05fr 1.05fr">
                         <div class="flex justify-center">
                             <div class="w-6 h-6 rounded-full ${rankClass} flex items-center justify-center text-[10px] font-bold">${globalIndex}</div>
                         </div>
-                        <div class="text-center px-0.5">
-                            <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <div class="text-left px-0.5">
+                            <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
                                 <span class="text-xs font-semibold ${isCostRecovered ? 'text-purple-600 font-bold' : 'text-gray-800'}">${shortName}</span>
                                 ${recoveredBadge}
-                                <span class="${tagClass} text-[8px] px-1 py-0.5 rounded flex-shrink-0">${tagText}</span>
+                                <span class="${tagClass} text-[8px] px-0.5 py-0.5 rounded flex-shrink-0">${tagText}</span>
                             </div>
                             <div class="text-[11px] font-medium ${marketValueClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market" style="margin-left:${mvMargin}px">${mvText}</div>
                         </div>

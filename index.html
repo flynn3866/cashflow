@@ -5779,20 +5779,31 @@
                     // 层次一眼可辨：第一层 ★★★★★（≥10%，紫）、第二层 ★★★（5%~10%，金）、第三层 ★（2.5%~5%，天蓝）。
                     // 纯星星不带文字；title 提供长按/悬停说明，不影响显示。
                     const starPath = 'M12 2l2.4 4.86 5.36.78-3.88 3.78.92 5.34L12 15.4 7.2 19.76l.92-5.34-3.88-3.78 5.36-.78z';
-                    function heavyStarBadge(n, tierCls, tip){
+                    // 星级评级组件式设计（统一紫色系，顶级同色系层次）：
+                    // 固定 5 星槽位等长、紧凑不超过四字股票名宽度；亮星数表层级（5/3/1），
+                    // 未点亮星以半透明白星补齐；三档用同色系深浅渐变区分（深紫/中紫/浅紫），
+                    // 与页面紫色辅助风格统一，简洁优雅、层次一眼可辨
+                    function heavyStarBadge(lightN, tierCls, tip){
                         let stars = '';
-                        for(let si = 0; si < n; si++){
-                            stars += '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
+                        for(let si = 0; si < 5; si++){
+                            if(si < lightN){
+                                // 点亮星：纯白心 + 白色描边——星形饱满发亮、边缘清晰圆润，
+                                // 在任何紫底上都明亮醒目，三档亮度统一
+                                stars += '<svg width="10" height="10" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" shape-rendering="geometricPrecision" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
+                            } else {
+                                // 未点亮槽位：背景同色系淡紫描边 + 极淡白填充——暗淡融入底色、隐约可辨不抢眼
+                                stars += '<svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,0.15)" stroke="rgba(139,92,246,0.5)" stroke-width="1.2" stroke-linejoin="round" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
+                            }
                         }
-                        return '<span title="' + tip + '" class="inline-flex items-center justify-center gap-[2px] px-1.5 py-0.5 rounded-full text-white ' + tierCls + ' ml-1.5 align-middle">' + stars + '</span>';
+                        return '<span title="' + tip + '" class="inline-flex items-center justify-center px-1 py-0.5 rounded-full text-white ' + tierCls + ' ml-1.5 align-middle">' + stars + '</span>';
                     }
                     let heavyBadge = '';
                     if(heavyCodes[it.code]){
                         heavyBadge = heavyStarBadge(5, 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] shadow-purple-300/50 ring-1 ring-white/25', '重仓层级1 · 仓位占比≥10%');
                     } else if(heavyL2[it.code]){
-                        heavyBadge = heavyStarBadge(3, 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] shadow-amber-200/60 ring-1 ring-white/25', '重仓层级2 · 仓位占比5%~10%');
+                        heavyBadge = heavyStarBadge(3, 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] shadow-purple-300/40 ring-1 ring-white/25', '重仓层级2 · 仓位占比5%~10%');
                     } else if(heavyL3[it.code]){
-                        heavyBadge = heavyStarBadge(1, 'bg-gradient-to-br from-sky-400 to-blue-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] shadow-sky-200/60 ring-1 ring-white/25', '重仓层级3 · 仓位占比2.5%~5%');
+                        heavyBadge = heavyStarBadge(1, 'bg-gradient-to-br from-purple-400 to-purple-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] shadow-purple-300/40 ring-1 ring-white/25', '重仓层级3 · 仓位占比2.5%~5%');
                     }
                     // 当日盈亏金额（券商标准）
                     let dayPnl = 0;

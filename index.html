@@ -5774,18 +5774,25 @@
                     const marketTag = it.marketType === 'HK'
                         ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">港</span>'
                         : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">A</span>';
-                    // 三级重仓徽章（放在股票代码右边，精致不占位）：
-                    // 第一层 ≥10%：紫色渐变+星形"星仓"（最尊贵醒目）
-                    // 第二层 5%~10%：金色渐变+星形"重仓"
-                    // 第三层 2.5%~5%：蓝色渐变+眼睛"观察"
-                    // 星数代表层级：第一层★★★★★、第二层★★★、第三层★（纯星星徽章，不带文字，层次一眼可辨）
+                    // 三级重仓徽章（放在股票代码右边，顶级质感设计）：
+                    // 内联 SVG 五角星跨设备渲染一致且锐利；对角渐变 + 顶部内高光（玻璃质感）+ 极细白描边 + 同色系柔光，
+                    // 层次一眼可辨：第一层 ★★★★★（≥10%，紫）、第二层 ★★★（5%~10%，金）、第三层 ★（2.5%~5%，天蓝）。
+                    // 纯星星不带文字；title 提供长按/悬停说明，不影响显示。
+                    const starPath = 'M12 2l2.4 4.86 5.36.78-3.88 3.78.92 5.34L12 15.4 7.2 19.76l.92-5.34-3.88-3.78 5.36-.78z';
+                    function heavyStarBadge(n, tierCls, tip){
+                        let stars = '';
+                        for(let si = 0; si < n; si++){
+                            stars += '<svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
+                        }
+                        return '<span title="' + tip + '" class="inline-flex items-center justify-center gap-[1.5px] px-1 py-px rounded-full text-white ' + tierCls + ' ml-1.5 align-middle">' + stars + '</span>';
+                    }
                     let heavyBadge = '';
                     if(heavyCodes[it.code]){
-                        heavyBadge = '<span class="inline-flex items-center justify-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-purple-500 to-purple-600 ml-1.5 align-middle shadow-sm shadow-purple-300">★★★★★</span>';
+                        heavyBadge = heavyStarBadge(5, 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] shadow-purple-300/50 ring-1 ring-white/25', '重仓层级1 · 仓位占比≥10%');
                     } else if(heavyL2[it.code]){
-                        heavyBadge = '<span class="inline-flex items-center justify-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-amber-500 to-orange-500 ml-1.5 align-middle shadow-sm">★★★</span>';
+                        heavyBadge = heavyStarBadge(3, 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] shadow-amber-200/60 ring-1 ring-white/25', '重仓层级2 · 仓位占比5%~10%');
                     } else if(heavyL3[it.code]){
-                        heavyBadge = '<span class="inline-flex items-center justify-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white bg-gradient-to-r from-sky-500 to-blue-500 ml-1.5 align-middle shadow-sm">★</span>';
+                        heavyBadge = heavyStarBadge(1, 'bg-gradient-to-br from-sky-400 to-blue-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] shadow-sky-200/60 ring-1 ring-white/25', '重仓层级3 · 仓位占比2.5%~5%');
                     }
                     // 当日盈亏金额（券商标准）
                     let dayPnl = 0;
@@ -5832,25 +5839,32 @@
                         else if(pct < 0) priceColorClass = 'text-[#00d68f]';
                         else priceColorClass = 'text-gray-500';
                     }
-                    // 股票名称完整舒展展示：仅超长名（>6字，如中国人民保险集团）做省略，其余不加省略号
-                    const isLongName = it.name.length > 6;
+                    // 股票名称完整舒展展示：按实际视觉宽度估算（中文14px/字、ASCII约7px/字符），
+                    // 名字可用宽度内（约130px，iPhone窄屏最紧行）一律完整显示不省略；仅极长名省略
+                    let statsNameW = 0;
+                    for(let ni = 0; ni < it.name.length; ni++){
+                        const nc = it.name.charAt(ni);
+                        statsNameW += (nc === '.' || nc === '…') ? 4 : (it.name.charCodeAt(ni) > 0x2E80 ? 14 : 7);
+                    }
+                    const isLongName = statsNameW > 130;
                     const statsShowName = isLongName ? it.name.substring(0, 6) + '…' : it.name;
                     const statsNameCls = isLongName
                         ? 'text-sm font-medium text-gray-800 truncate'
                         : 'text-sm font-medium text-gray-800 whitespace-nowrap flex-shrink-0';
-                    html += '<div class="px-5 py-3 flex items-center gap-3 active:bg-gray-50 stock-row" data-code="' + it.code + '">'
-                        + '<div class="w-6 h-6 rounded-full ' + rankClass + ' flex items-center justify-center text-xs font-bold flex-shrink-0">' + (idx + 1) + '</div>'
+                    // 列宽分配：序号24px + 名字列flex弹性占满剩余 + 现价列76px + 盈亏列88px（中间列靠右、名字列约一半以上）
+                    html += '<div class="px-5 py-3 flex items-center gap-2 active:bg-gray-50 stock-row" data-code="' + it.code + '">'
+                        + '<div class="w-5 h-5 rounded-full ' + rankClass + ' flex items-center justify-center text-[10px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
                         + '<div class="flex items-center gap-1.5 min-w-0">' + stockLogoHtml(it, 16) + '<span class="' + statsNameCls + '">' + statsShowName + '</span>' + marketTag + '</div>'
                         + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + heavyBadge + '</div>'
                         + '</div>'
-                        + '<div class="w-[92px] text-right flex-shrink-0 ml-1">'
-                        + '<div class="text-[13px] font-bold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? fmtPrice(it.nowPrice, it.code, it.marketType === 'HK') : '--') + '</div>'
-                        + '<div class="text-[11px] font-semibold mt-0.5 ' + changeDiffClass + ' tabular-nums whitespace-nowrap">' + changeDiffText + '</div>'
+                        + '<div class="w-[76px] text-right flex-shrink-0">'
+                        + '<div class="text-[14px] font-semibold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? fmtPrice(it.nowPrice, it.code, it.marketType === 'HK') : '--') + '</div>'
+                        + '<div class="text-[11px] font-normal mt-0.5 ' + changeDiffClass + ' tabular-nums whitespace-nowrap">' + changeDiffText + '</div>'
                         + '</div>'
-                        + '<div class="w-[96px] text-right flex-shrink-0 ml-2">'
-                        + '<div class="text-base font-semibold ' + dayPnlClass + ' tabular-nums stats-daypnl whitespace-nowrap" data-code="' + it.code + '">' + dayPnlText + '</div>'
-                        + '<div class="text-[11px] font-medium mt-0.5 ' + pctClass + ' tabular-nums stats-pct whitespace-nowrap" data-code="' + it.code + '">' + arrow + pctText + '</div>'
+                        + '<div class="w-[88px] text-right flex-shrink-0 ml-1">'
+                        + '<div class="text-[14px] font-semibold ' + dayPnlClass + ' tabular-nums stats-daypnl whitespace-nowrap" data-code="' + it.code + '">' + dayPnlText + '</div>'
+                        + '<div class="text-[11px] font-normal mt-0.5 ' + pctClass + ' tabular-nums stats-pct whitespace-nowrap" data-code="' + it.code + '">' + arrow + pctText + '</div>'
                         + '</div>'
                         + '</div>';
                 });

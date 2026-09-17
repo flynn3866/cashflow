@@ -5772,8 +5772,8 @@
                     else if(idx === 1) rankClass = 'bg-gradient-to-br from-orange-400 to-orange-500 text-white';
                     else if(idx === 2) rankClass = 'bg-gradient-to-br from-amber-400 to-amber-500 text-white';
                     const marketTag = it.marketType === 'HK'
-                        ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">港</span>'
-                        : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded ml-1.5 flex-shrink-0">A</span>';
+                        ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">港</span>'
+                        : '<span class="text-[10px] text-accent bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
                     // 三级重仓徽章（放在股票代码右边，顶级质感设计）：
                     // 内联 SVG 五角星跨设备渲染一致且锐利；对角渐变 + 顶部内高光（玻璃质感）+ 极细白描边 + 同色系柔光，
                     // 层次一眼可辨：第一层 ★★★★★（≥10%，紫）、第二层 ★★★（5%~10%，金）、第三层 ★（2.5%~5%，天蓝）。
@@ -5782,9 +5782,9 @@
                     function heavyStarBadge(n, tierCls, tip){
                         let stars = '';
                         for(let si = 0; si < n; si++){
-                            stars += '<svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
+                            stars += '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
                         }
-                        return '<span title="' + tip + '" class="inline-flex items-center justify-center gap-[1.5px] px-1 py-px rounded-full text-white ' + tierCls + ' ml-1.5 align-middle">' + stars + '</span>';
+                        return '<span title="' + tip + '" class="inline-flex items-center justify-center gap-[2px] px-1.5 py-0.5 rounded-full text-white ' + tierCls + ' ml-1.5 align-middle">' + stars + '</span>';
                     }
                     let heavyBadge = '';
                     if(heavyCodes[it.code]){
@@ -5830,8 +5830,8 @@
                             changeDiffClass = 'text-gray-500';
                         }
                     }
-                    // 现价前缀（港股显示HK$）
-                    const pricePrefix2 = it.marketType === 'HK' ? 'HK$' : '';
+                    // 现价前缀：今日涨跌幅内港股不显示货币符号（列表紧凑、留白更多）
+                    const pricePrefix2 = '';
                     // 现价颜色：跟涨跌幅一致（涨红跌绿）
                     let priceColorClass = 'text-gray-900';
                     if(pct != null && !isNaN(pct)){
@@ -5855,7 +5855,7 @@
                     html += '<div class="px-5 py-3 flex items-center gap-2 active:bg-gray-50 stock-row" data-code="' + it.code + '">'
                         + '<div class="w-5 h-5 rounded-full ' + rankClass + ' flex items-center justify-center text-[10px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
-                        + '<div class="flex items-center gap-1.5 min-w-0">' + stockLogoHtml(it, 16) + '<span class="' + statsNameCls + '">' + statsShowName + '</span>' + marketTag + '</div>'
+                        + '<div class="flex items-center gap-1 min-w-0">' + stockLogoHtml(it, 16) + '<span class="' + statsNameCls + '">' + statsShowName + '</span>' + marketTag + '</div>'
                         + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + heavyBadge + '</div>'
                         + '</div>'
                         + '<div class="w-[76px] text-right flex-shrink-0">'

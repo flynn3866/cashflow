@@ -1210,7 +1210,7 @@
                         <div class="text-[11px] text-amber-100/60">覆盖 <span class="text-amber-200 font-semibold" id="navDetailYears">0</span> 年</div>
                     </div>
                 </div>
-                <div id="navDetailHint" class="text-[10px] text-amber-100/40 mt-2">初始净值=1 · 份额 = 初始投入 + 历年净流入按当期净值折算 · 净值 = 总资产 ÷ 总份额</div>
+                <div id="navDetailHint" class="text-[10px] text-amber-100/40 mt-2">基准日=初始投入日期 · 初始净值=1 · 每笔投入按加仓当日净值折算份额 · 最新净值=当前总资产÷总份额</div>
             </div>
         </div>
 
@@ -1725,7 +1725,7 @@
             </div>
         </div>
 
-        <!-- 每年净流入 -->
+        <!-- 资金投入 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" onclick="toggleSettingsCollapse('yearNetInflow')" id="yearNetInflowHeader">
                 <div class="flex items-center gap-2">
@@ -1733,14 +1733,19 @@
                         <i class="fa fa-arrows-h text-sky-500 text-sm"></i>
                     </div>
                     <div>
-                        <div class="text-base font-semibold text-gray-800">每年净流入</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5">用于今年收益率计算：正数=外部转入，负数=转出；历史年份无需填写，从今年开始</div>
+                        <div class="text-base font-semibold text-gray-800">资金投入</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">记录每笔投入/取出的日期与金额，用于复利年化(XIRR)与净值(BVPS)计算；正数=转入，负数=转出</div>
                     </div>
                 </div>
-                <i id="yearNetInflowChevron" class="fa fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                <div class="flex items-center gap-2">
+                    <button id="addFundBtn" class="w-8 h-8 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center active:scale-95 transition-transform" onclick="event.stopPropagation(); addFundInflow();" title="添加一笔资金">
+                        <i class="fa fa-plus text-sm"></i>
+                    </button>
+                    <i id="yearNetInflowChevron" class="fa fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
+                </div>
             </div>
             <div id="yearNetInflowList" class="divide-y divide-gray-50 transition-all duration-300">
-                <!-- 动态生成：仅今年一栏 -->
+                <!-- 动态生成：初始投入 + 每笔资金流水 -->
             </div>
         </div>
 
@@ -2999,7 +3004,7 @@
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, initialCost: 0, yearlyNav: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], closedStocks: [], portfolioStartYear: null };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, initialCost: 0, initialCostDate: '2020-01-01', fundInflows: [], navAlgoVer: 0, yearlyNav: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], closedStocks: [], portfolioStartYear: null };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
@@ -3023,7 +3028,25 @@
                     historyData.closedStocks = parsed.closedStocks || [];
                     if(parsed.portfolioStartYear) historyData.portfolioStartYear = parsed.portfolioStartYear;
                     historyData.initialCost = Number(parsed.initialCost) || 0;
+                    historyData.initialCostDate = parsed.initialCostDate || '2020-01-01';
                     historyData.yearlyNav = parsed.yearlyNav || {};
+                    historyData.navAlgoVer = Number(parsed.navAlgoVer) || 0;
+                    if(Array.isArray(parsed.fundInflows)){
+                        historyData.fundInflows = parsed.fundInflows;
+                    } else {
+                        // 兼容旧版 yearlyNetInflow：迁移为按年 01-01 的资金流水记录
+                        const mig = [];
+                        Object.keys(historyData.yearlyNetInflow || {}).forEach(function(y){
+                            const v = Number(historyData.yearlyNetInflow[y]) || 0;
+                            if(v !== 0) mig.push({ date: y + '-01-01', amount: v });
+                        });
+                        historyData.fundInflows = mig;
+                    }
+                    // 净值算法升级（XIRR/BVPS 时间加权）：旧算法归档值作废，重新按新算法归档
+                    if(historyData.navAlgoVer < 2){
+                        historyData.yearlyNav = {};
+                        historyData.navAlgoVer = 2;
+                    }
                 }
             }catch(e){}
         }
@@ -4463,22 +4486,65 @@
             { icon: 'fa-tachometer', label: '最新净值', valueId: 'mineNav', subId: 'mineNavGrowth', subIsValue: true, detail: 'openNavDetail()' },
             { icon: 'fa-coins', label: '自由现金流', valueId: 'mineFreeCashflow', accent: true, subStatic: '今年已收分红', detail: "openDivDetail('total')" }
         ];
-        // ============ 复利年化 CAGR（巴菲特式：(1+r)^n = 终值/本金） ============
-        function calcMineCagr(){
-            const initI = Number(historyData.initialCost) || 0;
-            let netSum = 0;
-            Object.keys(historyData.yearlyNetInflow || {}).forEach(function(y){
-                netSum += Number(historyData.yearlyNetInflow[y]) || 0;
-            });
-            const totalInvest = initI + netSum;
-            const startY = historyData.portfolioStartYear || new Date().getFullYear();
-            const curY = new Date().getFullYear();
-            const n = Math.max(1, curY - startY);
-            const totalAsset = Number(calcSummary().totalMarket) || 0;
-            if(totalInvest > 0 && totalAsset > 0 && n >= 1){
-                return (Math.pow(totalAsset / totalInvest, 1 / n) - 1) * 100;
+        // ============ XIRR 年化收益率（资金投入每笔记录日期，精确到天；投入为负、取出/终端为正） ============
+        function xirr(cashflows){
+            if(!cashflows || cashflows.length < 2) return null;
+            const data = cashflows.map(function(it){
+                return { t: new Date(it.date + 'T00:00:00').getTime(), cf: Number(it.amount) };
+            }).filter(function(d){ return isFinite(d.t) && isFinite(d.cf) && d.cf !== 0; });
+            if(data.length < 2) return null;
+            data.sort(function(a, b){ return a.t - b.t; });
+            const t0 = data[0].t;
+            const oneYear = 365;
+            let r = 0.1;
+            const eps = 1e-8;
+            const maxIter = 100;
+            let converged = false;
+            for(let iter = 0; iter < maxIter; iter++){
+                let npv = 0, deriv = 0, bad = false;
+                for(let i = 0; i < data.length; i++){
+                    const d = data[i];
+                    const days = (d.t - t0) / 86400000;
+                    const t = days / oneYear;
+                    const denom = Math.pow(1 + r, t);
+                    if(!isFinite(denom) || denom <= 0){ bad = true; break; }
+                    npv += d.cf / denom;
+                    deriv -= t * d.cf / (denom * (1 + r));
+                }
+                if(bad || !isFinite(deriv) || deriv === 0) break;
+                const dr = npv / deriv;
+                r -= dr;
+                if(!isFinite(r) || r <= -1){ r = 0.1; break; }
+                if(Math.abs(dr) < eps){ converged = true; break; }
             }
-            return null;
+            if(!isFinite(r) || r <= -1) return null;
+            return r;
+        }
+        // 资金流水：初始投入 + 每笔资金记录（按日期升序）
+        function getFundFlows(){
+            const flows = [];
+            const initCost = Number(historyData.initialCost) || 0;
+            if(initCost !== 0){
+                flows.push({ date: historyData.initialCostDate || '2020-01-01', amount: initCost });
+            }
+            (historyData.fundInflows || []).forEach(function(f){
+                const amt = Number(f.amount) || 0;
+                if(amt === 0) return;
+                flows.push({ date: f.date || '2020-01-01', amount: amt });
+            });
+            flows.sort(function(a, b){ return a.date.localeCompare(b.date); });
+            return flows;
+        }
+        // ============ 复利年化 CAGR = XIRR（资金投入每笔记录日期，精确到天） ============
+        function calcMineCagr(){
+            const flows = getFundFlows();
+            const totalAsset = Number(calcSummary().totalMarket) || 0;
+            if(!flows.length || totalAsset <= 0) return null;
+            const xirrCash = flows.map(function(f){ return { date: f.date, amount: -Number(f.amount) }; });
+            xirrCash.push({ date: todayStr(), amount: totalAsset });
+            const r = xirr(xirrCash);
+            if(r == null || !isFinite(r) || r <= -1) return null;
+            return r * 100;
         }
         // ============ 净值序列：初始净值=1，初始份额=初始投入；净流入按当期净值折算份额 ============
         // 历史年份总资产取年终归档（设置 yearlyAssets 优先 → monthlyAssets 年末 → dailyAssets 年末），与"总资产趋势"同口径
@@ -4500,28 +4566,49 @@
             return 0;
         }
         function calcNavSeries(){
-            const initI = Number(historyData.initialCost) || 0;
-            const startY = historyData.portfolioStartYear || new Date().getFullYear();
+            // BVPS 时间加权净值：基准日=初始投入日，初始净值=1，初始份额=初始投入；
+            // 每笔投入按"加仓当日净值"折算份额（当日净值 = (1+XIRR)^(距基准日年数)）；
+            // 历史年净值 = 该年年终总资产 ÷ 该年末总份额（年总资产有记录时）；当年 = 当前总资产 ÷ 总份额，每日刷新
+            const flows = getFundFlows();
             const curY = new Date().getFullYear();
-            let shares = initI; // 初始份额 = 初始投入 ÷ 初始净值(1)
-            const series = [];
             const curAsset = Number(calcSummary().totalMarket) || 0;
-            for(let y = startY; y <= curY; y++){
-                const inflow = Number(historyData.yearlyNetInflow && historyData.yearlyNetInflow[String(y)]) || 0;
-                const prevNav = series.length ? series[series.length - 1].nav : 1;
-                // 期初净流入：按上一期净值折算份额（正=净投入增份额，负=取出减份额）
-                if(y !== startY && inflow !== 0 && prevNav > 0){
-                    shares += inflow / prevNav;
-                }
-                // 本年总资产：历史年用年终归档值，当年用实时总资产
+            if(!flows.length) return [];
+            const baseDate = flows[0].date;
+            // 全局 XIRR（含终端当前总资产）
+            const xirrCash = flows.map(function(f){ return { date: f.date, amount: -Number(f.amount) }; });
+            xirrCash.push({ date: todayStr(), amount: curAsset });
+            const r = xirr(xirrCash);
+            // 按年份分组资金流水
+            const byYear = {};
+            flows.forEach(function(f){
+                const y = f.date.substring(0, 4);
+                if(!byYear[y]) byYear[y] = [];
+                byYear[y].push(f);
+            });
+            const yearsArr = Object.keys(byYear).map(Number).sort(function(a, b){ return a - b; });
+            const minY = yearsArr.length ? yearsArr[0] : curY;
+            const baseTs = new Date(baseDate + 'T00:00:00').getTime();
+            let shares = 0;
+            const series = [];
+            for(let y = minY; y <= curY; y++){
+                (byYear[y] || []).forEach(function(f){
+                    const tYears = (new Date(f.date + 'T00:00:00').getTime() - baseTs) / 86400000 / 365;
+                    let navAt = 1;
+                    if(r != null && isFinite(r) && r > -1 && tYears > 0){
+                        navAt = Math.pow(1 + r, tYears);
+                    }
+                    if(!isFinite(navAt) || navAt <= 0) navAt = 1;
+                    shares += Number(f.amount) / navAt;
+                });
+                // 本年总资产：历史年用年终归档值（无记录则为0，不沿用当前资产，避免误归档），当年用实时总资产
                 let asset = curAsset;
                 if(y !== curY){
                     const a = getYearEndAsset(String(y));
-                    if(a > 0) asset = a;
+                    asset = (a > 0) ? a : 0;
                 }
-                const nav = asset > 0 ? asset / shares : prevNav;
-                const gPrev = series.length ? series[series.length - 1].nav : 1;
-                const growth = gPrev > 0 ? (nav - gPrev) / gPrev : 0;
+                const prevNav = series.length ? series[series.length - 1].nav : 1;
+                const nav = (asset > 0 && shares > 0) ? asset / shares : prevNav;
+                const growth = prevNav > 0 ? (nav - prevNav) / prevNav : 0;
                 series.push({ year: y, nav: nav, growth: growth, asset: asset, shares: shares });
             }
             return series;
@@ -4652,14 +4739,11 @@
                 navGrowthEl.innerText = (g >= 0 ? '+' : '') + g.toFixed(2) + '%';
                 navGrowthEl.className = 'text-[11px] mt-0.5 ' + (g >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
             }
-            // 投入成本 = 设置页"初始成本"（独立固定输入）+ 历年净流入累计
-            const initCostV = Number(historyData.initialCost) || 0;
-            let netInflowSumV = 0;
-            Object.keys(historyData.yearlyNetInflow || {}).forEach(function(y){
-                netInflowSumV += Number(historyData.yearlyNetInflow[y]) || 0;
-            });
+            // 投入成本 = 初始投入 + 每笔资金流水（含取出为负）
+            let investTotalV = 0;
+            getFundFlows().forEach(function(f){ investTotalV += Number(f.amount) || 0; });
             const investCostEl = document.querySelector('#mineInvestCost');
-            if(investCostEl) investCostEl.innerText = fmtMoney(initCostV + netInflowSumV);
+            if(investCostEl) investCostEl.innerText = fmtMoney(investTotalV);
             // 自由现金流 = 当年分红收入（与今年已收同口径；交易日 6:00/20:00 快照，其余时间读存储）
             const fcfEl = document.querySelector('#mineFreeCashflow');
             if(fcfEl) fcfEl.innerText = fmtMoney(Number(mS.fcf != null ? mS.fcf : sum.totalReceived));
@@ -5055,32 +5139,30 @@
             document.querySelector('#openModalBtn').classList.toggle('hidden', costDetailReturnTab !== 'hold');
             renderPage();
         }
-        // 渲染投入成本明细：初始成本 + 历年净流入（年份倒序，当年净流入带"今年"标识）
+        // 渲染投入成本明细：初始投入 + 每笔资金流水（日期倒序，当年带"今年"标识）
         function renderCostDetail(){
-            const startY = historyData.portfolioStartYear || new Date().getFullYear();
-            const initCost = Number(historyData.initialCost) || 0;
             const entries = [];
-            if(initCost > 0){
+            if(Number(historyData.initialCost) !== 0){
                 entries.push({
-                    y: String(startY),
+                    date: historyData.initialCostDate || '2020-01-01',
                     kind: 'init',
-                    amount: initCost,
+                    amount: Number(historyData.initialCost),
                     cur: false,
                     sub: '账户建立时一次性投入本金 · 独立固定不变'
                 });
             }
-            Object.keys(historyData.yearlyNetInflow || {}).forEach(function(y){
-                const v = Number(historyData.yearlyNetInflow[y]) || 0;
+            (historyData.fundInflows || []).forEach(function(f){
+                const v = Number(f.amount) || 0;
                 if(v === 0) return;
                 entries.push({
-                    y: String(y),
+                    date: f.date || '2000-01-01',
                     kind: 'inflow',
                     amount: v,
-                    cur: String(y) === String(new Date().getFullYear()),
-                    sub: v > 0 ? '当年净转入（入金）' : '当年净转出（出金）'
+                    cur: String((f.date || '').substring(0, 4)) === String(new Date().getFullYear()),
+                    sub: v > 0 ? '资金转入（入金）' : '资金转出（出金）'
                 });
             });
-            entries.sort(function(a, b){ return b.y.localeCompare(a.y); });
+            entries.sort(function(a, b){ return b.date.localeCompare(a.date); });
             let sumC = 0;
             entries.forEach(function(e){ sumC += e.amount; });
             const listElC = document.querySelector('#costDetailList');
@@ -5102,14 +5184,15 @@
                     : (isCur ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">今年</span>' : '');
                 const amtCls = e.amount >= 0 ? 'text-accent' : 'text-[#00d68f]';
                 const amtSign = e.amount > 0 ? '+' : '';
+                const dateLabel = e.date ? e.date.substring(0, 10) : '';
                 htmlC += '<div class="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 overflow-hidden relative">'
                     + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg,#f59e0b,#d97706);"></div>'
                     + '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-md"><i class="fa ' + (isInit ? 'fa-home' : 'fa-exchange') + ' text-[13px]"></i></div>'
                     + '<div class="flex-1 min-w-0">'
-                    + '<div class="flex items-center gap-1.5"><span class="text-[14px] font-semibold text-gray-800">' + e.y + ' 年' + (isInit ? ' · 初始投入' : ' · 净流入') + '</span>' + badge + '</div>'
+                    + '<div class="flex items-center gap-1.5"><span class="text-[14px] font-semibold text-gray-800">' + dateLabel + (isInit ? ' · 初始投入' : ' · 资金流水') + '</span>' + badge + '</div>'
                     + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + e.sub + '</div>'
                     + '</div>'
-                    + '<div class="text-right flex-shrink-0"><div class="text-[15px] font-bold ' + amtCls + ' tabular-nums">' + amtSign + fmtMoney(Math.abs(e.amount)) + '</div><div class="text-[10px] text-gray-400 mt-0.5">' + (isInit ? '初始成本' : e.y + ' 年净流入') + '</div></div>'
+                    + '<div class="text-right flex-shrink-0"><div class="text-[15px] font-bold ' + amtCls + ' tabular-nums">' + amtSign + fmtMoney(Math.abs(e.amount)) + '</div><div class="text-[10px] text-gray-400 mt-0.5">' + (isInit ? '初始投入' : '资金流水') + '</div></div>'
                     + '</div>';
             });
             listElC.innerHTML = htmlC;
@@ -8785,50 +8868,53 @@
             window.scrollTo(0, 0);
         }
 
-        // 渲染每年净流入列表（仅今年一栏：从今年开始记录，历史年份无需填写）
+        // 渲染资金投入列表：初始投入（含日期）+ 每笔资金流水（含日期/金额/删除）
         function renderYearNetInflowList(){
             const listDom = document.querySelector('#yearNetInflowList');
             if(!listDom) return;
-            const curY = String(new Date().getFullYear());
-            if(!historyData.yearlyNetInflow) historyData.yearlyNetInflow = {};
-            if(historyData.yearlyNetInflow[curY] == null) historyData.yearlyNetInflow[curY] = 0;
-            const val = historyData.yearlyNetInflow[curY] || 0;
             const initCost = Number(historyData.initialCost) || 0;
-            listDom.innerHTML = `
-            <div class="px-5 py-3 border-b border-gray-50 bg-amber-50/40">
-                <div class="text-[11px] text-gray-500 mb-1.5"><i class="fa fa-home text-amber-500 mr-1"></i>初始投入（一开始放进这个组合的总现金，独立固定不变）</div>
-                <div class="flex items-center gap-2">
-                    <div class="w-16 flex-shrink-0">
-                        <span class="text-sm font-semibold text-gray-700">初始投入</span>
-                    </div>
-                    <div class="flex-1 relative">
-                        <input type="number" step="0.01" class="year-initcost-input w-full px-3 py-2 border-2 border-amber-200 bg-white rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="${initCost}" placeholder="0.00">
-                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">元</span>
-                    </div>
-                </div>
-            </div>
-            <div class="px-5 py-3" data-year="${curY}">
-                <div class="text-[11px] text-gray-400 mb-1.5">今年净流入（正数=外部转入，负数=转出）</div>
-                <div class="flex items-center gap-2">
-                    <div class="w-16 flex-shrink-0">
-                        <span class="text-sm font-semibold text-gray-700">${curY}年</span>
-                    </div>
-                    <div class="flex-1 relative">
-                        <input type="number" step="0.01" class="year-netinflow-input w-full px-3 py-2 border-2 border-gray-100 rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="${val}" data-year="${curY}" placeholder="0.00">
-                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">元</span>
-                    </div>
-                </div>
-            </div>`;
-            listDom.querySelectorAll('.year-netinflow-input').forEach(function(input){
+            const initDate = historyData.initialCostDate || '2020-01-01';
+            const inflows = historyData.fundInflows || [];
+            let h = '';
+            h += '<div class="px-5 py-3 border-b border-gray-50 bg-amber-50/40">'
+                + '<div class="text-[11px] text-gray-500 mb-1.5"><i class="fa fa-home text-amber-500 mr-1"></i>初始投入（一开始放进这个组合的总现金，独立固定不变）</div>'
+                + '<div class="flex items-center gap-2">'
+                + '<div class="w-[92px] flex-shrink-0"><input type="date" class="year-initcost-date w-full px-2 py-2 border border-amber-200 bg-white rounded-lg text-xs text-gray-700 focus:border-accent focus:outline-none" value="' + initDate + '"></div>'
+                + '<div class="flex-1 relative"><input type="number" step="0.01" class="year-initcost-input w-full px-3 py-2 border-2 border-amber-200 bg-white rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="' + initCost + '" placeholder="0.00"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">元</span></div>'
+                + '</div></div>';
+            if(inflows.length){
+                inflows.forEach(function(f, idx){
+                    const amt = Number(f.amount) || 0;
+                    const dateV = f.date || '2000-01-01';
+                    h += '<div class="px-5 py-3 border-b border-gray-50 fund-inflow-row" data-idx="' + idx + '">'
+                        + '<div class="text-[11px] text-gray-400 mb-1.5 flex items-center justify-between"><span><i class="fa fa-exchange text-sky-500 mr-1"></i>资金流水</span><button type="button" onclick="removeFundInflow(' + idx + ')" class="text-[10px] text-gray-400 hover:text-[#ff4d4f] active:scale-95 transition-transform"><i class="fa fa-trash-o mr-0.5"></i>删除</button></div>'
+                        + '<div class="flex items-center gap-2">'
+                        + '<div class="w-[92px] flex-shrink-0"><input type="date" class="fund-inflow-date w-full px-2 py-2 border border-gray-100 bg-white rounded-lg text-xs text-gray-700 focus:border-accent focus:outline-none" value="' + dateV + '"></div>'
+                        + '<div class="flex-1 relative"><input type="number" step="0.01" class="fund-inflow-amount w-full px-3 py-2 border-2 border-gray-100 rounded-xl text-sm text-gray-800 focus:border-accent focus:outline-none transition-colors tabular-nums" value="' + amt + '" placeholder="0.00"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">元</span></div>'
+                        + '</div></div>';
+                });
+            } else {
+                h += '<div class="px-5 py-4 text-center text-[11px] text-gray-400">暂无资金流水，点击右侧"+"添加一笔</div>';
+            }
+            listDom.innerHTML = h;
+            listDom.querySelectorAll('.year-initcost-input, .fund-inflow-amount, .year-initcost-date, .fund-inflow-date').forEach(function(input){
                 input.addEventListener('input', function(){
                     this.setAttribute('data-edited', 'true');
                 });
             });
-            listDom.querySelectorAll('.year-initcost-input').forEach(function(input){
-                input.addEventListener('input', function(){
-                    this.setAttribute('data-edited', 'true');
-                });
-            });
+        }
+        // 添加一笔资金流水（默认当年 01-01）
+        function addFundInflow(){
+            const curY = String(new Date().getFullYear());
+            if(!historyData.fundInflows) historyData.fundInflows = [];
+            historyData.fundInflows.push({ date: curY + '-01-01', amount: 0 });
+            renderYearNetInflowList();
+        }
+        // 删除一笔资金流水
+        function removeFundInflow(idx){
+            if(!historyData.fundInflows || !historyData.fundInflows[idx]) return;
+            historyData.fundInflows.splice(idx, 1);
+            renderYearNetInflowList();
         }
 
         // 初始化设置页面折叠功能
@@ -8923,16 +9009,33 @@
                     historyData.manualYearlyReturn[y] = true;
                 }
             });
-            // 保存初始成本（独立固定，不随行情/持仓变化）
+            // 保存初始投入（金额 + 日期，独立固定，不随行情/持仓变化）
             document.querySelectorAll('.year-initcost-input').forEach(function(input){
                 historyData.initialCost = Number(input.value) || 0;
             });
-            // 保存每年净流入
-            document.querySelectorAll('.year-netinflow-input').forEach(function(input){
-                const y = input.getAttribute('data-year');
-                const val = Number(input.value) || 0;
-                if(!historyData.yearlyNetInflow) historyData.yearlyNetInflow = {};
-                historyData.yearlyNetInflow[y] = val;
+            document.querySelectorAll('.year-initcost-date').forEach(function(input){
+                if(input.value) historyData.initialCostDate = input.value;
+            });
+            // 保存资金流水（每笔：日期 + 金额），并重建 yearlyNetInflow（按年汇总，供今年收益率等使用）
+            const inflows = [];
+            document.querySelectorAll('.fund-inflow-row').forEach(function(row){
+                const dateInput = row.querySelector('.fund-inflow-date');
+                const amtInput = row.querySelector('.fund-inflow-amount');
+                const d = dateInput ? dateInput.value : '';
+                const a = Number(amtInput ? amtInput.value : 0) || 0;
+                if(d) inflows.push({ date: d, amount: a });
+            });
+            historyData.fundInflows = inflows;
+            const inflowByYear = {};
+            inflows.forEach(function(f){
+                const y = f.date.substring(0, 4);
+                inflowByYear[y] = (inflowByYear[y] || 0) + (Number(f.amount) || 0);
+            });
+            historyData.yearlyNetInflow = {};
+            Object.keys(inflowByYear).forEach(function(y){
+                if(Math.abs(inflowByYear[y]) > 1e-9){
+                    historyData.yearlyNetInflow[y] = Number(inflowByYear[y].toFixed(2));
+                }
             });
             saveHistory();
             showToast('设置已保存');

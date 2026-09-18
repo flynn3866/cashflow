@@ -55,10 +55,10 @@
         }
         @layer utilities {
             .card-shadow {
-                box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+                box-shadow: 0 1px 2px rgba(93,72,38,0.04), 0 6px 20px rgba(93,72,38,0.06);
             }
             .card-shadow-soft {
-                box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 10px 24px rgba(0,0,0,0.12);
+                box-shadow: 0 1px 2px rgba(93,72,38,0.04), 0 6px 20px rgba(93,72,38,0.06), 0 14px 36px rgba(93,72,38,0.08);
             }
             .mask-bg {
                 background-color: rgba(0,0,0,0.45);
@@ -147,27 +147,18 @@
                 pointer-events: none;
             }
         }
+        /* 今日登记徽章脉动（置于 Tailwind @layer 外，确保 CDN 不丢弃） */
+        @keyframes todayRegPulse {
+            0%, 100% { box-shadow: 0 2px 8px rgba(16,185,129,0.40); }
+            50% { box-shadow: 0 2px 16px rgba(16,185,129,0.65); }
+        }
+        .today-reg-pulse { animation: todayRegPulse 2.2s ease-in-out infinite; }
     </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
     <div id="pageHold" class="max-w-xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 品牌标题：水滴图标 + 衬线渐变文字 + 装饰线副标题 -->
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center shadow-lg shadow-orange-500/25">
-                    <i class="fa fa-tint text-white text-sm"></i>
-                </div>
-                <h1 class="text-[26px] font-serif font-bold bg-gradient-to-r from-accent via-orange-600 to-orange-800 bg-clip-text text-transparent tracking-wide">细水长流</h1>
-            </div>
-            <div class="mt-2 flex items-center justify-center gap-2">
-                <div class="h-px w-8 bg-gradient-to-r from-transparent to-accent/40"></div>
-                <span class="text-[11px] text-gray-400 tracking-widest">股息持仓 · 价值投资</span>
-                <div class="h-px w-8 bg-gradient-to-l from-transparent to-accent/40"></div>
-            </div>
-        </div>
-
-        <!-- 顶部汇总卡片 - 暖色调渐变，紧凑精致设计 -->
+        <!-- 顶部汇总卡片 - 暖色调渐变，紧凑精致设计（首页直接展示资产卡，品牌区移至"我的"页） -->
         <div class="relative text-white rounded-3xl p-4 shadow-2xl mb-4 overflow-hidden card-shimmer" style="background: linear-gradient(135deg, #C46137 0%, #A04E2C 50%, #7A3A20 100%);">
             <!-- 消息通知入口：右上角铃铛（与其他导航页一致，置于卡片右上角） -->
             <button class="notif-bell absolute right-3 top-3 w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shadow-lg shadow-black/15 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
@@ -888,9 +879,10 @@
         <!-- 分红预计派发时间表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center justify-between cursor-pointer stats-collapse-header" data-target="statsDividendWrap">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 min-w-0">
                     <div class="w-1 h-4 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                    <span class="text-base font-semibold text-gray-800">分红派发日程</span>
+                    <span class="text-base font-semibold text-gray-800 whitespace-nowrap">分红派发日程</span>
+                    <span id="statsTodayRegBadge" class="flex-shrink-0"></span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span id="statsDividendRefreshTime" class="text-[11px] text-gray-400">每日更新 · -- 更新</span>
@@ -968,28 +960,28 @@
             <div class="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div class="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
             <div class="flex items-center gap-3 mb-4 relative z-10">
-                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30"><i class="fa fa-tree"></i></div>
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30"><i class="fa fa-tint"></i></div>
                 <div>
                     <div class="text-lg font-serif font-semibold text-white tracking-wide">细水长流</div>
                     <div class="text-xs text-gray-400">股息持仓记录 · 价值投资</div>
                 </div>
             </div>
-            <div class="grid grid-cols-4 gap-2 text-center relative z-10">
-                <div class="bg-white/5 rounded-xl p-2.5">
+            <div class="grid grid-cols-2 gap-2.5 text-center relative z-10">
+                <div class="bg-white/5 rounded-xl px-3 py-3">
                     <div class="text-[10px] text-gray-400">总资产</div>
-                    <div class="text-sm font-semibold text-white mt-0.5" id="mineTotalAsset">0</div>
+                    <div class="text-[15px] font-bold text-white whitespace-nowrap mt-1 tabular-nums" id="mineTotalAsset">0</div>
                 </div>
-                <div class="bg-white/5 rounded-xl p-2.5">
-                    <div class="text-[10px] text-gray-400">持仓盈亏</div>
-                    <div class="text-sm font-semibold tabular-nums mt-0.5" id="mineTotalPnl">0.00</div>
+                <div class="bg-white/5 rounded-xl px-3 py-3">
+                    <div class="text-[10px] text-gray-400">累计盈亏</div>
+                    <div class="text-[15px] font-bold tabular-nums whitespace-nowrap mt-1" id="mineTotalPnl">0.00</div>
                 </div>
-                <div class="bg-white/5 rounded-xl p-2.5">
+                <div class="bg-white/5 rounded-xl px-3 py-3">
                     <div class="text-[10px] text-gray-400">今年分红</div>
-                    <div class="text-sm font-semibold text-amber-300 mt-0.5" id="mineYearDiv">0</div>
+                    <div class="text-[15px] font-bold text-amber-300 whitespace-nowrap mt-1 tabular-nums" id="mineYearDiv">0</div>
                 </div>
-                <div class="bg-white/5 rounded-xl p-2.5">
+                <div class="bg-white/5 rounded-xl px-3 py-3">
                     <div class="text-[10px] text-gray-400">累计收息</div>
-                    <div class="text-sm font-semibold text-accent mt-0.5" id="mineTotalDiv">0</div>
+                    <div class="text-[15px] font-bold text-accent whitespace-nowrap mt-1 tabular-nums" id="mineTotalDiv">0</div>
                 </div>
             </div>
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/10 relative z-10">
@@ -1022,33 +1014,33 @@
                     <i class="fa fa-chevron-right text-amber-100/50 text-xs"></i>
                 </div>
             </button>
-            <button id="watchBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
-                <span><i class="fa fa-eye mr-2 text-gray-400"></i>关注
-                    <span class="text-[10px] text-gray-400 ml-1" id="mineWatchCount">0只</span>
+            <button id="watchBtn" class="w-full px-5 py-3 text-left text-gray-700 flex justify-between items-center active:bg-gray-50/80 transition-colors">
+                <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-sky-50 flex items-center justify-center flex-shrink-0"><i class="fa fa-eye text-sky-500 text-[13px]"></i></span>关注
+                    <span class="text-[10px] text-gray-400 ml-0.5" id="mineWatchCount">0只</span>
                 </span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
             </button>
-            <button id="notifCenterBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
-                <span><i class="fa fa-bell-o mr-2 text-gray-400"></i>消息中心
+            <button id="notifCenterBtn" class="w-full px-5 py-3 text-left text-gray-700 flex justify-between items-center active:bg-gray-50/80 transition-colors">
+                <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0"><i class="fa fa-bell-o text-amber-500 text-[13px]"></i></span>消息中心
                     <span id="mineNotifBadge" class="hidden ml-1.5 text-[10px] font-bold text-white bg-[#ff4d4f] rounded-full px-1.5 py-0.5 align-middle">0</span>
                 </span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
             </button>
-            <button id="settingsBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
-                <span><i class="fa fa-cog mr-2 text-gray-400"></i>设置</span>
+            <button id="settingsBtn" class="w-full px-5 py-3 text-left text-gray-700 flex justify-between items-center active:bg-gray-50/80 transition-colors">
+                <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0"><i class="fa fa-cog text-slate-500 text-[13px]"></i></span>设置</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
             </button>
-            <button id="importDataBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
-                <span><i class="fa fa-upload mr-2 text-gray-400"></i>导入持仓数据</span>
+            <button id="importDataBtn" class="w-full px-5 py-3 text-left text-gray-700 flex justify-between items-center active:bg-gray-50/80 transition-colors">
+                <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0"><i class="fa fa-upload text-emerald-500 text-[13px]"></i></span>导入持仓数据</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
             </button>
             <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
-            <button id="exportDataBtn" class="w-full px-5 py-2.5 text-left text-gray-700 flex justify-between items-center border-b border-gray-100 active:bg-gray-50">
-                <span><i class="fa fa-download mr-2 text-gray-400"></i>导出持仓数据</span>
+            <button id="exportDataBtn" class="w-full px-5 py-3 text-left text-gray-700 flex justify-between items-center active:bg-gray-50/80 transition-colors">
+                <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0"><i class="fa fa-download text-violet-500 text-[13px]"></i></span>导出持仓数据</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
             </button>
-            <button id="clearDataBtn" class="w-full px-5 py-2.5 text-left text-red-500 flex justify-between items-center active:bg-gray-50">
-                <span><i class="fa fa-trash-o mr-2"></i>清空所有数据</span>
+            <button id="clearDataBtn" class="w-full px-5 py-3 text-left text-red-500 flex justify-between items-center active:bg-red-50/60 transition-colors">
+                <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0"><i class="fa fa-trash-o text-red-400 text-[13px]"></i></span>清空所有数据</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
             </button>
         </div>
@@ -2827,7 +2819,8 @@
                         const sumA = calcSummary();
                         document.querySelector('#analysisTotalAsset').innerText = fmtMoney(Number(sumA.totalMarket));
                         document.querySelector('#analysisYearDiv').innerText = fmtMoney(Number(sumA.totalYearDiv));
-                        const yrA = sumA.annualReturnRate;
+                        // 年化收益率 = 复利年化 XIRR（与我的页"持仓概览"同一口径）
+                        const yrA = calcMineCagr();
                         const retElA = document.querySelector('#analysisYearReturn');
                         if(yrA == null || isNaN(yrA)){
                             retElA.innerText = '--';
@@ -3047,6 +3040,8 @@
                         historyData.yearlyNav = {};
                         historyData.navAlgoVer = 2;
                     }
+                    // 总投入成本持久化缓存：加载/导入后与资金数据同步重算，保证缓存永远一致
+                    recalcTotalInvested();
                 }
             }catch(e){}
         }
@@ -3771,12 +3766,12 @@
             if(key){
                 return '<span class="inline-flex align-middle flex-shrink-0" style="width:' + sz + 'px;height:' + sz + 'px">'
                     + '<img data-logo-key="' + key + '" src="logos/' + key + '.png" alt=""'
-                    + ' style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;object-fit:cover;background:#fff"'
+                    + ' style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;object-fit:cover;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,0.95), 0 1px 3px rgba(0,0,0,0.14), 0 1px 2px rgba(0,0,0,0.08)"'
                     + ' onerror="onLogoErr(this,\'' + key + '\',' + sz + ')">'
                     + '</span>';
             }
             return '<span class="inline-flex items-center justify-center rounded-full bg-orange-50 text-accent font-bold flex-shrink-0"'
-                + ' style="width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz * 0.5) + 'px">' + (escName.charAt(0) || '股') + '</span>';
+                + ' style="width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz * 0.5) + 'px;box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06)">' + (escName.charAt(0) || '股') + '</span>';
         }
         // 本地 img 加载失败：切换为缓存的 base64；缓存没有则异步拉取；拉不到保持隐藏
         function onLogoErr(img, key, sz){
@@ -4433,7 +4428,8 @@
                 const sum = calcSummary();
                 document.querySelector('#analysisTotalAsset').innerText = fmtMoney(Number(sum.totalMarket));
                 document.querySelector('#analysisYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
-                const yr = sum.annualReturnRate;
+                // 年化收益率 = 复利年化 XIRR（与我的页"持仓概览"同一口径，资金按日期折现）
+                const yr = calcMineCagr();
                 const retEl = document.querySelector('#analysisYearReturn');
                 if(yr == null || isNaN(yr)){
                     retEl.innerText = '--';
@@ -4534,6 +4530,23 @@
             });
             flows.sort(function(a, b){ return a.date.localeCompare(b.date); });
             return flows;
+        }
+        // 总投入成本 = 初始投入 + 每笔资金流水（含取出为负）。
+        // 持久化缓存：设置页保存资金投入时重算落库（historyData.totalInvested），
+        // 其他位置直接读缓存，无需重复遍历；缓存缺失（旧数据/导入）时惰性重算并落库
+        function recalcTotalInvested(){
+            let t = 0;
+            getFundFlows().forEach(function(f){ t += Number(f.amount) || 0; });
+            historyData.totalInvested = Number(t.toFixed(2));
+            return historyData.totalInvested;
+        }
+        function getTotalInvested(){
+            if(historyData.totalInvested != null && isFinite(Number(historyData.totalInvested))){
+                return Number(historyData.totalInvested);
+            }
+            recalcTotalInvested();
+            saveHistory();
+            return historyData.totalInvested;
         }
         // ============ 复利年化 CAGR = XIRR（资金投入每笔记录日期，精确到天） ============
         function calcMineCagr(){
@@ -4705,12 +4718,14 @@
             document.querySelector('#mineHKShare').innerText = mS.hkShareNum != null ? mS.hkShareNum : sum.hkShareNum;
             // 更新时间：显示存储快照的真实更新时间
             document.querySelector('#mineUpdateTime').innerText = (mS.time || '--');
-            // 顶部卡片：持仓盈亏（只显示金额，涨红跌绿）
-            const pnl = Number(sum.totalPnl);
+            // 投入成本 = 初始投入 + 每笔资金流水（含取出为负），实时计算（公共函数，与持仓页成本息率同源）
+            const investTotalV = getTotalInvested();
+            // 顶部卡片：累计盈亏 = 总资产 - 投入成本（只显示金额，涨红跌绿）
+            const cumPnl = Number(sum.totalMarket) - investTotalV;
             const pnlEl = document.querySelector('#mineTotalPnl');
             if(pnlEl){
-                pnlEl.innerText = (pnl >= 0 ? '+' : '') + fmtMoney(pnl);
-                pnlEl.className = 'text-sm font-semibold tabular-nums mt-0.5 ' + (pnl >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
+                pnlEl.innerText = (cumPnl >= 0 ? '+' : '') + fmtMoney(cumPnl);
+                pnlEl.className = 'text-[15px] font-bold tabular-nums whitespace-nowrap mt-1 ' + (cumPnl >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
             }
             // 持仓概览：复利年化 CAGR（交易日 6:00/20:00 快照，其余时间读存储；缺失回退实时）
             const cagrEl = document.querySelector('#mineCagr');
@@ -4739,9 +4754,6 @@
                 navGrowthEl.innerText = (g >= 0 ? '+' : '') + g.toFixed(2) + '%';
                 navGrowthEl.className = 'text-[11px] mt-0.5 ' + (g >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]');
             }
-            // 投入成本 = 初始投入 + 每笔资金流水（含取出为负）
-            let investTotalV = 0;
-            getFundFlows().forEach(function(f){ investTotalV += Number(f.amount) || 0; });
             const investCostEl = document.querySelector('#mineInvestCost');
             if(investCostEl) investCostEl.innerText = fmtMoney(investTotalV);
             // 自由现金流 = 当年分红收入（与今年已收同口径；交易日 6:00/20:00 快照，其余时间读存储）
@@ -7119,6 +7131,16 @@
                     }
                 }
                 divList.innerHTML = html;
+                // 今日登记醒目标记：当天有股权登记日的股票数量，显示在折叠条右侧（无登记则隐藏）
+                const todayRegCount = upcoming.filter(function(it){ return it.isTodayRegister; }).length;
+                const regBadge = document.querySelector('#statsTodayRegBadge');
+                if(regBadge){
+                    if(todayRegCount > 0){
+                        regBadge.innerHTML = '<span class="inline-flex items-center gap-1 pl-1.5 pr-2 py-0.5 rounded-full text-[10px] font-bold text-white today-reg-pulse" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 1px 4px rgba(16,185,129,0.45);transform:translateY(-4px)"><span class="w-1 h-1 rounded-full bg-white/90"></span>今日登记 <span class="tabular-nums">' + todayRegCount + '</span></span>';
+                    } else {
+                        regBadge.innerHTML = '';
+                    }
+                }
                 // 分红日程数据来自每日刷新的分红缓存，标记当日首次更新即可
                 markStatsRefresh('dividend', '#statsDividendRefreshTime', '每日更新');
                 // 绑定子部分折叠点击事件
@@ -7838,7 +7860,9 @@
                     totalDivReceived += Number(historyData.yearlyDiv[y]) || 0;
                 }
             });
-            const costYield = totalCost > 0 ? (totalYearDiv / totalCost *100).toFixed(2) : 0;
+            // 成本息率 = 年度总分红 ÷ 总投入成本（公共函数 getTotalInvested，与"我的"页投入成本同源）
+            const investTotal = getTotalInvested();
+            const costYield = investTotal > 0 ? (totalYearDiv / investTotal * 100).toFixed(2) : 0;
             const marketYield = totalMarket > 0 ? (totalYearDiv / totalMarket *100).toFixed(2) : 0;
             const monthDiv = (totalYearDiv /12).toFixed(2);
             const totalPnl = totalMarket - totalCost;
@@ -8961,6 +8985,8 @@
         function hideSettings(){
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
+            // 设置页保存的资金投入/分红等会实时影响我的页概览，返回时立即刷新
+            renderMinePage();
         }
 
         // 保存设置
@@ -9037,6 +9063,8 @@
                     historyData.yearlyNetInflow[y] = Number(inflowByYear[y].toFixed(2));
                 }
             });
+            // 总投入成本持久化缓存：资金投入变化后重算，随本次 saveHistory 一起落库
+            recalcTotalInvested();
             saveHistory();
             showToast('设置已保存');
             // 重新渲染列表，显示"已锁定"标签

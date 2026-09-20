@@ -7760,7 +7760,7 @@
                 const pct = totalMarket > 0 ? mv / totalMarket * 100 : 0;
                 if(pct > maxPct){ maxPct = pct; maxName = it.name; }
                 if(it.marketType === 'HK') hkMkt += mv;
-                const ind = getStockIndustry(it);
+                const ind = getStockRawIndustry(it);
                 indMap[ind] = (indMap[ind] || 0) + mv;
             });
             const inds = Object.keys(indMap).map(function(k){ return indMap[k]; }).sort(function(a,b){ return b - a; });
@@ -7840,11 +7840,11 @@
             list.forEach(function(it){
                 wByStock[String(it.code)] = ((Number(it.nowPrice)||0) * Number(it.count) * (it.marketType === 'HK' ? (hkFxRate || 0.9) : 1)) / totalMk2;
             });
-            // 行业集中度 HHI（按映射后统计大类）
+            // 行业集中度 HHI（评分口径：原始行业）
             const indMk2 = {};
             list.forEach(function(it){
                 const mv = (Number(it.nowPrice)||0) * Number(it.count) * (it.marketType === 'HK' ? (hkFxRate || 0.9) : 1);
-                const indI = getStockIndustry(it);
+                const indI = getStockRawIndustry(it);
                 indMk2[indI] = (indMk2[indI] || 0) + mv;
             });
             let hhiBf = 0;
@@ -7854,7 +7854,7 @@
             list.forEach(function(it){
                 const w = wByStock[String(it.code)] || 0;
                 const s = scMapBf[String(it.code)];
-                const indI = getStockIndustry(it);
+                const indI = getStockRawIndustry(it);
                 const isFin = finInds.some(function(f){ return indI.indexOf(f) >= 0; });
                 const dv = s ? (Number(s.divYears) || 0) : 0;
                 const yp = s ? (Number(s.yieldPct) || 0) : 0;
@@ -7890,11 +7890,11 @@
                 if(s){
                     const clsB = classifyInd(indI, s.name || it.name);
                     const ruleB = IND_RULES[clsB] || IND_RULES.default;
-                    let pePts = 3;
-                    if(s.pe != null && s.pe > 0){ if(s.pe <= ruleB.peFull) pePts = 6; else if(s.pe <= ruleB.peGood) pePts = 4.5; else if(s.pe <= ruleB.peMid) pePts = 3; else pePts = 1.5; }
-                    let pbPts = 0;
-                    if(s.pb != null && s.pb > 0){ if(s.pb <= ruleB.pbGood) pbPts = 0; else pbPts = -1.5; }
-                    rSub += Math.max(0, pePts + pbPts);
+                    // 估值复用个股同一套行业锚点+周期正常化打分（0-10 → 映射回本维度 0-6）
+                    const valB = scoreValuation({ cls: clsB, pe: s.pe, pb: s.pb, yieldPct: yp, normYield: s.normYield || 0, roeLatest: s.roeLatest, isEtf: s.isEtf });
+                    const valPtsB = Math.round(valB.pts * 0.6 * 10) / 10;
+                    rSub += Math.max(0, Math.min(6, valPtsB));
+                    if(valB.cycleTop) rSub -= 1;   // 组合层同步惩罚周期顶部式便宜
                     if(isFin) rSub += 3;
                     else if(s.debt != null){ if(s.debt <= ruleB.debtGood) rSub += 5; else if(s.debt <= ruleB.debtGood + 15) rSub += 3; else rSub += 1; }
                     else rSub += 3;
@@ -8512,6 +8512,16 @@
                 return '其他';
             }
             return getIndustryStat(it.industry || '其他');
+        }
+        // 评分专用：读取接口/配置的原始行业（A股=东财F10原始行业、港股=行业映射配置的行业名），
+        // 不做统计大类映射。评分打分（护城河/行业桶/负债率/金融判断/HHI）一律用原始行业，
+        // 避免映射大类（如"公用事业""能源"）导致关键字失配误判；前端展示才用 getStockIndustry（映射后）
+        function getStockRawIndustry(it){
+            if(!it) return '其他';
+            if(it.marketType === 'HK'){
+                return getHkIndustry(it.code) || '其他';
+            }
+            return it.industry || '其他';
         }
         function addHkIndustryMapRow(){
             const cfg = loadHkIndustryMapCfg();
@@ -11861,18 +11871,25 @@
         }
         function saveStockScores(s){ try{ localStorage.setItem(STOCK_SCORE_KEY, JSON.stringify(s)); }catch(e){} }
         function invalidateStockScores(){ try{ localStorage.removeItem(STOCK_SCORE_KEY); }catch(e){} }
-        // 防御/垄断行业（中国环境）
-        const SCORE_DEF_INDS = ['银行','电力','水务','燃气','电信','通信','石油','石化','煤炭','高速','港口','铁路','保险','核电'];
-        const SCORE_MONO_INDS = ['石油','石化','电信','通信','银行','保险','证券','电力','煤炭','高速','核电','建筑','铁路'];
+        // 防御/垄断行业（中国环境）——匹配"映射统计大类 + 公司名"拼接串：
+        // 既要覆盖映射后的大类名（公用事业→公用、能源、非银金融→非银等），
+        // 也要覆盖公司名特征词（华能水电→水电、中国海油→海油等），否则映射大类后护城河会误判
+        const SCORE_DEF_INDS = ['银行','电力','水电','水务','燃气','电信','通信','石油','石化','煤炭','高速','港口','铁路','保险','核电','公用','能源','机场','环保','白酒','食品','医药','消费','饮料','中药','轨道交通','交运设备','轨交','机车','高铁','动车','城轨','地铁','军工','船舶','通号','中车'];
+        const SCORE_MONO_INDS = ['石油','石化','电信','通信','银行','保险','证券','电力','水电','核电','煤炭','高速','铁路','港口','水务','燃气','公用','能源','非银','海洋石油','海油','天然气','油气','黄金','贵金属','机场','建筑','基建','啤酒','轨道交通','交运设备','轨交','机车','高铁','动车','城轨','地铁','列控','军工','船舶','航发'];
+        // 资源/牌照独占型关键词：水资源、油气资源、矿产资源、特许牌照——护城河不可复制（巴菲特式特许经营权）
+        const SCORE_RES_KEYWORDS = ['水电','海油','海洋石油','核电','神华','长江电力','黄金','稀土','港口','水务','燃气','铁路','高速','移动','电信','联通','石油','煤炭','银行','保险','白酒','茅台','五粮液','中车','通号','高铁','动车','机车','列控','城轨','地铁','轨道交通','军工','船舶','航发'];
         function scoreIndustry(ind){
-            if(!ind) return { stb: 8, mono: 4 };
+            if(!ind) return { stb: 8, mono: 4, res: false };
             let stb = 8, mono = 4;
             if(SCORE_DEF_INDS.some(function(d){ return ind.indexOf(d) >= 0; })) stb = 15;
-            else if(ind.indexOf('白酒') >= 0 || ind.indexOf('食品') >= 0 || ind.indexOf('医药') >= 0 || ind.indexOf('消费') >= 0 || ind.indexOf('饮料') >= 0) stb = 12;
+            else if(ind.indexOf('白酒') >= 0 || ind.indexOf('食品') >= 0 || ind.indexOf('医药') >= 0 || ind.indexOf('消费') >= 0 || ind.indexOf('饮料') >= 0 || ind.indexOf('中药') >= 0) stb = 12;
             else if(ind.indexOf('科技') >= 0 || ind.indexOf('半导体') >= 0 || ind.indexOf('电子') >= 0 || ind.indexOf('互联网') >= 0 || ind.indexOf('软件') >= 0 || ind.indexOf('传媒') >= 0) stb = 5;
             else if(ind.indexOf('证券') >= 0 || ind.indexOf('地产') >= 0 || ind.indexOf('钢铁') >= 0 || ind.indexOf('有色') >= 0 || ind.indexOf('汽车') >= 0) stb = 6;
             if(SCORE_MONO_INDS.some(function(d){ return ind.indexOf(d) >= 0; })) mono = 10;
-            return { stb: stb, mono: mono };
+            // 资源/牌照独占型：即使行业名未命中垄断词（如"公用事业"），公司名里的资源特征词也认定护城河
+            const res = SCORE_RES_KEYWORDS.some(function(k){ return ind.indexOf(k) >= 0; });
+            if(res && mono < 10) mono = 10;
+            return { stb: stb, mono: mono, res: res };
         }
         // 行业分类桶（巴菲特视角·中国环境）：金融高杠杆→负债率高是常态、低PE/PB才有价值；
         // 公用看稳定收息；消费看品牌毛利；周期看股息覆盖与低估值；成长高PE容忍、分红弱不重罚
@@ -11883,7 +11900,7 @@
             if(hay.indexOf('银行') >= 0) return 'fin_bank';
             if(hay.indexOf('保险') >= 0) return 'fin_ins';
             if(hay.indexOf('证券') >= 0 || hay.indexOf('券商') >= 0) return 'fin_sec';
-            if(['电力','水务','燃气','高速','铁路','港口','煤炭','核电','环保','机场','移动','电信','联通'].some(function(k){ return hay.indexOf(k) >= 0; })) return 'util';
+            if(['电力','水务','燃气','高速','铁路','港口','煤炭','核电','环保','机场','移动','电信','联通','轨道交通','轨交','高铁','动车','机车','城轨','地铁','通号','中车','军工','船舶'].some(function(k){ return hay.indexOf(k) >= 0; })) return 'util';
             if(['白酒','食品','饮料','家电','医药','消费','乳业','啤酒','调味','日化'].some(function(k){ return hay.indexOf(k) >= 0; })) return 'consumer';
             if(['石油','石化','有色','钢铁','化工','航运','建材','地产','汽车','机械','船舶'].some(function(k){ return hay.indexOf(k) >= 0; })) return 'cyclical';
             if(['科技','半导体','电子','互联网','软件','传媒','计算机','通信设备'].some(function(k){ return hay.indexOf(k) >= 0; })) return 'growth';
@@ -11893,16 +11910,73 @@
         // grossFull/Good 毛利率阈值、netFull/Good 净利率阈值（金融无毛利率只看净利）；
         // peFull/Good/Mid PE 阈值、pbFull/Good PB 阈值；debtGood 负债率合理上限（金融不提示）；
         // grossNA=true 表示无毛利率概念；fcfNA=true 表示现金流口径特殊中性给分
+        // 估值口径（巴菲特式）：
+        // valMode 'pb' = 以 PB 为主锚（银行/保险/证券：账面价值稳定，盈利波动大，低 PB 才有价值）；
+        //           'pe' = 以 PE 为主锚（公用/消费/成长：盈利稳定可预测，PE 更有意义）；
+        // cyclical=true = 周期资源：当期 PE 在周期顶部会虚低（盈利分母放大）→ 必须用多年平均分红的
+        //          正常化股息率 + 当期 ROE 交叉验证周期位置，避免"周期顶部式低估"陷阱
         const IND_RULES = {
-            fin_bank: { label:'银行', yieldFull:5, yieldGood:4, yieldMid:3, roeFull:14, roeGood:12, roeMid:10, netFull:30, netGood:22, grossNA:true, peFull:7, peGood:10, peMid:14, pbFull:0.8, pbGood:1.0, debtGood:95, fcfNA:true },
-            fin_ins:  { label:'保险', yieldFull:4, yieldGood:3.2, yieldMid:2.5, roeFull:15, roeGood:12, roeMid:9, netFull:9, netGood:6, grossNA:true, peFull:8, peGood:12, peMid:18, pbFull:1.2, pbGood:1.8, debtGood:92, fcfNA:true },
-            fin_sec:  { label:'证券', yieldFull:3.5, yieldGood:2.5, yieldMid:1.5, roeFull:11, roeGood:8, roeMid:6, netFull:30, netGood:20, grossNA:false, peFull:12, peGood:18, peMid:28, pbFull:1.0, pbGood:1.6, debtGood:90, fcfNA:true },
-            util:     { label:'公用事业', yieldFull:5, yieldGood:4, yieldMid:3, roeFull:15, roeGood:12, roeMid:9, grossFull:40, grossGood:25, netFull:22, netGood:15, grossNA:false, peFull:14, peGood:20, peMid:30, pbFull:2.0, pbGood:3.0, debtGood:72, fcfNA:false },
-            consumer: { label:'消费品牌', yieldFull:4, yieldGood:3, yieldMid:2, roeFull:18, roeGood:15, roeMid:10, grossFull:55, grossGood:35, netFull:18, netGood:10, grossNA:false, peFull:20, peGood:28, peMid:45, pbFull:4.0, pbGood:8.0, debtGood:60, fcfNA:false },
-            cyclical: { label:'周期资源', yieldFull:6, yieldGood:5, yieldMid:4, roeFull:16, roeGood:12, roeMid:8, grossFull:35, grossGood:22, netFull:15, netGood:8, grossNA:false, peFull:10, peGood:15, peMid:25, pbFull:1.5, pbGood:2.5, debtGood:62, fcfNA:false },
-            growth:   { label:'成长科技', yieldFull:2.5, yieldGood:1.8, yieldMid:1.2, roeFull:20, roeGood:15, roeMid:10, grossFull:50, grossGood:35, netFull:18, netGood:10, grossNA:false, peFull:25, peGood:40, peMid:65, pbFull:8.0, pbGood:15.0, debtGood:60, fcfNA:false },
-            default:  { label:'综合', yieldFull:5, yieldGood:4, yieldMid:3, roeFull:20, roeGood:15, roeMid:10, grossFull:50, grossGood:30, netFull:15, netGood:10, grossNA:false, peFull:15, peGood:25, peMid:40, pbFull:3.0, pbGood:6.0, debtGood:70, fcfNA:false }
+            fin_bank: { label:'银行', valMode:'pb', cyclical:false, yieldFull:5, yieldGood:4, yieldMid:3, roeFull:14, roeGood:12, roeMid:10, netFull:30, netGood:22, grossNA:true, peFull:7, peGood:10, peMid:14, pbFull:0.8, pbGood:1.0, debtGood:95, fcfNA:true },
+            fin_ins:  { label:'保险', valMode:'pb', cyclical:false, yieldFull:4, yieldGood:3.2, yieldMid:2.5, roeFull:15, roeGood:12, roeMid:9, netFull:9, netGood:6, grossNA:true, peFull:8, peGood:12, peMid:18, pbFull:1.2, pbGood:1.8, debtGood:92, fcfNA:true },
+            fin_sec:  { label:'证券', valMode:'pb', cyclical:false, yieldFull:3.5, yieldGood:2.5, yieldMid:1.5, roeFull:11, roeGood:8, roeMid:6, netFull:30, netGood:20, grossNA:false, peFull:12, peGood:18, peMid:28, pbFull:1.0, pbGood:1.6, debtGood:90, fcfNA:true },
+            util:     { label:'公用事业', valMode:'pe', cyclical:false, yieldFull:5, yieldGood:4, yieldMid:3, roeFull:15, roeGood:12, roeMid:9, grossFull:40, grossGood:25, netFull:22, netGood:15, grossNA:false, peFull:14, peGood:20, peMid:30, pbFull:2.0, pbGood:3.0, debtGood:72, fcfNA:false },
+            consumer: { label:'消费品牌', valMode:'pe', cyclical:false, yieldFull:4, yieldGood:3, yieldMid:2, roeFull:18, roeGood:15, roeMid:10, grossFull:55, grossGood:35, netFull:18, netGood:10, grossNA:false, peFull:20, peGood:28, peMid:45, pbFull:4.0, pbGood:8.0, debtGood:60, fcfNA:false },
+            cyclical: { label:'周期资源', valMode:'pb', cyclical:true, yieldFull:6, yieldGood:5, yieldMid:4, roeFull:16, roeGood:12, roeMid:8, grossFull:35, grossGood:22, netFull:15, netGood:8, grossNA:false, peFull:10, peGood:15, peMid:25, pbFull:1.5, pbGood:2.5, debtGood:62, fcfNA:false },
+            growth:   { label:'成长科技', valMode:'pe', cyclical:false, yieldFull:2.5, yieldGood:1.8, yieldMid:1.2, roeFull:20, roeGood:15, roeMid:10, grossFull:50, grossGood:35, netFull:18, netGood:10, grossNA:false, peFull:25, peGood:40, peMid:65, pbFull:8.0, pbGood:15.0, debtGood:60, fcfNA:false },
+            default:  { label:'综合', valMode:'pe', cyclical:false, yieldFull:5, yieldGood:4, yieldMid:3, roeFull:20, roeGood:15, roeMid:10, grossFull:50, grossGood:30, netFull:15, netGood:10, grossNA:false, peFull:15, peGood:25, peMid:40, pbFull:3.0, pbGood:6.0, debtGood:70, fcfNA:false }
         };
+        // ============ 巴菲特式估值打分（行业锚点 + 周期正常化 + 陷阱修正） ============
+        // 跨行业不能直接比 PE/PB：同样的 PB=1，银行是合理、成长股可能极贵；
+        // 周期股当期 PE 低可能是周期顶部陷阱（盈利虚高），必须用多年平均分红的正常化股息率定位周期位置
+        function scoreValuation(o){
+            const rule = IND_RULES[o.cls] || IND_RULES.default;
+            if(o.isEtf){ return { pts: 3, tag: '中性', note: 'ETF 按整体估值中性给分', cycleTop: false, trapNote: '' }; }
+            const pe = o.pe, pb = o.pb;
+            const havePe = pe != null && pe > 0, havePb = pb != null && pb > 0;
+            const isCyc = !!rule.cyclical;
+            let main = 0, sub = 0, tag = '', note = '';
+            // ---- 主锚分档（6 分） ----
+            if(rule.valMode === 'pb' || (isCyc && havePb)){
+                if(havePb){
+                    if(pb <= rule.pbFull){ main = 6; tag = '低估'; note = 'PB ' + pb.toFixed(2) + '（' + rule.label + '锚点 ≤' + rule.pbFull + ' 低估）'; }
+                    else if(pb <= rule.pbGood){ main = 5; tag = '合理'; note = 'PB ' + pb.toFixed(2) + '（' + rule.label + '合理区间 ≤' + rule.pbGood + '）'; }
+                    else if(pb <= rule.pbGood * 1.6){ main = 3; tag = '偏高'; note = 'PB ' + pb.toFixed(2) + ' 高于' + rule.label + '合理上沿'; }
+                    else { main = 1; tag = '高估'; note = 'PB ' + pb.toFixed(2) + ' 显著高估'; }
+                }
+            } else if(havePe){
+                if(pe <= rule.peFull){ main = 6; tag = '低估'; note = 'PE ' + pe.toFixed(1) + '（' + rule.label + '锚点 ≤' + rule.peFull + ' 低估）'; }
+                else if(pe <= rule.peGood){ main = 5; tag = '合理'; note = 'PE ' + pe.toFixed(1) + '（' + rule.label + '合理区间 ≤' + rule.peGood + '）'; }
+                else if(pe <= rule.peMid){ main = 3; tag = '偏高'; note = 'PE ' + pe.toFixed(1) + ' 高于' + rule.label + '合理上沿'; }
+                else { main = 1; tag = '高估'; note = 'PE ' + pe.toFixed(1) + ' 显著高估'; }
+            }
+            // ---- 副锚修正（最多 2 分） ----
+            if(rule.valMode === 'pb' && havePe){ sub += pe <= rule.peGood ? 1.5 : pe <= rule.peMid ? 0.5 : 0; }
+            if(rule.valMode === 'pe' && havePb){ sub += pb <= rule.pbGood ? 1.5 : pb <= rule.pbGood * 1.6 ? 0.5 : 0; }
+            // ---- 周期股：正常化判断（关键，最多 ±2 分） ----
+            let cycleTop = false, trapNote = '';
+            if(isCyc){
+                const normYield = o.normYield || 0;
+                const yieldPct = o.yieldPct || 0;
+                if(normYield > 0 && yieldPct > 0){
+                    const ratio = yieldPct / normYield;
+                    if(ratio >= 1.5){
+                        cycleTop = true;
+                        tag = '陷阱';
+                        main = Math.max(1, main - 2);
+                        trapNote = '当期股息率 ' + yieldPct.toFixed(2) + '% 达多年平均（' + normYield.toFixed(2) + '%）的 ' + ratio.toFixed(1) + ' 倍，盈利处周期高位——低 PE 可能是周期顶部陷阱，不可按低估买入';
+                    } else if(ratio <= 0.7){
+                        main = Math.min(7, main + 2);
+                        note = (note ? note + '；' : '') + '当期股息率低于多年平均（' + normYield.toFixed(2) + '%），盈利处周期低谷，或为左侧布局机会';
+                    }
+                }
+                // ROE 交叉验证：高 ROE + 低 PE → 周期顶部确认；低 ROE + 高 PE → 周期底部不按"贵"处理
+                if(cycleTop && o.roeLatest != null && o.roeLatest >= 18){ main = Math.max(1, main - 1); }
+                if(o.roeLatest != null && o.roeLatest <= 6 && havePe && pe > rule.peMid){ main = Math.min(7, main + 1); }
+            }
+            if(!havePe && !havePb && !isCyc){ return { pts: 3, tag: '中性', note: '估值数据待行情刷新', cycleTop: cycleTop, trapNote: trapNote }; }
+            const pts = Math.max(0, Math.min(10, main + sub));
+            return { pts: pts, tag: tag, note: note, cycleTop: cycleTop, trapNote: trapNote };
+        }
         // 每股年度分红：A股优先 divCacheMap 近1年均值；否则持仓 divPerShare
         function getStockAnnualDiv(it){
             const code = String(it.code);
@@ -11966,7 +12040,8 @@
             const cost = Number(it.costPrice) || 0;
             const annualDiv = getStockAnnualDiv(it);
             const isEtf = isEtfCode(code);
-            const ind = getStockIndustry(it);
+            const ind = getStockRawIndustry(it);       // 评分口径：接口/配置原始行业（护城河/行业桶/负债率判断用）
+            const indDisplay = getStockIndustry(it);   // 展示口径：映射后统计大类
             const wq = watchQuotes[code] || {};
             const pe = (it.pe != null && !isNaN(it.pe) && it.pe > 0) ? Number(it.pe)
                 : (wq.pe != null && !isNaN(wq.pe) && wq.pe > 0 ? Number(wq.pe) : null);
@@ -12001,11 +12076,21 @@
             const ncOp = f0 ? f0.ncOp : null;
             const finMissing = !fin;
             const indRule = IND_RULES[classifyInd(ind, name)] || IND_RULES.default;
+            // 资产负债率按行业资本结构细分（巴菲特视角：不能一刀切）：
+            // 重资产公用（水电/核电/电力）长期高杠杆是行业常态；油气/煤炭资本开支大、负债中等偏高；
+            // 高速/港口/铁路特许经营负债偏高属正常；消费品牌应保持低杠杆
+            let debtGood = indRule.debtGood;
+            if(!indRule.grossNA){
+                if(/(水电|核电|电力|公用)/.test(ind) && debtGood < 78) debtGood = 78;
+                else if(/(石油|石化|煤炭|能源|油气)/.test(ind)) debtGood = Math.min(debtGood, 65);
+                else if(/(高速|港口|铁路|机场)/.test(ind) && debtGood < 68) debtGood = 68;
+                else if(/(白酒|食品|饮料|医药|消费|家电|啤酒)/.test(ind)) debtGood = Math.min(debtGood, 60);
+            }
             const pros = [], cons = [], tips = [];
             let score = 0;
             // 1. 便宜程度（股息率·现价口径，14）——巴菲特：高股息率是"低估"的信号，但必须
             //    以优质商业模式为前提；单独的高股息不构成买入理由（避免万科/融创式股息率陷阱）
-            let s1 = yieldPct >= indRule.yieldFull ? 14 : yieldPct >= indRule.yieldGood ? 11 : yieldPct >= indRule.yieldMid ? 8 : yieldPct >= indRule.yieldMid / 2 ? 5 : yieldPct > 0 ? 2 : 0;
+            let s1 = yieldPct >= indRule.yieldFull ? 12 : yieldPct >= indRule.yieldGood ? 9 : yieldPct >= indRule.yieldMid ? 7 : yieldPct >= indRule.yieldMid / 2 ? 4 : yieldPct > 0 ? 1.5 : 0;
             const s1Raw = s1;
             score += s1;
             if(yieldPct >= indRule.yieldFull){ pros.push('股息率(现价) ' + yieldPct.toFixed(2) + '%，' + indRule.label + '内极便宜，低估明显'); }
@@ -12013,7 +12098,7 @@
             else if(yieldPct > 0 && yieldPct < indRule.yieldMid / 2){ cons.push('股息率仅 ' + yieldPct.toFixed(2) + '%，价格偏贵，收息性价比弱'); tips.push('关注股息率回升至 ' + indRule.yieldGood + '% 以上（更便宜）的介入机会'); }
             else if(yieldPct <= 0){ cons.push('暂无分红数据，便宜程度无法评估'); tips.push('确认该股是否持续派息，或手动补充每股分红'); }
             // 2. 分红持续性（12）
-            let s2 = divYears >= 5 ? 12 : divYears >= 4 ? 10 : divYears >= 3 ? 7 : divYears >= 2 ? 5 : divYears >= 1 ? 2 : (annualDiv > 0 ? 2 : 1);
+            let s2 = divYears >= 5 ? 10 : divYears >= 4 ? 8 : divYears >= 3 ? 6 : divYears >= 2 ? 4 : divYears >= 1 ? 1.5 : (annualDiv > 0 ? 1.5 : 1);
             score += s2;
             if(divYears >= 4){ pros.push('连续 ' + divYears + ' 年分红记录，持久性佳'); }
             else if(divYears <= 1 && annualDiv > 0){ cons.push('分红历史不足 2 年，持续性待验证'); tips.push('持续观察分红是否逐年稳定'); }
@@ -12023,14 +12108,14 @@
                 const last3 = yearsArr.slice(-3);
                 let ok = true;
                 last3.forEach(function(y){ if(!byYear[y] || byYear[y] <= 0) ok = false; });
-                s3 = ok ? 8 : 5;
+                s3 = ok ? 6 : 4;
                 if(ok){ pros.push('近 ' + Math.min(3, divYears) + ' 年每年派息，分红稳定'); }
                 else { cons.push('近年分红有中断'); tips.push('关注分红中断原因'); }
-            } else if(divYears >= 2){ s3 = 5; }
-            else if(annualDiv > 0){ s3 = 2; }
+            } else if(divYears >= 2){ s3 = 4; }
+            else if(annualDiv > 0){ s3 = 1.5; }
             score += s3;
             // 4. 业务稳定性（8，行业）
-            const indS = isEtf ? { stb: 4, mono: 4 } : scoreIndustry(ind + (name || ''));
+            const indS = isEtf ? { stb: 4, mono: 4, res: false } : scoreIndustry(ind + (name || ''));
             let s4 = isEtf ? 4 : (indS.stb >= 15 ? 8 : indS.stb >= 12 ? 7 : indS.stb >= 8 ? 5 : indS.stb >= 6 ? 4 : 3);
             score += s4;
             if(indS.stb >= 12){ pros.push('属防御性行业（' + (ind || name || '未知') + '），业务稳定性强'); }
@@ -12038,12 +12123,13 @@
             // 5. 商业模式与护城河（22，最高权重——巴菲特最看重"十年后这家公司还在不在"）：
             //    竞争格局（垄断/寡头/牌照）为第一要素；无护城河的高股息率是陷阱
             const brandMoat = gross != null && gross >= 60;
-            let s5 = isEtf ? 6 : (indS.mono >= 10 ? 12 : (brandMoat ? 10 : 6));
+            let s5 = isEtf ? 6 : (indS.mono >= 10 ? (indS.res ? 13 : 12) : (brandMoat ? 10 : 6));
             if(roeLatest != null){ s5 += roeLatest >= indRule.roeFull ? 5 : roeLatest >= indRule.roeGood ? 4 : roeLatest >= indRule.roeMid ? 3 : roeLatest >= indRule.roeMid / 2 ? 2 : 1; }
             if(gross != null){ s5 += gross >= (indRule.grossFull || 50) ? 5 : gross >= (indRule.grossGood || 30) ? 4 : gross >= 15 ? 2 : 1; }
             s5 = Math.min(s5, 22);
             score += s5;
-            if(indS.mono >= 10){ pros.push('央企垄断/寡头竞争格局，护城河深厚——巴菲特式核心壁垒'); }
+            if(indS.res){ pros.push('资源/牌照独占型生意（' + (ind || name || '未知') + '）：' + (ind.indexOf('水电') >= 0 ? '流域水资源独占，后发者无法复制同一资源' : (ind.indexOf('海油') >= 0 || ind.indexOf('海洋石油') >= 0 || ind.indexOf('石油') >= 0) ? '油气资源垄断，勘探开发资质稀缺' : ind.indexOf('核电') >= 0 ? '核电牌照稀缺，选址与技术壁垒高' : ind.indexOf('煤炭') >= 0 || ind.indexOf('神华') >= 0 ? '煤炭资源储量独占，采矿权不可复制' : ind.indexOf('银行') >= 0 ? '牌照+网点网络，特许经营壁垒深' : ind.indexOf('保险') >= 0 ? '牌照+精算/资金实力，特许经营壁垒深' : ind.indexOf('白酒') >= 0 || ind.indexOf('茅台') >= 0 || ind.indexOf('五粮液') >= 0 ? '高端品牌与文化垄断，品牌护城河极深' : ind.indexOf('中车') >= 0 || ind.indexOf('通号') >= 0 || ind.indexOf('高铁') >= 0 || ind.indexOf('动车') >= 0 || ind.indexOf('机车') >= 0 || ind.indexOf('列控') >= 0 || ind.indexOf('城轨') >= 0 || ind.indexOf('轨道交通') >= 0 ? '轨道交通装备/列控系统国内唯一或寡头（国家战略与运行安全属性），后发者无法进入' : ind.indexOf('军工') >= 0 || ind.indexOf('船舶') >= 0 || ind.indexOf('航发') >= 0 ? '国家安全级核心装备，军工特许垄断' : '特许/资源垄断，护城河深厚难以复制') + '——巴菲特式核心壁垒'); }
+            else if(indS.mono >= 10){ pros.push('央企垄断/寡头竞争格局，护城河深厚——巴菲特式核心壁垒'); }
             else if(brandMoat){ pros.push('高毛利品牌型商业模式，品牌护城河强'); }
             else if(indS.mono <= 4 && !isEtf){ cons.push('行业竞争格局分散，护城河有限'); tips.push('优先选择具备垄断/牌照/品牌优势的标的，高股息而无护城河易成陷阱'); }
             if(roeLatest != null && roeLatest >= indRule.roeFull){ pros.push('ROE ' + roeLatest.toFixed(1) + '%，' + indRule.label + '内资本回报卓越'); }
@@ -12051,10 +12137,10 @@
             // 6. 盈利能力与资本回报 ROE（12）——阈值按行业：银行高杠杆下 ROE 标准低于工业/消费
             let s6;
             if(roeLatest != null){
-                s6 = roeLatest >= indRule.roeFull ? 14 : roeLatest >= indRule.roeGood ? 12 : roeLatest >= indRule.roeMid ? 9 : roeLatest >= indRule.roeMid / 2 ? 6 : roeLatest > 0 ? 3 : 0;
+                s6 = roeLatest >= indRule.roeFull ? 12 : roeLatest >= indRule.roeGood ? 10 : roeLatest >= indRule.roeMid ? 8 : roeLatest >= indRule.roeMid / 2 ? 5 : roeLatest > 0 ? 2 : 0;
                 const roeYearsOkN = roeList.filter(function(v){ return v >= indRule.roeGood; }).length;
-                if(roeYearsOkN >= 3 && (debt == null || debt < indRule.debtGood)){
-                    s6 = Math.min(s6 + 2, 14);
+                if(roeYearsOkN >= 3 && (debt == null || debt < debtGood)){
+                    s6 = Math.min(s6 + 2, 12);
                     pros.push('连续 ' + roeYearsOkN + ' 年 ROE≥' + indRule.roeGood + '%' + (debt != null ? '，负债率 ' + debt.toFixed(0) + '% 在' + indRule.label + '合理区间' : '') + '，高质量盈利');
                 } else if(roeLatest < indRule.roeMid){
                     cons.push('ROE 仅 ' + roeLatest.toFixed(1) + '%，低于' + indRule.label + '中位水平');
@@ -12081,41 +12167,40 @@
             } else s7 = 4;
             score += s7;
             // 行业负债率检查：金融类高杠杆为常态不提示，其他行业过高才提示
-            if(debt != null && !indRule.grossNA && !isEtf && debt > indRule.debtGood){
-                cons.push('资产负债率 ' + debt.toFixed(0) + '%，高于' + indRule.label + '合理上限'); tips.push('关注偿债压力与财务稳健性');
+            if(debt != null && !indRule.grossNA && !isEtf && debt > debtGood){
+                cons.push('资产负债率 ' + debt.toFixed(0) + '%，高于' + indRule.label + '合理上限（' + debtGood + '%）'); tips.push('关注偿债压力与财务稳健性');
             }
             // 8. 自由现金流 FCF（5）——金融类现金流口径特殊，中性给分不重罚
             let s8;
             if(indRule.fcfNA){
-                s8 = ((fcff != null && fcff > 0) || (ncOp != null && ncOp > 0)) ? 5 : 4;
+                s8 = ((fcff != null && fcff > 0) || (ncOp != null && ncOp > 0)) ? 4 : 3;
             } else if(fcff != null || ncOp != null){
                 const fcffPos = fcff == null ? true : fcff > 0;
                 const ocPos = ncOp == null ? true : ncOp > 0;
-                s8 = (fcffPos && ocPos) ? 6 : (fcffPos || ocPos) ? 4 : 2;
+                s8 = (fcffPos && ocPos) ? 4 : (fcffPos || ocPos) ? 3 : 1;
                 if(fcffPos && ocPos){ pros.push('自由现金流持续为正，造血能力强'); }
                 else if(!fcffPos){ cons.push('自由现金流为负，资本开支吞噬现金'); tips.push('关注扩张投入的回报周期'); }
-            } else s8 = 4;
+            } else s8 = 3;
             score += s8;
-            // 9. 估值安全边际（4，PE+PB 按行业标准：金融低PE/PB才有价值，消费成长可容忍更高估值）
-            let s9;
-            if(isEtf){ s9 = 2; }
-            else if(pe != null || pb != null){
-                s9 = 0;
-                if(pe != null && pe > 0){
-                    s9 += pe <= indRule.peFull ? 2 : pe <= indRule.peGood ? 2 : pe <= indRule.peMid ? 1 : 1;
-                    if(pe <= indRule.peFull){ pros.push('PE ' + pe.toFixed(1) + ' 倍，' + indRule.label + '内显著低估，安全边际足'); }
-                    else if(pe > indRule.peMid){ cons.push('PE ' + pe.toFixed(1) + ' 倍，高于' + indRule.label + '合理上限'); tips.push('等待估值回归再考虑介入'); }
-                }
-                if(pb != null && pb > 0){
-                    s9 += pb <= indRule.pbFull ? 1 : pb <= indRule.pbGood ? 1 : 1;
-                    if(pb <= indRule.pbFull){ pros.push('PB ' + pb.toFixed(2) + '，资产端被低估'); }
-                }
-                s9 = Math.min(s9, 4);
-            } else {
-                s9 = 2;
-                if(!finMissing && !isEtf){ cons.push('估值数据（PE）待行情刷新'); }
-            }
+            // 9. 估值安全边际（12，巴菲特：安全边际与护城河同等重要）——
+            //    行业主锚（银行/保险/证券看 PB，公用/消费/成长看 PE）+ 周期股正常化判断 + 陷阱修正
+            const histDivVals = divHistVals.slice(0, -1);   // 正常化用：去掉今年，防一次性大分红抬高均值
+            const histPool = histDivVals.length ? histDivVals : divHistVals;
+            const normYieldPct = (histPool && histPool.length && price > 0)
+                ? histPool.slice(-5).reduce(function(a, b){ return a + b; }, 0) / Math.min(5, histPool.length) / price * 100
+                : 0;
+            const valObj = scoreValuation({
+                cls: classifyInd(ind, name), pe: pe, pb: pb,
+                yieldPct: yieldPct, normYield: normYieldPct,
+                roeLatest: roeLatest, isEtf: isEtf
+            });
+            let s9 = valObj.pts;
             score += s9;
+            if(valObj.trapNote){ cons.push(valObj.trapNote); tips.push('周期股应等待盈利与分红回落（正常化股息率 ' + normYieldPct.toFixed(2) + '%）后再评估安全边际'); }
+            else if(valObj.note){
+                if(valObj.tag === '低估'){ pros.push(valObj.note + '，安全边际足，符合巴菲特式买点'); }
+                else if(valObj.tag === '偏高' || valObj.tag === '高估'){ cons.push(valObj.note); tips.push('等待估值回归' + (normYieldPct > 0 ? '（正常化股息率 ' + normYieldPct.toFixed(2) + '% 可作锚）' : '') + '再考虑介入'); }
+            }
             // 10. 分红增长质量（6）——巴菲特：稳定持续增长优于暴涨暴跌；一次性暴增按陷阱处理
             let s10 = 4;
             if(yearsArr.length >= 2){
@@ -12155,7 +12240,7 @@
             else if(score >= 70){ grade = '良好'; gColor = '#f59e0b'; gDesc = '具备良好收息基因'; }
             else if(score >= 60){ grade = '稳健'; gColor = '#f97316'; gDesc = '基本稳健，部分指标待提升'; }
             else { grade = '关注'; gColor = '#ef4444'; gDesc = '收息属性偏弱，谨慎评估'; }
-            return { code: code, market: market, name: name, price: price, cost: cost, annualDiv: annualDiv, yieldPct: yieldPct, costYield: costYield, divYears: divYears, score: score, grade: grade, gColor: gColor, gDesc: gDesc, pros: pros, cons: cons, tips: tips, industry: ind, isEtf: isEtf, watchOnly: !!it.watch, roeLatest: roeLatest, gross: gross, net: net, pe: pe, pb: pb, debt: debt, finMissing: finMissing, roeYearsOk: roeYearsOk, fcff: fcff };
+            return { code: code, market: market, name: name, price: price, cost: cost, annualDiv: annualDiv, yieldPct: yieldPct, costYield: costYield, divYears: divYears, score: score, grade: grade, gColor: gColor, gDesc: gDesc, pros: pros, cons: cons, tips: tips, industry: indDisplay, isEtf: isEtf, watchOnly: !!it.watch, roeLatest: roeLatest, gross: gross, net: net, pe: pe, pb: pb, debt: debt, finMissing: finMissing, roeYearsOk: roeYearsOk, fcff: fcff, normYield: normYieldPct, valTag: valObj.tag, cycleTop: valObj.cycleTop };
         }
         // 计算全部评分（持仓+关注合并去重；关注优先，持仓覆盖补全信息）
         function computeStockScores(){
@@ -12182,12 +12267,14 @@
         }
         // 确保评分快照（与刷新点同键；过期或缺失则重算覆盖存储）
         // force=true 用于财务数据后台补齐完成后强制重建，避免同日快照复用导致新拉到财务不生效
+        // 评分算法版本号：护城河/负债率等评分逻辑升级时递增，强制旧缓存重算（否则手机端一直显示旧点评）
+        const SCORE_SNAP_VERSION = 5;
         function ensureStockScores(force){
             const key = getStatsPeriodKey();
             let snap = loadStockScores();
-            if(!force && snap && snap.period === key && snap.list) return snap;
+            if(!force && snap && snap.period === key && snap.ver === SCORE_SNAP_VERSION && snap.list) return snap;
             const list = computeStockScores();
-            snap = { period: key, time: statsRefreshNow(), date: todayStr(), list: list };
+            snap = { ver: SCORE_SNAP_VERSION, period: key, time: statsRefreshNow(), date: todayStr(), list: list };
             saveStockScores(snap);
             return snap;
         }
@@ -12220,7 +12307,7 @@
             const timeEl = document.querySelector('#stockScoreRefreshTime');
             if(timeEl) timeEl.innerText = snap && snap.time ? ('每日更新 · ' + snap.time + ' 更新') : '';
             const sumEl = document.querySelector('#stockScoreSummary');
-            if(sumEl) sumEl.innerText = '共 ' + list.length + ' 只（持仓与关注合并去重）· 满分 100 · 巴菲特式收息标准（护城河22/ROE14/股息率14·陷阱规避） · 财务数据来自东方财富 F10';
+            if(sumEl) sumEl.innerText = '共 ' + list.length + ' 只（持仓与关注合并去重）· 满分 100 · 巴菲特式标准（护城河22/估值安全边际12/ROE12/股息率12·行业锚点+周期陷阱规避） · 财务数据来自东方财富 F10';
             const listEl = document.querySelector('#stockScoreList');
             const entryCount = document.querySelector('#stockScoreEntryCount');
             if(entryCount) entryCount.innerText = list.length ? (list.length + ' 只') : '';

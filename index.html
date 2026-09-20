@@ -2428,6 +2428,21 @@
         <div class="text-[10px] text-gray-400 mt-3 text-center leading-relaxed">
             港股代码 → 行业名称：新增/编辑港股自动填充行业，存量持仓实时读取最新映射，修改即时重算全部行业统计
         </div>
+
+        <!-- 当前持仓原始行业一览卡 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mt-4">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-4 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full"></div>
+                    <span class="text-[13px] font-semibold text-gray-800">当前持仓原始行业</span>
+                    <span class="text-[10px] text-gray-400" id="holdRawIndCount"></span>
+                </div>
+            </div>
+            <div class="divide-y divide-gray-50" id="holdRawIndList"></div>
+            <div class="px-4 py-3 bg-gray-50/60 text-[10px] leading-relaxed text-gray-400">
+                A股原始行业来自东方财富F10；ETF固定"ETF"；港股按代码行业映射（未配置显示"未配置"）。下方"统计归类"为当前实际归类，橙色的说明未命中映射规则，当前归入【其他】。
+            </div>
+        </div>
     </div>
 
     <!-- 股票评分页面（设置-股票评分：巴菲特式收息标准） -->
@@ -8265,6 +8280,53 @@
                             + '</div>';
                     }).join('');
                 }
+            }
+            // 当前持仓原始行业一览：展示接口返回的原始行业 + 当前统计归类，未映射高亮提示
+            const rawList = document.querySelector('#holdRawIndList');
+            if(rawList){
+                const items = (holdDataList || []).map(function(it){
+                    let rawInd, statInd, isHkMap = false;
+                    if(it.marketType === 'HK'){
+                        const hk = getHkIndustry(it.code);
+                        isHkMap = true;
+                        rawInd = hk ? ('港股映射：' + hk) : '未配置';
+                        statInd = hk || '其他';
+                    } else {
+                        rawInd = it.industry || '其他';
+                        statInd = getStockIndustry(it);
+                    }
+                    return { it: it, rawInd: rawInd, statInd: statInd, isHkMap: isHkMap };
+                });
+                items.sort(function(a, b){
+                    const ao = a.statInd === '其他' ? 0 : 1;
+                    const bo = b.statInd === '其他' ? 0 : 1;
+                    if(ao !== bo) return ao - bo;
+                    return String(a.statInd).localeCompare(String(b.statInd), 'zh');
+                });
+                const cntEl = document.querySelector('#holdRawIndCount');
+                if(cntEl){
+                    const unmappedN = items.filter(function(x){ return x.statInd === '其他'; }).length;
+                    cntEl.innerText = items.length + ' 只' + (unmappedN ? ' · ' + unmappedN + ' 只未映射' : '');
+                }
+                rawList.innerHTML = items.map(function(x){
+                    const it = x.it;
+                    const isHk = it.marketType === 'HK';
+                    const isEtf = isEtfCode(it.code);
+                    const tagTxt = isEtf ? 'ETF' : (isHk ? '港' : 'A');
+                    const tagCls = isEtf ? 'bg-indigo-50 text-indigo-500' : (isHk ? 'bg-blue-50 text-blue-600' : 'bg-accent/10 text-accent');
+                    const unmapped = x.statInd === '其他';
+                    return '<div class="px-4 py-2.5 flex items-center gap-2">'
+                        + '<span class="w-6 h-6 rounded-md ' + tagCls + ' flex items-center justify-center text-[10px] font-semibold flex-shrink-0">' + tagTxt + '</span>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="text-[13px] font-medium text-gray-800 truncate">' + mapEsc(it.name) + ' <span class="text-[10px] text-gray-400 font-normal">' + mapEsc(it.code) + '</span></div>'
+                        + '<div class="text-[10px] text-gray-400 mt-0.5 truncate">' + (x.isHkMap ? '港股行业映射 · ' : '接口原始行业 · ') + mapEsc(x.rawInd) + '</div>'
+                        + '</div>'
+                        + '<div class="flex-shrink-0 text-right">'
+                        + '<div class="text-[12px] font-semibold ' + (unmapped ? 'text-orange-500' : 'text-gray-700') + '">' + mapEsc(x.statInd) + '</div>'
+                        + (unmapped ? '<div class="text-[9px] text-orange-400 mt-0.5">未配置 → 其他</div>' : '')
+                        + '</div>'
+                        + '</div>';
+                }).join('');
             }
         }
         function industryMapEdit(i, field, val){

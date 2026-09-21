@@ -448,6 +448,17 @@
                     <input type="number" id="customTax" step="0.1" min="0" max="100" class="hidden w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 mt-2.5 focus:border-accent focus:outline-none" placeholder="输入税率，如 15">
                     <div class="mt-2 text-xs text-gray-400 leading-relaxed">港股通H股默认20%；红筹股选28%；香港券商直投H股选10%；港股直投本地股选0%</div>
                 </div>
+                <!-- 分红到账记录（仅港股显示）：手动录入每笔到账，按日期归属年度并自动累加 -->
+                <div id="hkDivRecordsGroup" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">分红到账记录 <span class="text-xs text-gray-400 font-normal">（仅港股 · 按到账日期归属年度）</span></label>
+                    <div id="hkDivRecordsList" class="space-y-1.5"></div>
+                    <div class="flex gap-2 mt-2">
+                        <input type="date" id="hkDivDate" class="w-[124px] border-2 border-gray-200 rounded-xl px-2.5 py-2 text-xs focus:border-accent focus:outline-none">
+                        <input type="number" step="0.0001" id="hkDivPer" placeholder="每股分红(人民币)" class="flex-1 min-w-0 border-2 border-gray-200 rounded-xl px-3 py-2 text-xs focus:border-accent focus:outline-none">
+                        <button type="button" onclick="addHkDivRecord()" class="px-3 py-2 rounded-xl bg-accent text-white text-xs font-medium shrink-0 active:scale-95 transition-transform">添加</button>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-400 leading-relaxed">新一年分红到账后在此添加一笔（到账日期 + 每股分红），系统按日期自动归属年份并累加到「今年已收 / 每年分红收入 / 行业分红」，已保存的历史记录不会被后续持股变动影响。未录入任何记录时，按「每股分红 × 持股数」估算当年。</div>
+                </div>
                 <!-- 操作按钮 -->
                 <div class="pt-4 flex gap-3">
                     <button type="button" id="cancelBtn" class="flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 transition-colors">取消</button>
@@ -1187,6 +1198,20 @@
             </div>
             <div id="industryBfDetail" class="px-4 py-3 border-b border-purple-100" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff)"></div>
             <div id="industrySummaryBody" class="px-4 py-3.5 text-[11px] leading-relaxed text-gray-600">
+                正在计算…
+            </div>
+        </div>
+        <!-- 巴菲特组合调优方案（行业资产分布内，巴菲特亲手调优思路代码化） -->
+        <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
+            <div class="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-sm shadow-purple-500/30 flex-shrink-0"><i class="fa fa-diamond text-white text-[14px]"></i></div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-[14px] font-semibold text-gray-800">巴菲特组合调优方案 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle ml-1" id="industryBuffettLevel"></span></div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">收益最大化 · 现金流最大化 · 分红稳定性与生意长久性</div>
+                </div>
+                <span class="text-[10px] text-purple-400 font-medium whitespace-nowrap"><i class="fa fa-balance-scale text-[10px]"></i> 行业占比对比</span>
+            </div>
+            <div id="industryBuffettBody" class="px-4 py-3.5">
                 正在计算…
             </div>
         </div>
@@ -2521,6 +2546,7 @@
         const divTaxGroupEl = document.querySelector('#divTaxGroup');
         const customTaxEl = document.querySelector('#customTax');
         let editingId = null;       // 当前编辑中的持仓id，null 表示新增模式
+        let hkDivDraft = [];        // 港股分红到账记录草稿（编辑时从 item.divPaidRecords 加载，保存时写入）
         let activeFilter = 'all';   // 列表筛选：all / A / HK
         let holdViewMode = localStorage.getItem('holdViewMode') || 'card';  // 持仓展示模式：card / list
         let divTaxRate = 0.2;       // 港股当前税率（小数）
@@ -2784,10 +2810,47 @@
             customTaxEl.classList.toggle('hidden', !divTaxCustom);
         }
 
+        // 港股分红到账记录：渲染列表 / 添加 / 删除（草稿，保存时写入持仓）
+        function renderHkDivList(){
+            const listEl = document.querySelector('#hkDivRecordsList');
+            if(!listEl) return;
+            const curCount = Number(document.querySelector('#stockCount') ? document.querySelector('#stockCount').value : 0) || 0;
+            if(!hkDivDraft.length){
+                listEl.innerHTML = '<div class="text-xs text-gray-400 bg-gray-50 rounded-xl px-3 py-2">暂无记录：新分红到账时在此添加一笔（到账日期 + 每股分红）</div>';
+                return;
+            }
+            listEl.innerHTML = hkDivDraft.map(function(r, i){
+                const amt = (Number(r.perShare) || 0) * curCount;
+                return '<div class="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">'
+                    + '<span class="text-xs font-medium text-gray-700 tabular-nums w-[96px]">' + r.exDate + '</span>'
+                    + '<span class="text-xs text-gray-500 tabular-nums flex-1 min-w-0">每股 ' + Number(r.perShare).toFixed(4) + ' 元' + (curCount > 0 ? ' × ' + curCount + ' 股 = ' + amt.toFixed(2) + ' 元' : '') + '</span>'
+                    + '<button type="button" onclick="delHkDivRecord(' + i + ')" class="text-gray-300 hover:text-[#ff4d4f] text-xs px-1.5 py-1 shrink-0"><i class="fa fa-times"></i></button>'
+                    + '</div>';
+            }).join('');
+        }
+        function addHkDivRecord(){
+            const d = document.querySelector('#hkDivDate').value;
+            const per = Number(document.querySelector('#hkDivPer').value);
+            if(!d){ showToast('请选择到账日期'); return; }
+            if(!(per > 0)){ showToast('请输入有效的每股分红'); return; }
+            if(hkDivDraft.some(function(r){ return r.exDate === d; })){ showToast('该日期已存在记录'); return; }
+            hkDivDraft.push({ exDate: d, perShare: per });
+            document.querySelector('#hkDivPer').value = '';
+            renderHkDivList();
+        }
+        function delHkDivRecord(i){
+            hkDivDraft.splice(i, 1);
+            renderHkDivList();
+        }
         // 根据市场类型显示/隐藏港股税率区块，并更新每股分红标签
         function syncHkTaxUI(){
             const isHk = marketTypeEl.value === 'HK';
             hkTaxGroupEl.classList.toggle('hidden', !isHk);
+            const recEl = document.querySelector('#hkDivRecordsGroup');
+            if(recEl){
+                recEl.classList.toggle('hidden', !isHk);
+                if(isHk) renderHkDivList();
+            }
             divPerShareLabelEl.innerHTML = isHk
                 ? '每股分红（人民币/股）<span class="text-xs text-gray-400">（近一年 · 手动填写）</span>'
                 : '每股分红（元/股）<span class="text-xs text-gray-400">（近一年 · 自动获取）</span>';
@@ -2855,6 +2918,9 @@
             divTaxRate = 0.2;
             divTaxCustom = false;
             setTaxActive();
+            // 清空港股分红到账记录草稿
+            hkDivDraft = [];
+            renderHkDivList();
             syncHkTaxUI();
         }
 
@@ -4002,10 +4068,16 @@
                         const per = getDivPerShareInYear(it, curY);
                         if(per > 0) curYearDiv += per * count;
                     } else {
-                        // 港股：无免费历史数据源，以当前每股分红(扣税后)计入当前年
-                        let per = Number(it.divPerShare) || 0;
-                        if(it.divTaxRate != null && Number(it.divTaxRate) > 0) per = per * (1 - Number(it.divTaxRate));
-                        curYearDiv += per * count;
+                        // 港股：优先按手动到账流水归属当年；无流水时以每股分红(扣税后)估算计入当年
+                        const recsY = (it.divPaidRecords || []).filter(function(r){ return r.exDate && String(r.exDate).substring(0, 4) === String(curY); });
+                        const recSumY = recsY.reduce(function(a, r){ return a + (Number(r.amount) || 0); }, 0);
+                        if(recSumY > 0){
+                            curYearDiv += recSumY;
+                        } else {
+                            let per = Number(it.divPerShare) || 0;
+                            if(it.divTaxRate != null && Number(it.divTaxRate) > 0) per = per * (1 - Number(it.divTaxRate));
+                            curYearDiv += per * count;
+                        }
                     }
                 });
                 // 跳过手动编辑的年份，不覆盖用户输入
@@ -4026,10 +4098,21 @@
                         if(per > 0) byYear[y] += per * count;
                     }
                 } else {
-                    // 港股：无免费历史数据源，以当前每股分红(扣税后)计入当前年
-                    let per = Number(it.divPerShare) || 0;
-                    if(it.divTaxRate != null && Number(it.divTaxRate) > 0) per = per * (1 - Number(it.divTaxRate));
-                    byYear[curY] += per * count;
+                    // 港股：优先按手动到账流水归属各年份；无任何流水时以每股分红(扣税后)估算计入当前年
+                    const recs = it.divPaidRecords || [];
+                    let anyRec = false;
+                    recs.forEach(function(r){
+                        const yr = r.exDate ? String(r.exDate).substring(0, 4) : '';
+                        if(/^\d{4}$/.test(yr) && Number(yr) >= startY && Number(yr) <= curY){
+                            byYear[yr] += Number(r.amount) || 0;
+                            anyRec = true;
+                        }
+                    });
+                    if(!anyRec){
+                        let per = Number(it.divPerShare) || 0;
+                        if(it.divTaxRate != null && Number(it.divTaxRate) > 0) per = per * (1 - Number(it.divTaxRate));
+                        byYear[curY] += per * count;
+                    }
                 }
             });
             Object.keys(byYear).forEach(function(y){
@@ -4186,15 +4269,19 @@
                 ? '当前股价(港币) <span class="text-xs text-gray-400">（自动获取）</span>'
                 : '当前股价(元) <span class="text-xs text-gray-400">（自动获取）</span>';
             costLabelEl.innerText = item.marketType === 'HK' ? '买入成本价(港币)' : '买入成本价(元)';
-            // 港股税率回填
+            // 港股税率回填 + 分红到账记录加载
             if(item.marketType === 'HK'){
                 divTaxRate = item.divTaxRate != null ? Number(item.divTaxRate) : 0.2;
                 divTaxCustom = !(Math.abs(divTaxRate-0.2)<1e-9 || Math.abs(divTaxRate-0.28)<1e-9 || Math.abs(divTaxRate-0.1)<1e-9 || Math.abs(divTaxRate-0)<1e-9);
                 setTaxActive();
+                hkDivDraft = (item.divPaidRecords || []).map(function(r){ return { exDate: r.exDate, perShare: r.perShare }; });
+                renderHkDivList();
             } else {
                 divTaxRate = 0.2;
                 divTaxCustom = false;
                 setTaxActive();
+                hkDivDraft = [];
+                renderHkDivList();
             }
             setModalMode(true);
             // 打开编辑页面（隐藏持仓页）
@@ -4672,6 +4759,10 @@
                     item.industry = editInd;
                     if(item.marketType === 'HK'){
                         item.divTaxRate = divTaxRate;
+                        item.divPaidRecords = hkDivDraft.map(function(r){
+                            return { exDate: r.exDate, perShare: r.perShare, amount: Number((Number(r.perShare) * (Number(item.count) || 0)).toFixed(2)), manual: true };
+                        });
+                        computeYearlyDiv();
                     }
                     saveLocal();
                 }
@@ -4722,6 +4813,10 @@
                 existing.processedDivDates = [];
                 if(marketType === 'HK'){
                     existing.divTaxRate = divTaxRate;
+                    existing.divPaidRecords = hkDivDraft.map(function(r){
+                        return { exDate: r.exDate, perShare: r.perShare, amount: Number((Number(r.perShare) * (Number(existing.count) || 0)).toFixed(2)), manual: true };
+                    });
+                    computeYearlyDiv();
                 }
                 saveLocal();
                 closeModal();
@@ -4757,9 +4852,13 @@
                 transactions: [{ t: Date.now(), delta: count, price: costPrice }],
                 createdAt: new Date().toISOString()
             }
-            // 港股：保存分红税率（默认按所选税率扣税）
+            // 港股：保存分红税率（默认按所选税率扣税）+ 分红到账记录
             if(marketType === 'HK'){
                 newItem.divTaxRate = divTaxRate;
+                newItem.divPaidRecords = hkDivDraft.map(function(r){
+                    return { exDate: r.exDate, perShare: r.perShare, amount: Number((Number(r.perShare) * (Number(count) || 0)).toFixed(2)), manual: true };
+                });
+                computeYearlyDiv();
             }
             holdDataList.push(newItem);
             saveLocal();
@@ -7515,10 +7614,15 @@
             const divRankList = [];
             holdDataList.forEach(function(it){
                 let y = 0;
-                (it.exDivRecords || []).forEach(function(r){
-                    const d = String(r.date || '');
-                    if(d.indexOf(reportYStr + '-') === 0) y += Number(r.amount) || 0;
-                });
+                if(isCurYear){
+                    // 今年：与"今年已收"同口径（设置手动基准 + 固化到账记录 + 港股估算，按股分解）
+                    y = getCurYearReceivedByStock(it);
+                } else {
+                    (it.exDivRecords || []).forEach(function(r){
+                        const d = String(r.date || '');
+                        if(d.indexOf(reportYStr + '-') === 0) y += Number(r.amount) || 0;
+                    });
+                }
                 if(y > 0) divRankList.push({ item: it, amount: y });
             });
             divRankList.sort(function(a, b){ return b.amount - a.amount; });
@@ -7827,6 +7931,18 @@
             else if(top3IndPct < 70){ vScore += 5; cons.push('行业集中度偏高（前三大行业 ' + top3IndPct.toFixed(1) + '%）'); tips.push('关注行业周期，适当跨行业配置'); }
             else { vScore += 2; cons.push('行业高度集中（前三大行业 ' + top3IndPct.toFixed(1) + '%）'); tips.push('增加不同行业标的，降低行业周期冲击'); }
             if(hkPct > 50 && n > 0){ cons.push('港股市值占比 ' + hkPct.toFixed(1) + '%，需留意汇率波动影响'); tips.push('港股占比过高时可考虑 A 股高息标的对冲'); }
+            // 行业下坡期预警：白酒/啤酒/饮料/食品等下行行业持仓占比过高时提示（景气拐点比静态估值重要）
+            let downIndPct = 0;
+            list.forEach(function(it){
+                const ri = getStockRawIndustry(it);
+                if(/(白酒|啤酒|饮料|食品)/.test(ri)){
+                    downIndPct += (Number(it.nowPrice)||0) * Number(it.count) * (it.marketType === 'HK' ? (hkFxRate || 0.9) : 1);
+                }
+            });
+            if(totalMarket > 0){
+                const dp = downIndPct / totalMarket * 100;
+                if(dp > 30){ cons.push('酒类/消费（行业下坡期）市值占比 ' + dp.toFixed(1) + '%，下行行业集中度风险'); tips.push('关注消费景气拐点，或适度降低下行行业仓位'); }
+            }
             // ---- 【伯克希尔风格组合评估】巴菲特组合加权评分（参考巴菲特组合评分原则：五维按市值加权） ----
             // 管理层维度（代码难以评估）按用户要求去掉，用现有可计算指标替代：留存收益回报(ROE)、股东回报倾向(分红历史)、财务健康(负债率)
             let scSnap = null;
@@ -7931,7 +8047,7 @@
             let maxWt = 0;
             list.forEach(function(it){ maxWt = Math.max(maxWt, wByStock[String(it.code)] || 0); });
             let liqConcBf = 5;
-            if(maxWt <= 0.15) liqConcBf = 5; else if(maxWt <= 0.2) liqConcBf = 4; else if(maxWt <= 0.3) liqConcBf = 2.5; else liqConcBf = 1;
+            if(maxWt <= 0.2) liqConcBf = 5; else if(maxWt <= 0.3) liqConcBf = 4; else if(maxWt <= 0.4) liqConcBf = 2.5; else liqConcBf = 1;
             let aMktPct = 0;
             list.forEach(function(it){ if(it.marketType !== 'HK') aMktPct += (wByStock[String(it.code)] || 0); });
             let liqMktBf = 2;
@@ -7954,8 +8070,8 @@
             else if(bfDims.risk < 10){ bfCons.push('安全边际不足（' + bfDims.risk.toFixed(1) + '/20）：估值或集中度风险偏高'); bfTips.push('避免估值高位加仓，控制单一行业占比'); }
             if(bfDims.capital >= 12) bfPros.push('资本配置稳健（' + bfDims.capital.toFixed(1) + '/15）：高 ROE、低杠杆，持续回馈股东');
             if(bfDims.liquid >= 8) bfPros.push('持仓结构均衡（' + bfDims.liquid.toFixed(1) + '/10）：个股与市场分散度合理，流动充足');
-            else if(bfDims.liquid < 5){ bfCons.push('持仓集中度偏高（' + bfDims.liquid.toFixed(1) + '/10）'); bfTips.push('单只个股尽量不超过 20%，避免过度集中'); }
-            if(maxWt > 0.2){ bfCons.push('个股仓位 ' + (maxWt * 100).toFixed(1) + '% 超过巴菲特 20% 上限'); bfTips.push('对超限个股分批降仓，控制永久性亏损风险'); }
+            else if(bfDims.liquid < 5){ bfCons.push('持仓集中度偏高（' + bfDims.liquid.toFixed(1) + '/10）'); bfTips.push('单只个股尽量不超过 30%，避免过度集中'); }
+            if(maxWt > 0.3){ bfCons.push('个股仓位 ' + (maxWt * 100).toFixed(1) + '% 超过组合单票 30% 上限'); bfTips.push('对超限个股分批降仓，控制单一持仓风险'); }
             if(hhiBf >= 0.22){
                 const topIndBf = Object.keys(indMk2).reduce(function(a, k){ return indMk2[k] > (a ? indMk2[a] : -1) ? k : a; }, null) || '';
                 bfCons.push('行业集中度偏高（HHI ' + hhiBf.toFixed(3) + '，最大行业 ' + topIndBf + '）'); bfTips.push('跨行业分散配置，降低单一行业周期冲击');
@@ -7963,7 +8079,61 @@
             if(hkPct > 50){ bfCons.push('港股市值占比 ' + hkPct.toFixed(1) + '%，需关注汇率与分红预扣税风险'); bfTips.push('港股占比过高时可配置 A 股高息标的对冲'); }
             if(divRate < 4 && n > 0){ bfCons.push('组合股息率仅 ' + divRate.toFixed(2) + '%，低于 4% 收息门槛'); bfTips.push('关注股息率回升至 4% 以上的买入机会'); }
             if(bfScore >= 85) bfPros.push('综合评分 ' + bfScore + ' 分，符合伯克希尔长期收息标准，建议长期持有不动');
-            const bfObj = { score: bfScore, grade: bfGrade, gradeColor: bfGradeColor, gradeDesc: bfGradeDesc, pros: bfPros, cons: bfCons, tips: bfTips, dims: bfDims, hhi: hhiBf, maxW: maxWt, divRate: divRate };
+            // ---- 伯克希尔顾问层：分项扣分明细 + 优化配置建议 + 抗风险画像（巴菲特优化配置能力） ----
+            const isDefInd = function(x){ return /(银行|保险|公用|电力|水电|核电|水务|燃气|高速|铁路|港口|机场|电信|通信|移动|白酒|食品|饮料|消费|啤酒|中药|医药)/.test(x); };
+            const isResInd = function(x){ return /(石油|石化|煤炭|能源|油气|黄金|贵金属)/.test(x); };
+            const isCycInd = function(x){ return /(有色|钢铁|化工|建材|地产|汽车|机械|航运|船舶|证券|游戏|传媒)/.test(x); };
+            let defMkt2 = 0, resMkt2 = 0, cycMkt2 = 0;
+            const bfWeak = [];
+            list.forEach(function(it){
+                const s2w = scMapBf[String(it.code)];
+                const indW = getStockRawIndustry(it);
+                const mvW = (Number(it.nowPrice)||0) * Number(it.count) * (it.marketType === 'HK' ? (hkFxRate || 0.9) : 1);
+                const wPct = totalMarket > 0 ? mvW / totalMarket * 100 : 0;
+                if(isDefInd(indW)) defMkt2 += mvW; else if(isResInd(indW)) resMkt2 += mvW; else if(isCycInd(indW)) cycMkt2 += mvW;
+                if(!s2w) return;
+                const monoW = scoreIndustry(indW).mono;
+                const reasons = [];
+                if(monoW <= 4) reasons.push('护城河弱（竞争分散）');
+                if(s2w.roeLatest != null && s2w.roeLatest < 8) reasons.push('ROE ' + s2w.roeLatest.toFixed(1) + '% 偏低');
+                if(s2w.fcff != null && s2w.fcff <= 0) reasons.push('自由现金流为负');
+                if(s2w.yieldPct > 12) reasons.push('股息率 ' + s2w.yieldPct.toFixed(1) + '% 异常高（高息陷阱风险）');
+                if(s2w.divYears <= 2 && s2w.divYears > 0) reasons.push('分红历史仅 ' + s2w.divYears + ' 年');
+                if(s2w.cycleTop) reasons.push('周期顶部式便宜');
+                if(s2w.valTag === '高估') reasons.push('估值高估');
+                if(reasons.length) bfWeak.push({ name: it.name, w: wPct, mono: monoW, reasons: reasons });
+            });
+            bfWeak.sort(function(a, b){ return b.w - a.w; });
+            const defPct = totalMarket > 0 ? defMkt2 / totalMarket * 100 : 0;
+            const resPct = totalMarket > 0 ? resMkt2 / totalMarket * 100 : 0;
+            const cycPct = totalMarket > 0 ? cycMkt2 / totalMarket * 100 : 0;
+            const bfDetails = [
+                { name: '底层生意', s: bfDims.quality, f: 30, reasons: bfWeak.filter(function(x){ return x.mono <= 4 || /ROE|现金流/.test(x.reasons.join(' ')); }).slice(0, 3).map(function(x){ return x.name + '（占 ' + x.w.toFixed(1) + '%）：' + x.reasons.join('、'); }) },
+                { name: '分红可持续', s: bfDims.div, f: 25, reasons: bfWeak.filter(function(x){ return /高息|历史/.test(x.reasons.join(' ')); }).slice(0, 3).map(function(x){ return x.name + '：' + x.reasons.join('、'); }) },
+                { name: '安全边际', s: bfDims.risk, f: 20, reasons: bfWeak.filter(function(x){ return /顶部|高估|负债/.test(x.reasons.join(' ')); }).slice(0, 3).map(function(x){ return x.name + '（占 ' + x.w.toFixed(1) + '%）：' + x.reasons.join('、'); }) },
+                { name: '资本配置', s: bfDims.capital, f: 15, reasons: bfWeak.filter(function(x){ return /ROE|高息/.test(x.reasons.join(' ')); }).slice(0, 3).map(function(x){ return x.name + '：' + x.reasons.join('、'); }) },
+                { name: '流动性', s: bfDims.liquid, f: 10, reasons: (maxWt > 0.3 ? ['最大持仓 ' + maxName + ' ' + (maxWt * 100).toFixed(1) + '% 超 30% 上限'] : (hhiBf >= 0.22 ? ['行业集中 HHI ' + hhiBf.toFixed(3) + ' 偏高'] : [])) }
+            ];
+            const bfAdvices = [];
+            if(maxWt > 0.3) bfAdvices.push({ tag: '降仓', issue: '单票集中度超限', action: '将 ' + maxName + ' 从 ' + (maxWt * 100).toFixed(1) + '% 分批降至 ≤30%', effect: '降低单一标的大幅回撤风险' });
+            if(hhiBf >= 0.22){
+                const topIndBf2 = Object.keys(indMk2).reduce(function(a, k){ return indMk2[k] > (a ? indMk2[a] : -1) ? k : a; }, null) || '';
+                bfAdvices.push({ tag: '分散', issue: '行业集中度偏高', action: '将最大行业「' + topIndBf2 + '」占比降至 ≤35%、前三大行业 ≤65%', effect: '降低行业周期冲击，提升稳定性' });
+            }
+            if(divRate < 4 && n > 0) bfAdvices.push({ tag: '增配', issue: '收息效率不足', action: '增配股息率 ≥5% 的公用/银行/能源高息标的', effect: '提升自由现金流收入，向 4%+ 组合门槛靠拢' });
+            if(hkPct > 50) bfAdvices.push({ tag: '对冲', issue: '港股占比过高', action: '港股降至 ≤50%，或增配 A 股高息标的', effect: '减少汇率波动与红利预扣税侵蚀' });
+            if(totalMarket > 0 && downIndPct / totalMarket * 100 > 30) bfAdvices.push({ tag: '调仓', issue: '下坡行业集中', action: '酒类/消费占比降至 ≤20%', effect: '规避行业下行期的盈利缩水' });
+            const weakTop = bfWeak.filter(function(x){ return x.w >= 5 && x.mono <= 4; });
+            if(weakTop.length) bfAdvices.push({ tag: '替换', issue: '护城河薄弱标的', action: '将 ' + weakTop.map(function(x){ return x.name; }).join('、') + '（合计占 ' + weakTop.reduce(function(a, x){ return a + x.w; }, 0).toFixed(1) + '%）逐步替换为垄断/资源/公用型标的', effect: '提升生意质量与抗衰退能力' });
+            const cycTopN = bfWeak.filter(function(x){ return /顶部/.test(x.reasons.join(' ')); });
+            if(cycTopN.length) bfAdvices.push({ tag: '止盈', issue: '周期顶部持仓', action: '对 ' + cycTopN.map(function(x){ return x.name; }).join('、') + ' 逢高分批止盈', effect: '锁定周期高位收益，等盈利回落再评估' });
+            if(defPct < 50 && n > 0) bfAdvices.push({ tag: '增配', issue: '抗衰退不足', action: '防御型资产（公用/银行/必需消费/电信）占比仅 ' + defPct.toFixed(1) + '%，建议提升至 ≥60%', effect: '增强熊市/衰退期现金流韧性' });
+            const riskRating = defPct >= 60 ? { rating: '强', color: '#10b981' } : defPct >= 45 ? { rating: '中', color: '#d4a017' } : { rating: '弱', color: '#ef4444' };
+            let riskNote = '防御型占比 ' + defPct.toFixed(1) + '%' + (defPct >= 60 ? '：需求刚性+稳定现金流，抗衰退能力强' : defPct >= 45 ? '：基础尚可，可适度增配公用/银行提升韧性' : '：偏低，衰退期现金流与回撤压力较大');
+            if(resPct > 20) riskNote += '；资源型 ' + resPct.toFixed(1) + '% 提供抗通胀/地缘对冲';
+            if(hkPct > 30) riskNote += '；港股 ' + hkPct.toFixed(1) + '% 需关注汇率与预扣税';
+            const riskProfile = { defPct: defPct, resPct: resPct, cycPct: cycPct, hkPct: hkPct, rating: riskRating.rating, color: riskRating.color, note: riskNote };
+            const bfObj = { score: bfScore, grade: bfGrade, gradeColor: bfGradeColor, gradeDesc: bfGradeDesc, pros: bfPros, cons: bfCons, tips: bfTips, dims: bfDims, hhi: hhiBf, maxW: maxWt, divRate: divRate, details: bfDetails, advices: bfAdvices, riskProfile: riskProfile, weak: bfWeak.slice(0, 5) };
             score = Math.max(0, Math.min(100, Math.round(score)));
             let grade = '', gradeColor = '#10b981', gradeDesc = '';
             if(score >= 90){ grade = '卓越'; gradeColor = '#8b5cf6'; gradeDesc = '组合质量非常高，收息体系成熟，保持定力继续持有'; }
@@ -8028,6 +8198,61 @@
                 + dimCell('资本配置', h.bf.dims.capital, 15, '#7c3aed')
                 + dimCell('流动性', h.bf.dims.liquid, 10, '#7c3aed')
                 + '</div></div>';
+            // ===== 伯克希尔顾问：分项扣分明细 + 优化配置建议 + 抗风险画像 =====
+            if(h.bf.details && h.bf.details.length){
+                s += '<div class="mt-3 rounded-2xl p-3" style="background:linear-gradient(135deg,#faf5ff,#f5f0ff)">'
+                    + '<div class="flex items-center gap-1.5 mb-2">'
+                    + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#8b5cf6,#6d28d9)"></span>'
+                    + '<span class="text-[11px] font-bold text-purple-700">【伯克希尔顾问 · 分项扣分明细】</span>'
+                    + '<span class="ml-auto text-[10px] text-purple-400">五维市值加权</span></div>';
+                h.bf.details.forEach(function(dm){
+                    const lost = dm.f - dm.s;
+                    const barPct = dm.f > 0 ? dm.s / dm.f * 100 : 0;
+                    s += '<div class="rounded-xl bg-white px-2.5 py-2 mb-1.5 last:mb-0">'
+                        + '<div class="flex items-center gap-1.5">'
+                        + '<span class="text-[10px] text-gray-600 font-medium whitespace-nowrap w-[74px]">' + dm.name + '</span>'
+                        + '<div class="flex-1 h-[5px] rounded-full overflow-hidden" style="background:#eee">'
+                        + '<div style="width:' + barPct + '%;height:100%;background:' + (barPct >= 80 ? '#10b981' : barPct >= 60 ? '#f59e0b' : '#ef4444') + ';border-radius:999px"></div></div>'
+                        + '<span class="text-[10px] font-semibold tabular-nums whitespace-nowrap">' + dm.s.toFixed(1) + '<span class="text-gray-300">/' + dm.f + '</span></span>'
+                        + (lost > 0.05 ? '<span class="text-[9px] text-red-500 whitespace-nowrap">扣 ' + lost.toFixed(1) + ' 分</span>' : '<span class="text-[9px] text-emerald-500 whitespace-nowrap">满分</span>')
+                        + '</div>'
+                        + (dm.reasons && dm.reasons.length ? '<div class="mt-1 space-y-0.5">' + dm.reasons.map(function(r){ return '<div class="text-[10px] leading-relaxed" style="color:#a16207">· ' + r + '</div>'; }).join('') + '</div>' : '')
+                        + '</div>';
+                });
+                s += '</div>';
+            }
+            if(h.bf.advices && h.bf.advices.length){
+                s += '<div class="mt-3 rounded-2xl p-3" style="background:linear-gradient(135deg,#fffbeb,#fef3c7)">'
+                    + '<div class="flex items-center gap-1.5 mb-2">'
+                    + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#f7cf8f,#d4a017)"></span>'
+                    + '<span class="text-[11px] font-bold" style="color:#b45309">【巴菲特优化配置建议】</span>'
+                    + '<span class="ml-auto text-[10px] text-amber-500">' + h.bf.advices.length + ' 条</span></div>';
+                h.bf.advices.forEach(function(a){
+                    s += '<div class="rounded-xl bg-white/80 px-2.5 py-2 mb-1.5 last:mb-0">'
+                        + '<div class="flex items-center gap-1.5">'
+                        + '<span class="text-[9px] font-semibold text-white px-1.5 py-0.5 rounded-full flex-shrink-0" style="background:#8b5cf6">' + a.tag + '</span>'
+                        + '<span class="text-[11px] font-semibold text-gray-700">' + a.issue + '</span></div>'
+                        + '<div class="text-[11px] leading-relaxed mt-1" style="color:#374151">→ ' + a.action + '</div>'
+                        + (a.effect ? '<div class="text-[10px] mt-0.5" style="color:#d97706">· ' + a.effect + '</div>' : '')
+                        + '</div>';
+                });
+                s += '</div>';
+            }
+            if(h.bf.riskProfile){
+                const rp = h.bf.riskProfile;
+                s += '<div class="mt-3 rounded-2xl p-3" style="background:#fff">'
+                    + '<div class="flex items-center gap-1.5 mb-2">'
+                    + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#10b981,#047857)"></span>'
+                    + '<span class="text-[11px] font-bold text-emerald-700">【组合抗风险画像】</span>'
+                    + '<span class="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full text-white" style="background:' + rp.color + '">抗衰退 ' + rp.rating + '</span></div>'
+                    + '<div class="grid grid-cols-3 gap-2">'
+                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa"><div class="text-[9px] text-gray-400">防御型 · 公用/银行/消费/电信</div><div class="text-[13px] font-bold mt-0.5" style="color:#10b981">' + rp.defPct.toFixed(1) + '%</div></div>'
+                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa"><div class="text-[9px] text-gray-400">资源型 · 能源/黄金/煤炭</div><div class="text-[13px] font-bold mt-0.5" style="color:#d4a017">' + rp.resPct.toFixed(1) + '%</div></div>'
+                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa"><div class="text-[9px] text-gray-400">周期型 · 有色/钢铁/化工/地产</div><div class="text-[13px] font-bold mt-0.5" style="color:#f59e0b">' + rp.cycPct.toFixed(1) + '%</div></div>'
+                    + '</div>'
+                    + (rp.note ? '<div class="text-[10px] mt-2 leading-relaxed" style="color:#047857">' + rp.note + '</div>' : '')
+                    + '</div>';
+            }
             s += '<div class="grid grid-cols-3 gap-2 mt-3">'
                 + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa">'
                 + '<div class="text-[10px] text-gray-400">持仓数</div>'
@@ -8575,7 +8800,7 @@
                     const p = Number(it.nowPrice) > 0 ? Number(it.nowPrice) : (Number(it.costPrice) || 0);
                     const mkt = (Number(it.count) || 0) * p * fx;
                     const estDiv = Number(getAnnualDiv(it)) || 0;
-                    const actDiv = (it.exDivRecords || []).filter(function(r){ return String(r.date || '').substring(0, 4) === String(year); }).reduce(function(a, r){ return a + (Number(r.amount) || 0); }, 0);
+                    const actDiv = getCurYearReceivedByStock(it);
                     addInd(ind, [raw], cost, mkt, estDiv, actDiv);
                 });
             } else {
@@ -8740,6 +8965,8 @@
             renderIndustrySummary(data);
             // 巴菲特式组合评估徽章（当前组合口径，与年度报告一致）
             renderIndustryBfScore();
+            // 巴菲特组合调优方案（行业占比对比 + 三大目标 + 逐行业点评 + 行动清单）
+            renderIndustryBuffett(data);
         }
         function renderIndustryBfScore(){
             const badge = document.querySelector('#industryBfBadge');
@@ -8820,6 +9047,165 @@
                 + (warns.length ? '<div class="flex items-center gap-1.5"><div class="w-6 h-6 rounded-lg bg-[#ff4d4f]/10 flex items-center justify-center flex-shrink-0"><i class="fa fa-exclamation-triangle text-[#ff4d4f] text-[10px]"></i></div><div class="text-[12px] font-semibold text-gray-800">风险提示</div></div>'
                     + '<div class="rounded-xl px-3 py-2.5 bg-[#fff6f5] border border-[#ffe1dd] text-[11px] leading-relaxed text-[#c0392b] space-y-1">' + warns.join('') + '</div>' : '')
                 + '</div>';
+        }
+        // ===== 巴菲特组合调优方案：行业占比对比 + 三目标评分 + 逐行业点评 + 调优行动清单 =====
+        function buildIndustryBuffett(data){
+            const rows = data.rows || [];
+            const totals = data.totals || {};
+            const isCur = data.isCur;
+            if(!rows.length) return null;
+            const mktTotal = totals.mkt > 0 ? totals.mkt : 1;
+            const divAmtTotal = (isCur ? totals.estDiv : totals.actDiv);
+            const divYield = mktTotal > 0 && divAmtTotal > 0 ? divAmtTotal / mktTotal * 100 : 0;
+            // 防御型行业（稳定现金流、需求刚性）
+            const isDefInd = function(x){ return /(银行|保险|公用|电力|水电|核电|水务|燃气|高速|铁路|港口|机场|电信|通信|移动|白酒|食品|饮料|消费|啤酒|中药|医药)/.test(x); };
+            let defPct = 0;
+            rows.forEach(function(r){ if(isDefInd(r.name)) defPct += r.mktPct; });
+            // 浮盈/浮亏行业合计（市值-成本方向）
+            let winPct = 0, lossPct = 0;
+            rows.forEach(function(r){ if(r.d1 > 0.05) winPct += r.mktPct; else if(r.d1 < -0.05) lossPct += r.mktPct; });
+            const netPnl = totals.cost > 0 ? (totals.mkt - totals.cost) / totals.cost * 100 : 0;
+            // 分红贡献集中度
+            const divRows = rows.filter(function(r){ return r.divPct > 0; });
+            let maxDiv = null, top3DivPct = 0, divHhi = 0;
+            divRows.forEach(function(r){
+                const p = r.divPct / 100;
+                divHhi += p * p;
+                if(!maxDiv || r.divPct > maxDiv.divPct) maxDiv = r;
+            });
+            divRows.slice(0, 3).forEach(function(r){ top3DivPct += r.divPct; });
+            // ---- 三大目标评分 ----
+            const goals = [];
+            // A 收益最大化（净浮盈 + 浮盈结构）
+            let g1 = { key: '收益最大化', icon: 'fa-trend-up', level: '中', color: '#d4a017', score: 0, note: '' };
+            if(netPnl >= 50){ g1.level = '强'; g1.color = '#10b981'; g1.score = 3; g1.note = '组合净浮盈 ' + netPnl.toFixed(1) + '%，浮盈行业合计占市值 ' + winPct.toFixed(1) + '%，盈利结构健康，具备兑现与再平衡空间'; }
+            else if(netPnl >= 20){ g1.level = '良'; g1.color = '#10b981'; g1.score = 2; g1.note = '组合净浮盈 ' + netPnl.toFixed(1) + '%，收益为正但弹性一般，可向高息高效行业集中再平衡'; }
+            else if(netPnl >= 0){ g1.level = '中'; g1.color = '#d4a017'; g1.score = 1; g1.note = '组合净浮盈仅 ' + netPnl.toFixed(1) + '%，收益结构平庸，巴菲特会倾向把仓位移向现金产出更强的行业'; }
+            else { g1.level = '弱'; g1.color = '#ef4444'; g1.score = 0; g1.note = '组合整体浮亏 ' + Math.abs(netPnl).toFixed(1) + '%（浮亏行业占市值 ' + lossPct.toFixed(1) + '%），需优先审视亏损行业的基本面，避免价值陷阱'; }
+            goals.push(g1);
+            // B 现金流最大化（组合股息率 + 分红来源厚度）
+            let g2 = { key: '现金流最大化', icon: 'fa-money', level: '中', color: '#d4a017', score: 0, note: '' };
+            if(divYield >= 5){ g2.level = '强'; g2.color = '#10b981'; g2.score = 3; g2.note = '组合' + (isCur ? '预估' : '实际') + '股息率 ' + divYield.toFixed(2) + '%，自由现金流产出优秀，符合巴菲特「现金奶牛」标准'; }
+            else if(divYield >= 4){ g2.level = '良'; g2.color = '#10b981'; g2.score = 2; g2.note = '组合' + (isCur ? '预估' : '实际') + '股息率 ' + divYield.toFixed(2) + '%，跨过 4% 收息门槛，现金流基本达标'; }
+            else if(divYield >= 3){ g2.level = '中'; g2.color = '#d4a017'; g2.score = 1; g2.note = '组合' + (isCur ? '预估' : '实际') + '股息率 ' + divYield.toFixed(2) + '%，偏低，巴菲特会提高高息行业（公用/银行/能源）权重'; }
+            else { g2.level = '弱'; g2.color = '#ef4444'; g2.score = 0; g2.note = '组合' + (isCur ? '预估' : '实际') + '股息率仅 ' + divYield.toFixed(2) + '%，现金流创造能力不足，是首要再平衡方向'; }
+            goals.push(g2);
+            // C 分红稳定性与生意长久性（分红集中度 + 覆盖行业数 + 防御占比）
+            let g3 = { key: '分红稳定性', icon: 'fa-shield', level: '中', color: '#d4a017', score: 0, note: '' };
+            const divCover = divRows.length;
+            let cScore = 0, notes = [];
+            if(maxDiv && maxDiv.divPct > 40){ notes.push('最大分红行业「' + maxDiv.name + '」占 ' + maxDiv.divPct.toFixed(1) + '% 超警戒，分红现金流过度依赖单一行业'); }
+            else if(maxDiv && maxDiv.divPct > 25){ notes.push('最大分红行业「' + maxDiv.name + '」占 ' + maxDiv.divPct.toFixed(1) + '%，来源较集中'); }
+            else if(maxDiv){ notes.push('分红来源分散，最大行业仅占 ' + maxDiv.divPct.toFixed(1) + '%'); cScore += 1; }
+            if(top3DivPct <= 60){ notes.push('前三大分红行业合计 ' + top3DivPct.toFixed(1) + '% ≤60%，结构均衡'); cScore += 1; }
+            if(divCover >= 5){ notes.push(divCover + ' 个行业贡献分红，覆盖广'); cScore += 1; }
+            if(defPct >= 60){ notes.push('防御型行业（公用/银行/消费/电信）占市值 ' + defPct.toFixed(1) + '%，需求刚性+稳定现金流，生意长久性佳'); cScore += 1; }
+            else if(defPct >= 40){ notes.push('防御型行业占 ' + defPct.toFixed(1) + '%，可适度增配公用/银行提升抗衰退与长久性'); }
+            else { notes.push('防御型行业仅占 ' + defPct.toFixed(1) + '%，周期暴露偏高，长久性存疑'); }
+            if(cScore >= 4){ g3.level = '强'; g3.color = '#10b981'; g3.score = 3; }
+            else if(cScore >= 2){ g3.level = '良'; g3.color = '#10b981'; g3.score = 2; }
+            else if(cScore >= 1){ g3.level = '中'; g3.color = '#d4a017'; g3.score = 1; }
+            else { g3.level = '弱'; g3.color = '#ef4444'; g3.score = 0; }
+            g3.note = notes.join('；');
+            goals.push(g3);
+            // ---- 逐行业巴菲特式点评（基于占比对比 d1/d2/d3） ----
+            const indAdvices = rows.map(function(r){
+                let action = '关注', cls = 'bg-gray-50 text-gray-500 border-gray-200', note = '';
+                const eff = r.d2 > 0.05 ? '分红产出效率高于组合' : (r.d2 < -0.05 ? '分红产出效率低于组合' : '分红产出效率与组合相当');
+                if(r.d2 > 0.05){
+                    if(r.mktPct >= 15){ action = '核心收息'; cls = 'bg-[#fff1f0] text-[#ff4d4f] border-[#ffd6d2]'; note = '高市值+高分红效率，是组合的收息引擎，巴菲特会长期持有并优先补仓'; }
+                    else if(r.d1 < -0.05){ action = '逆向增配'; cls = 'bg-[#e8faf3] text-[#00b57a] border-[#b8ecd9]'; note = '浮亏但分红效率高（市值占比 ' + r.mktPct.toFixed(1) + '% < 分红占比 ' + r.divPct.toFixed(1) + '%），跌出的正是巴菲特要的便宜现金流，可逆向加仓'; }
+                    else { action = '持有'; cls = 'bg-gray-50 text-gray-600 border-gray-200'; note = '分红效率高于组合均值，现金流性价比好，维持现有仓位'; }
+                } else if(r.d2 < -0.05){
+                    if(r.d1 >= 15){ action = '部分止盈'; cls = 'bg-[#fffbe6] text-[#b7791f] border-[#ffe58f]'; note = '市值占比超出成本占比 ' + r.d1.toFixed(1) + '%，浮盈可观但分红效率低，巴菲特会落袋一部分转投高息'; }
+                    else if(r.mktPct >= 15){ action = '减仓'; cls = 'bg-[#fff1f0] text-[#c0392b] border-[#ffd6d2]'; note = '市值占比高但分红贡献弱，占用资金回报差，考虑减仓再平衡至高息行业'; }
+                    else { action = '关注'; cls = 'bg-gray-50 text-gray-500 border-gray-200'; note = '分红产出效率偏低，权重不大，观察其业务能否改善，否则替换'; }
+                } else {
+                    if(r.d3 > 0.05){ action = '持有'; cls = 'bg-gray-50 text-gray-600 border-gray-200'; note = '投入本金分红回报与组合相当，结构均衡'; }
+                    else { action = '关注'; cls = 'bg-gray-50 text-gray-500 border-gray-200'; note = '与组合均值基本持平，维持观察'; }
+                }
+                if(r.mktPct > 35) note += '；市值占比 ' + r.mktPct.toFixed(1) + '% 超 35%，集中度风险需通过调仓消化';
+                if(r.divPct > 40) note += '；分红占比 ' + r.divPct.toFixed(1) + '% 超 40%，现金流依赖过高，一旦行业分红政策变化将显著冲击收息';
+                return { name: r.name, action: action, cls: cls, note: note, mktPct: r.mktPct, costPct: r.costPct, divPct: r.divPct, d1: r.d1, d2: r.d2, d3: r.d3, divLabel: r.divLabel };
+            });
+            // ---- 整体调优行动清单（按优先级，直击最大痛点） ----
+            const actions = [];
+            const maxMktRow = rows.reduce(function(a, r){ return r.mktPct > a.mktPct ? r : a; }, rows[0]);
+            const effGapRows = rows.filter(function(r){ return r.d2 < -0.05 && r.d1 >= 15; });
+            const lowEffRows = rows.filter(function(r){ return r.d3 < -0.05 && r.mktPct >= 8; });
+            if(maxMktRow && maxMktRow.mktPct > 35) actions.push({ step: 1, tag: '集中度', text: '将最大行业「' + maxMktRow.name + '」市值占比从 ' + maxMktRow.mktPct.toFixed(1) + '% 降至 ≤35%', why: '单一行业波动将直接主导组合总资产，先拆最大的雷' });
+            if(maxDiv && maxDiv.divPct > 40) actions.push({ step: actions.length + 1, tag: '依赖度', text: '降低对「' + maxDiv.name + '」的' + maxDiv.divLabel + '依赖（' + maxDiv.divPct.toFixed(1) + '% → ≤35%）', why: '为组合引入第二个分红引擎，避免单一行业分红政策变化击穿现金流' });
+            if(divYield > 0 && divYield < 4) actions.push({ step: actions.length + 1, tag: '现金流', text: '把低息浮盈仓位（' + effGapRows.map(function(r){ return r.name; }).join('、') + (effGapRows.length ? '等' : '') + '）部分止盈，转配股息率 ≥5% 的高息行业', why: '组合股息率仅 ' + divYield.toFixed(2) + '%，自由现金流是巴菲特组合的生命线' });
+            if(lowEffRows.length) actions.push({ step: actions.length + 1, tag: '替换', text: '将本金分红回报弱于组合的「' + lowEffRows.map(function(r){ return r.name; }).join('、') + '」逐步替换为高ROE、高分红、护城河深的标的', why: '投入产出比长期为负的仓位，占用本金却无法产生现金流，是组合的「沉睡资金」' });
+            if(defPct < 50) actions.push({ step: actions.length + 1, tag: '防御', text: '防御型行业（公用/银行/必需消费/电信）市值占比 ' + defPct.toFixed(1) + '%，建议提升至 ≥60%', why: '需求刚性+稳定现金流才能在衰退期守住本金与分红，这是巴菲特组合的压舱石' });
+            if(top3DivPct > 60 && actions.length < 4) actions.push({ step: actions.length + 1, tag: '分散', text: '前三大分红行业合计 ' + top3DivPct.toFixed(1) + '% 偏高，适度引入新的高息行业', why: '分红集中度越高，组合收息越像单行业ETF' });
+            if(!actions.length) actions.push({ step: 1, tag: '维持', text: '行业结构已接近巴菲特最优配置（分散度、现金流、稳定性均衡）', why: '此时最好的操作是不操作——长期持有，静待复利' });
+            // 综合等级
+            const gScore = goals.reduce(function(a, g){ return a + g.score; }, 0);
+            let levelText, levelCls, levelBg;
+            if(gScore >= 8){ levelText = '优秀'; levelCls = 'text-[#0f8a5f]'; levelBg = 'bg-[#e8faf3]'; }
+            else if(gScore >= 5){ levelText = '良好'; levelCls = 'text-[#0f8a5f]'; levelBg = 'bg-[#e8faf3]'; }
+            else if(gScore >= 3){ levelText = '关注'; levelCls = 'text-[#b7791f]'; levelBg = 'bg-[#fffbe6]'; }
+            else { levelText = '需调整'; levelCls = 'text-[#c0392b]'; levelBg = 'bg-[#fff1f0]'; }
+            return { goals: goals, rows: indAdvices, actions: actions, level: { text: levelText, cls: levelCls, bg: levelBg }, divYield: divYield, netPnl: netPnl, defPct: defPct, top3DivPct: top3DivPct, isCur: isCur };
+        }
+        function renderIndustryBuffett(data){
+            const body = document.querySelector('#industryBuffettBody');
+            const lvEl = document.querySelector('#industryBuffettLevel');
+            if(!body) return;
+            const b = buildIndustryBuffett(data);
+            if(!b){
+                body.innerHTML = '<div class="text-gray-400 text-[12px]">' + (data.isCur ? '暂无持仓数据，无法生成调优方案。' : data.year + ' 年无快照数据。') + '</div>';
+                if(lvEl){ lvEl.innerText = ''; lvEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle'; }
+                return;
+            }
+            if(lvEl){ lvEl.innerText = b.level.text; lvEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle ' + b.level.cls + ' ' + b.level.bg; }
+            let h = '';
+            // 三大目标评分
+            h += '<div class="flex items-center gap-1.5 mb-2">'
+                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#8b5cf6,#6d28d9)"></span>'
+                + '<span class="text-[11px] font-bold text-purple-700">三大目标评分</span>'
+                + '<span class="ml-auto text-[10px] text-gray-400">巴菲特三问：收益 / 现金流 / 稳定性</span></div>';
+            h += '<div class="grid grid-cols-3 gap-1.5">' + b.goals.map(function(g){
+                return '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa">'
+                    + '<div class="flex items-center justify-center gap-1"><i class="fa ' + g.icon + ' text-[9px]" style="color:' + g.color + '"></i>'
+                    + '<span class="text-[10px] font-medium text-gray-600 truncate">' + g.key + '</span></div>'
+                    + '<div class="mt-1 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style="background:' + g.color + '">' + g.level + '</div></div>';
+            }).join('') + '</div>';
+            h += '<div class="mt-2 space-y-1.5">' + b.goals.map(function(g){
+                return '<div class="rounded-lg px-2.5 py-1.5 text-[10px] leading-relaxed" style="background:' + (g.level === '弱' ? 'rgba(239,68,68,.06)' : 'rgba(139,92,246,.06)') + ';color:' + (g.level === '弱' ? '#c0392b' : '#5b21b6') + '">' + g.note + '</div>';
+            }).join('') + '</div>';
+            // 逐行业巴菲特式点评
+            h += '<div class="flex items-center gap-1.5 mt-3 mb-2">'
+                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#f7cf8f,#d4a017)"></span>'
+                + '<span class="text-[11px] font-bold" style="color:#b45309">逐行业点评</span>'
+                + '<span class="ml-auto text-[10px] text-gray-400">按市值占比 × 分红效率对比</span></div>';
+            h += '<div class="space-y-1.5">' + b.rows.map(function(r){
+                return '<div class="rounded-xl bg-white border border-gray-100 px-2.5 py-2">'
+                    + '<div class="flex items-center gap-1.5">'
+                    + '<span class="text-[12px] font-semibold text-gray-800 truncate flex-1 min-w-0">' + r.name + '</span>'
+                    + '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap ' + r.cls + '">' + r.action + '</span></div>'
+                    + '<div class="text-[10px] leading-relaxed mt-1" style="color:#6b7280">' + r.note + '</div>'
+                    + '<div class="flex items-center gap-1 mt-1 text-[9px] text-gray-400 tabular-nums">'
+                    + '<span class="bg-gray-50 rounded px-1 py-0.5">市值 ' + r.mktPct.toFixed(1) + '%</span>'
+                    + '<span class="bg-gray-50 rounded px-1 py-0.5">成本 ' + r.costPct.toFixed(1) + '%</span>'
+                    + '<span class="bg-gray-50 rounded px-1 py-0.5">' + r.divLabel + ' ' + r.divPct.toFixed(1) + '%</span>'
+                    + '</div></div>';
+            }).join('') + '</div>';
+            // 调优行动清单
+            h += '<div class="flex items-center gap-1.5 mt-3 mb-2">'
+                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#10b981,#047857)"></span>'
+                + '<span class="text-[11px] font-bold text-emerald-700">巴菲特调优行动清单</span>'
+                + '<span class="ml-auto text-[10px] text-gray-400">按优先级执行</span></div>';
+            h += '<div class="space-y-1.5">' + b.actions.map(function(a){
+                return '<div class="rounded-xl px-2.5 py-2 flex items-start gap-2" style="background:linear-gradient(135deg,#faf5ff,#f0fdf4)">'
+                    + '<span class="w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">' + a.step + '</span>'
+                    + '<div class="min-w-0">'
+                    + '<div class="text-[11px] font-semibold text-gray-800">[' + a.tag + '] ' + a.text + '</div>'
+                    + '<div class="text-[10px] leading-relaxed mt-0.5" style="color:#6d28d9">理由：' + a.why + '</div>'
+                    + '</div></div>';
+            }).join('') + '</div>';
+            body.innerHTML = h;
         }
         // 流水发生时点账户总资产：优先 ≤ 日期最近日度快照 → 月度 → 年度；无则 0（显示 --）
         function assetAsOf(dateStr){
@@ -10726,6 +11112,45 @@
             }
             return (manualVal != null ? manualVal : 0) + extra;
         }
+        // 单只股票当年实际已收（与 getCurYearReceived 同口径的按股分解，不含手动基准分摊）：
+        // A股：固化到账记录（基准线之后、当年）；港股：无手动基准时按每股分红×股数估算
+        function getStockYearReceived(it, curY){
+            const y = String(curY || new Date().getFullYear());
+            const asOf = (historyData.manualYearlyDivAsOf && historyData.manualYearlyDivAsOf[y]) || '0000-00-00';
+            const manualVal = (historyData.manualYearlyDiv && historyData.manualYearlyDiv[y]) ? (Number(historyData.yearlyDiv[y]) || 0) : null;
+            let act = 0;
+            let recSum = 0;
+            (it.divPaidRecords || []).forEach(function(rec){
+                if(!rec.exDate) return;
+                if(String(rec.exDate).substring(0, 4) !== y) return;
+                if(rec.exDate <= asOf) return;
+                act += Number(rec.amount) || 0;
+                recSum += Number(rec.amount) || 0;
+            });
+            // 港股：有手动到账流水时以流水为准（按日期归属年度）；无任何流水时回退估算（兼容旧数据）
+            if(manualVal == null && it.marketType === 'HK' && recSum <= 0){
+                let per = Number(it.divPerShare) || 0;
+                if(it.divTaxRate != null && Number(it.divTaxRate) > 0){
+                    per = per * (1 - Number(it.divTaxRate));
+                }
+                act += per * (Number(it.count) || 0);
+            }
+            return act;
+        }
+        // 含手动基准分摊的按股当年已收（手动填写的今年分红收入按各股预估分红占比分摊，Σ 各股 = getCurYearReceived）
+        function getCurYearReceivedByStock(it){
+            const curY = String(new Date().getFullYear());
+            const manualVal = (historyData.manualYearlyDiv && historyData.manualYearlyDiv[curY]) ? (Number(historyData.yearlyDiv[curY]) || 0) : null;
+            let act = getStockYearReceived(it, curY);
+            if(manualVal != null){
+                let estTotalAll = 0;
+                holdDataList.forEach(function(it2){ estTotalAll += (Number(getAnnualDiv(it2)) || 0); });
+                if(estTotalAll > 0){
+                    act += manualVal * ((Number(getAnnualDiv(it)) || 0) / estTotalAll);
+                }
+            }
+            return act;
+        }
 
         // 计算汇总数据（均为人民币口径）
         function calcSummary(){
@@ -11977,6 +12402,65 @@
             const pts = Math.max(0, Math.min(10, main + sub));
             return { pts: pts, tag: tag, note: note, cycleTop: cycleTop, trapNote: trapNote };
         }
+        // ============ 行业景气度/发展空间判断（巴菲特：避开下坡行业，买在拐点前） ============
+        // 用历史 ROE 趋势 + 分红趋势识别"行业下行期 vs 高峰期"特征：
+        //  - 盈利连续下滑 + 低估值 → "便宜但利润缩水"的价值陷阱早期（白酒/啤酒下坡期典型）
+        //  - 盈利连续上行 + 高股息 → 景气上行确认；高分红利或处周期顶部（周期股由 scoreValuation 处理）
+        //  - 电力/公用需求刚性 + 绿电政策支撑，无行业下坡期，只有供给过剩压力
+        function analyzeTrend(roeList, byYear, yearsArr, pe, indRule, ind, name, isEtf){
+            const out = { phase: '平稳', note: '', adj: 0, cons: [], tips: [] };
+            if(isEtf) return out;
+            const roe = roeList || [];
+            if(roe.length >= 3){
+                const latest = roe.slice(0, 2);
+                const earlier = roe.slice(2, 5);
+                const lAvg = latest.reduce(function(a, b){ return a + b; }, 0) / latest.length;
+                const eAvg = earlier.reduce(function(a, b){ return a + b; }, 0) / earlier.length;
+                if(eAvg > 0 && lAvg > 0){
+                    if(lAvg < eAvg * 0.85){
+                        out.phase = '下行';
+                        out.adj -= 2;
+                        out.cons.push('盈利处下行期：近 2 年 ROE 均值 ' + lAvg.toFixed(1) + '% 较前几年（' + eAvg.toFixed(1) + '%）明显回落');
+                        if(pe != null && pe > 0 && pe <= indRule.peGood){
+                            out.cons.push('低估值伴随盈利下滑：当前低 PE 是利润缩水的结果而非低估（价值陷阱早期特征）');
+                            out.tips.push('等盈利企稳（ROE 止跌回升）再评估安全边际，避免"便宜但持续变差"');
+                        }
+                    } else if(lAvg > eAvg * 1.15){
+                        out.phase = '上行';
+                        out.adj += 1;
+                        out.note = '盈利处上行期：近 2 年 ROE 均值 ' + lAvg.toFixed(1) + '% 高于前几年（' + eAvg.toFixed(1) + '%），景气向上';
+                    }
+                }
+            }
+            const yrs = Object.keys(byYear || {}).sort();
+            if(yrs.length >= 4){
+                const l2 = byYear[yrs[yrs.length - 1]] + byYear[yrs[yrs.length - 2]];
+                const p2 = byYear[yrs[yrs.length - 3]] + byYear[yrs[yrs.length - 4]];
+                if(p2 > 0 && l2 < p2 * 0.85){
+                    if(out.phase === '平稳'){ out.phase = '下行'; }
+                    out.adj -= 1;
+                    out.cons.push('每股分红近两年较前两年回落 ' + Math.round((1 - l2 / p2) * 100) + '%，红利进入收缩期');
+                    out.tips.push('区分周期回落与经营恶化，跟踪分红政策是否收缩');
+                }
+            }
+            // 行业属性特判
+            if(ind.indexOf('白酒') >= 0 || ind.indexOf('啤酒') >= 0 || ind.indexOf('饮料') >= 0 || ind.indexOf('食品') >= 0){
+                if(out.phase === '下行'){
+                    out.cons.push('酒类/消费处行业下坡期：需求与提价承压，景气拐点比静态估值更重要');
+                    out.tips.push('行业下行期估值回落属正常，务必等待盈利、库存、动销出现拐点再介入');
+                } else if(out.phase === '上行'){
+                    out.note = (out.note ? out.note + '；' : '') + '消费景气向上，品牌集中度提升利好龙头';
+                }
+            }
+            if(ind.indexOf('电力') >= 0 || ind.indexOf('水电') >= 0 || ind.indexOf('核电') >= 0 || ind.indexOf('公用') >= 0){
+                if(out.phase === '下行'){
+                    out.cons.push('电力盈利回落：关注来水、电价与供给过剩（绿电有政策支撑，属结构性机会）');
+                } else {
+                    out.note = (out.note ? out.note + '；' : '') + '电力需求刚性+绿色能源政策支撑，无行业下坡期，现金流长期稳定';
+                }
+            }
+            return out;
+        }
         // 每股年度分红：A股优先 divCacheMap 近1年均值；否则持仓 divPerShare
         function getStockAnnualDiv(it){
             const code = String(it.code);
@@ -12098,7 +12582,7 @@
             else if(yieldPct > 0 && yieldPct < indRule.yieldMid / 2){ cons.push('股息率仅 ' + yieldPct.toFixed(2) + '%，价格偏贵，收息性价比弱'); tips.push('关注股息率回升至 ' + indRule.yieldGood + '% 以上（更便宜）的介入机会'); }
             else if(yieldPct <= 0){ cons.push('暂无分红数据，便宜程度无法评估'); tips.push('确认该股是否持续派息，或手动补充每股分红'); }
             // 2. 分红持续性（12）
-            let s2 = divYears >= 5 ? 10 : divYears >= 4 ? 8 : divYears >= 3 ? 6 : divYears >= 2 ? 4 : divYears >= 1 ? 1.5 : (annualDiv > 0 ? 1.5 : 1);
+            let s2 = divYears >= 5 ? 9 : divYears >= 4 ? 7 : divYears >= 3 ? 5.5 : divYears >= 2 ? 4 : divYears >= 1 ? 1.5 : (annualDiv > 0 ? 1.5 : 1);
             score += s2;
             if(divYears >= 4){ pros.push('连续 ' + divYears + ' 年分红记录，持久性佳'); }
             else if(divYears <= 1 && annualDiv > 0){ cons.push('分红历史不足 2 年，持续性待验证'); tips.push('持续观察分红是否逐年稳定'); }
@@ -12108,15 +12592,15 @@
                 const last3 = yearsArr.slice(-3);
                 let ok = true;
                 last3.forEach(function(y){ if(!byYear[y] || byYear[y] <= 0) ok = false; });
-                s3 = ok ? 6 : 4;
+                s3 = ok ? 4 : 3;
                 if(ok){ pros.push('近 ' + Math.min(3, divYears) + ' 年每年派息，分红稳定'); }
                 else { cons.push('近年分红有中断'); tips.push('关注分红中断原因'); }
-            } else if(divYears >= 2){ s3 = 4; }
+            } else if(divYears >= 2){ s3 = 3; }
             else if(annualDiv > 0){ s3 = 1.5; }
             score += s3;
             // 4. 业务稳定性（8，行业）
             const indS = isEtf ? { stb: 4, mono: 4, res: false } : scoreIndustry(ind + (name || ''));
-            let s4 = isEtf ? 4 : (indS.stb >= 15 ? 8 : indS.stb >= 12 ? 7 : indS.stb >= 8 ? 5 : indS.stb >= 6 ? 4 : 3);
+            let s4 = isEtf ? 5 : (indS.stb >= 15 ? 10 : indS.stb >= 12 ? 9 : indS.stb >= 8 ? 7 : indS.stb >= 6 ? 5 : 3);
             score += s4;
             if(indS.stb >= 12){ pros.push('属防御性行业（' + (ind || name || '未知') + '），业务稳定性强'); }
             else if(indS.stb <= 5 && !isEtf){ cons.push('属成长/周期行业，业务波动较大'); tips.push('关注行业周期位置，控制仓位'); }
@@ -12201,7 +12685,7 @@
                 if(valObj.tag === '低估'){ pros.push(valObj.note + '，安全边际足，符合巴菲特式买点'); }
                 else if(valObj.tag === '偏高' || valObj.tag === '高估'){ cons.push(valObj.note); tips.push('等待估值回归' + (normYieldPct > 0 ? '（正常化股息率 ' + normYieldPct.toFixed(2) + '% 可作锚）' : '') + '再考虑介入'); }
             }
-            // 10. 分红增长质量（6）——巴菲特：稳定持续增长优于暴涨暴跌；一次性暴增按陷阱处理
+            // 10. 分红增长质量（7）——巴菲特：稳定持续增长优于暴涨暴跌；一次性暴增按陷阱处理
             let s10 = 4;
             if(yearsArr.length >= 2){
                 const lastY = yearsArr[yearsArr.length - 1];
@@ -12209,13 +12693,19 @@
                 if(byYear[prevY] > 0){
                     const g = (byYear[lastY] - byYear[prevY]) / byYear[prevY] * 100;
                     if(divTrap){ s10 = 1; }
-                    else if(g > 5 && yearsArr.length >= 3 && byYear[lastY] > byYear[yearsArr[yearsArr.length - 3]] * 1.05){ s10 = 6; pros.push('分红连续提升、红利稳步壮大（巴菲特偏好持续提高分红）'); }
-                    else if(g > 5){ s10 = 5; pros.push('分红较上年增长 ' + g.toFixed(1) + '%，红利壮大'); }
+                    else if(g > 5 && yearsArr.length >= 3 && byYear[lastY] > byYear[yearsArr[yearsArr.length - 3]] * 1.05){ s10 = 7; pros.push('分红连续提升、红利稳步壮大（巴菲特偏好持续提高分红）'); }
+                    else if(g > 5){ s10 = 6; pros.push('分红较上年增长 ' + g.toFixed(1) + '%，红利壮大'); }
                     else if(g >= 0){ s10 = 4; }
                     else { s10 = 2; cons.push('分红较上年下降 ' + Math.abs(g).toFixed(1) + '%，警惕红利衰减'); tips.push('跟踪分红下降原因，区分周期波动与经营恶化'); }
                 }
             }
+            // 11. 行业景气度/发展空间（并入 s10，满分 7）——识别行业下坡期/高峰期，稳定性与发展空间权重更高
+            const trend = analyzeTrend(roeList, byYear, yearsArr, pe, indRule, ind, name, isEtf);
+            s10 = Math.max(1, Math.min(7, s10 + trend.adj));
             score += s10;
+            trend.cons.forEach(function(t){ cons.push(t); });
+            trend.tips.forEach(function(t){ tips.push(t); });
+            if(trend.note) pros.push(trend.note);
             // ===== 股息率陷阱修正（巴菲特：高股息≠值得买，避免万科/融创式陷阱） =====
             // 修正①：一次性大额分红 → 现价股息率虚高，便宜程度得分腰斩
             if(divTrap){
@@ -12240,7 +12730,19 @@
             else if(score >= 70){ grade = '良好'; gColor = '#f59e0b'; gDesc = '具备良好收息基因'; }
             else if(score >= 60){ grade = '稳健'; gColor = '#f97316'; gDesc = '基本稳健，部分指标待提升'; }
             else { grade = '关注'; gColor = '#ef4444'; gDesc = '收息属性偏弱，谨慎评估'; }
-            return { code: code, market: market, name: name, price: price, cost: cost, annualDiv: annualDiv, yieldPct: yieldPct, costYield: costYield, divYears: divYears, score: score, grade: grade, gColor: gColor, gDesc: gDesc, pros: pros, cons: cons, tips: tips, industry: indDisplay, isEtf: isEtf, watchOnly: !!it.watch, roeLatest: roeLatest, gross: gross, net: net, pe: pe, pb: pb, debt: debt, finMissing: finMissing, roeYearsOk: roeYearsOk, fcff: fcff, normYield: normYieldPct, valTag: valObj.tag, cycleTop: valObj.cycleTop };
+            return { code: code, market: market, name: name, price: price, cost: cost, annualDiv: annualDiv, yieldPct: yieldPct, costYield: costYield, divYears: divYears, score: score, grade: grade, gColor: gColor, gDesc: gDesc, pros: pros, cons: cons, tips: tips, industry: indDisplay, isEtf: isEtf, watchOnly: !!it.watch, roeLatest: roeLatest, gross: gross, net: net, pe: pe, pb: pb, debt: debt, finMissing: finMissing, roeYearsOk: roeYearsOk, fcff: fcff, normYield: normYieldPct, valTag: valObj.tag, cycleTop: valObj.cycleTop, trendPhase: trend.phase,
+                dims: [
+                    { n: '股息率(便宜)', s: Math.max(0, Math.min(12, s1)), f: 12, d: yieldPct > 0 ? '现价股息率 ' + yieldPct.toFixed(2) + '% vs ' + indRule.label + '锚点 ' + indRule.yieldGood + '%' : '暂无分红数据' },
+                    { n: '分红持续性', s: s2, f: 9, d: divYears >= 1 ? '连续 ' + divYears + ' 年派息' : '分红记录不足' },
+                    { n: '分红稳定性', s: s3, f: 4, d: s3 >= 4 ? '近 3 年每年派息' : (s3 >= 3 ? '近 2 年派息' : '分红有中断/不足') },
+                    { n: '业务稳定性', s: s4, f: 10, d: indS.stb >= 15 ? '防御型行业，需求刚性' : (indS.stb >= 12 ? '需求较稳，品牌/公用属性' : '行业波动较大') },
+                    { n: '护城河/商业模式', s: s5, f: 22, d: indS.res ? '资源/牌照/国情独占' : (indS.mono >= 10 ? '垄断/寡头格局' : '竞争分散，护城河有限') },
+                    { n: 'ROE资本回报', s: s6, f: 12, d: roeLatest != null ? 'ROE ' + roeLatest.toFixed(1) + '% vs ' + indRule.label + '标准 ' + indRule.roeGood + '%' : '财务数据待获取' },
+                    { n: '盈利质量', s: s7, f: 8, d: (gross != null || net != null) ? ('毛利率 ' + (gross != null ? gross.toFixed(0) + '%' : '--') + ' · 净利率 ' + (net != null ? net.toFixed(1) + '%' : '--')) : '财务数据待获取' },
+                    { n: '自由现金流', s: s8, f: 4, d: s8 >= 4 ? '现金流持续为正' : (s8 >= 3 ? '现金流中性' : '现金流偏弱') },
+                    { n: '估值安全边际', s: Math.max(0, Math.min(12, s9)), f: 12, d: valObj.note || '估值数据待刷新' },
+                    { n: '分红增长/景气趋势', s: Math.max(1, Math.min(7, s10)), f: 7, d: '景气' + (trend.phase === '上行' ? '上行' : trend.phase === '下行' ? '下行' : '平稳') + (trend.note ? ' · ' + trend.note.replace(/；/g, ' · ') : '') }
+                ] };
         }
         // 计算全部评分（持仓+关注合并去重；关注优先，持仓覆盖补全信息）
         function computeStockScores(){
@@ -12268,7 +12770,7 @@
         // 确保评分快照（与刷新点同键；过期或缺失则重算覆盖存储）
         // force=true 用于财务数据后台补齐完成后强制重建，避免同日快照复用导致新拉到财务不生效
         // 评分算法版本号：护城河/负债率等评分逻辑升级时递增，强制旧缓存重算（否则手机端一直显示旧点评）
-        const SCORE_SNAP_VERSION = 5;
+        const SCORE_SNAP_VERSION = 6;
         function ensureStockScores(force){
             const key = getStatsPeriodKey();
             let snap = loadStockScores();
@@ -12307,7 +12809,7 @@
             const timeEl = document.querySelector('#stockScoreRefreshTime');
             if(timeEl) timeEl.innerText = snap && snap.time ? ('每日更新 · ' + snap.time + ' 更新') : '';
             const sumEl = document.querySelector('#stockScoreSummary');
-            if(sumEl) sumEl.innerText = '共 ' + list.length + ' 只（持仓与关注合并去重）· 满分 100 · 巴菲特式标准（护城河22/估值安全边际12/ROE12/股息率12·行业锚点+周期陷阱规避） · 财务数据来自东方财富 F10';
+            if(sumEl) sumEl.innerText = '共 ' + list.length + ' 只（持仓与关注合并去重）· 满分 100 · 巴菲特式标准（护城河22/估值12/ROE12/股息率12/业务稳定10/分红持续9/景气趋势7） · 财务数据来自东方财富 F10';
             const listEl = document.querySelector('#stockScoreList');
             const entryCount = document.querySelector('#stockScoreEntryCount');
             if(entryCount) entryCount.innerText = list.length ? (list.length + ' 只') : '';
@@ -12382,6 +12884,25 @@
                     + '<div class="px-4 pb-3">'
                     + '<button type="button" onclick="toggleScoreDetail(this)" class="w-full py-1.5 rounded-lg text-[11px] text-violet-500 bg-violet-50/60 active:bg-violet-50 transition-colors"><i class="fa fa-chevron-down text-[9px] mr-1"></i>展开点评</button>'
                     + '<div class="score-detail hidden mt-2 space-y-1.5">'
+                    + '<div class="rounded-xl px-2.5 py-2" style="background:#f8f8f6">'
+                    + '<div class="text-[10px] font-semibold text-gray-500 mb-1.5">分维度得分 · 满分 ' + s.score + ' / 100</div>'
+                    + (s.dims || []).map(function(dm){
+                        const pct = dm.f > 0 ? dm.s / dm.f * 100 : 0;
+                        const lost = Math.round((dm.f - dm.s) * 10) / 10;
+                        const barC = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#ef4444';
+                        const lossTxt = lost > 0.05 ? '<span class="text-[9px]" style="color:#ef4444">扣 ' + lost + ' 分</span>' : '<span class="text-[9px]" style="color:#10b981">满</span>';
+                        return '<div class="mb-1 last:mb-0">'
+                            + '<div class="flex items-center gap-1.5">'
+                            + '<span class="text-[10px] text-gray-600 whitespace-nowrap w-[86px]">' + dm.n + '</span>'
+                            + '<div class="flex-1 h-[5px] rounded-full overflow-hidden" style="background:#e8e8e4">'
+                            + '<div style="width:' + pct + '%;height:100%;background:' + barC + ';border-radius:999px"></div></div>'
+                            + '<span class="text-[10px] font-semibold tabular-nums whitespace-nowrap" style="color:' + (pct >= 60 ? '#374151' : '#ef4444') + '">' + dm.s + '/' + dm.f + '</span>'
+                            + lossTxt
+                            + '</div>'
+                            + '<div class="text-[9px] text-gray-400 pl-[94px] -mt-0.5 truncate">' + dm.d + '</div>'
+                            + '</div>';
+                    }).join('')
+                    + '</div>'
                     + '<div class="flex items-center gap-1.5 mb-1"><i class="fa fa-check-circle text-emerald-500 text-[11px]"></i><span class="text-[11px] font-semibold text-emerald-600">优点</span><span class="ml-auto text-[9px] text-gray-300">' + s.pros.length + ' 项</span></div>'
                     + prosH
                     + '<div class="flex items-center gap-1.5 mb-1 mt-2.5"><i class="fa fa-exclamation-triangle text-amber-500 text-[11px]"></i><span class="text-[11px] font-semibold text-amber-600">待改善</span><span class="ml-auto text-[9px] text-gray-300">' + s.cons.length + ' 项</span></div>'

@@ -1366,12 +1366,11 @@
                 </div>
             </div>
             <div class="border-t border-gray-100"></div>
-            <div class="px-4 py-2 grid grid-cols-[48px_minmax(0,1fr)_62px_72px_94px] gap-1 text-[10px] text-gray-400 items-center bg-gray-50/60 border-b border-gray-100" id="statsTradeHead">
-                <span>交易</span>
-                <span>股票</span>
-                <span class="text-right">数量</span>
-                <span class="text-right">金额</span>
-                <span class="text-right">日期</span>
+            <div class="px-4 py-2 grid grid-cols-[minmax(0,1.25fr)_0.65fr_0.95fr_0.95fr] gap-2 text-[10px] text-gray-400 items-center bg-gray-50/60 border-b border-gray-100" id="statsTradeHead">
+                <span>股票/时间</span>
+                <span class="text-right">成交价</span>
+                <span class="text-right">成交量</span>
+                <span class="text-right">业务/金额</span>
             </div>
             <div id="statsTradeList"></div>
             <div id="statsTradeMoreWrap" class="hidden px-4 pb-3">
@@ -5790,22 +5789,33 @@
             const series = [];
             let firstDone = false;
             for(let y = minY; y <= curY; y++){
-                (byYear[y] || []).forEach(function(f){
+                // 该年内流水按日期分组：同一天多笔（转入/取出）共享同一个"加仓当日净值"，
+                // 新增份额 = 资金额 ÷ 当日净值；避免同日后续笔被含新增份额的净值折现导致份额偏高、净值偏低
+                const yearFlows = byYear[y] || [];
+                const byDate = {};
+                yearFlows.forEach(function(f){
+                    const d = f.date;
+                    if(!byDate[d]) byDate[d] = [];
+                    byDate[d].push(f);
+                });
+                Object.keys(byDate).sort().forEach(function(d){
+                    const dayFlows = byDate[d];
                     if(!firstDone){
-                        // 基准日（初始投入）：初始净值=1，份额=初始金额
-                        shares += Number(f.amount);
+                        // 基准日（初始投入）：初始净值=1，份额=当天所有初始流水合计
+                        dayFlows.forEach(function(f){ shares += Number(f.amount) || 0; });
                         firstDone = true;
                         return;
                     }
-                    // 追加/取出：加仓当日实际净值 = 加仓日前最近资产快照 ÷ 当时总份额；
-                    // 新增份额 = 资金额 ÷ 当日净值；总份额累加
-                    const snap = snapBeforeDate(f.date);
+                    // 加仓当日实际净值 = 加仓日前最近资产快照 ÷ 当时总份额（当日所有笔共享同一净值）
+                    const snap = snapBeforeDate(d);
                     let navAt = 1;
                     if(snap && shares > 0){
                         navAt = Number(snap.value) / shares;
                     }
                     if(!isFinite(navAt) || navAt <= 0) navAt = 1;
-                    shares += Number(f.amount) / navAt;
+                    dayFlows.forEach(function(f){
+                        shares += (Number(f.amount) || 0) / navAt;
+                    });
                 });
                 // 本年总资产：历史年用年终归档值（无记录则为0，不沿用当前资产，避免误归档），当年用实时总资产
                 let asset = curAsset;
@@ -8838,7 +8848,8 @@
         // 交易明细数据指纹：买卖流水 / 清仓归档流水 / 修改持仓事件 任一变化 → 快照失效即时重建
         function tradeFingerprint(){
             try{
-                let f = '';
+                // v2：四列布局（股票/时间|成交价|成交量|业务/金额），旧快照结构变化强制重建
+                let f = 'v2|';
                 (holdDataList || []).forEach(function(it){
                     const tx = it.transactions || [];
                     f += it.id + ':' + tx.length + ':' + (tx.length ? tx[tx.length - 1].t : 0) + ';';
@@ -8862,6 +8873,7 @@
                         time: Number(t.t) || 0,
                         type: delta > 0 ? 'buy' : 'sell',
                         code: it.code, name: it.name, market: it.marketType,
+                        price: price,
                         qtyTxt: Math.abs(delta),
                         subTxt: '成交价 ' + fmtPrice(price, it.code, it.marketType === 'HK'),
                         amount: delta * price
@@ -8877,6 +8889,7 @@
                         time: Number(t.t) || 0,
                         type: delta > 0 ? 'buy' : 'sell',
                         code: c.code, name: c.name, market: c.marketType,
+                        price: price,
                         qtyTxt: Math.abs(delta),
                         subTxt: '成交价 ' + fmtPrice(price, c.code, c.marketType === 'HK'),
                         amount: delta * price
@@ -8889,6 +8902,7 @@
                     time: Number(e.t) || 0,
                     type: 'edit',
                     code: e.code, name: e.name, market: e.market,
+                    price: null,
                     qtyTxt: dm ? dm[1] : '--',
                     subTxt: (dm && dm[2]) ? '成本 ' + dm[2] : '',
                     amount: 0
@@ -8963,18 +8977,23 @@
                 const badgeText = ev.type === 'buy' ? '买入' : (ev.type === 'sell' ? '卖出' : '修改');
                 const amtCls = 'text-gray-600';
                 const amtTxt = ev.type === 'edit' ? '--' : ((ev.amount > 0 ? '+' : '-') + fmtMoney(Math.abs(ev.amount)));
+                const priceTxt = (ev.price != null && isFinite(Number(ev.price)) && Number(ev.price) > 0)
+                    ? fmtPrice(Number(ev.price), ev.code, ev.market === 'HK')
+                    : '--';
                 const d = new Date(ev.time);
                 const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-                html += '<div class="grid grid-cols-[48px_minmax(0,1fr)_62px_72px_94px] gap-1 items-center px-4 py-3' + (i < slice.length - 1 ? ' border-b border-gray-100' : '') + '">';
-                html += '<span class="' + badgeCls + ' text-[10px] font-semibold px-1.5 py-0.5 rounded-md text-center shrink-0 justify-self-start">' + badgeText + '</span>';
+                html += '<div class="grid grid-cols-[minmax(0,1.25fr)_0.65fr_0.95fr_0.95fr] gap-2 items-center px-4 py-3' + (i < slice.length - 1 ? ' border-b border-gray-100' : '') + '">';
                 html += '<div class="min-w-0">';
                 html += '<div class="text-[13px] font-semibold text-gray-800 truncate">' + ev.name + '</div>';
-                html += '<div class="text-[10px] text-gray-400 mt-0.5 truncate">' + ev.subTxt + '</div>';
+                html += '<div class="text-[10px] text-gray-400 mt-0.5 tabular-nums whitespace-nowrap">' + dateStr + ' ' + timeStr + '</div>';
                 html += '</div>';
-                html += '<div class="text-[12px] text-gray-600 tabular-nums text-right whitespace-nowrap">' + ev.qtyTxt + '</div>';
-                html += '<div class="text-[13px] font-semibold ' + amtCls + ' tabular-nums text-right whitespace-nowrap">' + amtTxt + '</div>';
-                html += '<div class="text-[10px] text-gray-400 tabular-nums text-right whitespace-nowrap">' + dateStr + ' ' + timeStr + '</div>';
+                html += '<div class="text-right"><div class="text-[12px] font-medium text-gray-600 tabular-nums whitespace-nowrap">' + priceTxt + '</div></div>';
+                html += '<div class="text-right"><div class="text-[12px] font-medium text-gray-600 tabular-nums whitespace-nowrap">' + ev.qtyTxt + '</div></div>';
+                html += '<div class="text-right">';
+                html += '<span class="' + badgeCls + ' text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">' + badgeText + '</span>';
+                html += '<div class="text-[12px] font-medium ' + amtCls + ' tabular-nums whitespace-nowrap mt-0.5">' + amtTxt + '</div>';
+                html += '</div>';
                 html += '</div>';
             });
             listDom.innerHTML = html;
@@ -9792,7 +9811,7 @@
             (historyData.fundInflows || []).forEach(function(f){
                 const amt = Number(f.amount) || 0;
                 if(amt === 0) return;
-                log.push({ type: amt >= 0 ? 'in' : 'out', title: amt >= 0 ? '资金转入' : '资金取出', detail: '资金流水记录', amount: amt, dateStr: f.date || '' });
+                log.push({ type: amt >= 0 ? 'in' : 'out', title: amt >= 0 ? '资金转入' : '资金取出', detail: '资金流水记录', amount: amt, dateStr: String(f.date || '').substring(0, 10) });
             });
             holdDataList.forEach(function(it){
                 (it.exDivRecords || []).forEach(function(r){
@@ -9826,11 +9845,10 @@
                     tEl.innerText = statsRefreshNow().slice(0, 5) + ' 更新';
                 }
             }
-            // 首次/数据导入后无账本 → 自动重建并落库一次，之后完全由变动时同步维护
-            if(!historyData.cashFlowLog || !historyData.cashFlowLog.length){
-                syncCashFlowLog();
-                saveHistory();
-            }
+            // 每次打开重建账本并落库：转入转出从资金源数据实时生成（日期仅保留到日，兼容早期带时分秒的存量记录），
+            // 分红入账保留已清仓股票的历史记录；账本内容无变化时更新时间不变，事件驱动自动落库
+            syncCashFlowLog();
+            saveHistory();
             const events = (historyData.cashFlowLog || []).slice();
             events.sort(function(a, b){ return (b.dateStr || '').localeCompare(a.dateStr || ''); });
             window._cashFlowEvents = events;

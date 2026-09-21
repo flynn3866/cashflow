@@ -1408,6 +1408,12 @@
                 </span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
             </button>
+            <button onclick="openFundTransfer()" class="w-full px-5 py-3 text-left text-gray-700 flex justify-between items-center active:bg-gray-50/80 transition-colors">
+                <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-sky-50 flex items-center justify-center flex-shrink-0"><i class="fa fa-exchange text-sky-500 text-[13px]"></i></span>资金转账
+                    <span class="text-[10px] text-gray-400 ml-0.5" id="mineFundTransferCount">--</span>
+                </span>
+                <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
+            </button>
             <button id="settingsBtn" class="w-full px-5 py-3 text-left text-gray-700 flex justify-between items-center active:bg-gray-50/80 transition-colors">
                 <span class="flex items-center gap-3"><span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0"><i class="fa fa-cog text-slate-500 text-[13px]"></i></span>设置</span>
                 <i class="fa fa-chevron-right text-gray-300 text-xs"></i>
@@ -2219,6 +2225,105 @@
     </div>
 
     <!-- 设置页面 -->
+    <!-- 资金转账详情页：资金转入/取出记录 + 年度汇总（与资金流水同源，风格统一） -->
+    <div id="pageFundTransfer" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部吸顶标题栏：标题 + 右侧醒目"新增流水"按钮 -->
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button onclick="closeFundTransfer()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">资金转入转出记录</span>
+                <button onclick="openFundTransferAdd()" class="ml-auto flex items-center gap-1 px-3 py-1.5 rounded-full text-white text-[12px] font-semibold active:scale-95 transition-transform shadow-md" style="background:linear-gradient(135deg,#D45329,#f97316);box-shadow:0 4px 14px rgba(212,83,41,.35)"><i class="fa fa-plus text-[11px]"></i>新增流水</button>
+            </div>
+        </div>
+        <!-- 总汇总卡片：总转入 / 总取出 / 累计净流入（深棕金渐变，与资金流水统一） -->
+        <div class="relative overflow-hidden rounded-2xl p-4 text-white card-shadow mb-3" style="background: linear-gradient(135deg,#2b2217 0%,#4a3218 55%,#6b451f 100%);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+            <div class="relative z-10 grid grid-cols-3">
+                <div class="text-center px-1">
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">总转入</div>
+                    <div id="ftTotalIn" class="text-base font-bold tabular-nums" style="color:#ffb3a7">--</div>
+                </div>
+                <div class="text-center px-1 border-l border-white/10">
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">总取出</div>
+                    <div id="ftTotalOut" class="text-base font-bold tabular-nums" style="color:#9ef0cf">--</div>
+                </div>
+                <div class="text-center px-1 border-l border-white/10">
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">累计净流入</div>
+                    <div id="ftTotalNet" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                </div>
+            </div>
+        </div>
+        <div class="text-[10px] text-gray-400 leading-relaxed px-1 mb-3">历史资金（系统投入使用前）已从「设置 · 资金投入」迁移至此；此后每笔转入 / 取出点击右上角「新增流水」录入，自动累计到当年汇总（明细与「统计 · 资金流水」同源）。</div>
+        <!-- 年度资金汇总：按年份倒序 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+            <div class="px-4 pt-3 pb-2.5 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    <span class="text-[13px] font-semibold text-gray-700">年度资金汇总</span>
+                </div>
+                <span id="ftYearCount" class="text-[10px] text-gray-400 bg-gray-50 rounded-full px-2.5 py-1">--</span>
+            </div>
+            <div class="border-t border-gray-100"></div>
+            <div class="px-4 py-2 grid grid-cols-[44px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_12px] gap-1 text-[10px] text-gray-400 items-center bg-gray-50/60 border-b border-gray-100">
+                <span>年份</span><span class="text-right">总转入</span><span class="text-right">总取出</span><span class="text-right">净流入</span><span></span>
+            </div>
+            <div id="fundTransferYearList"></div>
+        </div>
+    </div>
+
+    <!-- 新增资金流水独立页面 -->
+    <div id="pageFundTransferAdd" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部吸顶标题栏 -->
+        <div class="relative bg-white rounded-2xl px-4 py-3 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button onclick="closeFundTransferAdd()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">新增资金流水</span>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+            <!-- 类型 -->
+            <div class="px-4 pt-3.5 pb-3 border-b border-gray-50">
+                <label class="block text-[12px] font-medium text-gray-500 mb-2">类型</label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" id="ftTypeIn" onclick="setFundTransferType('in')" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent shadow-md shadow-orange-500/15"><i class="fa fa-arrow-down text-[12px]"></i>转入（入金）</button>
+                    <button type="button" id="ftTypeOut" onclick="setFundTransferType('out')" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200"><i class="fa fa-arrow-up text-[12px]"></i>取出（出金）</button>
+                </div>
+            </div>
+            <!-- 金额 -->
+            <div class="px-4 py-3 border-b border-gray-50">
+                <label class="block text-[12px] font-medium text-gray-500 mb-1.5">金额</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-base font-semibold">¥</span>
+                    <input type="number" step="0.01" id="ftAmount" class="w-full border-2 border-gray-100 rounded-xl pl-9 pr-4 py-3 focus:border-accent focus:outline-none transition-colors text-xl font-bold tabular-nums" placeholder="0.00">
+                </div>
+            </div>
+            <!-- 日期 -->
+            <div class="px-4 py-3 border-b border-gray-50">
+                <label class="block text-[12px] font-medium text-gray-500 mb-1.5">日期</label>
+                <div class="relative">
+                    <input type="date" id="ftDate" class="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base tabular-nums">
+                    <i class="fa fa-calendar-o absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 text-sm pointer-events-none"></i>
+                </div>
+            </div>
+            <!-- 备注 -->
+            <div class="px-4 py-3">
+                <label class="block text-[12px] font-medium text-gray-500 mb-1.5">备注 <span class="text-[10px] text-gray-300 font-normal">（可选）</span></label>
+                <input type="text" id="ftRemark" class="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="例如：工资结余入金">
+            </div>
+        </div>
+        <button onclick="saveFundTransfer()" class="mt-4 w-full py-3.5 bg-gradient-to-r from-accent to-orange-600 text-white rounded-2xl font-semibold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform text-[15px] tracking-wide">保存流水</button>
+        <div class="text-center text-[10px] text-gray-300 mt-2.5">保存后自动累计到当年年度汇总，并同步到「统计 · 资金流水」</div>
+    </div>
+
     <div id="pageSettings" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
         <div class="flex items-center gap-3 mb-4">
@@ -2239,8 +2344,8 @@
                         <i class="fa fa-bank text-accent text-sm"></i>
                     </div>
                     <div>
-                        <div class="text-base font-semibold text-gray-800">总资产</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入历史年终总资产，编辑后不会被自动计算覆盖</div>
+                        <div class="text-base font-semibold text-gray-800">历年总资产</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入系统投入使用前的历史年终总资产；今年总资产由系统自动记录，无需填写</div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -2263,8 +2368,8 @@
                         <i class="fa fa-coins text-amber-500 text-sm"></i>
                     </div>
                     <div>
-                        <div class="text-base font-semibold text-gray-800">每年分红收入</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入历史数据，编辑后不会被自动计算覆盖</div>
+                        <div class="text-base font-semibold text-gray-800">历年分红收入</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入系统投入使用前的历史年份分红收入，编辑后不会被自动计算覆盖</div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -2278,30 +2383,7 @@
                 <!-- 动态生成 -->
             </div>
         </div>
-
-        <!-- 资金投入 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" onclick="toggleSettingsCollapse('yearNetInflow')" id="yearNetInflowHeader">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
-                        <i class="fa fa-arrows-h text-sky-500 text-sm"></i>
-                    </div>
-                    <div>
-                        <div class="text-base font-semibold text-gray-800">资金投入</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5">记录每笔投入/取出的日期与金额，用于复利年化(XIRR)与净值(BVPS)计算；正数=转入，负数=转出</div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button id="addFundBtn" class="w-8 h-8 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center active:scale-95 transition-transform" onclick="event.stopPropagation(); addFundInflow();" title="添加一笔资金">
-                        <i class="fa fa-plus text-sm"></i>
-                    </button>
-                    <i id="yearNetInflowChevron" class="fa fa-chevron-down text-gray-400 text-sm transition-transform duration-300"></i>
-                </div>
-            </div>
-            <div id="yearNetInflowList" class="divide-y divide-gray-50 transition-all duration-300">
-                <!-- 动态生成：初始投入 + 每笔资金流水 -->
-            </div>
-        </div>
+        <!-- 资金投入已迁移至"我的 → 资金转账"（记录每笔转入/取出，用于复利年化 XIRR 与净值 BVPS 计算） -->
 
         <!-- 每年总收益率 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
@@ -2311,8 +2393,8 @@
                         <i class="fa fa-line-chart text-green-500 text-sm"></i>
                     </div>
                     <div>
-                        <div class="text-base font-semibold text-gray-800">每年总收益率</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入历史收益率，编辑后不会被自动计算覆盖</div>
+                        <div class="text-base font-semibold text-gray-800">历年总收益率</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">手动录入系统投入使用前的历史年份收益率，编辑后不会被自动计算覆盖</div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -5337,6 +5419,8 @@
             document.querySelector('#pageBalanceSheet').classList.add('hidden');
             document.querySelector('#pageYearSnapshot').classList.add('hidden');
             document.querySelector('#pageIndustryMap').classList.add('hidden');
+            document.querySelector('#pageFundTransfer').classList.add('hidden');
+            document.querySelector('#pageFundTransferAdd').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageAnalysis').classList.toggle('hidden', tab !== 'analysis');
@@ -5480,7 +5564,7 @@
             const flows = [];
             const initCost = Number(historyData.initialCost) || 0;
             if(initCost !== 0){
-                flows.push({ date: historyData.initialCostDate || '2020-01-01', amount: initCost });
+                flows.push({ date: historyData.initialCostDate || '2020-01-01', amount: initCost, isInit: true });
             }
             (historyData.fundInflows || []).forEach(function(f){
                 const amt = Number(f.amount) || 0;
@@ -5957,6 +6041,14 @@
             // 关注数量：本地实时数据（增删即时变化），不依赖每日快照
             const mcEl = document.querySelector('#mineWatchCount');
             if(mcEl) mcEl.innerText = loadWatchList().length + '只';
+            // 资金转账入口计数（本地数据，即时更新）
+            const ftElM = document.querySelector('#mineFundTransferCount');
+            if(ftElM){
+                const ftY = getFundYearSummary();
+                const ftN = Object.keys(ftY).length;
+                const ftFlows = getFundFlows().length;
+                ftElM.innerText = ftN ? (ftFlows + '笔') : '--';
+            }
             // 年度快照入口计数（本地数据，即时更新）
             const snElM = document.querySelector('#mineSnapshotCount');
             if(snElM){
@@ -13183,9 +13275,11 @@
         function renderYearAssetList(){
             const listDom = document.querySelector('#yearAssetList');
             if(!listDom) return;
-            const years = Object.keys(historyData.yearlyAssets || {}).sort();
+            const curYr = String(new Date().getFullYear());
+            // 今年总资产由系统自动记录（取最新），不在此处手动填写
+            const years = Object.keys(historyData.yearlyAssets || {}).filter(function(y){ return y !== curYr; }).sort();
             if(!years.length){
-                listDom.innerHTML = '<div class="px-5 py-6 text-center text-sm text-gray-400">暂无数据，点击右上角 + 添加</div>';
+                listDom.innerHTML = '<div class="px-5 py-6 text-center text-sm text-gray-400">暂无历史数据，点击右上角 + 添加历史年份</div>';
                 return;
             }
             let html = '';
@@ -13367,7 +13461,6 @@
             document.querySelector('#pageSettings').classList.remove('hidden');
             renderYearAssetList();
             renderYearDivList();
-            renderYearNetInflowList();
             renderYearReturnList();
             // 初始化折叠状态
             initSettingsCollapse();
@@ -13422,6 +13515,159 @@
             historyData.fundInflows.splice(idx, 1);
             renderYearNetInflowList();
         }
+        // ============ 资金转账（我的页）：转入/取出记录 + 年度汇总（与资金流水同源） ============
+        function openFundTransfer(){
+            window.scrollTo(0, 0);
+            document.querySelector('#pageFundTransfer').classList.remove('hidden');
+            document.querySelector('#pageMine').classList.add('hidden');
+            renderFundTransfer();
+        }
+        function closeFundTransfer(){
+            document.querySelector('#pageFundTransfer').classList.add('hidden');
+            document.querySelector('#pageMine').classList.remove('hidden');
+            renderMinePage();
+            window.scrollTo(0, 0);
+        }
+        // 按年聚合资金流水（含初始投入；与 XIRR/净值使用同一 getFundFlows 数据源）
+        function getFundYearSummary(){
+            const flows = getFundFlows();
+            const byY = {};
+            flows.forEach(function(f){
+                const y = String(f.date || '').substring(0, 4) || '----';
+                if(!byY[y]) byY[y] = { in: 0, out: 0, net: 0, items: [] };
+                const a = Number(f.amount) || 0;
+                byY[y].net += a;
+                if(a >= 0) byY[y].in += a; else byY[y].out += Math.abs(a);
+                byY[y].items.push({ date: f.date, amount: a, remark: f.remark || '', isInit: !!f.isInit });
+            });
+            return byY;
+        }
+        function renderFundTransfer(){
+            const byY = getFundYearSummary();
+            const years = Object.keys(byY).sort().reverse();
+            let inT = 0, outT = 0;
+            Object.keys(byY).forEach(function(y){ inT += byY[y].in; outT += byY[y].out; });
+            const e1 = document.querySelector('#ftTotalIn'), e2 = document.querySelector('#ftTotalOut'), e3 = document.querySelector('#ftTotalNet');
+            if(e1) e1.innerText = fmtMoney(inT);
+            if(e2) e2.innerText = fmtMoney(outT);
+            if(e3) e3.innerText = (inT - outT >= 0 ? '+' : '') + fmtMoney(inT - outT);
+            const cntEl = document.querySelector('#ftYearCount');
+            if(cntEl) cntEl.innerText = years.length ? (years.length + ' 年') : '--';
+            const listEl = document.querySelector('#fundTransferYearList');
+            if(!listEl) return;
+            if(!years.length){
+                listEl.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">暂无资金记录，点击右上角「新增流水」录入</div>';
+                return;
+            }
+            let h = '';
+            years.forEach(function(y, i){
+                const d = byY[y];
+                const netCls = d.net >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]';
+                const itemsH = d.items.map(function(it){
+                    const amtCls = it.amount >= 0 ? 'text-[#ff4d4f]' : 'text-[#00d68f]';
+                    const tag = it.isInit
+                        ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium shrink-0">初始投入</span>'
+                        : (it.amount >= 0 ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-[#fff1f0] text-[#ff4d4f] font-medium shrink-0">转入</span>' : '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-[#e8faf3] text-[#00b57a] font-medium shrink-0">取出</span>');
+                    // 明细布局：标签 | 资金流水（备注） | 金额（紧贴备注） | 时间（最右，含时分秒）
+                    const dRaw = String(it.date || '');
+                    const timeTxt = dRaw.length > 10 ? dRaw.substring(5) : (dRaw.substring(5) + ' 00:00:00');
+                    return '<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-gray-50">'
+                        + tag
+                        + '<div class="min-w-0 max-w-[45%]"><div class="text-[11px] text-gray-700 truncate">' + (it.remark || (it.isInit ? '组合启动资金' : '资金流水')) + '</div></div>'
+                        + '<div class="text-[12px] font-semibold ' + amtCls + ' tabular-nums shrink-0">' + (it.amount >= 0 ? '+' : '-') + fmtMoney(Math.abs(it.amount)) + '</div>'
+                        + '<div class="flex-1"></div>'
+                        + '<div class="text-[10px] text-gray-400 tabular-nums shrink-0">' + timeTxt + '</div>'
+                        + '</div>';
+                }).join('');
+                h += '<div class="' + (i < years.length - 1 ? 'border-b border-gray-100' : '') + '">'
+                    + '<div class="px-4 py-3 flex items-center gap-1 cursor-pointer active:bg-gray-50/80 transition-colors" onclick="toggleFundYearRow(this)">'
+                    + '<div class="w-[44px] text-[12px] font-semibold text-gray-700 tabular-nums">' + y + '</div>'
+                    + '<div class="flex-1 text-right text-[13px] font-semibold tabular-nums text-gray-700">' + fmtMoney(d.in) + '</div>'
+                    + '<div class="flex-1 text-right text-[13px] font-semibold tabular-nums text-gray-700">' + fmtMoney(d.out) + '</div>'
+                    + '<div class="flex-1 text-right text-[13px] font-semibold tabular-nums ' + netCls + '">' + (d.net >= 0 ? '+' : '') + fmtMoney(d.net) + '</div>'
+                    + '<i class="fa fa-chevron-down text-[10px] text-gray-300 transition-transform duration-200"></i>'
+                    + '</div>'
+                    + '<div class="fund-year-detail hidden px-4 pb-3 pt-1" style="background:#fafaf8">'
+                    + (d.items.length > 4 ? '<div class="text-[10px] text-gray-400 pb-1.5 flex items-center justify-between"><span>共 ' + d.items.length + ' 笔记录</span><i class="fa fa-chevron-up text-[9px] text-gray-300"></i></div>' : '')
+                    + '<div class="space-y-1.5" style="max-height:260px;overflow-y:auto;">'
+                    + (itemsH || '<div class="text-center py-3 text-[11px] text-gray-300">本年无记录</div>')
+                    + '</div>'
+                    + '</div>'
+                    + '</div>';
+            });
+            listEl.innerHTML = h;
+        }
+        function toggleFundYearRow(header){
+            const detail = header.nextElementSibling;
+            const chevron = header.querySelector('i.fa-chevron-down');
+            if(!detail) return;
+            const open = detail.classList.toggle('hidden');
+            if(chevron) chevron.style.transform = open ? '' : 'rotate(-90deg)';
+        }
+        function openFundTransferAdd(){
+            window.scrollTo(0, 0);
+            const dEl = document.querySelector('#ftDate');
+            if(dEl) dEl.value = todayStr();
+            const amtEl = document.querySelector('#ftAmount');
+            if(amtEl) amtEl.value = '';
+            const rEl = document.querySelector('#ftRemark');
+            if(rEl) rEl.value = '';
+            setFundTransferType('in');
+            document.querySelector('#pageFundTransfer').classList.add('hidden');
+            document.querySelector('#pageFundTransferAdd').classList.remove('hidden');
+        }
+        function closeFundTransferAdd(){
+            document.querySelector('#pageFundTransferAdd').classList.add('hidden');
+            document.querySelector('#pageFundTransfer').classList.remove('hidden');
+            renderFundTransfer();
+        }
+        let fundTransferType = 'in';
+        function setFundTransferType(t){
+            fundTransferType = t;
+            const btnIn = document.querySelector('#ftTypeIn'), btnOut = document.querySelector('#ftTypeOut');
+            if(btnIn) btnIn.className = 'flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all ' + (t === 'in' ? 'bg-accent text-white border-accent shadow-md shadow-orange-500/15' : 'bg-white text-gray-500 border-gray-200');
+            if(btnOut) btnOut.className = 'flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all ' + (t === 'out' ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/15' : 'bg-white text-gray-500 border-gray-200');
+        }
+        // 资金流水变动后的统一同步：作废旧净值归档 + 重建 yearlyNetInflow + 同步流水账本 + 重算总投入 + 失效按天快照
+        function afterFundFlowsChanged(){
+            historyData.yearlyNav = {};
+            historyData.navFlowFp = '';
+            const inflowByYear = {};
+            (historyData.fundInflows || []).forEach(function(f){
+                const y = String(f.date || '').substring(0, 4);
+                if(y) inflowByYear[y] = (inflowByYear[y] || 0) + (Number(f.amount) || 0);
+            });
+            historyData.yearlyNetInflow = {};
+            Object.keys(inflowByYear).forEach(function(y){
+                if(Math.abs(inflowByYear[y]) > 1e-9) historyData.yearlyNetInflow[y] = Number(inflowByYear[y].toFixed(2));
+            });
+            syncCashFlowLog();
+            recalcTotalInvested();
+            saveHistory();
+            invalidateStatsSnaps();
+            renderFundTransfer();
+            renderMinePage();
+            renderPage();
+            analysisChartsRendered = false;
+        }
+        function saveFundTransfer(){
+            const dateV = document.querySelector('#ftDate').value;
+            const amtV = Number(document.querySelector('#ftAmount').value) || 0;
+            const remarkV = (document.querySelector('#ftRemark').value || '').trim();
+            if(!dateV){ showToast('请选择日期'); return; }
+            if(amtV <= 0){ showToast('请输入金额（大于 0）'); return; }
+            const amount = fundTransferType === 'out' ? -amtV : amtV;
+            if(!historyData.fundInflows) historyData.fundInflows = [];
+            // 保存完整时间戳：日期 + 录入时刻的时分秒（明细按时间展示更精确）
+            const now = new Date();
+            const pad2 = function(n){ return n < 10 ? '0' + n : '' + n; };
+            const ts = dateV + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+            historyData.fundInflows.push({ date: ts, amount: amount, remark: remarkV });
+            afterFundFlowsChanged();
+            closeFundTransferAdd();
+            showToast(fundTransferType === 'in' ? '已记录资金转入，并累计到 ' + dateV.substring(0, 4) + ' 年汇总' : '已记录资金取出，并累计到 ' + dateV.substring(0, 4) + ' 年汇总');
+        }
+        // 资金流水为不可变历史记录：不在资金转账页提供删除（如需修正可在导入数据时调整）
 
         // 初始化设置页面折叠功能
         function initSettingsCollapse(){
@@ -13433,7 +13679,6 @@
             // 应用折叠状态
             applyCollapseState('yearAsset', collapseState.yearAsset);
             applyCollapseState('yearDiv', collapseState.yearDiv);
-            applyCollapseState('yearNetInflow', collapseState.yearNetInflow);
             applyCollapseState('yearReturn', collapseState.yearReturn);
             // 折叠点击事件已通过内联 onclick 绑定（避免 showSettings 重复 addEventListener 导致偶发无反应）
         }
@@ -13521,52 +13766,12 @@
                     historyData.manualYearlyReturn[y] = true;
                 }
             });
-            // 记录资金投入旧值（用于检测变化；变化后历史净值归档作废，按新份额重算）
-            const prevInitCost = Number(historyData.initialCost) || 0;
-            const prevInflowsStr = JSON.stringify(historyData.fundInflows || []);
-            // 保存初始投入（金额 + 日期，独立固定，不随行情/持仓变化）
-            document.querySelectorAll('.year-initcost-input').forEach(function(input){
-                historyData.initialCost = Number(input.value) || 0;
-            });
-            document.querySelectorAll('.year-initcost-date').forEach(function(input){
-                if(input.value) historyData.initialCostDate = input.value;
-            });
-            // 保存资金流水（每笔：日期 + 金额），并重建 yearlyNetInflow（按年汇总，供今年收益率等使用）
-            const inflows = [];
-            document.querySelectorAll('.fund-inflow-row').forEach(function(row){
-                const dateInput = row.querySelector('.fund-inflow-date');
-                const amtInput = row.querySelector('.fund-inflow-amount');
-                const d = dateInput ? dateInput.value : '';
-                const a = Number(amtInput ? amtInput.value : 0) || 0;
-                if(d) inflows.push({ date: d, amount: a });
-            });
-            historyData.fundInflows = inflows;
-            const inflowByYear = {};
-            inflows.forEach(function(f){
-                const y = f.date.substring(0, 4);
-                inflowByYear[y] = (inflowByYear[y] || 0) + (Number(f.amount) || 0);
-            });
-            historyData.yearlyNetInflow = {};
-            Object.keys(inflowByYear).forEach(function(y){
-                if(Math.abs(inflowByYear[y]) > 1e-9){
-                    historyData.yearlyNetInflow[y] = Number(inflowByYear[y].toFixed(2));
-                }
-            });
-            // 资金投入变化 → 份额体系变化 → 历史净值归档作废（净值详情/分析页按新份额重算）
-            const newInflowsStr = JSON.stringify(historyData.fundInflows || []);
-            if(Math.abs(prevInitCost - (Number(historyData.initialCost) || 0)) > 1e-9 || prevInflowsStr !== newInflowsStr){
-                historyData.yearlyNav = {};
-                historyData.navFlowFp = '';
-            }
-            // 资金流水账本：资金投入/初始投入变动后立即同步保存（事件驱动，不依赖每日刷新）
-            syncCashFlowLog();
-            // 总投入成本持久化缓存：资金投入变化后重算，随本次 saveHistory 一起落库
-            recalcTotalInvested();
+            // 资金投入已迁移至"我的 → 资金转账"：新增/删除流水在资金转账页即时同步
+            // （重建 yearlyNetInflow、作废旧净值归档、同步资金流水账本、重算总投入、失效按天快照）
             saveHistory();
             showToast('设置已保存');
             // 重新渲染列表，显示"已锁定"标签
             renderYearDivList();
-            renderYearNetInflowList();
             renderYearReturnList();
             // 立即刷新持仓页顶部（今年收益率等受净流入影响的指标即时生效）
             renderPage();
@@ -13590,8 +13795,8 @@
         function addYearAsset(){
             const years = Object.keys(historyData.yearlyAssets || {}).map(Number).sort(function(a, b){ return a - b; });
             const curYearNum = new Date().getFullYear();
-            const hasCur = years.indexOf(curYearNum) >= 0;
-            const newYear = String(hasCur ? (years.length ? years[0] - 1 : curYearNum - 1) : curYearNum);
+            // 只往历史方向添加年份（今年总资产自动记录，不在设置页手动填写）
+            const newYear = String(years.length ? Math.min(years[0] - 1, curYearNum - 1) : curYearNum - 1);
             if(!historyData.yearlyAssets[newYear]){
                 historyData.yearlyAssets[newYear] = 0;
                 // 用户主动添加的历史年份，标记为手动编辑，防止被自动计算覆盖

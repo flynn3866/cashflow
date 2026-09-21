@@ -12480,7 +12480,10 @@
         // 既要覆盖映射后的大类名（公用事业→公用、能源、非银金融→非银等），
         // 也要覆盖公司名特征词（华能水电→水电、中国海油→海油等），否则映射大类后护城河会误判
         const SCORE_DEF_INDS = ['银行','电力','水电','水务','燃气','电信','通信','石油','石化','煤炭','高速','港口','铁路','保险','核电','公用','能源','机场','环保','白酒','食品','医药','消费','饮料','中药','轨道交通','交运设备','轨交','机车','高铁','动车','城轨','地铁','军工','船舶','通号','中车'];
-        const SCORE_MONO_INDS = ['石油','石化','电信','通信','银行','保险','证券','电力','水电','核电','煤炭','高速','铁路','港口','水务','燃气','公用','能源','非银','海洋石油','海油','天然气','油气','黄金','贵金属','机场','建筑','基建','啤酒','轨道交通','交运设备','轨交','机车','高铁','动车','城轨','地铁','列控','军工','船舶','航发'];
+        // 垄断/寡头词表：命中即视为有护城河（moat）——行政牌照（电信/银行/保险）、自然垄断（水电/港口/铁路/高速）、
+        // 资源独占（石油/煤炭/黄金/海油）、国情寡头（中车/通号/军工/船舶）。注意：啤酒/白酒等品牌消费
+        // 不属于垄断（市场上玩家众多，仅品牌差异），不计入垄断，护城河按品牌/毛利单独评估
+        const SCORE_MONO_INDS = ['石油','石化','电信','通信','银行','保险','证券','电力','水电','核电','煤炭','高速','铁路','港口','水务','燃气','公用','能源','非银','海洋石油','海油','天然气','油气','黄金','贵金属','机场','建筑','基建','轨道交通','交运设备','轨交','机车','高铁','动车','城轨','地铁','列控','军工','船舶','航发'];
         // 资源/牌照独占型关键词：水资源、油气资源、矿产资源、特许牌照——护城河不可复制（巴菲特式特许经营权）
         const SCORE_RES_KEYWORDS = ['水电','海油','海洋石油','核电','神华','长江电力','黄金','稀土','港口','水务','燃气','铁路','高速','移动','电信','联通','石油','煤炭','银行','保险','白酒','茅台','五粮液','中车','通号','高铁','动车','机车','列控','城轨','地铁','轨道交通','军工','船舶','航发'];
         function scoreIndustry(ind){
@@ -12599,11 +12602,20 @@
                 if(eAvg > 0 && lAvg > 0){
                     if(lAvg < eAvg * 0.85){
                         out.phase = '下行';
-                        out.adj -= 2;
-                        out.cons.push('盈利处下行期：近 2 年 ROE 均值 ' + lAvg.toFixed(1) + '% 较前几年（' + eAvg.toFixed(1) + '%）明显回落');
+                        // 金融（银行/保险/证券）盈利与息差/市场周期强相关，ROE 回落多为周期波动而非业务衰退，
+                        // 具均值回归属性 → 扣分放宽为 -1；其他行业（消费/周期/成长）按业务景气扣 -2
+                        const finBiz = /(银行|保险|证券|非银)/.test(ind);
+                        out.adj -= (finBiz ? 1 : 2);
+                        out.cons.push(finBiz
+                            ? '金融盈利处回落期：近 2 年 ROE 均值 ' + lAvg.toFixed(1) + '% 较前几年（' + eAvg.toFixed(1) + '%）回落，主因净息差/市场波动（周期属性，具均值回归），非业务衰退'
+                            : '盈利处下行期：近 2 年 ROE 均值 ' + lAvg.toFixed(1) + '% 较前几年（' + eAvg.toFixed(1) + '%）明显回落');
                         if(pe != null && pe > 0 && pe <= indRule.peGood){
-                            out.cons.push('低估值伴随盈利下滑：当前低 PE 是利润缩水的结果而非低估（价值陷阱早期特征）');
-                            out.tips.push('等盈利企稳（ROE 止跌回升）再评估安全边际，避免"便宜但持续变差"');
+                            out.cons.push(finBiz
+                                ? '低估值+盈利回落：息差周期底部叠加低 PE，属长期布局窗口，跟踪净息差企稳与资产质量（不良率）信号'
+                                : '低估值伴随盈利下滑：当前低 PE 是利润缩水的结果而非低估（价值陷阱早期特征）');
+                            out.tips.push(finBiz
+                                ? '关注净息差企稳、不良率与拨备覆盖率，盈利周期底部买入优质金融是巴菲特式逆向布局'
+                                : '等盈利企稳（ROE 止跌回升）再评估安全边际，避免"便宜但持续变差"');
                         }
                     } else if(lAvg > eAvg * 1.15){
                         out.phase = '上行';
@@ -12756,12 +12768,15 @@
             let score = 0;
             // 1. 便宜程度（股息率·现价口径，14）——巴菲特：高股息率是"低估"的信号，但必须
             //    以优质商业模式为前提；单独的高股息不构成买入理由（避免万科/融创式股息率陷阱）
-            let s1 = yieldPct >= indRule.yieldFull ? 10 : yieldPct >= indRule.yieldGood ? 8 : yieldPct >= indRule.yieldMid ? 6 : yieldPct >= indRule.yieldMid / 2 ? 3 : yieldPct > 0 ? 1.5 : 0;
+            // 巴菲特视角：现价股息率是绝对数字，跨行业统一标准（≥5%极便宜/≥4.5%低估/≥4%高息/≥3%尚可/≥2%偏贵/1.5分保底）。
+            // 行业差异不应导致"更高股息率得分更低"（行业特征由估值PE/PB锚与护城河维度体现）
+            let s1 = yieldPct >= 5 ? 10 : yieldPct >= 4.5 ? 9 : yieldPct >= 4 ? 8 : yieldPct >= 3 ? 6 : yieldPct >= 2 ? 4 : yieldPct > 0 ? 1.5 : 0;
             const s1Raw = s1;
             score += s1;
-            if(yieldPct >= indRule.yieldFull){ pros.push('股息率(现价) ' + yieldPct.toFixed(2) + '%，' + indRule.label + '内极便宜，低估明显'); }
-            else if(yieldPct >= indRule.yieldGood){ pros.push('股息率(现价) ' + yieldPct.toFixed(2) + '%，' + indRule.label + '内便宜/低估'); }
-            else if(yieldPct > 0 && yieldPct < indRule.yieldMid / 2){ cons.push('股息率仅 ' + yieldPct.toFixed(2) + '%，价格偏贵，收息性价比弱'); tips.push('关注股息率回升至 ' + indRule.yieldGood + '% 以上（更便宜）的介入机会'); }
+            if(yieldPct >= 5){ pros.push('股息率(现价) ' + yieldPct.toFixed(2) + '%，≥5% 极便宜，低估明显'); }
+            else if(yieldPct >= 4.5){ pros.push('股息率(现价) ' + yieldPct.toFixed(2) + '%，≥4.5% 明显低估'); }
+            else if(yieldPct >= 4){ pros.push('股息率(现价) ' + yieldPct.toFixed(2) + '%，≥4% 高股息'); }
+            else if(yieldPct > 0 && yieldPct < 2){ cons.push('股息率仅 ' + yieldPct.toFixed(2) + '%，价格偏贵，收息性价比弱'); tips.push('关注股息率回升至 4% 以上（更便宜）的介入机会'); }
             else if(yieldPct <= 0){ cons.push('暂无分红数据，便宜程度无法评估'); tips.push('确认该股是否持续派息，或手动补充每股分红'); }
             // 2. 分红持续性（12）
             let s2 = divYears >= 5 ? 8 : divYears >= 4 ? 6 : divYears >= 3 ? 5 : divYears >= 2 ? 3.5 : divYears >= 1 ? 1.5 : (annualDiv > 0 ? 1.5 : 1);
@@ -12788,10 +12803,17 @@
             else if(indS.stb <= 5 && !isEtf){ cons.push('属成长/周期行业，业务波动较大'); tips.push('关注行业周期位置，控制仓位'); }
             // 5. 商业模式与护城河（22，最高权重——巴菲特最看重"十年后这家公司还在不在"）：
             //    竞争格局（垄断/寡头/牌照）为第一要素；无护城河的高股息率是陷阱
-            const brandMoat = gross != null && gross >= 60;
-            let s5 = isEtf ? 5 : (indS.mono >= 10 ? (indS.res ? 11 : 10) : (brandMoat ? 8 : 5));
-            if(roeLatest != null){ s5 += roeLatest >= indRule.roeFull ? 4 : roeLatest >= indRule.roeGood ? 3.5 : roeLatest >= indRule.roeMid ? 2.5 : roeLatest >= indRule.roeMid / 2 ? 1.5 : 1; }
-            if(gross != null){ s5 += gross >= (indRule.grossFull || 50) ? 4 : gross >= (indRule.grossGood || 30) ? 3 : gross >= 15 ? 1.5 : 1; }
+            // 品牌护城河判定：高毛利+合理净利率才成立（不是每个消费品都是可口可乐，高毛利低净利多为弱品牌）
+            const brandMoat = gross != null && gross >= 60 && (net == null || net >= 10);
+            // 护城河基础分按竞争格局层级（巴菲特：行政牌照/资源独占 > 寡头 > 品牌 > 竞争分散）：
+            //   res(资源/牌照/行政垄断，如银行/电信/水电/铁路/中车/军工) = 11
+            //   mono(寡头格局) = 10
+            //   brand(高毛利品牌，如茅台/可口可乐式定价权) = 7
+            //   竞争分散 = 4（只有品牌/成本微优势，护城河有限）
+            // ROE/毛利只作护城河"加固"（≤1.5/+2），不喧宾夺主——盈利质量另由 ROE 与盈利质量维度评估
+            let s5 = isEtf ? 5 : (indS.mono >= 10 ? (indS.res ? 11 : 10) : (brandMoat ? 7 : 4));
+            if(roeLatest != null){ s5 += roeLatest >= indRule.roeFull ? 1.5 : roeLatest >= indRule.roeGood ? 1 : roeLatest >= indRule.roeMid ? 0.5 : 0; }
+            if(gross != null){ s5 += gross >= (indRule.grossFull || 50) ? 2 : gross >= (indRule.grossGood || 30) ? 1.5 : gross >= 15 ? 0.5 : 0; }
             s5 = Math.min(s5, 18);
             score += s5;
             if(indS.res){ pros.push('资源/牌照独占型生意（' + (ind || name || '未知') + '）：' + (ind.indexOf('水电') >= 0 ? '流域水资源独占，后发者无法复制同一资源' : (ind.indexOf('海油') >= 0 || ind.indexOf('海洋石油') >= 0 || ind.indexOf('石油') >= 0) ? '油气资源垄断，勘探开发资质稀缺' : ind.indexOf('核电') >= 0 ? '核电牌照稀缺，选址与技术壁垒高' : ind.indexOf('煤炭') >= 0 || ind.indexOf('神华') >= 0 ? '煤炭资源储量独占，采矿权不可复制' : ind.indexOf('银行') >= 0 ? '牌照+网点网络，特许经营壁垒深' : ind.indexOf('保险') >= 0 ? '牌照+精算/资金实力，特许经营壁垒深' : ind.indexOf('白酒') >= 0 || ind.indexOf('茅台') >= 0 || ind.indexOf('五粮液') >= 0 ? '高端品牌与文化垄断，品牌护城河极深' : ind.indexOf('中车') >= 0 || ind.indexOf('通号') >= 0 || ind.indexOf('高铁') >= 0 || ind.indexOf('动车') >= 0 || ind.indexOf('机车') >= 0 || ind.indexOf('列控') >= 0 || ind.indexOf('城轨') >= 0 || ind.indexOf('轨道交通') >= 0 ? '轨道交通装备/列控系统国内唯一或寡头（国家战略与运行安全属性），后发者无法进入' : ind.indexOf('军工') >= 0 || ind.indexOf('船舶') >= 0 || ind.indexOf('航发') >= 0 ? '国家安全级核心装备，军工特许垄断' : '特许/资源垄断，护城河深厚难以复制') + '——巴菲特式核心壁垒'); }
@@ -12884,6 +12906,13 @@
             // 11. 行业景气度/发展空间（并入 s10，满分 7）——识别行业下坡期/高峰期，稳定性与发展空间权重更高
             const trend = analyzeTrend(roeList, byYear, yearsArr, pe, indRule, ind, name, isEtf);
             s10 = Math.max(1, Math.min(6, s10 + trend.adj));
+            // 巴菲特：避开下坡行业——分红增长不等于行业景气
+            // 酒类/消费（白酒/啤酒/饮料/食品）：行业需求承压期（ROE 趋势下行）即使分红微增也不给高分；
+            //   估值偏高时（PE>行业合理上沿）上限 5，防止"高分红幻觉"掩盖需求下滑
+            if(/(白酒|啤酒|饮料|食品|消费)/.test(ind) && !isEtf){
+                if(trend.phase === '下行' && s10 > 4){ s10 = 4; trend.cons.push('酒类/消费处需求下坡期：分红增长≠行业景气，量价承压时高分红利不可持续'); trend.tips.push('等待库存/动销/提价拐点，行业下行期以经营企稳为先'); }
+                else if(s10 >= 6 && pe != null && pe > 0 && pe > indRule.peGood){ s10 = 5; trend.cons.push('消费分红增长但估值偏高（PE ' + pe.toFixed(1) + ' > 行业合理上沿 ' + indRule.peGood + '）：增长已被价格透支，需更严格的安全边际'); trend.tips.push('高毛利品牌也要按"十年后还在不在"评估，估值回归至 ' + indRule.peGood + ' 以下再考虑'); }
+            }
             score += s10;
             trend.cons.forEach(function(t){ cons.push(t); });
             trend.tips.forEach(function(t){ tips.push(t); });
@@ -12898,7 +12927,7 @@
             }
             // 修正②：高股息但护城河薄弱 → 价值陷阱，便宜程度得分打6折并明确警示
             const weakMoat = !isEtf && indS.mono <= 4 && !brandMoat;
-            if(weakMoat && yieldPct >= indRule.yieldGood){
+            if(weakMoat && yieldPct >= 4){
                 const s1Before = s1;
                 s1 = Math.floor(s1 * 0.6);
                 score = score - s1Before + s1;
@@ -12956,16 +12985,16 @@
             return { code: code, market: market, name: name, price: price, cost: cost, annualDiv: annualDiv, yieldPct: yieldPct, costYield: costYield, divYears: divYears, score: score, grade: grade, gColor: gColor, gDesc: gDesc, pros: pros, cons: cons, tips: tips, industry: indDisplay, isEtf: isEtf, watchOnly: !!it.watch, roeLatest: roeLatest, gross: gross, net: net, pe: pe, pb: pb, debt: debt, finMissing: finMissing, roeYearsOk: roeYearsOk, fcff: fcff, normYield: normYieldPct, valTag: valObj.tag, cycleTop: valObj.cycleTop, trendPhase: trend.phase,
                 certainty: s11,
                 dims: [
-                    { n: '股息率(便宜)', s: Math.max(0, Math.min(10, s1)), f: 10, d: yieldPct > 0 ? '现价股息率 ' + yieldPct.toFixed(2) + '% vs ' + indRule.label + '锚点 ' + indRule.yieldGood + '%' : '暂无分红数据' },
+                    { n: '股息率(便宜)', s: Math.max(0, Math.min(10, s1)), f: 10, d: yieldPct > 0 ? '现价股息率 ' + yieldPct.toFixed(2) + '%（统一标准：≥5%满档，≥4.5% 9分，≥4% 8分，≥3% 6分）' : '暂无分红数据' },
                     { n: '分红持续性', s: s2, f: 8, d: divYears >= 1 ? '连续 ' + divYears + ' 年派息' : '分红记录不足' },
                     { n: '分红稳定性', s: s3, f: 3, d: s3 >= 3 ? '近 3 年每年派息' : (s3 >= 2.5 ? '近 2 年派息' : '分红有中断/不足') },
                     { n: '业务稳定性', s: s4, f: 8, d: indS.stb >= 15 ? '防御型行业，需求刚性' : (indS.stb >= 12 ? '需求较稳，品牌/公用属性' : '行业波动较大') },
-                    { n: '护城河/商业模式', s: s5, f: 18, d: indS.res ? '资源/牌照/国情独占' : (indS.mono >= 10 ? '垄断/寡头格局' : '竞争分散，护城河有限') },
+                    { n: '护城河/商业模式', s: s5, f: 18, d: indS.res ? '资源/牌照/行政垄断（银行/电信/水电/铁路/中车/军工级）' : (indS.mono >= 10 ? '寡头竞争格局' : (brandMoat ? '高毛利品牌护城河（定价权）' : '竞争分散，仅品牌/成本微优势，护城河有限')) },
                     { n: 'ROE资本回报', s: s6, f: 10, d: roeLatest != null ? 'ROE ' + roeLatest.toFixed(1) + '% vs ' + indRule.label + '标准 ' + indRule.roeGood + '%' : '财务数据待获取' },
                     { n: '盈利质量', s: s7, f: 7, d: (gross != null || net != null) ? ('毛利率 ' + (gross != null ? gross.toFixed(0) + '%' : '--') + ' · 净利率 ' + (net != null ? net.toFixed(1) + '%' : '--')) : '财务数据待获取' },
                     { n: '自由现金流', s: s8, f: 4, d: s8 >= 4 ? '现金流持续为正' : (s8 >= 3 ? '现金流中性' : '现金流偏弱') },
                     { n: '估值安全边际', s: Math.max(0, Math.min(10, s9)), f: 10, d: valObj.note || '估值数据待刷新' },
-                    { n: '分红增长/景气趋势', s: Math.max(1, Math.min(6, s10)), f: 6, d: '景气' + (trend.phase === '上行' ? '上行' : trend.phase === '下行' ? '下行' : '平稳') + (trend.note ? ' · ' + trend.note.replace(/；/g, ' · ') : '') },
+                    { n: '分红增长/景气趋势', s: Math.max(1, Math.min(6, s10)), f: 6, d: '依据：近2年ROE ' + (trend.phase === '上行' ? '上行' : trend.phase === '下行' ? '下行' : '平稳') + ' + 分红' + (trend.phase === '下行' ? '收缩/承压' : '增长/稳定') + '；' + (trend.note ? trend.note.replace(/；/g, ' · ') : '行业生命周期中性') },
                     { n: '顶级确定性', s: Math.max(0, Math.min(16, s11)), f: 16, d: '需求永恒/地位不可动摇/分红永续/低波动/稳健财务——"看不懂宏观也能拿几十年的资产"' }
                 ] };
         }
@@ -12995,7 +13024,7 @@
         // 确保评分快照（与刷新点同键；过期或缺失则重算覆盖存储）
         // force=true 用于财务数据后台补齐完成后强制重建，避免同日快照复用导致新拉到财务不生效
         // 评分算法版本号：护城河/负债率等评分逻辑升级时递增，强制旧缓存重算（否则手机端一直显示旧点评）
-        const SCORE_SNAP_VERSION = 7;
+        const SCORE_SNAP_VERSION = 9;
         function ensureStockScores(force){
             const key = getStatsPeriodKey();
             let snap = loadStockScores();

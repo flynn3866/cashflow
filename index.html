@@ -158,20 +158,20 @@
     
         /* ==================== 移动端交互体验升级（页面切换 / Tab 弹跳 / 弹窗动画 / 吸顶毛玻璃） ==================== */
         #pageHold, #pageStats, #pageAnalysis, #pageMilestone, #pageMine{
-            animation: appFadeUp .26s cubic-bezier(.22,.61,.36,1) both;
+            animation: appFadeUp .26s cubic-bezier(.22,.61,.36,1) backwards;
         }
         [id^="pageStats"]:not(#pageStats), #pageStockEdit, #pageTrade, #pageTradeLog, #pageAssetHigh,
         #pageYearSnapshot, #pageNotifCenter, #pageDivDetail, #pageCostDetail, #pageNavDetail, #pageWatchList,
         #pageBalanceSheet, #pageAnnualReport, #pageFundTransfer, #pageFundTransferAdd, #pageSettings,
         #pageIndustryMap, #pageStockScores{
-            animation: appSlideIn .3s cubic-bezier(.22,.61,.36,1) both;
+            animation: appSlideIn .6s cubic-bezier(.22,1,.36,1) backwards;
         }
         @keyframes appFadeUp{
             from{ opacity:0; transform:translateY(12px); }
             to{ opacity:1; transform:translateY(0); }
         }
         @keyframes appSlideIn{
-            from{ opacity:.4; transform:translateX(28px); }
+            from{ opacity:.3; transform:translateX(40px); }
             to{ opacity:1; transform:translateX(0); }
         }
         .bottomTab{ -webkit-tap-highlight-color:transparent; }
@@ -183,8 +183,8 @@
             40%{ transform:scale(1.25); }
             100%{ transform:scale(1); }
         }
-        #confirmModal, #milestoneModal{ animation: modalFade .2s ease both; }
-        #confirmModal > div, #milestoneModal > div{ animation: modalPop .28s cubic-bezier(.34,1.56,.64,1) both; }
+        #confirmModal, #milestoneModal{ animation: modalFade .2s ease backwards; }
+        #confirmModal > div, #milestoneModal > div{ animation: modalPop .28s cubic-bezier(.34,1.56,.64,1) backwards; }
         @keyframes modalFade{ from{ opacity:0; } to{ opacity:1; } }
         @keyframes modalPop{
             from{ opacity:0; transform:scale(.92) translateY(10px); }
@@ -198,6 +198,59 @@
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
         }
+        /* 二级页内容卡片依次浮现（排除吸顶标题栏；delay 递增产生层次） */
+        [id^="pageStats"]:not(#pageStats) > :nth-child(n+2):nth-child(-n+6),
+        #pageSettings > :nth-child(n+2):nth-child(-n+6), #pageBalanceSheet > :nth-child(n+2):nth-child(-n+6),
+        #pageAnnualReport > :nth-child(n+2):nth-child(-n+6), #pageStockScores > :nth-child(n+2):nth-child(-n+6),
+        #pageWatchList > :nth-child(n+2):nth-child(-n+6), #pageFundTransfer > :nth-child(n+2):nth-child(-n+6),
+        #pageStockEdit > :nth-child(n+2):nth-child(-n+6), #pageTradeLog > :nth-child(n+2):nth-child(-n+6),
+        #pageAssetHigh > :nth-child(n+2):nth-child(-n+6), #pageYearSnapshot > :nth-child(n+2):nth-child(-n+6),
+        #pageNotifCenter > :nth-child(n+2):nth-child(-n+6), #pageDivDetail > :nth-child(n+2):nth-child(-n+6),
+        #pageCostDetail > :nth-child(n+2):nth-child(-n+6), #pageNavDetail > :nth-child(n+2):nth-child(-n+6),
+        #pageIndustryMap > :nth-child(n+2):nth-child(-n+6), #pageFundTransferAdd > :nth-child(n+2):nth-child(-n+6),
+        #pageTrade > :nth-child(n+2):nth-child(-n+6){
+            animation: appFadeUp .45s cubic-bezier(.22,.61,.36,1) backwards;
+        }
+        [id^="pageStats"]:not(#pageStats) > :nth-child(2), #pageSettings > :nth-child(2), #pageBalanceSheet > :nth-child(2),
+        #pageAnnualReport > :nth-child(2), #pageStockScores > :nth-child(2), #pageWatchList > :nth-child(2),
+        #pageFundTransfer > :nth-child(2), #pageStockEdit > :nth-child(2), #pageTradeLog > :nth-child(2),
+        #pageAssetHigh > :nth-child(2), #pageYearSnapshot > :nth-child(2), #pageNotifCenter > :nth-child(2),
+        #pageDivDetail > :nth-child(2), #pageCostDetail > :nth-child(2), #pageNavDetail > :nth-child(2),
+        #pageIndustryMap > :nth-child(2), #pageFundTransferAdd > :nth-child(2), #pageTrade > :nth-child(2){ animation-delay: .08s !important; }
+        [id^="pageStats"]:not(#pageStats) > :nth-child(3), #pageSettings > :nth-child(3), #pageBalanceSheet > :nth-child(3),
+        #pageAnnualReport > :nth-child(3), #pageStockScores > :nth-child(3), #pageWatchList > :nth-child(3),
+        #pageFundTransfer > :nth-child(3), #pageStockEdit > :nth-child(3), #pageTradeLog > :nth-child(3),
+        #pageAssetHigh > :nth-child(3), #pageYearSnapshot > :nth-child(3), #pageNotifCenter > :nth-child(3),
+        #pageDivDetail > :nth-child(3), #pageCostDetail > :nth-child(3), #pageNavDetail > :nth-child(3),
+        #pageIndustryMap > :nth-child(3), #pageFundTransferAdd > :nth-child(3), #pageTrade > :nth-child(3){ animation-delay: .16s !important; }
+        [id^="pageStats"]:not(#pageStats) > :nth-child(4), #pageSettings > :nth-child(4), #pageBalanceSheet > :nth-child(4),
+        #pageAnnualReport > :nth-child(4), #pageStockScores > :nth-child(4), #pageWatchList > :nth-child(4),
+        #pageFundTransfer > :nth-child(4), #pageStockEdit > :nth-child(4), #pageTradeLog > :nth-child(4),
+        #pageAssetHigh > :nth-child(4), #pageYearSnapshot > :nth-child(4), #pageNotifCenter > :nth-child(4),
+        #pageDivDetail > :nth-child(4), #pageCostDetail > :nth-child(4), #pageNavDetail > :nth-child(4),
+        #pageIndustryMap > :nth-child(4), #pageFundTransferAdd > :nth-child(4), #pageTrade > :nth-child(4){ animation-delay: .24s !important; }
+        [id^="pageStats"]:not(#pageStats) > :nth-child(5), #pageSettings > :nth-child(5), #pageBalanceSheet > :nth-child(5),
+        #pageAnnualReport > :nth-child(5), #pageStockScores > :nth-child(5), #pageWatchList > :nth-child(5),
+        #pageFundTransfer > :nth-child(5), #pageStockEdit > :nth-child(5), #pageTradeLog > :nth-child(5),
+        #pageAssetHigh > :nth-child(5), #pageYearSnapshot > :nth-child(5), #pageNotifCenter > :nth-child(5),
+        #pageDivDetail > :nth-child(5), #pageCostDetail > :nth-child(5), #pageNavDetail > :nth-child(5),
+        #pageIndustryMap > :nth-child(5), #pageFundTransferAdd > :nth-child(5), #pageTrade > :nth-child(5){ animation-delay: .32s !important; }
+        [id^="pageStats"]:not(#pageStats) > :nth-child(6), #pageSettings > :nth-child(6), #pageBalanceSheet > :nth-child(6),
+        #pageAnnualReport > :nth-child(6), #pageStockScores > :nth-child(6), #pageWatchList > :nth-child(6),
+        #pageFundTransfer > :nth-child(6), #pageStockEdit > :nth-child(6), #pageTradeLog > :nth-child(6),
+        #pageAssetHigh > :nth-child(6), #pageYearSnapshot > :nth-child(6), #pageNotifCenter > :nth-child(6),
+        #pageDivDetail > :nth-child(6), #pageCostDetail > :nth-child(6), #pageNavDetail > :nth-child(6),
+        #pageIndustryMap > :nth-child(6), #pageFundTransferAdd > :nth-child(6), #pageTrade > :nth-child(6){ animation-delay: .40s !important; }
+        /* 隐藏滚动条（内容页更沉浸） */
+        ::-webkit-scrollbar{ width:0; height:0; display:none; }
+        *{ scrollbar-width:none; -ms-overflow-style:none; }
+        /* Toast 上移浮现 */
+        #toast{ transition: opacity .3s ease, transform .3s ease; }
+        /* 底部导航毛玻璃（iOS 式） */
+        #bottomNav{ background: rgba(255,255,255,.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        /* 吸顶标题栏滚动阴影过渡 */
+        .sticky.top-0{ transition: box-shadow .25s ease; }
+        .sticky-scrolled{ box-shadow: 0 6px 20px rgba(0,0,0,.1); }
 </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
@@ -4991,9 +5044,11 @@
             if(!el) return;
             el.innerText = msg;
             el.style.opacity = '1';
+            el.style.transform = 'translate(-50%, 0)';
             if(toastTimer) clearTimeout(toastTimer);
             toastTimer = setTimeout(function(){
                 el.style.opacity = '0';
+                el.style.transform = 'translate(-50%, -12px)';
             }, 2000);
         }
         // 确认弹窗
@@ -5688,6 +5743,18 @@
             }
             window.scrollTo(0, 0);
         }
+        // ---- 吸顶标题栏滚动阴影（iOS 式层次感：滚动后标题栏下方浮现投影） ----
+        const stickyBars = Array.prototype.slice.call(document.querySelectorAll('.sticky.top-0'));
+        window.addEventListener('scroll', function(){
+            const scrolled = window.scrollY > 4;
+            stickyBars.forEach(function(el){ el.classList.toggle('sticky-scrolled', scrolled); });
+        }, { passive: true });
+        // ---- 双击吸顶标题栏回顶部（顶级 APP 手势） ----
+        document.addEventListener('dblclick', function(e){
+            if(e.target && e.target.closest && e.target.closest('.sticky.top-0')){
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
         // 金额 tooltip 格式化（万/元）
         function fmtTooltipMoney(v){
             if(v == null || isNaN(v)) return '-';

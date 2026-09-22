@@ -929,7 +929,7 @@
             </button>
             <button onclick="openStatsSection('industry')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#4f46e5] flex items-center justify-center mb-2"><i class="fa fa-building text-[12px] text-white"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">行业资产分布</div>
+                <div class="text-[12px] font-semibold text-gray-800">行业资产分析</div>
                 <div id="statsCardSummaryIndustry" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('cash')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
@@ -1304,7 +1304,7 @@
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">行业资产分布</span>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">行业资产分析</span>
                 <div class="ml-auto flex items-center gap-1.5">
                     <select id="industryYearSelect" onchange="industryYear = this.value; renderIndustryMulti();" class="text-[11px] font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-1 py-1 outline-none appearance-none max-w-[86px]"></select>
                     <span class="flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
@@ -1374,6 +1374,14 @@
         <div class="flex items-start gap-2 rounded-2xl bg-[#fffbf2] border border-amber-100 px-3.5 py-2.5 mb-4">
             <i class="fa fa-lightbulb-o text-amber-500 text-[12px] mt-0.5 flex-shrink-0"></i>
             <div class="text-[10px] leading-relaxed text-amber-800/80">市值占比看资产集中度；成本占比看历史本金投入；预估分红占比用于现金流规划与风控预警；实际已收分红仅用于年末复盘，不适合年内横向对比。预估分红为理论值，最终以实际到账现金为准。</div>
+        </div>
+        <!-- 行业三占比柱形图（预测分红/市值/成本占比，复用行业对比明细已算好的数据） -->
+        <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
+            <div class="px-4 py-2.5 flex items-center justify-between border-b border-gray-100 bg-gray-50/40">
+                <div class="flex items-center gap-1.5 text-[13px] font-semibold text-gray-800"><i class="fa fa-bar-chart text-accent text-[13px]"></i>行业占比对比</div>
+                <span id="industryCmpNote" class="text-[9px] text-gray-400 flex items-center gap-1"><i class="fa fa-percent text-[9px]"></i>预测分红 · 市值 · 成本</span>
+            </div>
+            <div id="industryCompareChart" style="width:100%;height:260px;"></div>
         </div>
         <!-- 行业对比明细表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
@@ -5665,6 +5673,7 @@
                 if(_sel) _sel.classList.add('hidden');
             }
             activeStatsSection = null;
+            hideAllChartTips();
             // 新增按钮仅在持仓页显示
             document.querySelector('#openModalBtn').classList.toggle('hidden', tab !== 'hold');
             // 更新底部导航高亮
@@ -8885,7 +8894,22 @@
         // ============ 统计页：卡片宫格 → 独立详情页（点击进入，返回/切导航同步收起） ============
         var STATS_SECTION_PAGES = { today:'pageStatsToday', yield:'pageStatsYield', position:'pageStatsPosition', pnl:'pageStatsPnl', divrank:'pageStatsDivRank', schedule:'pageStatsSchedule', compare:'pageStatsCompare', industry:'pageStatsIndustry', cash:'pageStatsCashFlow', trade:'pageStatsTrade' };
         var activeStatsSection = null;
+        // 隐藏所有图表 tooltip（页面收起/切换/重开前清理，避免残留挂到其他页面）
+        function hideAllChartTips(){
+            const doms = document.querySelectorAll('#chartStatsDivMonth, #chartMonthlyDiv, #chartMonthly, #chartYearlyDiv, #chartYearlyNav, #chartYearlyAvgDiv, #chartYearlyReturn, #industryPieChart, #chartStatsPnlInd, #chartStatsDivRankInd, #bsNetTrendChart, #msChart, #industryCompareChart');
+            doms.forEach(function(el){
+                let inst = null;
+                try{
+                    if(el && el._chart) inst = el._chart;
+                    else if(typeof echarts !== 'undefined' && echarts.getInstanceByDom) inst = echarts.getInstanceByDom(el);
+                }catch(e){}
+                if(inst && inst.dispatchAction){
+                    try{ inst.dispatchAction({ type: 'hideTip' }); }catch(e){}
+                }
+            });
+        }
         function openStatsSection(key){
+            hideAllChartTips();
             const pg = document.querySelector('#' + (STATS_SECTION_PAGES[key] || ''));
             if(!pg) return;
             document.querySelector('#pageStats').classList.add('hidden');
@@ -8919,6 +8943,7 @@
             }
         }
         function closeStatsSection(){
+            hideAllChartTips();
             for(const k in STATS_SECTION_PAGES){
                 const el = document.querySelector('#' + STATS_SECTION_PAGES[k]);
                 if(el) el.classList.add('hidden');
@@ -9641,6 +9666,83 @@
                             + '</div>';
                     });
                     listEl.innerHTML = html;
+                }
+            }
+            // 行业三占比柱形图（复用表格 rows；仅显示市值占比 > 2% 的行业；负成本柱用斜纹镂空 + 柱顶标签）
+            const cmpEl = document.querySelector('#industryCompareChart');
+            const cmpNote = document.querySelector('#industryCmpNote');
+            if(cmpNote) cmpNote.innerHTML = '<i class="fa fa-percent text-[9px]"></i>' + (data.isCur ? '预测分红' : '已收分红') + ' · 市值 · 成本';
+            if(cmpEl && typeof echarts !== 'undefined'){
+                let cmpChart = cmpEl._chart;
+                if(!cmpChart){ cmpChart = echarts.init(cmpEl); cmpEl._chart = cmpChart; }
+                const cmpRows = data.rows.filter(function(x){ return (x.mktPct || 0) > 2; });
+                const cat = cmpRows.map(function(x){ return x.name; });
+                // 分红口径与表格一致：今年=预估分红占比，历史年份=实际已收分红占比
+                const divName = data.isCur ? '预测分红占比' : '已收分红占比';
+                // 斜纹镂空 pattern（负成本柱：本金已全部收回）
+                let stripePat = null;
+                try{
+                    const _pc = document.createElement('canvas');
+                    _pc.width = 8; _pc.height = 8;
+                    const _cx = _pc.getContext('2d');
+                    _cx.clearRect(0, 0, 8, 8);
+                    _cx.strokeStyle = '#6d28d9';
+                    _cx.lineWidth = 1.4;
+                    _cx.beginPath(); _cx.moveTo(0, 8); _cx.lineTo(8, 0); _cx.stroke();
+                    _cx.beginPath(); _cx.moveTo(0, 5); _cx.lineTo(5, 0); _cx.stroke();
+                    stripePat = { image: _pc, repetition: 'repeat' };
+                }catch(e){}
+                const costData = cmpRows.map(function(x){
+                    const neg = (x.costPct || 0) < -0.05;
+                    const v = Math.abs(x.costPct || 0);
+                    return { value: +v.toFixed(1), negCost: neg };
+                });
+                const key = cat.join('|') + '|' + costData.map(function(d){ return d.value + (d.negCost ? 'N' : ''); }).join(',')
+                    + '|' + cmpRows.map(function(x){ return Math.round((x.divPct || 0) * 10) + ':' + Math.round((x.mktPct || 0) * 10); }).join(',');
+                if(cmpChart._key !== key){
+                    cmpChart._key = key;
+                    cmpChart.setOption({
+                        tooltip: {
+                            trigger: 'axis',
+                            confine: true,
+                            appendToBody: true,
+                            backgroundColor: 'rgba(255,255,255,0.96)',
+                            borderColor: '#eee',
+                            textStyle: { color: '#333', fontSize: 12 },
+                            padding: [8, 10],
+                            axisPointer: { type: 'shadow' },
+                            formatter: function(params){
+                                let h = '<div style="font-weight:600;margin-bottom:4px">' + params[0].axisValue + '</div>';
+                                params.forEach(function(p){
+                                    let v = p.value;
+                                    let suffix = '%';
+                                    let mark = (p.seriesIndex === 2) ? '#8b5cf6' : p.color;
+                                    if(p.seriesName === '成本占比' && p.data && p.data.negCost){
+                                        suffix = '%（本金已全部收回）';
+                                    }
+                                    h += '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + mark + ';margin-right:6px"></span>' + p.seriesName + '：<b>' + v + suffix + '</b><br>';
+                                });
+                                return h;
+                            }
+                        },
+                        legend: { top: 2, left: 'center', itemWidth: 10, itemHeight: 10, icon: 'circle', textStyle: { fontSize: 10, color: '#777' } },
+                        grid: { left: 4, right: 4, top: 30, bottom: 0, containLabel: true },
+                        xAxis: { type: 'category', data: cat, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false }, axisLabel: { fontSize: 10, color: '#555', interval: 0, rotate: cat.length > 8 ? 45 : (cat.length > 6 ? 30 : 0) } },
+                        yAxis: { type: 'value', axisLabel: { fontSize: 10, color: '#bbb', formatter: '{value}%' }, splitLine: { lineStyle: { color: '#f3f3f3' } } },
+                        series: [
+                            { name: divName, type: 'bar', data: cmpRows.map(function(x){ return +(x.divPct || 0).toFixed(1); }), barWidth: 8, itemStyle: { borderRadius: [2,2,0,0], color: '#ff4d4f' } },
+                            { name: '市值占比', type: 'bar', data: cmpRows.map(function(x){ return +(x.mktPct || 0).toFixed(1); }), barWidth: 8, itemStyle: { borderRadius: [2,2,0,0], color: '#e8a33d' } },
+                            { name: '成本占比', type: 'bar', data: costData, barWidth: 8,
+                              itemStyle: { borderRadius: [2,2,0,0], color: '#8b5cf6' },
+                              label: { show: true, position: 'top', fontSize: 8, color: '#6d28d9', fontWeight: 'bold',
+                                       formatter: function(pp){
+                                           if(pp.data && pp.data.negCost) return cat.length > 4 ? '已回本' : '本金已全部收回';
+                                           return '';
+                                       } } }
+                        ]
+                    }, true);
+                } else {
+                    try{ cmpChart.resize(); }catch(e){}
                 }
             }
             // 顶部综合评估总结面板
@@ -11055,7 +11157,25 @@
                             tooltip: {
                                 trigger: 'axis',
                                 appendToBody: true,
+                                confine: true,
                                 z: 1000,
+                                position: function(point, params, dom, rect, size){
+                                    let tx = point[0], ty = point[1];
+                                    const vw = size.viewSize[0] || 300;
+                                    const vh = size.viewSize[1] || 200;
+                                    const cw = size.contentSize[0] || 120;
+                                    const ch = size.contentSize[1] || 60;
+                                    // 水平：尽量居中于触发点，左右不出界
+                                    if(tx + cw / 2 > vw - 6) tx = Math.max(6, vw - cw - 6);
+                                    else if(tx - cw / 2 < 6) tx = 6 + cw / 2;
+                                    // 垂直：触发点上方空间足够则显示在上方，不足自动转下方
+                                    if(ty - ch - 12 >= 4){
+                                        ty = ty - ch - 12;
+                                    } else {
+                                        ty = Math.min(ty + 18, Math.max(4, vh - ch - 4));
+                                    }
+                                    return [tx, ty];
+                                },
                                 backgroundColor: 'rgba(255,255,255,0.96)',
                                 borderColor: '#eee',
                                 borderWidth: 1,

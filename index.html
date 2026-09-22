@@ -155,7 +155,50 @@
         .today-reg-pulse { animation: todayRegPulse 2.2s ease-in-out infinite; }
         /* 个股仓位预警条：显示时页面内容下移让位，隐藏时不占版面 */
         body.has-position-warn { padding-top: calc(env(safe-area-inset-top, 0px) + 38px); }
-    </style>
+    
+        /* ==================== 移动端交互体验升级（页面切换 / Tab 弹跳 / 弹窗动画 / 吸顶毛玻璃） ==================== */
+        #pageHold, #pageStats, #pageAnalysis, #pageMilestone, #pageMine{
+            animation: appFadeUp .26s cubic-bezier(.22,.61,.36,1) both;
+        }
+        [id^="pageStats"]:not(#pageStats), #pageStockEdit, #pageTrade, #pageTradeLog, #pageAssetHigh,
+        #pageYearSnapshot, #pageNotifCenter, #pageDivDetail, #pageCostDetail, #pageNavDetail, #pageWatchList,
+        #pageBalanceSheet, #pageAnnualReport, #pageFundTransfer, #pageFundTransferAdd, #pageSettings,
+        #pageIndustryMap, #pageStockScores{
+            animation: appSlideIn .3s cubic-bezier(.22,.61,.36,1) both;
+        }
+        @keyframes appFadeUp{
+            from{ opacity:0; transform:translateY(12px); }
+            to{ opacity:1; transform:translateY(0); }
+        }
+        @keyframes appSlideIn{
+            from{ opacity:.4; transform:translateX(28px); }
+            to{ opacity:1; transform:translateX(0); }
+        }
+        .bottomTab{ -webkit-tap-highlight-color:transparent; }
+        .bottomTab i{ transition: transform .2s ease, color .2s ease; }
+        .bottomTab.tab-pop i{ animation: tabPop .34s cubic-bezier(.34,1.56,.64,1); }
+        .bottomTab > div{ transition: background-color .25s ease, width .25s ease; }
+        @keyframes tabPop{
+            0%{ transform:scale(1); }
+            40%{ transform:scale(1.25); }
+            100%{ transform:scale(1); }
+        }
+        #confirmModal, #milestoneModal{ animation: modalFade .2s ease both; }
+        #confirmModal > div, #milestoneModal > div{ animation: modalPop .28s cubic-bezier(.34,1.56,.64,1) both; }
+        @keyframes modalFade{ from{ opacity:0; } to{ opacity:1; } }
+        @keyframes modalPop{
+            from{ opacity:0; transform:scale(.92) translateY(10px); }
+            to{ opacity:1; transform:scale(1) translateY(0); }
+        }
+        body{ -webkit-tap-highlight-color:transparent; overscroll-behavior-y:none; }
+        [onclick]{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        button{ -webkit-tap-highlight-color:transparent; }
+        .sticky.top-0.bg-white{
+            background: rgba(255,255,255,.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+</style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- 个股仓位预警条：全局固定吸顶提示条，仅超限时显示，正常状态自动隐藏不占版面 -->
@@ -810,7 +853,7 @@
             </button>
             <button onclick="openStatsSection('pnl')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#10b981] to-[#059669] flex items-center justify-center mb-2"><i class="fa fa-balance-scale text-[13px] text-white"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">盈亏排行</div>
+                <div class="text-[12px] font-semibold text-gray-800">累计盈亏排行</div>
                 <div id="statsCardSummaryPnl" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('divrank')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
@@ -990,7 +1033,7 @@
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">盈亏排行</span>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">累计盈亏排行</span>
                 <div class="ml-auto text-right leading-tight">
                     <div id="pnlRankTotal" class="text-[12px] font-bold tabular-nums text-gray-800">--</div>
                     <div class="text-[10px] text-gray-400 mt-0.5 whitespace-nowrap">盈利 <span id="pnlRankWinCount" class="text-[#ff6b6b] font-semibold">0</span> 只 · 亏损 <span id="pnlRankLoseCount" class="text-[#00d68f] font-semibold">0</span> 只</div>
@@ -999,6 +1042,31 @@
                     <i class="fa fa-clock-o text-[10px]"></i>
                     <span id="statsPnlRefreshTime">-- 更新</span>
                 </span>
+            </div>
+        </div>
+        <!-- 行业累计盈亏占比环形图 + 行业占比列表（>1%）：参考累计分红排行饼图布局 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div id="statsPnlIndWrap">
+                <div class="px-5 py-3 bg-gray-50/50 border-b border-gray-100">
+                    <div class="flex items-center gap-1.5 mb-3">
+                        <i class="fa fa-pie-chart text-[11px] text-accent"></i>
+                        <span class="text-[12px] font-semibold text-gray-600">行业累计盈亏占比</span>
+                        <span class="ml-auto text-[10px] text-gray-400" id="statsPnlIndTag">&gt;1% 行业</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <!-- 环形图 -->
+                        <div class="flex-shrink-0" style="width:120px;height:120px;">
+                            <div id="chartStatsPnlInd" style="width:120px;height:120px;"></div>
+                        </div>
+                        <!-- 行业占比列表 -->
+                        <div id="statsPnlIndList" class="flex-1 min-w-0 space-y-1.5">
+                            <div class="text-center text-gray-400 text-xs py-4">暂无行业数据</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-5 py-3">
+                    <div class="text-[10px] text-gray-400 leading-relaxed">行业累计盈亏（含已清仓，行业为映射后统计大类）÷ Σ|行业盈亏| 的盈亏规模占比，各行业以不同颜色区分，右侧金额红涨绿跌，仅展示占比 &gt; 1% 的行业。</div>
+                </div>
             </div>
         </div>
         <!-- 盈亏排行：按累计盈亏额降序（收盘后更新一次，其他时间延用） -->
@@ -1037,6 +1105,31 @@
                     <i class="fa fa-clock-o text-[10px]"></i>
                     <span id="statsDivRankRefreshTime">-- 更新</span>
                 </span>
+            </div>
+        </div>
+        <!-- 行业预估分红占比环形图 + 行业占比列表（>2%）：参考仓位分布详情页风格（灰底区块 + 环形图 + 右侧占比数值） -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div id="statsDivRankPieWrap">
+                <div class="px-5 py-3 bg-gray-50/50 border-b border-gray-100">
+                    <div class="flex items-center gap-1.5 mb-3">
+                        <i class="fa fa-pie-chart text-[11px] text-accent"></i>
+                        <span class="text-[12px] font-semibold text-gray-600">行业预估分红占比</span>
+                        <span class="ml-auto text-[10px] text-gray-400" id="statsDivRankIndTag">&gt;2% 行业</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <!-- 环形图 -->
+                        <div class="flex-shrink-0" style="width:120px;height:120px;">
+                            <div id="chartStatsDivRankInd" style="width:120px;height:120px;"></div>
+                        </div>
+                        <!-- 行业占比列表 -->
+                        <div id="statsDivRankIndList" class="flex-1 min-w-0 space-y-1.5">
+                            <div class="text-center text-gray-400 text-xs py-4">暂无行业数据</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-5 py-3">
+                    <div class="text-[10px] text-gray-400 leading-relaxed">口径与行业资产分布一致：行业今年预估全年分红 ÷ 组合预估总分红，仅展示占比 &gt; 2% 的行业。</div>
+                </div>
             </div>
         </div>
         <!-- 累计分红排行：所有持仓（含已清仓）累计分红收入排行（刷新机制与盈亏排行一致：交易日6:00/20:00各构建一次并存储） -->
@@ -5528,6 +5621,13 @@
                 if(indicator){
                     indicator.classList.toggle('bg-accent', isActive);
                     indicator.classList.toggle('bg-transparent', !isActive);
+                }
+                if(isActive){
+                    btn.classList.remove('tab-pop');
+                    void btn.offsetWidth;
+                    btn.classList.add('tab-pop');
+                } else {
+                    btn.classList.remove('tab-pop');
                 }
             });
             // 切换到分析页时渲染图表（只渲染一次，之后切换不重复渲染）
@@ -10529,6 +10629,80 @@
                 document.querySelector('#pnlRankLoseCount').innerText = '0';
             }
             markStatsRefresh('pnl', '#statsPnlRefreshTime', '每日更新');
+            // ---- 行业累计盈亏占比环形图：含已清仓，行业用映射后统计大类；盈利红/亏损绿；>1% 行业 ----
+            const pnlPieEl = document.querySelector('#chartStatsPnlInd');
+            if(pnlPieEl && typeof echarts !== 'undefined'){
+                const indColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
+                const pnlIndMap = {};
+                holdDataList.forEach(function(it){
+                    const ind = getStockIndustry(it);
+                    pnlIndMap[ind] = (pnlIndMap[ind] || 0) + getPnl(it);
+                });
+                (historyData.closedStocks || []).forEach(function(r){
+                    const ind = r.marketType === 'HK' ? (getHkIndustry(r.code) || '其他') : getIndustryStat(r.industry || '其他');
+                    pnlIndMap[ind] = (pnlIndMap[ind] || 0) + (Number(r.pnl) || 0);
+                });
+                let pnlTotalAbs = 0, pnlGrand = 0;
+                Object.keys(pnlIndMap).forEach(function(k){ pnlTotalAbs += Math.abs(pnlIndMap[k]); pnlGrand += pnlIndMap[k]; });
+                const pnlIndItems = Object.keys(pnlIndMap).map(function(k){
+                    return { name: k, pnl: pnlIndMap[k], pct: pnlTotalAbs > 0 ? (Math.abs(pnlIndMap[k]) / pnlTotalAbs * 100) : 0 };
+                }).filter(function(x){ return x.pct > 1; }).sort(function(a, b){ return Math.abs(b.pnl) - Math.abs(a.pnl); });
+                const pnlPieKey = 'v2|' + pnlPeriodKey + '|' + pnlIndItems.map(function(x){ return x.name + ':' + Math.round(x.pct); }).join(',');
+                const pnlIndTagEl = document.querySelector('#statsPnlIndTag');
+                const pnlIndListEl = document.querySelector('#statsPnlIndList');
+                if(pnlIndItems.length){
+                    if(pnlIndTagEl) pnlIndTagEl.innerText = pnlIndItems.length + ' 个行业 · 合计 ' + (pnlGrand >= 0 ? '+' : '') + fmtMoney(pnlGrand);
+                    if(pnlIndListEl){
+                        let pnlIndHtml = '';
+                        pnlIndItems.forEach(function(x, i){
+                            const indC = indColors[i % indColors.length];
+                            pnlIndHtml += '<div class="flex items-center justify-between gap-2">'
+                                + '<div class="flex items-center gap-1.5 min-w-0">'
+                                + '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + indC + '"></span>'
+                                + '<span class="text-[12px] text-gray-600 truncate">' + x.name + '</span>'
+                                + '</div>'
+                                + '<div class="flex items-center flex-shrink-0">'
+                                + '<span class="w-16 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap">' + (x.pnl >= 0 ? '+' : '') + fmtMoney(x.pnl) + '</span>'
+                                + '<span class="w-14 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap ml-2">' + x.pct.toFixed(2) + '%</span>'
+                                + '</div>'
+                                + '</div>';
+                        });
+                        pnlIndListEl.innerHTML = pnlIndHtml;
+                    }
+                    const pnlPieData = pnlIndItems.map(function(x, i){
+                        return { name: x.name, value: Number(x.pct.toFixed(2)), itemStyle: { color: indColors[i % indColors.length] } };
+                    });
+                    if(pnlPieEl._chart && pnlPieEl._chart._pieKey === pnlPieKey){
+                        try{ pnlPieEl._chart.resize(); }catch(e){}
+                    } else {
+                        if(pnlPieEl._chart) pnlPieEl._chart.dispose();
+                        const chart = echarts.init(pnlPieEl);
+                        chart.setOption({
+                            series: [{
+                                type: 'pie',
+                                radius: ['55%', '75%'],
+                                center: ['50%', '50%'],
+                                avoidLabelOverlap: true,
+                                label: { show: false },
+                                labelLine: { show: false },
+                                data: pnlPieData,
+                                emphasis: { scale: false }
+                            }],
+                            graphic: [{
+                                type: 'text',
+                                left: 'center',
+                                top: 'center',
+                                style: { text: '行业盈亏', fontSize: 11, fill: '#9CA3AF', textAlign: 'center' }
+                            }]
+                        });
+                        chart._pieKey = pnlPieKey;
+                        pnlPieEl._chart = chart;
+                    }
+                } else {
+                    if(pnlIndTagEl) pnlIndTagEl.innerText = '暂无行业数据';
+                    if(pnlIndListEl) pnlIndListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无行业数据</div>';
+                }
+            }
 
             // ===== 1.7 累计分红排行：所有持仓（含已清仓）累计分红收入排行 =====
             // 刷新机制与盈亏排行一致：交易日 6:00/20:00 各构建一次并持久化，其余时间直接读存储
@@ -10643,6 +10817,67 @@
                 document.querySelector('#divRankCount').innerText = '0';
             }
             markStatsRefresh('divRank', '#statsDivRankRefreshTime', '每日更新');
+            // ---- 行业预估分红占比环形图：复用行业资产分布口径（今年预估分红占比 > 2% 的行业），参考仓位分布样式 ----
+            const indPieEl = document.querySelector('#chartStatsDivRankInd');
+            if(indPieEl && typeof echarts !== 'undefined'){
+                const indCurData = buildIndustryMulti(String(new Date().getFullYear()));
+                const indColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
+                const indPieItems = indCurData.rows.filter(function(r){ return r.estDivPct > 2; }).map(function(r, i){
+                    return { name: r.name, value: Number(r.estDivPct.toFixed(2)), estDiv: r.estDiv, itemStyle: { color: indColors[i % indColors.length] } };
+                });
+                const indPieKey = divRankPeriodKey + '|' + indPieItems.map(function(p){ return p.name + ':' + p.value; }).join(',');
+                const indTagEl = document.querySelector('#statsDivRankIndTag');
+                const indListEl = document.querySelector('#statsDivRankIndList');
+                if(indPieItems.length){
+                    if(indTagEl) indTagEl.innerText = indPieItems.length + ' 个行业 · 合计 ' + indPieItems.reduce(function(s, p){ return s + p.value; }, 0).toFixed(2) + '%';
+                    // 右侧占比列表（参考仓位分布：彩色圆点 + 行业名 + 百分比）
+                    if(indListEl){
+                        let indListHtml = '';
+                        indPieItems.forEach(function(p, i){
+                            indListHtml += '<div class="flex items-center justify-between gap-2">'
+                                + '<div class="flex items-center gap-1.5 min-w-0">'
+                                + '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + indColors[i % indColors.length] + '"></span>'
+                                + '<span class="text-[12px] text-gray-600 truncate">' + p.name + '</span>'
+                                + '</div>'
+                                + '<div class="flex items-center flex-shrink-0">'
+                                + '<span class="w-16 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap">' + fmtMoney(p.estDiv) + '</span>'
+                                + '<span class="w-14 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap ml-2">' + p.value.toFixed(2) + '%</span>'
+                                + '</div>'
+                                + '</div>';
+                        });
+                        indListEl.innerHTML = indListHtml;
+                    }
+                    if(indPieEl._chart && indPieEl._chart._pieKey === indPieKey){
+                        try{ indPieEl._chart.resize(); }catch(e){}
+                    } else {
+                        if(indPieEl._chart) indPieEl._chart.dispose();
+                        const chart = echarts.init(indPieEl);
+                        chart.setOption({
+                            series: [{
+                                type: 'pie',
+                                radius: ['55%', '75%'],
+                                center: ['50%', '50%'],
+                                avoidLabelOverlap: true,
+                                label: { show: false },
+                                labelLine: { show: false },
+                                data: indPieItems,
+                                emphasis: { scale: false }
+                            }],
+                            graphic: [{
+                                type: 'text',
+                                left: 'center',
+                                top: 'center',
+                                style: { text: '行业分红', fontSize: 11, fill: '#9CA3AF', textAlign: 'center' }
+                            }]
+                        });
+                        chart._pieKey = indPieKey;
+                        indPieEl._chart = chart;
+                    }
+                } else {
+                    if(indTagEl) indTagEl.innerText = '暂无行业数据';
+                    if(indListEl) indListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无行业数据</div>';
+                }
+            }
 
             // ===== 2. 分红预计派发时间表（仅今年，分即将派发/已派发两部分）=====
             const divList = document.querySelector('#statsDividendList');

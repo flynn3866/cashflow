@@ -16,7 +16,7 @@
     <script>window.APP_VERSION = '20260906.1';</script>
     <script src="libs/tailwind.min.js?v=20260906"></script>
     <link href="libs/font-awesome.min.css?v=20260906" rel="stylesheet">
-    <script src="libs/echarts.min.js?v=20260906" defer></script>
+    <script src="libs/echarts.min.js?v=20260906"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -3823,6 +3823,13 @@
                         if(it.processedDivDates.indexOf(divKey) >= 0
                             || (equityDate && it.processedDivDates.indexOf(equityDate) >= 0)
                             || (exDate && it.processedDivDates.indexOf(exDate) >= 0)) return;
+                        // 双保险：即使已处理标识异常丢失，除权流水中已有同一笔分红也不再除权
+                        // （同时补回标识，避免后续再次误处理）
+                        const dupExDiv = (it.exDivRecords || []).some(function(er){ return er.divKey === divKey; });
+                        if(dupExDiv){
+                            if(it.processedDivDates.indexOf(divKey) < 0) it.processedDivDates.push(divKey);
+                            return;
+                        }
                         const perShare = per10 / 10;
                         it.costPrice = Number((it.costPrice - perShare).toFixed(4));
                         it.processedDivDates.push(divKey);
@@ -3972,6 +3979,8 @@
                 const fixTodayStr = todayStr();
                 holdDataList.forEach(function(it){
                     if(!it.processedDivDates || !it.processedDivDates.length) return;
+                    // 删除重加/覆盖更新继承来的历史防重标识：不打乱、不过滤（已除权分红绝不重复除权）
+                    if(it.closedDivInherit) return;
                     const createDate = it.createdAt ? String(it.createdAt).substring(0, 10) : fixTodayStr;
                     const beforeCount = it.processedDivDates.length;
                     it.processedDivDates = it.processedDivDates.filter(function(d){
@@ -3997,6 +4006,12 @@
             loadDivCache();
             // 加载资产分析历史数据，记录今日总资产，归档已过去月份
             loadHistory();
+            // 启动即自愈（此时 historyData 已从存储加载，覆盖安全）：
+            // 清理存量重复分红/除权记录与重复清仓记录，不依赖后续刷新是否成功
+            if(dedupDivRecords()){
+                saveLocal();
+                saveHistory();
+            }
             recordDailyAssets();
             finalizePastMonths();
             // 补存历史年份最终净值（最后一天未打开时，首次打开即保存最新一刻数据）
@@ -4013,11 +4028,10 @@
                 historyData.yearStart = { year: curY, cost: tc, market: tm };
                 saveHistory();
             }
-            // 港股税率口径迁移：仅旧百分数口径（>1，如 10 表示 10%）需要迁移并重算当年分红收入
-            // （覆盖历史百分数税率造成的负数脏值）；已迁移为小数口径（0-1）后不再每次启动重算，
-            // 避免每次打开页面都执行一遍 computeYearlyDiv + saveHistory 的同步开销
+            // 港股税率口径迁移完成后：重算当年分红收入（覆盖历史百分数税率造成的负数脏值）
+            // computeYearlyDiv 在已计算状态下只更新当年，不影响历史年份固定数据
             const migratedTax = holdDataList.some(function(it){
-                return it.marketType === 'HK' && it.divTaxRate != null && Number(it.divTaxRate) > 1;
+                return it.marketType === 'HK' && it.divTaxRate != null && Number(it.divTaxRate) >= 0 && Number(it.divTaxRate) <= 1;
             });
             if(migratedTax){
                 computeYearlyDiv();
@@ -4027,8 +4041,7 @@
             initMilestoneEvents();
             // 自动补全缺失的行业信息：对industry为"其他"的A股股票，自动从东方财富获取
             // 行业信息基本不变，获取成功后保存，不再重复获取（参考券商行业分类刷新机制）
-            // 首屏优化：延迟到启动完成后后台执行，不抢占首屏渲染时间
-            setTimeout(fetchMissingIndustries, 3000);
+            fetchMissingIndustries();
         }
 
         // 自动补全缺失的行业信息（串行逐个获取，避免并发请求过多）
@@ -5060,7 +5073,9 @@
                 divPaidRecords: (item.divPaidRecords || []).map(function(r){ return Object.assign({}, r); }),
                 exDivRecords: (item.exDivRecords || []).map(function(r){ return Object.assign({}, r); }),
                 divPerShare: item.divPerShare != null ? item.divPerShare : undefined,
-                divTaxRate: item.divTaxRate != null ? item.divTaxRate : undefined
+                divTaxRate: item.divTaxRate != null ? item.divTaxRate : undefined,
+                // 已处理分红标识：删除重加同一股票时继承，已除权分红绝不重复除权/重复入账
+                processedDivDates: (item.processedDivDates || []).slice()
             };
             if(!historyData.closedStocks) historyData.closedStocks = [];
             historyData.closedStocks.push(rec);
@@ -5164,10 +5179,8 @@
                 if(item){
                     const newCost = Number(costPriceEl.value);
                     const oldCntEdit = item.count, oldCostEdit = item.costPrice;
-                    // 如果成本价变化了，清空已处理分红日期，让分红除权基于新成本重新计算
-                    if(newCost !== item.costPrice){
-                        item.processedDivDates = [];
-                    }
+                    // 编辑是数据修正：不清空已处理分红标识——已除权过的分红（含当天18:00已到账）
+                    // 后续任何操作（编辑/覆盖/删除重加）都不得重复除权、重复入账
                     item.count = Number(stockCountEl.value);
                     item.costPrice = newCost;
                     item.divPerShare = Number(divPerShareEl.value || 0);
@@ -5180,7 +5193,15 @@
                     item.industry = editInd;
                     if(item.marketType === 'HK'){
                         item.divTaxRate = divTaxRate;
+                        // 编辑只改股数/成本时：保留历史到账记录原值（按当时股数固化的金额不随新股数重算），
+                        // 仅对用户新增/修改的分红草稿条目按当前股数生成
+                        const existPaidMap = {};
+                        (item.divPaidRecords || []).forEach(function(r){
+                            existPaidMap[(r.exDate || r.date) + '|' + Number(r.perShare)] = r;
+                        });
                         item.divPaidRecords = hkDivDraft.map(function(r){
+                            const k = (r.exDate || r.date) + '|' + Number(r.perShare);
+                            if(existPaidMap[k]) return existPaidMap[k];   // 原记录原样保留
                             return { exDate: r.exDate, perShare: r.perShare, amount: Number((Number(r.perShare) * (Number(item.count) || 0)).toFixed(2)), manual: true };
                         });
                         syncHkDivToExDivRecords(item);
@@ -5233,10 +5254,7 @@
                     const origCreated = existing.createdAt ? new Date(existing.createdAt).getTime() : Date.now();
                     existing.transactions = [{ t: origCreated, delta: count, price: costPrice }];
                 }
-                // 覆盖更新时，更新建仓日为当前时间，并清空已处理分红日期
-                // 让分红除权基于新成本和新建仓日重新计算，避免历史除权记录影响新成本
-                existing.createdAt = new Date().toISOString();
-                existing.processedDivDates = [];
+                // 覆盖更新：保留原建仓日与全部分红标记（已除权分红绝不重复除权，历史到账记录不重算）
                 if(marketType === 'HK'){
                     existing.divTaxRate = divTaxRate;
                     existing.divPaidRecords = hkDivDraft.map(function(r){
@@ -5281,6 +5299,14 @@
                 // 建仓交易流水（用于今年盈亏额精确计算：买入股数 + 建仓成本价）
                 transactions: [{ t: Date.now(), delta: count, price: costPrice }],
                 createdAt: new Date().toISOString()
+            }
+            // 重新买入同一只已清仓股票：继承该股票已处理分红标识，
+            // 已除权过（含今天18:00已到账）的分红绝不重复除权、重复入账
+            const closedRecNew = (historyData.closedStocks || []).find(function(c){ return c.marketType === marketType && c.code === code; });
+            if(closedRecNew && closedRecNew.processedDivDates && closedRecNew.processedDivDates.length){
+                newItem.processedDivDates = closedRecNew.processedDivDates.slice();
+                // 继承标记：防重标识早于新建仓日，加载时不得按新日期过滤（已除权分红绝不重复除权）
+                newItem.closedDivInherit = true;
             }
             // 港股：保存分红税率（默认按所选税率扣税）+ 分红到账记录
             if(marketType === 'HK'){
@@ -5674,14 +5700,6 @@
         }
         // 当前激活的 Tab
         let activeTab = 'hold';
-        // echarts 异步加载守卫（首屏优化：图表库 defer 加载不阻塞首屏，切到图表页时若尚未就绪则稍后重试整页渲染；
-        // 重试约6秒仍不可用则按原逻辑执行，保留原有失败容错行为）
-        function guardEcharts(fn, tries){
-            tries = tries || 0;
-            if(window.echarts && window.echarts.init){ fn(); return; }
-            if(tries > 40){ fn(); return; }
-            setTimeout(function(){ guardEcharts(fn, tries + 1); }, 150);
-        }
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
@@ -10214,11 +10232,6 @@
         }
 
         function renderStatsPage(){
-            // echarts 就绪守卫：未就绪时稍后重试整页渲染（首屏不等待图表库，切页时几乎总是已就绪）
-            if(!window.echarts || !window.echarts.init){
-                setTimeout(function(){ renderStatsPage(); }, 150);
-                return;
-            }
             // 统计页日快照版本号：版本升级（如新增logo等渲染结构变化）时强制重建当天快照，
             // 避免手机上继续展示旧版无logo的缓存HTML；同版本内仍按 6:00/20:00 双刷新点 + 其余读存储
             const STATS_SNAP_VERSION = 2;
@@ -11692,11 +11705,6 @@
             refreshStatsCardSummaries();
         }
         function renderAnalysisCharts(){
-            // echarts 就绪守卫：未就绪时稍后重试整页渲染（首屏不等待图表库）
-            if(typeof echarts === 'undefined' || !echarts.init){
-                setTimeout(function(){ renderAnalysisCharts(); }, 150);
-                return;
-            }
             if(typeof echarts === 'undefined'){
                 document.querySelector('#chartMonthly').innerHTML = '<div class="text-center text-gray-400 text-sm py-10">图表库加载失败，请检查网络后刷新</div>';
                 return;
@@ -12102,6 +12110,98 @@
         function divPaidAt(divDate){
             return String(divDate || '').substring(0, 10) + ' 18:00';
         }
+        // 自愈清理：持仓与清仓股的分红记录去重合并（防历史重复除权/重复入账/重复清仓记录）
+        // 持仓 A股：exDivRecords 按 divKey（无则 日期|每股）去重、divPaidRecords 按 日期|每股 去重
+        // 清仓股：同股票多条清仓记录合并为一条（分红/除权/标识/流水合并去重，盈亏与累计分红累加）
+        // 返回是否有变化；页面启动与每次固化前调用，保证所有遍历 closedStocks 的展示不再重复
+        function dedupDivRecords(){
+            let dirty = false;
+            holdDataList.forEach(function(it){
+                if(it.marketType !== 'A') return;
+                if(!it.divPaidRecords) it.divPaidRecords = [];
+                if(it.exDivRecords && it.exDivRecords.length > 1){
+                    const seenEx = {}; const keepEx = [];
+                    it.exDivRecords.forEach(function(er){
+                        const ek = er.divKey || (er.date + '|' + er.perShare);
+                        if(seenEx[ek]) return;
+                        seenEx[ek] = true; keepEx.push(er);
+                    });
+                    if(keepEx.length !== it.exDivRecords.length){ it.exDivRecords = keepEx; dirty = true; }
+                }
+                if(it.divPaidRecords && it.divPaidRecords.length > 1){
+                    const seenPd = {}; const keepPd = [];
+                    it.divPaidRecords.forEach(function(pr){
+                        const pk = (pr.exDate || '') + '|' + pr.perShare;
+                        if(seenPd[pk]) return;
+                        seenPd[pk] = true; keepPd.push(pr);
+                    });
+                    if(keepPd.length !== it.divPaidRecords.length){ it.divPaidRecords = keepPd; dirty = true; }
+                }
+            });
+            // 清仓股：同股票多条记录合并（修复前删除重加会累积多条清仓记录，导致分红/盈亏重复统计）
+            const closedSrc = historyData.closedStocks || [];
+            if(closedSrc.length){
+                const closedMap = {};
+                const merged = [];
+                closedSrc.forEach(function(c){
+                    const key = c.marketType + '|' + c.code;
+                    if(!closedMap[key]){
+                        closedMap[key] = {
+                            id: c.id, marketType: c.marketType, code: c.code, name: c.name,
+                            industry: c.industry || '其他', closeDate: c.closeDate,
+                            count: Number(c.count) || 0, costPrice: Number(c.costPrice) || 0,
+                            nowPrice: Number(c.nowPrice) || 0, closePrice: Number(c.closePrice) || 0,
+                            totalReceived: Number(c.totalReceived) || 0,
+                            pnl: Number(c.pnl) || 0, pnlPct: Number(c.pnlPct) || 0,
+                            divPerShare: c.divPerShare, divTaxRate: c.divTaxRate,
+                            divPaidRecords: (c.divPaidRecords || []).map(function(r){ return Object.assign({}, r); }),
+                            exDivRecords: (c.exDivRecords || []).map(function(r){ return Object.assign({}, r); }),
+                            processedDivDates: (c.processedDivDates || []).slice(),
+                            transactions: (c.transactions || []).slice()
+                        };
+                        merged.push(closedMap[key]);
+                    } else {
+                        const m = closedMap[key];
+                        m.totalReceived += Number(c.totalReceived) || 0;
+                        m.pnl += Number(c.pnl) || 0;
+                        (c.divPaidRecords || []).forEach(function(r){ m.divPaidRecords.push(Object.assign({}, r)); });
+                        (c.exDivRecords || []).forEach(function(r){ m.exDivRecords.push(Object.assign({}, r)); });
+                        (c.processedDivDates || []).forEach(function(d){ if(m.processedDivDates.indexOf(d) < 0) m.processedDivDates.push(d); });
+                        (c.transactions || []).forEach(function(t){ m.transactions.push(t); });
+                        if(String(c.closeDate || '') > String(m.closeDate || '')) m.closeDate = c.closeDate;
+                        if(Number(c.count) > 0) m.count = Number(c.count);
+                        if(Number(c.closePrice) > 0) m.closePrice = Number(c.closePrice);
+                    }
+                });
+                // 合并后的记录内部再按 key 去重
+                let beforePd = 0, beforeEx = 0;
+                closedSrc.forEach(function(c){ beforePd += (c.divPaidRecords || []).length; beforeEx += (c.exDivRecords || []).length; });
+                let afterPd = 0, afterEx = 0;
+                merged.forEach(function(m){
+                    const seenPd = {}; const keepPd = [];
+                    m.divPaidRecords.forEach(function(r){
+                        const k = (r.exDate || '') + '|' + r.perShare;
+                        if(seenPd[k]) return;
+                        seenPd[k] = true; keepPd.push(r);
+                    });
+                    m.divPaidRecords = keepPd;
+                    const seenEx = {}; const keepEx = [];
+                    m.exDivRecords.forEach(function(r){
+                        const k = r.divKey || (r.date + '|' + r.perShare);
+                        if(seenEx[k]) return;
+                        seenEx[k] = true; keepEx.push(r);
+                    });
+                    m.exDivRecords = keepEx;
+                    afterPd += m.divPaidRecords.length;
+                    afterEx += m.exDivRecords.length;
+                });
+                if(closedSrc.length !== merged.length || beforePd !== afterPd || beforeEx !== afterEx){
+                    historyData.closedStocks = merged;
+                    dirty = true;
+                }
+            }
+            return dirty;
+        }
         // 固化已到账的除权分红记录：每笔按"到账日当天的实际持股数"计算并写入 item.divPaidRecords
         // 到账口径与成本除权完全一致：股权登记日（无登记日用除权日）当天 18:00 起算，
         // 保证"资金流水/成本除权/今年已收/累计分红/明细/排行/里程碑/自由现金流"全部同步
@@ -12110,6 +12210,8 @@
             const curY = String(new Date().getFullYear());
             const asOfFull = manualDivBaseFull();
             let dirty = false;
+            // 先自愈清理存量重复（持仓 + 清仓股合并去重）
+            if(dedupDivRecords()) dirty = true;
             holdDataList.forEach(function(it){
                 if(it.marketType !== 'A') return;
                 if(!it.divPaidRecords) it.divPaidRecords = [];
@@ -12134,6 +12236,12 @@
                     if(divDate > today) return;                    // 尚未到账
                     if(divDate === today && new Date().getHours() < 18) return; // 登记日当天 18:00 起算到账
                     if(divDate < createDate) return;               // 建仓日前未收到
+                    // 防重复固化：该笔分红已在成本除权中处理过（含删除重加后继承的标识），不再固化
+                    const divKeyChk = (eqDate || '') + '|' + (exDate || '') + '|' + p;
+                    if(it.processedDivDates && it.processedDivDates.length
+                        && (it.processedDivDates.indexOf(divKeyChk) >= 0
+                            || (eqDate && it.processedDivDates.indexOf(eqDate) >= 0)
+                            || (exDate && it.processedDivDates.indexOf(exDate) >= 0))) return;
                     if(divPaidAt(divDate) <= asOfFull) return;     // 手动基准已包含该时刻之前到账的分红
                     const perShare = p / 10;
                     const keyA = (eqDate || divDate) + '|' + perShare;
@@ -12621,11 +12729,6 @@
         }
         // 渲染里程碑页（分红数据按天更新，拿到最新数据渲染一次即可）
         function renderMilestonePage(){
-            // echarts 就绪守卫：未就绪时稍后重试整页渲染（首屏不等待图表库）
-            if(!window.echarts || !window.echarts.init){
-                setTimeout(function(){ renderMilestonePage(); }, 150);
-                return;
-            }
             const milestones = getMilestones();
             // 每年分红收入：历史+当年（与顶部"年度分红收入"口径一致）
             const divMap = {};
@@ -15007,9 +15110,8 @@
             }
         }
 
-        // 页面加载后延迟刷新一次（获取最新收盘价）：延迟让首屏先渲染完成，避免启动即请求海啸；
-        // 交易时段由 startSmartRefresh 每10秒检查接管，刷新行为与结果不变
-        setTimeout(refreshAll, 2500);
+        // 页面加载后立即刷新一次（获取最新收盘价）
+        setTimeout(refreshAll, 500);
         // 启动智能刷新
         startSmartRefresh();
         // 非交易时段失败补偿：每天一次类数据（分红/YTD/汇率）在交易时段拉取失败后，

@@ -16,7 +16,7 @@
     <script>window.APP_VERSION = '20260906.1';</script>
     <script src="libs/tailwind.min.js?v=20260906"></script>
     <link href="libs/font-awesome.min.css?v=20260906" rel="stylesheet">
-    <script src="libs/echarts.min.js?v=20260906"></script>
+    <script src="libs/echarts.min.js?v=20260906" defer></script>
     <script>
         tailwind.config = {
             theme: {
@@ -4013,10 +4013,11 @@
                 historyData.yearStart = { year: curY, cost: tc, market: tm };
                 saveHistory();
             }
-            // 港股税率口径迁移完成后：重算当年分红收入（覆盖历史百分数税率造成的负数脏值）
-            // computeYearlyDiv 在已计算状态下只更新当年，不影响历史年份固定数据
+            // 港股税率口径迁移：仅旧百分数口径（>1，如 10 表示 10%）需要迁移并重算当年分红收入
+            // （覆盖历史百分数税率造成的负数脏值）；已迁移为小数口径（0-1）后不再每次启动重算，
+            // 避免每次打开页面都执行一遍 computeYearlyDiv + saveHistory 的同步开销
             const migratedTax = holdDataList.some(function(it){
-                return it.marketType === 'HK' && it.divTaxRate != null && Number(it.divTaxRate) >= 0 && Number(it.divTaxRate) <= 1;
+                return it.marketType === 'HK' && it.divTaxRate != null && Number(it.divTaxRate) > 1;
             });
             if(migratedTax){
                 computeYearlyDiv();
@@ -4026,7 +4027,8 @@
             initMilestoneEvents();
             // 自动补全缺失的行业信息：对industry为"其他"的A股股票，自动从东方财富获取
             // 行业信息基本不变，获取成功后保存，不再重复获取（参考券商行业分类刷新机制）
-            fetchMissingIndustries();
+            // 首屏优化：延迟到启动完成后后台执行，不抢占首屏渲染时间
+            setTimeout(fetchMissingIndustries, 3000);
         }
 
         // 自动补全缺失的行业信息（串行逐个获取，避免并发请求过多）
@@ -5672,6 +5674,14 @@
         }
         // 当前激活的 Tab
         let activeTab = 'hold';
+        // echarts 异步加载守卫（首屏优化：图表库 defer 加载不阻塞首屏，切到图表页时若尚未就绪则稍后重试整页渲染；
+        // 重试约6秒仍不可用则按原逻辑执行，保留原有失败容错行为）
+        function guardEcharts(fn, tries){
+            tries = tries || 0;
+            if(window.echarts && window.echarts.init){ fn(); return; }
+            if(tries > 40){ fn(); return; }
+            setTimeout(function(){ guardEcharts(fn, tries + 1); }, 150);
+        }
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
@@ -10204,6 +10214,11 @@
         }
 
         function renderStatsPage(){
+            // echarts 就绪守卫：未就绪时稍后重试整页渲染（首屏不等待图表库，切页时几乎总是已就绪）
+            if(!window.echarts || !window.echarts.init){
+                setTimeout(function(){ renderStatsPage(); }, 150);
+                return;
+            }
             // 统计页日快照版本号：版本升级（如新增logo等渲染结构变化）时强制重建当天快照，
             // 避免手机上继续展示旧版无logo的缓存HTML；同版本内仍按 6:00/20:00 双刷新点 + 其余读存储
             const STATS_SNAP_VERSION = 2;
@@ -11677,6 +11692,11 @@
             refreshStatsCardSummaries();
         }
         function renderAnalysisCharts(){
+            // echarts 就绪守卫：未就绪时稍后重试整页渲染（首屏不等待图表库）
+            if(typeof echarts === 'undefined' || !echarts.init){
+                setTimeout(function(){ renderAnalysisCharts(); }, 150);
+                return;
+            }
             if(typeof echarts === 'undefined'){
                 document.querySelector('#chartMonthly').innerHTML = '<div class="text-center text-gray-400 text-sm py-10">图表库加载失败，请检查网络后刷新</div>';
                 return;
@@ -12601,6 +12621,11 @@
         }
         // 渲染里程碑页（分红数据按天更新，拿到最新数据渲染一次即可）
         function renderMilestonePage(){
+            // echarts 就绪守卫：未就绪时稍后重试整页渲染（首屏不等待图表库）
+            if(!window.echarts || !window.echarts.init){
+                setTimeout(function(){ renderMilestonePage(); }, 150);
+                return;
+            }
             const milestones = getMilestones();
             // 每年分红收入：历史+当年（与顶部"年度分红收入"口径一致）
             const divMap = {};
@@ -14982,8 +15007,9 @@
             }
         }
 
-        // 页面加载后立即刷新一次（获取最新收盘价）
-        setTimeout(refreshAll, 500);
+        // 页面加载后延迟刷新一次（获取最新收盘价）：延迟让首屏先渲染完成，避免启动即请求海啸；
+        // 交易时段由 startSmartRefresh 每10秒检查接管，刷新行为与结果不变
+        setTimeout(refreshAll, 2500);
         // 启动智能刷新
         startSmartRefresh();
         // 非交易时段失败补偿：每天一次类数据（分红/YTD/汇率）在交易时段拉取失败后，

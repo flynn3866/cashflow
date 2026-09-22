@@ -3850,7 +3850,8 @@
                     saveHistory();
                     // 行情刷新后：更新关注股息率阶梯提醒（突破 4%/5%/6% 各提醒一次）
                     updateYieldNotif();
-                    renderPage();
+                    // 耗电优化：持仓页不可见时不渲染持仓 DOM（切回时 switchTab 立即渲染一次）
+                    if(activeTab === 'hold') renderPage();
                     // 如果当前在统计页，同步刷新统计数据
                     if(activeTab === 'stats'){
                         renderStatsPage();
@@ -5724,6 +5725,10 @@
                     setTimeout(renderAnalysisCharts, 120);
                     analysisChartsRendered = true;
                 }
+            }
+            // 切换到持仓页时立即渲染一次（耗电优化：行情刷新仅在持仓页可见时渲染 DOM）
+            if(tab === 'hold'){
+                renderPage();
             }
             // 切换到我的页时更新数据
             if(tab === 'mine'){
@@ -14874,6 +14879,7 @@
         // 直到成功（refreshAll 内部自带失败条件判断与防并发，幂等安全）
         let offHoursTimer = null;
         setInterval(function(){
+            if(document.hidden) return; // 耗电优化：后台暂停
             if(!holdDataList.length) return;
             if(isTradingTime()) return; // 交易时段由2秒刷新负责
             refreshAll();
@@ -14881,6 +14887,7 @@
         // 分红派发日程每日18:00刷新点（非交易日也刷新）：到点且今天尚未刷新则刷新一次；
         // refreshAll 幂等防并发，成功一次后快照键=当天，后续分钟自动跳过
         setInterval(function(){
+            if(document.hidden) return; // 耗电优化：后台暂停
             if(!holdDataList.length) return;
             if(!holdDataList.some(function(it){ return it.marketType === 'A'; })) return;
             const nowD = new Date();
@@ -14892,8 +14899,19 @@
                 }
             }
         }, 60 * 1000);
-        // 每10秒检查一次交易时间，动态启停刷新（及时响应开盘/收盘/午休）
-        setInterval(startSmartRefresh, 10000);
+        // 每10秒检查一次交易时间，动态启停刷新（及时响应开盘/收盘/午休）；后台暂停
+        setInterval(function(){ if(document.hidden) return; startSmartRefresh(); }, 10000);
+        // ===== 耗电优化：切后台暂停行情刷新，回前台立即刷新并恢复（页面行为完全不变） =====
+        document.addEventListener('visibilitychange', function(){
+            if(document.hidden){
+                if(refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; }
+            } else {
+                if(holdDataList.length && !refreshing){
+                    setTimeout(function(){ refreshAll(); }, 200);
+                }
+                startSmartRefresh();
+            }
+        });
     </script>
 </body>
 </html>

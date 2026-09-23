@@ -9937,7 +9937,7 @@
                 } else {
                     let html = '';
                     data.rows.forEach(function(x, i){
-                        const warnYellow = x.mktPct > 35;
+                        const warnYellow = x.mktPct >= 50;
                         const warnRed = x.divPct > 40;
                         const rowCls = 'px-3 py-3.5';
                         // 差值方向词与涨跌色（>0 红、<0 绿）
@@ -9997,7 +9997,27 @@
             if(cmpEl && typeof echarts !== 'undefined'){
                 let cmpChart = cmpEl._chart;
                 if(!cmpChart){ cmpChart = echarts.init(cmpEl); cmpEl._chart = cmpChart; }
-                const cmpRows = data.rows.filter(function(x){ return (x.mktPct || 0) > 2; });
+                const cmpRows = data.rows.filter(function(x){ return (x.mktPct || 0) >= 5; });
+                if(!cmpRows.length){
+                    try{ cmpChart.clear(); }catch(e){}
+                    if(cmpNote) cmpNote.innerHTML = '<i class="fa fa-info-circle text-[9px]"></i>暂无市值占比 ≥ 5% 的行业';
+                    return;
+                }
+                // 点击图表外/空白处自动隐藏 tooltip（仅挂一次）
+                if(!cmpEl._hideBound){
+                    cmpEl._hideBound = true;
+                    document.addEventListener('click', function(ev){
+                        const c = document.querySelector('#industryCompareChart');
+                        if(!c || !c._chart) return;
+                        const t = ev.target;
+                        if(c.contains(t)) return;
+                        if(t && t.closest && t.closest('.industryCmpTip')) return;
+                        try{
+                            if(c._chart.hideTip) c._chart.hideTip();
+                            else c._chart.dispatchAction({ type: 'hideTip' });
+                        }catch(e){}
+                    });
+                }
                 const cat = cmpRows.map(function(x){ return x.name; });
                 // 分红口径与表格一致：今年=预估分红占比，历史年份=实际已收分红占比
                 const divName = data.isCur ? '预测分红占比' : '已收分红占比';
@@ -10029,6 +10049,7 @@
                             confine: true,
                             appendToBody: true,
                             z: 1000,
+                            className: 'industryCmpTip',
                             position: function(point, params, dom, rect, size){
                                 let tx = point[0], ty = point[1];
                                 const vw = size.viewSize[0] || 300;
@@ -10038,11 +10059,14 @@
                                 // 水平：尽量居中于触发点，左右不出界
                                 if(tx + cw / 2 > vw - 6) tx = Math.max(6, vw - cw - 6);
                                 else if(tx - cw / 2 < 6) tx = 6 + cw / 2;
-                                // 垂直：触发点上方空间足够则显示在上方，不足自动转下方
+                                // 垂直：优先上方；上方不足且下方放得下则转下方；
+                                // 上下都不足时靠上显示并留出安全间距，避免贴底被遮挡
                                 if(ty - ch - 12 >= 4){
                                     ty = ty - ch - 12;
+                                } else if(ty + 18 + ch <= vh - 12){
+                                    ty = ty + 18;
                                 } else {
-                                    ty = Math.min(ty + 18, Math.max(4, vh - ch - 4));
+                                    ty = Math.max(4, Math.min(ty - ch - 12, vh - ch - 12));
                                 }
                                 return [tx, ty];
                             },
@@ -10066,8 +10090,8 @@
                             }
                         },
                         legend: { top: 2, left: 'center', itemWidth: 10, itemHeight: 10, icon: 'circle', textStyle: { fontSize: 10, color: '#777' } },
-                        grid: { left: 4, right: 4, top: 30, bottom: 0, containLabel: true },
-                        xAxis: { type: 'category', data: cat, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false }, axisLabel: { fontSize: 10, color: '#555', interval: 0, rotate: cat.length > 8 ? 45 : (cat.length > 6 ? 30 : 0) } },
+                        grid: { left: 4, right: 4, top: 30, bottom: 8, containLabel: true },
+                        xAxis: { type: 'category', data: cat, axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false }, axisLabel: { fontSize: 10, color: '#555', interval: 0, margin: 12, rotate: cat.length > 8 ? 45 : (cat.length > 6 ? 30 : 0) } },
                         yAxis: { type: 'value', axisLabel: { fontSize: 10, color: '#bbb', formatter: '{value}%' }, splitLine: { lineStyle: { color: '#f3f3f3' } } },
                         series: [
                             { name: divName, type: 'bar', data: cmpRows.map(function(x){ return +(x.divPct || 0).toFixed(1); }), barWidth: 8, itemStyle: { borderRadius: [2,2,0,0], color: '#ff4d4f' } },
@@ -10142,13 +10166,13 @@
             });
             const warns = [];
             data.rows.forEach(function(x){
-                if(x.mktPct > 35) warns.push('<div>⚠ <b>' + x.name + '</b> 市值占比 ' + x.mktPct.toFixed(1) + '% 超 35%，行业资产集中度风险</div>');
+                if(x.mktPct >= 50) warns.push('<div>⚠ <b>' + x.name + '</b> 市值占比 ' + x.mktPct.toFixed(1) + '% 超 50%，行业资产集中度风险</div>');
                 if(x.divPct > 40) warns.push('<div>⚠ <b>' + x.name + '</b> ' + x.divLabel + '占比 ' + x.divPct.toFixed(1) + '% 超 40%，分红现金流依赖偏高</div>');
             });
             // 集中度结论
             let concText, concCls;
-            if(maxMkt.mktPct > 35){ concText = '集中度偏高：最大行业 <b>' + maxMkt.name + '</b> 市值占比 ' + maxMkt.mktPct.toFixed(1) + '%，超过 35% 警戒线，单一行业波动将显著影响组合总资产。'; concCls = 'bg-[#fff1f0] text-[#c0392b]'; }
-            else if(maxMkt.mktPct > 20){ concText = '集中度适中：最大行业 <b>' + maxMkt.name + '</b> 市值占比 ' + maxMkt.mktPct.toFixed(1) + '%，处于 20%-35% 区间，建议关注并适度分散。'; concCls = 'bg-[#fffbe6] text-[#b7791f]'; }
+            if(maxMkt.mktPct >= 50){ concText = '集中度偏高：最大行业 <b>' + maxMkt.name + '</b> 市值占比 ' + maxMkt.mktPct.toFixed(1) + '%，超过 50% 警戒线，单一行业波动将显著影响组合总资产。'; concCls = 'bg-[#fff1f0] text-[#c0392b]'; }
+            else if(maxMkt.mktPct > 20){ concText = '集中度适中：最大行业 <b>' + maxMkt.name + '</b> 市值占比 ' + maxMkt.mktPct.toFixed(1) + '%，处于 20%-50% 区间，建议关注并适度分散。'; concCls = 'bg-[#fffbe6] text-[#b7791f]'; }
             else { concText = '分布分散：最大行业 <b>' + maxMkt.name + '</b> 市值占比仅 ' + maxMkt.mktPct.toFixed(1) + '%，资产在行业间较均衡，抗单一行业波动能力强。'; concCls = 'bg-[#e8faf3] text-[#0f8a5f]'; }
             // 依赖度结论（今年=预估口径，历史年份=实际已收口径）
             let depText, depCls;
@@ -10248,7 +10272,7 @@
                     if(r.d3 > 0.05){ action = '持有'; cls = 'bg-gray-50 text-gray-600 border-gray-200'; note = '投入本金分红回报与组合相当，结构均衡'; }
                     else { action = '关注'; cls = 'bg-gray-50 text-gray-500 border-gray-200'; note = '与组合均值基本持平，维持观察'; }
                 }
-                if(r.mktPct > 35) note += '；市值占比 ' + r.mktPct.toFixed(1) + '% 超 35%，集中度风险需通过调仓消化';
+                if(r.mktPct >= 50) note += '；市值占比 ' + r.mktPct.toFixed(1) + '% 超 50%，集中度风险需通过调仓消化';
                 if(r.divPct > 40) note += '；分红占比 ' + r.divPct.toFixed(1) + '% 超 40%，现金流依赖过高，一旦行业分红政策变化将显著冲击收息';
                 return { name: r.name, action: action, cls: cls, note: note, mktPct: r.mktPct, costPct: r.costPct, divPct: r.divPct, d1: r.d1, d2: r.d2, d3: r.d3, divLabel: r.divLabel };
             });
@@ -10257,7 +10281,7 @@
             const maxMktRow = rows.reduce(function(a, r){ return r.mktPct > a.mktPct ? r : a; }, rows[0]);
             const effGapRows = rows.filter(function(r){ return r.d2 < -0.05 && r.d1 >= 15; });
             const lowEffRows = rows.filter(function(r){ return r.d3 < -0.05 && r.mktPct >= 8; });
-            if(maxMktRow && maxMktRow.mktPct > 35) actions.push({ step: 1, tag: '集中度', text: '将最大行业「' + maxMktRow.name + '」市值占比从 ' + maxMktRow.mktPct.toFixed(1) + '% 降至 ≤35%', why: '单一行业波动将直接主导组合总资产，先拆最大的雷' });
+            if(maxMktRow && maxMktRow.mktPct >= 50) actions.push({ step: 1, tag: '集中度', text: '将最大行业「' + maxMktRow.name + '」市值占比从 ' + maxMktRow.mktPct.toFixed(1) + '% 降至 ≤50%', why: '单一行业波动将直接主导组合总资产，先拆最大的雷' });
             if(maxDiv && maxDiv.divPct > 40) actions.push({ step: actions.length + 1, tag: '依赖度', text: '降低对「' + maxDiv.name + '」的' + maxDiv.divLabel + '依赖（' + maxDiv.divPct.toFixed(1) + '% → ≤35%）', why: '为组合引入第二个分红引擎，避免单一行业分红政策变化击穿现金流' });
             if(divYield > 0 && divYield < 4) actions.push({ step: actions.length + 1, tag: '现金流', text: '把低息浮盈仓位（' + effGapRows.map(function(r){ return r.name; }).join('、') + (effGapRows.length ? '等' : '') + '）部分止盈，转配股息率 ≥5% 的高息行业', why: '组合股息率仅 ' + divYield.toFixed(2) + '%，自由现金流是巴菲特组合的生命线' });
             if(lowEffRows.length) actions.push({ step: actions.length + 1, tag: '替换', text: '将本金分红回报弱于组合的「' + lowEffRows.map(function(r){ return r.name; }).join('、') + '」逐步替换为高ROE、高分红、护城河深的标的', why: '投入产出比长期为负的仓位，占用本金却无法产生现金流，是组合的「沉睡资金」' });

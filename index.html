@@ -1160,13 +1160,13 @@
                 </span>
             </div>
         </div>
-        <!-- 行业预估分红占比环形图 + 行业占比列表（>2%）：参考仓位分布详情页风格（灰底区块 + 环形图 + 右侧占比数值） -->
+        <!-- 行业累计分红占比环形图 + 行业占比列表（>2%）：所有持仓（含清仓）历史累计分红按映射后行业汇总，参考仓位分布详情页风格（灰底区块 + 环形图 + 右侧占比数值） -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div id="statsDivRankPieWrap">
                 <div class="px-5 py-3 bg-gray-50/50 border-b border-gray-100">
                     <div class="flex items-center gap-1.5 mb-3">
                         <i class="fa fa-pie-chart text-[11px] text-accent"></i>
-                        <span class="text-[12px] font-semibold text-gray-600">行业预估分红占比</span>
+                        <span class="text-[12px] font-semibold text-gray-600">行业累计分红占比</span>
                         <span class="ml-auto text-[10px] text-gray-400" id="statsDivRankIndTag">&gt;2% 行业</span>
                     </div>
                     <div class="flex items-center gap-4">
@@ -1181,7 +1181,7 @@
                     </div>
                 </div>
                 <div class="px-5 py-3">
-                    <div class="text-[10px] text-gray-400 leading-relaxed">口径与行业资产分布一致：行业今年预估全年分红 ÷ 组合预估总分红，仅展示占比 &gt; 2% 的行业。</div>
+                    <div class="text-[10px] text-gray-400 leading-relaxed">口径：全部持仓（含已清仓）历史累计已收分红按映射后行业汇总，行业累计分红 ÷ 组合累计分红，仅展示占比 &gt; 2% 的行业。</div>
                 </div>
             </div>
         </div>
@@ -2707,15 +2707,20 @@
 
     <!-- 行业映射配置页（我的 - 行业映射配置） -->
     <div id="pageIndustryMap" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 顶部导航 -->
-        <div class="flex items-center gap-3 mb-4">
-            <button class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform" onclick="closeIndustryMapPage()">
-                <i class="fa fa-arrow-left"></i>
-            </button>
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                行业映射配置
-            </h2>
+        <!-- 顶部标题栏（白色卡片 + 吸顶固定，与其他详情页统一） -->
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button onclick="closeIndustryMapPage()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <div class="w-1 h-5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full"></div>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">行业映射配置</span>
+                <span class="ml-auto flex items-center gap-1 text-[10px] text-indigo-500 font-medium whitespace-nowrap bg-indigo-50 px-2 py-0.5 rounded-full">
+                    <i class="fa fa-sitemap text-[10px]"></i>
+                    <span id="industryMapTitleCount"></span>
+                </span>
+            </div>
         </div>
 
         <!-- 说明卡 -->
@@ -9527,6 +9532,7 @@
             rememberScroll();
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#pageIndustryMap').classList.remove('hidden');
+            window.scrollTo(0, 0);
             renderIndustryMapPage();
         }
         function closeIndustryMapPage(){
@@ -9542,6 +9548,8 @@
             if(cnt) cnt.innerText = cfg.rules.length + ' 条';
             const entry = document.querySelector('#industryMapEntryCount');
             if(entry) entry.innerText = cfg.rules.length + '条';
+            const tCount = document.querySelector('#industryMapTitleCount');
+            if(tCount) tCount.innerText = cfg.rules.length + ' 条规则';
             const tg = document.querySelector('#industryShowRawToggle');
             if(tg){
                 tg.className = 'w-11 h-6 rounded-full transition-colors relative flex-shrink-0 ' + (cfg.showRaw ? 'bg-accent' : 'bg-gray-200');
@@ -9771,9 +9779,9 @@
                     const actDiv = getCurYearReceivedByStock(it);
                     addInd(ind, [raw], cost, mkt, estDiv, actDiv);
                 });
-                // 与顶部"年度分红收入（预测）"保持完全一致（历史已收部分 = 今年已收）：
-                // 1) 已清仓股票今年已实际收到的分红，按行业归入对应行业（历史已收，无未来预测）
-                // 2) 设置里手动录入的今年已收（组合级、无行业归属），计入【其他】行业
+                // 预测分红占比仅统计真实股票来源（持仓股全年预测分红 + 已清仓股票今年已实际收到的分红），
+                // 均按行业归入对应行业；设置里手动录入的今年已收（组合级、无行业归属）不计入任何行业，
+                // 避免稀释行业分红占比导致【其他】虚高。
                 const bmCurY = String(new Date().getFullYear());
                 const bmAsOf = manualDivBaseFull();
                 const closedDivByInd = {};
@@ -9790,13 +9798,6 @@
                     if(indMap[k]) indMap[k].estDiv += closedDivByInd[k];
                     else addInd(k, [k], 0, 0, closedDivByInd[k], 0);
                 });
-                if(historyData.manualYearlyDiv && historyData.manualYearlyDiv[bmCurY]){
-                    const manualBaseAmt = Number(historyData.yearlyDiv[bmCurY]) || 0;
-                    if(manualBaseAmt > 0){
-                        if(indMap['其他']) indMap['其他'].estDiv += manualBaseAmt;
-                        else addInd('其他', ['其他'], 0, 0, manualBaseAmt, 0);
-                    }
-                }
             } else {
                 const snap = historyData.yearSnapshots && historyData.yearSnapshots[year];
                 const holdList = (snap && snap.holdings && snap.holdings.length) ? snap.holdings : [];
@@ -10031,6 +10032,24 @@
                             trigger: 'axis',
                             confine: true,
                             appendToBody: true,
+                            z: 1000,
+                            position: function(point, params, dom, rect, size){
+                                let tx = point[0], ty = point[1];
+                                const vw = size.viewSize[0] || 300;
+                                const vh = size.viewSize[1] || 200;
+                                const cw = size.contentSize[0] || 120;
+                                const ch = size.contentSize[1] || 60;
+                                // 水平：尽量居中于触发点，左右不出界
+                                if(tx + cw / 2 > vw - 6) tx = Math.max(6, vw - cw - 6);
+                                else if(tx - cw / 2 < 6) tx = 6 + cw / 2;
+                                // 垂直：触发点上方空间足够则显示在上方，不足自动转下方
+                                if(ty - ch - 12 >= 4){
+                                    ty = ty - ch - 12;
+                                } else {
+                                    ty = Math.min(ty + 18, Math.max(4, vh - ch - 4));
+                                }
+                                return [tx, ty];
+                            },
                             backgroundColor: 'rgba(255,255,255,0.96)',
                             borderColor: '#eee',
                             textStyle: { color: '#333', fontSize: 12 },
@@ -11311,20 +11330,37 @@
                 document.querySelector('#divRankCount').innerText = '0';
             }
             markStatsRefresh('divRank', '#statsDivRankRefreshTime', '每日更新');
-            // ---- 行业预估分红占比环形图：复用行业资产分布口径（今年预估分红占比 > 2% 的行业），参考仓位分布样式 ----
+            // ---- 行业累计分红占比环形图：所有持仓（含已清仓）历史累计分红按映射后统计大类汇总（占比 > 2% 的行业），参考仓位分布样式 ----
             const indPieEl = document.querySelector('#chartStatsDivRankInd');
             if(indPieEl && typeof echarts !== 'undefined'){
-                const indCurData = buildIndustryMulti(String(new Date().getFullYear()));
                 const indColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
-                const indPieItems = indCurData.rows.filter(function(r){ return r.estDivPct > 2; }).map(function(r, i){
-                    return { name: r.name, value: Number(r.estDivPct.toFixed(2)), estDiv: r.estDiv, itemStyle: { color: indColors[i % indColors.length] } };
+                // 累计分红按行业汇总（口径与累计分红排行一致：持仓 = getItemTotalReceived，清仓 = totalReceived）
+                const indDivAgg = {};
+                holdDataList.forEach(function(it){
+                    const ind = getStockIndustry(it);
+                    indDivAgg[ind] = (indDivAgg[ind] || 0) + (Number(getItemTotalReceived(it)) || 0);
                 });
+                closedForDivStat().forEach(function(r){
+                    const ind = getStockIndustry({ marketType: r.marketType, code: r.code, industry: r.industry });
+                    indDivAgg[ind] = (indDivAgg[ind] || 0) + (Number(r.totalReceived) || 0);
+                });
+                let indDivGrand = 0;
+                Object.keys(indDivAgg).forEach(function(k){ indDivGrand += indDivAgg[k]; });
+                const indPieItems = [];
+                if(indDivGrand > 0){
+                    Object.keys(indDivAgg).forEach(function(k, i){
+                        const v = Number(indDivAgg[k]) || 0;
+                        const pct = v / indDivGrand * 100;
+                        if(pct <= 2) return;
+                        indPieItems.push({ name: k, value: Number(pct.toFixed(2)), divTotal: v, itemStyle: { color: indColors[i % indColors.length] } });
+                    });
+                }
                 const indPieKey = divRankPeriodKey + '|' + indPieItems.map(function(p){ return p.name + ':' + p.value; }).join(',');
                 const indTagEl = document.querySelector('#statsDivRankIndTag');
                 const indListEl = document.querySelector('#statsDivRankIndList');
                 if(indPieItems.length){
                     if(indTagEl) indTagEl.innerText = indPieItems.length + ' 个行业 · 合计 ' + indPieItems.reduce(function(s, p){ return s + p.value; }, 0).toFixed(2) + '%';
-                    // 右侧占比列表（参考仓位分布：彩色圆点 + 行业名 + 百分比）
+                    // 右侧占比列表（参考仓位分布：彩色圆点 + 行业名 + 累计分红金额 + 占比）
                     if(indListEl){
                         let indListHtml = '';
                         indPieItems.forEach(function(p, i){
@@ -11334,7 +11370,7 @@
                                 + '<span class="text-[12px] text-gray-600 truncate">' + p.name + '</span>'
                                 + '</div>'
                                 + '<div class="flex items-center flex-shrink-0">'
-                                + '<span class="w-16 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap">' + fmtMoney(p.estDiv) + '</span>'
+                                + '<span class="w-16 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap">' + fmtMoney(p.divTotal) + '</span>'
                                 + '<span class="w-14 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap ml-2">' + p.value.toFixed(2) + '%</span>'
                                 + '</div>'
                                 + '</div>';
@@ -11361,7 +11397,7 @@
                                 type: 'text',
                                 left: 'center',
                                 top: 'center',
-                                style: { text: '行业分红', fontSize: 11, fill: '#9CA3AF', textAlign: 'center' }
+                                style: { text: '累计分红', fontSize: 11, fill: '#9CA3AF', textAlign: 'center' }
                             }]
                         });
                         chart._pieKey = indPieKey;
@@ -13528,13 +13564,12 @@
             htmlStr += `
             <div class="bg-white rounded-2xl card-shadow overflow-visible">
                 <!-- 表头：sticky固定在顶部，滚动时一直可见 -->
-                <div class="sticky top-0 z-20 grid px-2 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-2xl" style="grid-template-columns:24px 1.55fr 0.8fr 1.05fr 1.05fr 1.05fr">
-                    <div class="text-center text-[10px] text-gray-400 font-medium">#</div>
-                    <div class="text-center text-[10px] text-gray-400 font-medium">名称/市值</div>
-                    <div class="text-center text-[10px] text-gray-400 font-medium">个股仓位</div>
-                    <div class="text-center text-[10px] text-gray-400 font-medium">成本/现价</div>
-                    <div class="text-center text-[10px] text-gray-400 font-medium">累计盈亏</div>
-                    <div class="text-center text-[10px] text-gray-400 font-medium">当日盈亏</div>
+                <div class="sticky top-0 z-20 grid px-2 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-2xl" style="grid-template-columns:1.55fr 0.8fr 1.05fr 1.05fr 1.05fr">
+                    <div class="text-left text-[12px] text-gray-400 font-medium pr-2">名称/市值</div>
+                    <div class="text-right text-[12px] text-gray-400 font-medium">个股仓位</div>
+                    <div class="text-right text-[12px] text-gray-400 font-medium">成本/现价</div>
+                    <div class="text-right text-[12px] text-gray-400 font-medium">累计盈亏</div>
+                    <div class="text-right text-[12px] text-gray-400 font-medium">当日盈亏</div>
                 </div>
             `;
             // 全局序号
@@ -13547,9 +13582,9 @@
                 <div class="grid grid-cols-12 mx-0 mt-2 mb-1 rounded-lg bg-gray-50 overflow-hidden items-center">
                     <div class="col-span-12 flex items-center gap-2 px-3 py-2">
                         <span class="w-1 h-4 rounded-full flex-shrink-0" style="background:${indColor}"></span>
-                        <span class="text-[13px] font-bold text-gray-700">${ind.name}</span>
-                        <span class="text-[10px] text-gray-400">${ind.stocks.length}只</span>
-                        <span class="text-[12px] font-semibold text-gray-500 tabular-nums">${indPct}%</span>
+                        <span class="text-[14px] font-bold text-gray-700">${ind.name}</span>
+                        <span class="text-[12px] text-gray-400">${ind.stocks.length}只</span>
+                        <span class="text-[13px] font-semibold text-gray-500 tabular-nums">${indPct}%</span>
                     </div>
                 </div>
                 `;
@@ -13612,40 +13647,37 @@
                         ? 'bg-gradient-to-r from-purple-50 via-purple-100/40 to-purple-50 border border-purple-200/60'
                         : 'bg-pageBg';
                     // 市值颜色：已回本股票显示紫色
-                    const marketValueClass = isCostRecovered ? 'text-purple-600' : 'text-gray-500';
+                    const marketValueClass = isCostRecovered ? 'text-purple-600' : 'text-gray-800';
                     // 市值数字与股票名左对齐（名称行左对齐贴序号后，数字固定缩进logo+gap宽度）
                     const mvText = fmtMoney(itemMarketTotal);
                     const mvMargin = 18;
                     // 行风格：和卡片视图的两行一致（bg-pageBg rounded-xl），列表模式不可点击编辑
                     htmlStr += `
-                    <div class="hold-row ${rowBgClass} mx-2 mt-1 mb-1 rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" style="grid-template-columns:24px 1.55fr 0.8fr 1.05fr 1.05fr 1.05fr">
-                        <div class="flex justify-center">
-                            <div class="w-6 h-6 rounded-full ${rankClass} flex items-center justify-center text-[10px] font-bold">${globalIndex}</div>
-                        </div>
-                        <div class="text-left px-0.5">
+                    <div class="hold-row ${rowBgClass} mx-2 mt-1 mb-1 rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" style="grid-template-columns:1.55fr 0.8fr 1.05fr 1.05fr 1.05fr">
+                        <div class="text-left pl-0.5 pr-2">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
-                                <span class="text-xs font-semibold ${isCostRecovered ? 'text-purple-600 font-bold' : 'text-gray-800'}">${shortName}</span>
+                                <span class="text-[13px] font-medium ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'}">${shortName}</span>
                                 ${recoveredBadge}
                                 <span class="${tagClass} text-[8px] px-0.5 py-0.5 rounded flex-shrink-0">${tagText}</span>
                             </div>
-                            <div class="text-[11px] font-medium ${marketValueClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market" style="margin-left:${mvMargin}px">${mvText}</div>
+                            <div class="text-[13px] font-medium ${marketValueClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market" style="margin-left:${mvMargin}px">${mvText}</div>
                         </div>
-                        <div class="text-center px-0.5">
-                            <div class="text-xs font-semibold text-gray-700 tabular-nums">${item.count}</div>
-                            <div class="text-[11px] font-medium text-gray-500 mt-0.5 tabular-nums">${holdPct}%</div>
+                        <div class="text-right px-0.5">
+                            <div class="text-[13px] font-medium text-gray-700 tabular-nums">${item.count}</div>
+                            <div class="text-[13px] font-medium text-gray-700 mt-0.5 tabular-nums">${holdPct}%</div>
                         </div>
-                        <div class="text-center px-0.5">
-                            <div class="text-xs font-semibold text-gray-700 tabular-nums"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtCost(item.costPrice)}</div>
-                            <div class="text-xs font-medium text-gray-500 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
+                        <div class="text-right px-0.5">
+                            <div class="text-[13px] font-medium text-gray-700 tabular-nums"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtCost(item.costPrice)}</div>
+                            <div class="text-[13px] font-medium text-gray-700 mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[8px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
                         </div>
-                        <div class="text-center px-0.5">
-                            <div class="text-xs font-bold ${itemPnlClass2} tabular-nums">${formatPnl(itemPnl2)}</div>
-                            <div class="text-[11px] font-medium ${itemPnlClass2} mt-0.5 tabular-nums">${pnlPctText2}</div>
+                        <div class="text-right px-0.5">
+                            <div class="text-[13px] font-medium ${itemPnlClass2} tabular-nums">${formatPnl(itemPnl2)}</div>
+                            <div class="text-[13px] font-medium ${itemPnlClass2} mt-0.5 tabular-nums">${pnlPctText2}</div>
                         </div>
-                        <div class="text-center px-0.5">
-                            <div class="text-xs font-bold ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
-                            <div class="text-[11px] font-medium ${dayPnlClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
+                        <div class="text-right px-0.5">
+                            <div class="text-[13px] font-medium ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
+                            <div class="text-[13px] font-medium ${dayPnlClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>
                     </div>
                     `

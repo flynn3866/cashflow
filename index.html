@@ -4327,6 +4327,7 @@
         }
         // 资产新高记录弹窗（金色时间线，倒序显示最新5条）
         function openAssetHighModal(){
+            rememberScroll();
             const st = getAssetHighState();
             const highs = st.highs;
             const cur = st.cur;
@@ -4387,6 +4388,7 @@
             window.scrollTo(0, 0);
         }
         function closeAssetHighModal(){
+            restoreScroll();
             // 关闭资产新高页面，恢复持仓页
             document.querySelector('#pageAssetHigh').classList.add('hidden');
             document.querySelector('#pageHold').classList.remove('hidden');
@@ -5172,6 +5174,16 @@
         }
         // Toast 提示：显示一条消息，2秒后自动消失
         let toastTimer = null;
+        // 二级页面滚动位置记忆：打开详情页前保存主页面滚动位置，关闭后恢复（返回不再跳回顶部）
+        let __scrollStack = [];
+        function rememberScroll(){
+            try{ __scrollStack.push(window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0); }
+            catch(e){ __scrollStack.push(0); }
+        }
+        function restoreScroll(){
+            const t = __scrollStack.length ? __scrollStack.pop() : 0;
+            setTimeout(function(){ window.scrollTo(0, t); }, 0);
+        }
         function showToast(msg){
             const el = document.querySelector('#toast');
             if(!el) return;
@@ -5461,6 +5473,7 @@
         let tradeMode = 'buy';
         let tradeItemId = null;
         function openTradeModal(id, mode){
+            rememberScroll();
             const item = holdDataList.find(it => it.id === id);
             if(!item) return;
             tradeMode = mode;
@@ -5497,6 +5510,7 @@
             setTimeout(function(){ document.querySelector('#tradeQty').focus(); }, 100);
         }
         function closeTradeModal(){
+            restoreScroll();
             // 关闭交易页面，恢复持仓页
             document.querySelector('#pageTrade').classList.add('hidden');
             document.querySelector('#pageHold').classList.remove('hidden');
@@ -5677,6 +5691,7 @@
             renderTradeLogList();
         }
         function openTradeLogPage(id){
+            rememberScroll();
             const item = holdDataList.find(it => it.id === id);
             if(!item) return;
             tradeLogItemId = id;
@@ -5746,6 +5761,7 @@
             renderTradeLogList();
         }
         function closeTradeLogPage(){
+            restoreScroll();
             document.querySelector('#pageTradeLog').classList.add('hidden');
             document.querySelector('#pageHold').classList.remove('hidden');
             // 恢复新增按钮（仅持仓页显示）
@@ -5851,6 +5867,8 @@
         // 切换底部导航 Tab
         function switchTab(tab){
             activeTab = tab;
+            // 导航切换时不恢复滚动位置（详情页直接导航切换等效返回，清空记忆栈防错位）
+            if(__scrollStack) __scrollStack.length = 0;
             // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心），等效于点击左上角返回
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageStockScores').classList.add('hidden');
@@ -6262,6 +6280,7 @@
         // 保存字段：总资产、净值(BVPS)、XIRR、总投入、当年分红已收、累计分红、今年收益率、总收益率、
         // 持仓盈亏、成本息率/市值息率、持仓只数与持仓结构（行业占比 + 明细），用于多年回溯与年度报表
         function openYearSnapshot(){
+            rememberScroll();
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#openModalBtn').classList.add('hidden');
             document.querySelector('#pageYearSnapshot').classList.remove('hidden');
@@ -6269,6 +6288,7 @@
             window.scrollTo(0, 0);
         }
         function closeYearSnapshot(){
+            restoreScroll();
             document.querySelector('#pageYearSnapshot').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
@@ -6686,6 +6706,7 @@
             return s;
         }
         function openBalanceSheet(){
+            rememberScroll();
             bsData = loadBalanceSheet();
             bsReturnTab = activeTab || 'mine';
             bsOpenActions = null;
@@ -6697,6 +6718,7 @@
             renderBalanceSheet();
         }
         function closeBalanceSheet(){
+            restoreScroll();
             document.querySelector('#pageBalanceSheet').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', bsReturnTab !== 'hold');
@@ -7428,6 +7450,7 @@
         }
         // 打开消息中心（从任意页面进入，返回时回到原页面）
         function openNotifCenter(){
+            rememberScroll();
             notifReturnTab = activeTab || 'hold';
             const pageEl = document.querySelector('#' + (notifReturnTab === 'hold' ? 'pageHold' : notifReturnTab === 'stats' ? 'pageStats' : notifReturnTab === 'analysis' ? 'pageAnalysis' : notifReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.add('hidden');
@@ -7439,6 +7462,7 @@
             markAllNotifRead();
         }
         function closeNotifCenter(){
+            restoreScroll();
             document.querySelector('#pageNotifCenter').classList.add('hidden');
             const pageEl = document.querySelector('#' + (notifReturnTab === 'hold' ? 'pageHold' : notifReturnTab === 'stats' ? 'pageStats' : notifReturnTab === 'analysis' ? 'pageAnalysis' : notifReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
@@ -7451,6 +7475,7 @@
         let divDetailMode = 'received';
         // 打开分红明细页（mode: received=今年已收 / year=年度分红收入）
         function openDivDetail(mode){
+            rememberScroll();
             divDetailMode = mode || 'received';
             divDetailReturnTab = activeTab || 'hold';
             const pageEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
@@ -7461,6 +7486,7 @@
             renderDivDetail();
         }
         function closeDivDetail(){
+            restoreScroll();
             document.querySelector('#pageDivDetail').classList.add('hidden');
             const pageEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
@@ -7470,6 +7496,7 @@
         // ============ 净值历史（我的页 - 持仓概览 - 最新净值） ============
         let navDetailReturnTab = 'mine';
         function openNavDetail(){
+            rememberScroll();
             navDetailReturnTab = activeTab || 'mine';
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#pageNavDetail').classList.remove('hidden');
@@ -7478,6 +7505,7 @@
             renderNavDetail();
         }
         function closeNavDetail(){
+            restoreScroll();
             document.querySelector('#pageNavDetail').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', navDetailReturnTab !== 'hold');
@@ -7541,6 +7569,7 @@
         // ============ 投入成本明细（我的页 - 持仓概览 - 投入成本） ============
         let costDetailReturnTab = 'mine';
         function openCostDetail(){
+            rememberScroll();
             costDetailReturnTab = activeTab || 'mine';
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#pageCostDetail').classList.remove('hidden');
@@ -7549,6 +7578,7 @@
             renderCostDetail();
         }
         function closeCostDetail(){
+            restoreScroll();
             document.querySelector('#pageCostDetail').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', costDetailReturnTab !== 'hold');
@@ -7853,6 +7883,7 @@
         let watchReturnTab = 'mine';
         // 打开关注页面
         function openWatchPage(){
+            rememberScroll();
             watchReturnTab = activeTab || 'mine';
             const pageEl = document.querySelector('#' + (watchReturnTab === 'hold' ? 'pageHold' : watchReturnTab === 'stats' ? 'pageStats' : watchReturnTab === 'analysis' ? 'pageAnalysis' : watchReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.add('hidden');
@@ -7862,6 +7893,7 @@
             renderWatchPage();
         }
         function closeWatchPage(){
+            restoreScroll();
             document.querySelector('#pageWatchList').classList.add('hidden');
             const pageEl = document.querySelector('#' + (watchReturnTab === 'hold' ? 'pageHold' : watchReturnTab === 'stats' ? 'pageStats' : watchReturnTab === 'analysis' ? 'pageAnalysis' : watchReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
@@ -8015,6 +8047,7 @@
         }
 
         function openAnnualReport(){
+            rememberScroll();
             arReportYear = new Date().getFullYear();
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#pageAnnualReport').classList.remove('hidden');
@@ -8024,6 +8057,7 @@
             fetchAnnualIndex();
         }
         function closeAnnualReport(){
+            restoreScroll();
             document.querySelector('#pageAnnualReport').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
@@ -9170,6 +9204,7 @@
             });
         }
         function openStatsSection(key){
+            rememberScroll();
             hideAllChartTips();
             const pg = document.querySelector('#' + (STATS_SECTION_PAGES[key] || ''));
             if(!pg) return;
@@ -9204,6 +9239,7 @@
             }
         }
         function closeStatsSection(){
+            restoreScroll();
             hideAllChartTips();
             for(const k in STATS_SECTION_PAGES){
                 const el = document.querySelector('#' + STATS_SECTION_PAGES[k]);
@@ -9488,11 +9524,13 @@
         function industryMapShowRaw(){ return !!loadIndustryMapCfg().showRaw; }
         function mapEsc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
         function openIndustryMapPage(){
+            rememberScroll();
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#pageIndustryMap').classList.remove('hidden');
             renderIndustryMapPage();
         }
         function closeIndustryMapPage(){
+            restoreScroll();
             document.querySelector('#pageIndustryMap').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
@@ -14318,6 +14356,7 @@
         }
         // 打开评分页：从"我的"进入；读存储（缺失则构建），并异步补齐财务数据后自动刷新
         function openStockScores(){
+            rememberScroll();
             window.scrollTo(0, 0);
             document.querySelector('#pageStockScores').classList.remove('hidden');
             document.querySelector('#pageMine').classList.add('hidden');
@@ -14326,6 +14365,7 @@
             ensureFinFetch();
         }
         function closeStockScores(){
+            restoreScroll();
             document.querySelector('#pageStockScores').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
@@ -14647,6 +14687,7 @@
 
         // 显示设置页面
         function showSettings(){
+            rememberScroll();
             document.querySelector('#pageMine').classList.add('hidden');
             document.querySelector('#pageSettings').classList.remove('hidden');
             renderYearAssetList();
@@ -14707,12 +14748,14 @@
         }
         // ============ 资金转账（我的页）：转入/取出记录 + 年度汇总（与资金流水同源） ============
         function openFundTransfer(){
+            rememberScroll();
             window.scrollTo(0, 0);
             document.querySelector('#pageFundTransfer').classList.remove('hidden');
             document.querySelector('#pageMine').classList.add('hidden');
             renderFundTransfer();
         }
         function closeFundTransfer(){
+            restoreScroll();
             document.querySelector('#pageFundTransfer').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
@@ -14795,6 +14838,7 @@
             if(chevron) chevron.style.transform = open ? '' : 'rotate(-90deg)';
         }
         function openFundTransferAdd(){
+            rememberScroll();
             window.scrollTo(0, 0);
             const dEl = document.querySelector('#ftDate');
             if(dEl) dEl.value = todayStr();
@@ -14807,6 +14851,7 @@
             document.querySelector('#pageFundTransferAdd').classList.remove('hidden');
         }
         function closeFundTransferAdd(){
+            restoreScroll();
             document.querySelector('#pageFundTransferAdd').classList.add('hidden');
             document.querySelector('#pageFundTransfer').classList.remove('hidden');
             renderFundTransfer();
@@ -14897,6 +14942,7 @@
 
         // 隐藏设置页面，返回"我的"
         function hideSettings(){
+            restoreScroll();
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             // 设置页保存的资金投入/分红等会实时影响我的页概览，返回时立即刷新

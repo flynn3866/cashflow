@@ -13638,8 +13638,10 @@
                     const rankClass = isCostRecovered
                         ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-sm shadow-purple-300'
                         : 'bg-gray-100 text-gray-400';
-                    // 股票名称：4字以内完整显示；超出显示3字+…（省字防手机端换行）
-                    const shortName = item.name.length > 4 ? item.name.substring(0, 3) + '…' : item.name;
+                    // 股票名称：按显示宽度判断（12px基准估算，4个汉字宽度48以内完整显示）；
+                    // 宽度>52才截断为3字+…（省字防手机端换行）。修复含字母名称如"红利ETF"、
+                    // 以及3字名带空格/后缀被 length 误截断的问题；PICC(约96宽)仍截断。
+                    const shortName = estListTextW(item.name) > 52 ? item.name.substring(0, 3) + '…' : item.name;
                     // 已回本徽章：已去掉（港股名字过长导致换行）
                     const recoveredBadge = '';
                     // 行风格：已回本股票使用淡紫色渐变背景，更加醒目；普通股票使用bg-pageBg
@@ -13659,7 +13661,7 @@
                                 ${stockLogoHtml(item, 16)}
                                 <span class="text-[13.8px] font-medium ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'}">${shortName}</span>
                                 ${recoveredBadge}
-                                <span class="${tagClass} text-[8px] px-0.5 py-0.5 rounded flex-shrink-0">${tagText}</span>
+                                <span class="${tagClass} text-[7px] px-[1px] py-0.5 rounded flex-shrink-0">${tagText}</span>
                             </div>
                             <div class="text-[13.8px] font-medium ${marketValueClass} mt-0.5 tabular-nums list-num" data-code="${item.code}" data-field="market" style="margin-left:${mvMargin}px">${mvText}</div>
                         </div>

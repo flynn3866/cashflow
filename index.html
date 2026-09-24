@@ -264,15 +264,20 @@
     </div>
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
     <div id="pageHold" class="max-w-xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 我的持仓标题（置顶，汇总卡上方） -->
+        <div class="flex items-center gap-2 mb-3 mt-0">
+            <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+            <h2 class="text-lg font-semibold text-gray-800 tracking-wide">我的持仓</h2>
+        </div>
         <!-- 顶部汇总卡片 - 暖色调渐变，紧凑精致设计（首页直接展示资产卡，品牌区移至"我的"页） -->
-        <div class="relative rounded-3xl px-4 py-2.5 mb-4 overflow-hidden" style="background:#F7F8FC;box-shadow:0 2px 6px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(15,23,42,0.07);">
+        <div class="relative rounded-3xl px-4 py-2.5 mb-4 overflow-hidden" style="background:linear-gradient(180deg,#FFFFFF 0%,#FCFBF7 100%);box-shadow:0 2px 6px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.06), inset 0 -1px 0 rgba(15,23,42,0.06);">
             <!-- 消息通知入口：右上角铃铛（与其他导航页一致，置于卡片右上角） -->
             <button class="notif-bell absolute right-3 top-3 w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-md shadow-gray-300/50 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[15px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
             <!-- 顶部高光（浅色卡浮雕感） -->
-            <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent"></div>
+            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg, transparent, rgba(212,175,55,0.30), transparent);"></div>
             <!-- 内凹微阴影：卡内质感 -->
             <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(15,23,42,0.04);"></div>
 
@@ -280,22 +285,22 @@
                 <!-- 年度分红收入 -->
                 <div class="mb-1">
                     <div class="text-gray-500 text-[10px] flex items-center gap-1.5 mb-0.5">
-                        <i class="fa fa-coins text-amber-500 text-[10px]"></i>
+                        <i class="fa fa-coins text-amber-500 text-[10px]" style="filter:drop-shadow(0 1px 2px rgba(217,119,6,0.28));"></i>
                         <span class="tracking-wide">年度分红收入</span>
                         <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="flex items-center justify-center text-gray-400 active:scale-90 transition-transform"><i class="fa fa-chevron-right text-[9px]"></i></button>
                     </div>
                     <div class="flex items-baseline gap-1.5">
-                        <span class="text-[18px] font-bold text-[#0F172A] tabular-nums tracking-tight num-transition" id="totalYearDiv">0.00</span>
+                        <span class="text-[18px] font-bold tabular-nums tracking-tight num-transition text-accent" id="totalYearDiv">0.00</span>
                     </div>
                 </div>
 
                 <!-- 指标网格 - 三行三列，精致分隔 -->
-                <div class="grid grid-cols-3 gap-0">
+                <div class="grid grid-cols-3 gap-0 -mx-4">
                     <!-- 顶部渐变分隔线 -->
-                    <div class="col-span-3 mb-1.5" style="height:1px;background:#E2E6ED;box-shadow:0 1px 0 rgba(255,255,255,0.85);"></div>
+                    <div class="col-span-3 mb-0" style="height:1px;background:#E8E6E0;"></div>
                     <!-- 三行三列内容：渐变白面板（夹在上下凹凸线之间，参考上海证券持仓页顶部） -->
-                    <div class="col-span-3 rounded-xl mx-1" style="background:linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.28));">
-                        <div class="grid grid-cols-3 gap-0 px-0.5 py-0.5">
+                    <div class="col-span-3" style="background:#FAFBFD;box-shadow:inset 0 1px 0 rgba(255,255,255,0.9);">
+                        <div class="grid grid-cols-3 gap-0 px-1 py-1.5 mx-4">
                     <!-- 第一行 -->
                     <div class="py-1.5 pr-2.5">
                         <div class="text-gray-400 text-[11px] mb-1 flex items-center justify-start gap-1.5">
@@ -356,9 +361,9 @@
                         </div>
                     </div>
                     <!-- 资产新高 与网格之间的凹凸分隔线 -->
-                    <div class="col-span-3 mt-1.5 mb-2" style="height:1px;background:#E2E6ED;box-shadow:0 1px 0 rgba(255,255,255,0.85);"></div>
+                    <div class="col-span-3 mt-0 mb-2" style="height:1px;background:#E8E6E0;"></div>
                     <!-- 回本里程碑（账户级成就信息，卡内底部横幅；仅存在已回本股票时显示） -->
-                    <div id="recoverMilestone" class="hidden col-span-3 mb-0.5 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden">
+                    <div id="recoverMilestone" class="hidden col-span-3 mb-0.5 mx-4 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden">
                         <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#a78bfa,#6d28d9)"></span>
                         <span class="text-[11px] text-gray-500 whitespace-nowrap">已回本 <span id="recoverCount" class="text-[12px] font-semibold text-purple-600 tabular-nums">0</span>只</span>
                         <span class="h-3.5 w-px bg-purple-200/70 flex-shrink-0"></span>
@@ -372,13 +377,8 @@
 
 
         <!-- 我的持仓头部 -->
-        <div class="flex items-center gap-2 mb-3 mt-1">
-            <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-            <h2 class="text-lg font-semibold text-gray-800">我的持仓</h2>
-            <span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-xs"><span id="stockNum">0</span>只</span>
-        </div>
         <!-- 全部/A股/港股筛选标签 + 卡片/列表模式切换 -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-0.5">
             <div class="flex gap-2 text-sm" id="filterGroup">
                 <button type="button" data-filter="all" class="filterTag bg-gradient-to-r from-accent to-orange-600 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-sm transition-all">
                     全部 <span id="allCount">0</span>
@@ -12956,7 +12956,8 @@
             updatePositionWarn();
             const sum = calcSummary();
             // 更新顶部汇总卡片 & 筛选标签数量
-            document.querySelector('#stockNum').innerText = sum.holdLen;
+            const stNumEl = document.querySelector('#stockNum');
+            if(stNumEl) stNumEl.innerText = sum.holdLen;
             document.querySelector('#allCount').innerText = sum.holdLen;
             document.querySelector('#aCount').innerText = sum.aShareNum;
             document.querySelector('#hkCount').innerText = sum.hkShareNum;
@@ -15425,6 +15426,10 @@
         });
 
         init();
+
+        // 刷新/首次加载后强制回到页面顶部（避免浏览器刷新保留滚动位置导致越刷越往下）
+        if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
+        window.scrollTo(0, 0);
 
         // 判断是否为A股交易时间（周一到周五 9:30-16:00）
         function isTradingTime(){

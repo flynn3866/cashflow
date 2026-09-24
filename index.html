@@ -256,134 +256,120 @@
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- 个股仓位预警条：全局固定吸顶提示条，仅超限时显示，正常状态自动隐藏不占版面 -->
     <div id="positionWarnBar" class="hidden fixed top-0 left-0 right-0 z-[70]" style="background:rgba(253,246,230,0.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid #efe2c6;box-shadow:0 2px 10px rgba(180,140,60,0.10);">
-        <div class="max-w-2xl mx-auto flex items-center gap-2.5 px-4" style="padding-top:calc(env(safe-area-inset-top, 0px) + 6px);padding-bottom:7px;">
+        <div class="max-w-2xl mx-auto flex items-center gap-2.5 px-3" style="padding-top:calc(env(safe-area-inset-top, 0px) + 6px);padding-bottom:7px;">
             <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fff3d6;"><i class="fa fa-exclamation-triangle text-[10px] text-amber-600"></i></span>
             <div class="flex-1 min-w-0 text-[11px] text-gray-700 leading-snug" id="positionWarnText"></div>
             <button type="button" onclick="closePositionWarn()" class="w-5 h-5 rounded-full bg-white border border-amber-200 flex items-center justify-center text-amber-700 flex-shrink-0 active:scale-90 transition-transform" title="本次不再提示"><i class="fa fa-times text-[9px]"></i></button>
         </div>
     </div>
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
-    <div id="pageHold" class="max-w-xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageHold" class="max-w-xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部汇总卡片 - 暖色调渐变，紧凑精致设计（首页直接展示资产卡，品牌区移至"我的"页） -->
-        <div class="relative text-white rounded-3xl p-4 shadow-2xl mb-4 overflow-hidden card-shimmer" style="background: linear-gradient(135deg, #C46137 0%, #A04E2C 50%, #7A3A20 100%);">
+        <div class="relative rounded-3xl px-4 py-2.5 mb-4 overflow-hidden" style="background:#F7F8FC;box-shadow:0 2px 6px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(15,23,42,0.07);">
             <!-- 消息通知入口：右上角铃铛（与其他导航页一致，置于卡片右上角） -->
-            <button class="notif-bell absolute right-3 top-3 w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white shadow-lg shadow-black/15 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <button class="notif-bell absolute right-3 top-3 w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-md shadow-gray-300/50 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[15px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
-            <!-- 顶部高光线 -->
-            <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-200/30 to-transparent"></div>
-            <!-- 内发光边框 -->
-            <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.2);"></div>
-            <!-- 背景装饰：细腻网格纹理 -->
-            <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 24px 24px;"></div>
-            <!-- 光晕装饰：右上角金色主光晕 -->
-            <div class="absolute -top-24 -right-16 w-56 h-56 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(253,230,138,0.25) 0%, transparent 70%);"></div>
-            <!-- 左下角深橙辅光晕 -->
-            <div class="absolute -bottom-20 -left-20 w-48 h-48 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(180,83,9,0.2) 0%, transparent 70%);"></div>
-            <!-- 中间暖金光晕（增加层次感） -->
-            <div class="absolute top-1/3 left-1/4 w-40 h-40 rounded-full pointer-events-none opacity-30" style="background: radial-gradient(circle, rgba(251,191,36,0.15) 0%, transparent 70%);"></div>
+            <!-- 顶部高光（浅色卡浮雕感） -->
+            <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent"></div>
+            <!-- 内凹微阴影：卡内质感 -->
+            <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(15,23,42,0.04);"></div>
 
             <div class="relative z-10">
                 <!-- 年度分红收入 -->
-                <div class="mb-4">
-                    <div class="text-orange-100/70 text-[11px] flex items-center gap-1.5 mb-1.5">
-                        <i class="fa fa-coins text-amber-300 text-[10px]"></i>
+                <div class="mb-1">
+                    <div class="text-gray-500 text-[10px] flex items-center gap-1.5 mb-0.5">
+                        <i class="fa fa-coins text-amber-500 text-[10px]"></i>
                         <span class="tracking-wide">年度分红收入</span>
-                        <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="w-4 h-4 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-amber-200/90 active:scale-90 transition-transform">
-                            <i class="fa fa-info text-[7px]"></i>
-                        </button>
+                        <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="flex items-center justify-center text-gray-400 active:scale-90 transition-transform"><i class="fa fa-chevron-right text-[9px]"></i></button>
                     </div>
                     <div class="flex items-baseline gap-1.5">
-                        <span class="text-[32px] font-bold text-amber-200 tabular-nums tracking-tight num-transition" id="totalYearDiv">0.00</span>
+                        <span class="text-[18px] font-bold text-[#0F172A] tabular-nums tracking-tight num-transition" id="totalYearDiv">0.00</span>
                     </div>
                 </div>
 
                 <!-- 指标网格 - 三行三列，精致分隔 -->
                 <div class="grid grid-cols-3 gap-0">
                     <!-- 顶部渐变分隔线 -->
-                    <div class="col-span-3 h-px mb-0" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
+                    <div class="col-span-3 mb-1.5" style="height:1px;background:#E2E6ED;box-shadow:0 1px 0 rgba(255,255,255,0.85);"></div>
+                    <!-- 三行三列内容：渐变白面板（夹在上下凹凸线之间，参考上海证券持仓页顶部） -->
+                    <div class="col-span-3 rounded-xl mx-1" style="background:linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.28));">
+                        <div class="grid grid-cols-3 gap-0 px-0.5 py-0.5">
                     <!-- 第一行 -->
-                    <div class="py-2.5 pr-2.5">
-                        <div class="text-orange-100/70 text-[11px] mb-1 flex items-center gap-1">
+                    <div class="py-1.5 pr-2.5">
+                        <div class="text-gray-400 text-[11px] mb-1 flex items-center justify-start gap-1.5">
                             <span>今年已收</span>
-                            <button type="button" onclick="openDivDetail()" title="查看今年分红明细" class="w-4 h-4 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-amber-200/90 active:scale-90 transition-transform">
-                                <i class="fa fa-info text-[7px]"></i>
-                            </button>
+                            <button type="button" onclick="openDivDetail()" title="查看今年分红明细" class="flex items-center justify-center text-gray-400 active:scale-90 transition-transform"><i class="fa fa-chevron-right text-[9px]"></i></button>
                         </div>
-                        <div class="text-[14px] font-semibold tabular-nums num-transition text-white" id="incomeNowWrap"><span id="incomeNow">0.00</span></div>
+                        <div class="text-[14px] font-semibold tabular-nums num-transition text-[#334155]" id="incomeNowWrap"><span id="incomeNow">0.00</span></div>
                     </div>
-                    <div class="py-2.5 px-2.5 relative">
-                        <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
-                        <div class="text-orange-100/70 text-[11px] mb-1">成本息率</div>
-                        <div class="text-[14px] font-semibold tabular-nums num-transition text-white"><span id="costYield">0.00</span><span class="text-orange-100/50 text-[11px] font-normal">%</span></div>
+                    <div class="py-1.5 px-2.5 text-center">
+                        
+                        <div class="text-gray-400 text-[11px] mb-1">成本息率</div>
+                        <div class="text-[14px] font-semibold tabular-nums num-transition text-[#334155]"><span id="costYield">0.00</span><span class="text-gray-400 text-[11px] font-normal">%</span></div>
                     </div>
-                    <div class="py-2.5 pl-2.5 relative">
-                        <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
-                        <div class="text-orange-100/70 text-[11px] mb-1">市值息率</div>
-                        <div class="text-[14px] font-semibold tabular-nums num-transition text-white"><span id="marketYield">0.00</span><span class="text-orange-100/50 text-[11px] font-normal">%</span></div>
+                    <div class="py-1.5 pl-2.5 text-right">
+                        
+                        <div class="text-gray-400 text-[11px] mb-1">市值息率</div>
+                        <div class="text-[14px] font-semibold tabular-nums num-transition text-[#334155]"><span id="marketYield">0.00</span><span class="text-gray-400 text-[11px] font-normal">%</span></div>
                     </div>
-                    <!-- 分隔线 -->
-                    <div class="col-span-3 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);"></div>
+
 
                     <!-- 第二行 -->
-                    <div class="py-2.5 pr-2.5">
-                        <div class="text-orange-100/70 text-[11px] mb-1">月均分红</div>
-                        <div class="text-[14px] font-semibold tabular-nums num-transition text-white" id="monthDivWrap"><span id="monthDiv">0.00</span></div>
+                    <div class="py-1.5 pr-2.5">
+                        <div class="text-gray-400 text-[11px] mb-1">月均分红</div>
+                        <div class="text-[14px] font-semibold tabular-nums num-transition text-[#334155]" id="monthDivWrap"><span id="monthDiv">0.00</span></div>
                     </div>
-                    <div class="py-2.5 px-2.5 relative">
-                        <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
-                        <div class="text-orange-100/70 text-[11px] mb-1 flex items-center gap-1">
+                    <div class="py-1.5 px-2.5 text-center">
+                        
+                        <div class="text-gray-400 text-[11px] mb-1 flex items-center justify-center gap-1.5">
                             <span>累计分红总额</span>
-                            <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="w-4 h-4 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-amber-200/90 active:scale-90 transition-transform">
-                                <i class="fa fa-info text-[7px]"></i>
-                            </button>
+                            <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="flex items-center justify-center text-gray-400 active:scale-90 transition-transform"><i class="fa fa-chevron-right text-[9px]"></i></button>
                         </div>
-                        <div class="text-[14px] font-semibold tabular-nums num-transition" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-white">0.00</span></div>
+                        <div class="text-[14px] font-semibold tabular-nums num-transition" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-[#334155]">0.00</span></div>
                     </div>
-                    <div class="py-2.5 pl-2.5 relative">
-                        <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
-                        <div class="text-orange-100/70 text-[11px] mb-1">今年收益率</div>
+                    <div class="py-1.5 pl-2.5 text-right">
+                        
+                        <div class="text-gray-400 text-[11px] mb-1">今年收益率</div>
                         <div class="text-[14px] font-bold tabular-nums num-transition" id="yearReturnRate">0.00%</div>
                     </div>
-                    <!-- 分隔线 -->
-                    <div class="col-span-3 h-px" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);"></div>
 
-                    <!-- 第三行 -->
-                    <div class="pt-2.5 pr-2.5">
-                        <div class="text-orange-100/70 text-[11px] mb-1">总资产</div>
-                        <div class="text-[14px] font-semibold tabular-nums num-transition text-white" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
+
+                    <!-- 第三行 · 总资产（标题带右箭头，点击查看资产新高记录） -->
+                    <div class="pt-1.5 pr-2.5">
+                        <button type="button" onclick="openAssetHighModal()" title="查看资产新高记录" class="text-gray-400 text-[11px] mb-1 flex items-center gap-1.5 active:scale-95 transition-transform">
+                            <span>总资产</span><i class="fa fa-chevron-right text-[9px] text-gray-400"></i>
+                        </button>
+                        <div class="text-[14px] font-semibold tabular-nums num-transition text-[#334155]" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
                     </div>
-                    <div class="pt-2.5 px-2.5 relative">
-                        <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
-                        <div class="text-orange-100/70 text-[11px] mb-1">持仓盈亏</div>
+                    <div class="pt-1.5 px-2.5 text-center">
+                        
+                        <div class="text-gray-400 text-[11px] mb-1">持仓盈亏</div>
                         <div class="text-[14px] font-bold tabular-nums num-transition" id="totalPnl">0.00</div>
                     </div>
-                    <div class="pt-2.5 pl-2.5 relative">
-                        <div class="absolute left-0 top-2.5 bottom-2.5 w-px" style="background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);"></div>
-                        <div class="text-orange-100/70 text-[11px] mb-1">总收益率</div>
+                    <div class="pt-1.5 pl-2.5 text-right">
+                        
+                        <div class="text-gray-400 text-[11px] mb-1">总收益率</div>
                         <div class="text-[14px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                     </div>
-                    <!-- 资产新高（玻璃拟态横幅：自适应宽度、左对齐、金色皇冠，点击查看完整破新高记录） -->
-                    <button id="assetHighLine" onclick="openAssetHighModal()" class="hidden col-span-3 mt-2.5 mb-0.5 w-fit flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 border border-white/10 active:scale-95 transition-transform">
-                        <span id="assetHighCrown" class="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm flex-shrink-0"><i class="fa fa-trophy text-[9px]"></i></span>
-                        <span class="text-[10px] font-medium text-amber-200/60 whitespace-nowrap">资产新高</span>
-                        <span id="assetHighText" class="text-[12px] font-bold text-amber-200 tabular-nums whitespace-nowrap">--</span>
-                        <span id="assetHighDate" class="text-[10px] font-medium text-amber-200/50 whitespace-nowrap">--</span>
-                    </button>
+                        </div>
+                    </div>
+                    <!-- 资产新高 与网格之间的凹凸分隔线 -->
+                    <div class="col-span-3 mt-1.5 mb-2" style="height:1px;background:#E2E6ED;box-shadow:0 1px 0 rgba(255,255,255,0.85);"></div>
+                    <!-- 回本里程碑（账户级成就信息，卡内底部横幅；仅存在已回本股票时显示） -->
+                    <div id="recoverMilestone" class="hidden col-span-3 mb-0.5 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden">
+                        <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#a78bfa,#6d28d9)"></span>
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">已回本 <span id="recoverCount" class="text-[12px] font-semibold text-purple-600 tabular-nums">0</span>只</span>
+                        <span class="h-3.5 w-px bg-purple-200/70 flex-shrink-0"></span>
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">超额回收 <span id="recoverExtra" class="text-[12px] font-semibold text-purple-600 tabular-nums">0.00</span></span>
+                        <span class="h-3.5 w-px bg-purple-200/70 flex-shrink-0"></span>
+                        <span class="text-[11px] text-gray-500 whitespace-nowrap">占持仓 <span id="recoverSub" class="text-[12px] font-semibold text-purple-600 tabular-nums">0%</span></span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 回本里程碑（极简白色统计条：账户级成就信息，紧贴资产卡下方；仅存在已回本股票时显示） -->
-        <div id="recoverMilestone" class="hidden -mt-2 mb-3 bg-white rounded-xl card-shadow px-3 py-2.5 flex items-center gap-2.5 overflow-hidden">
-            <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#a78bfa,#6d28d9)"></span>
-            <span class="text-[11px] text-gray-500 whitespace-nowrap">已回本 <span id="recoverCount" class="text-[12px] font-semibold text-purple-600 tabular-nums">0</span>只</span>
-            <span class="h-3.5 w-px bg-gray-100 flex-shrink-0"></span>
-            <span class="text-[11px] text-gray-500 whitespace-nowrap">超额回收 <span id="recoverExtra" class="text-[12px] font-semibold text-purple-600 tabular-nums">0.00</span></span>
-            <span class="h-3.5 w-px bg-gray-100 flex-shrink-0"></span>
-            <span class="text-[11px] text-gray-500 whitespace-nowrap">占持仓 <span id="recoverSub" class="text-[12px] font-semibold text-purple-600 tabular-nums">0%</span></span>
-        </div>
 
         <!-- 我的持仓头部 -->
         <div class="flex items-center gap-2 mb-3 mt-1">
@@ -423,7 +409,7 @@
 
     <!-- 新增股票弹窗，max‑2xl同步加宽弹窗最大宽度；背景与主页一致，高度可控可滚动 -->
     <!-- 新增/编辑持仓独立页面 -->
-    <div id="pageStockEdit" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStockEdit" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
         <div class="flex items-center gap-3 mb-4">
             <button id="stockEditBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
@@ -568,7 +554,7 @@
     </div>
 
     <!-- 买入/卖出交易独立页面（券商风格：买入红色主题 / 卖出绿色主题，摊薄成本法预览） -->
-    <div id="pageTrade" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageTrade" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
         <div class="flex items-center gap-3 mb-4">
             <button id="tradeBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
@@ -642,7 +628,7 @@
     </div>
 
     <!-- 交易明细独立页面（买卖流水 + 分红到账时间线；手机上独立页面比弹窗体验更好，记录多时分页加载） -->
-    <div id="pageTradeLog" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageTradeLog" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航（吸顶固定，与其他详情页统一） -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
             <div class="flex items-center gap-3">
@@ -716,7 +702,7 @@
     </div>
 
     <!-- 资产新高记录独立页面（金色皇冠 · 每次破新高的里程碑轨迹） -->
-    <div id="pageAssetHigh" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageAssetHigh" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
         <div class="flex items-center gap-3 mb-4">
             <button id="assetHighBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
@@ -765,7 +751,7 @@
     </div>
 
     <!-- 资产分析页面：总资产 / 分红收入 / 总收益率 三个走势图 -->
-    <div id="pageAnalysis" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageAnalysis" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             资产分析
@@ -866,7 +852,7 @@
     </div>
 
     <!-- 统计页面 -->
-    <div id="pageStats" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStats" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             统计
@@ -951,7 +937,7 @@
     </div>
 
     <!-- 统计详情：今日涨跌幅 -->
-    <div id="pageStatsToday" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsToday" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -989,7 +975,7 @@
     </div>
 
     <!-- 统计详情：现价股息排行 -->
-    <div id="pageStatsYield" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsYield" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1023,7 +1009,7 @@
     </div>
 
     <!-- 统计详情：仓位分布 -->
-    <div id="pageStatsPosition" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsPosition" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1078,7 +1064,7 @@
     </div>
 
     <!-- 统计详情：盈亏排行 -->
-    <div id="pageStatsPnl" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsPnl" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1141,7 +1127,7 @@
     </div>
 
     <!-- 统计详情：累计分红排行 -->
-    <div id="pageStatsDivRank" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsDivRank" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1204,7 +1190,7 @@
     </div>
 
     <!-- 统计详情：分红派发日程 -->
-    <div id="pageStatsSchedule" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsSchedule" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1245,7 +1231,7 @@
     </div>
 
     <!-- 统计详情：分红升降对比 -->
-    <div id="pageStatsCompare" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsCompare" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1296,7 +1282,7 @@
     </div>
 
     <!-- 统计详情：行业资产分布 -->
-    <div id="pageStatsIndustry" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsIndustry" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1397,7 +1383,7 @@
     </div>
 
     <!-- 统计详情：资金流水 -->
-    <div id="pageStatsCashFlow" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsCashFlow" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1464,7 +1450,7 @@
     </div>
 
     <!-- 统计详情：交易明细（每笔买入/卖出 + 修改持仓事件，本地实时） -->
-    <div id="pageStatsTrade" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsTrade" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1534,7 +1520,7 @@
     </div>
 
     <!-- 我的页面 -->
-    <div id="pageMine" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageMine" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             我的
@@ -1668,7 +1654,7 @@
     </div>
 
     <!-- 年度快照页面：每年年末手动一键保存组合快照，永久留存用于多年回溯与报表 -->
-    <div id="pageYearSnapshot" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageYearSnapshot" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题 -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -1703,7 +1689,7 @@
     </div>
 
     <!-- 消息中心页面：当日重要信息（除权提醒 + 股息率提醒），券商级消息推送 -->
-    <div id="pageNotifCenter" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageNotifCenter" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <!-- 顶部导航 -->
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -1743,7 +1729,7 @@
     </div>
 
     <!-- 分红明细页面：今年已收分红的每一笔来源（设置基准 + 各股票除权到账） -->
-    <div id="pageDivDetail" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageDivDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <!-- 顶部导航（吸顶固定） -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
         <div class="flex items-center justify-between mb-0">
@@ -1785,7 +1771,7 @@
     </div>
 
     <!-- 投入成本明细页面：初始成本 + 历年净流入的来源 -->
-    <div id="pageCostDetail" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageCostDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <!-- 顶部导航（吸顶固定） -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
         <div class="flex items-center justify-between mb-0">
@@ -1827,7 +1813,7 @@
     </div>
 
     <!-- 净值历史页面：每年最终净值 + 年度增长率（风格与投入成本明细统一） -->
-    <div id="pageNavDetail" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageNavDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <!-- 顶部导航（吸顶固定） -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
         <div class="flex items-center justify-between mb-0">
@@ -1869,7 +1855,7 @@
     </div>
 
     <!-- 关注页面：自选股票行情 + 股息率阶梯提醒数据源 -->
-    <div id="pageWatchList" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageWatchList" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航（吸顶固定） -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
         <div class="flex items-center justify-between mb-0">
@@ -1928,7 +1914,7 @@
     </div>
 
     <!-- 资产负债表页面：家庭资产负债盘点（资产 - 负债 = 净资产） -->
-    <div id="pageBalanceSheet" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageBalanceSheet" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <!-- 吸顶区：顶部返回 + 可用净资产卡，下滑时固定在屏幕上方 -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
         <!-- 顶部返回 -->
@@ -2047,7 +2033,7 @@
     </div>
 
     <!-- 年度投资报告页面（年度账单式沉浸报告） -->
-    <div id="pageAnnualReport" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageAnnualReport" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <!-- 顶部返回（吸顶固定；与资产负债表等二级页统一：返回 + accent 竖条大标题 + 右侧信息） -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
         <div class="flex items-center justify-between mb-0">
@@ -2359,7 +2345,7 @@
     </div>
 
     <!-- 分红收入里程碑页面 -->
-    <div id="pageMilestone" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageMilestone" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 头部 -->
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
@@ -2454,7 +2440,7 @@
 
     <!-- 设置页面 -->
     <!-- 资金转账详情页：资金转入/取出记录 + 年度汇总（与资金流水同源，风格统一） -->
-    <div id="pageFundTransfer" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageFundTransfer" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题栏：标题 + 右侧醒目"新增流水"按钮 -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -2506,7 +2492,7 @@
     </div>
 
     <!-- 新增资金流水独立页面 -->
-    <div id="pageFundTransferAdd" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageFundTransferAdd" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题栏 -->
         <div class="relative bg-white rounded-2xl px-4 py-3 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -2552,7 +2538,7 @@
         <div class="text-center text-[10px] text-gray-300 mt-2.5">保存后自动累计到当年年度汇总，并同步到「统计 · 资金流水」</div>
     </div>
 
-    <div id="pageSettings" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageSettings" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
         <div class="flex items-center gap-3 mb-4">
             <button id="settingsBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
@@ -2705,7 +2691,7 @@
     </div>
 
     <!-- 行业映射配置页（我的 - 行业映射配置） -->
-    <div id="pageIndustryMap" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageIndustryMap" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部标题栏（白色卡片 + 吸顶固定，与其他详情页统一） -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -2794,7 +2780,7 @@
     </div>
 
     <!-- 股票评分页面（设置-股票评分：巴菲特式收息标准） -->
-    <div id="pageStockScores" class="hidden max-w-2xl mx-auto px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStockScores" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部标题栏（白色卡片 + 吸顶固定） -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -4290,7 +4276,7 @@
                 dateEl.innerText = '今日新高';
             } else if(st.histMax > 0){
                 // 历史最高（常规玻璃拟态）
-                el.className = 'col-span-3 mt-2.5 mb-0.5 w-fit flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 border border-white/10 active:scale-95 transition-transform';
+                el.className = 'col-span-3 mb-0.5 w-fit flex items-center gap-2 rounded-full bg-white px-3 py-1.5 border border-gray-200/80 shadow-sm active:scale-95 transition-transform';
                 crown.className = 'w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm flex-shrink-0';
                 txt.className = 'text-[12px] font-bold text-amber-200 tabular-nums whitespace-nowrap';
                 txt.innerText = fmtMoney(st.histMax);
@@ -5250,6 +5236,12 @@
             if(v > 0) return 'text-[#e03131]';
             if(v < 0) return 'text-[#00a05c]';
             return deep ? 'text-white' : 'text-gray-800';
+        }
+        // 浅色卡专用涨跌色：0 值显示深灰（顶部汇总卡已改浅色背景，白色不可见）
+        function pnlLightClass(v){
+            if(v > 0) return 'text-[#e03131]';
+            if(v < 0) return 'text-[#00a05c]';
+            return 'text-[#94A3B8]';
         }
 
         // 表单提交：新增或编辑持仓
@@ -12979,7 +12971,7 @@
             const totalPnlEl = document.querySelector('#totalPnl');
             const pnlVal = Number(sum.totalPnl);
             totalPnlEl.innerText = formatPnl(pnlVal);
-            totalPnlEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlClass(pnlVal, true);
+            totalPnlEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
             // 总资产
             document.querySelector('#totalMarket').innerText = fmtMoney(Number(sum.totalMarket));
             // 资产新高（金色皇冠徽章，点击查看破新高记录）
@@ -12988,12 +12980,12 @@
             const trrEl = document.querySelector('#totalReturnRate');
             const trrVal = Number(sum.totalReturnRate);
             trrEl.innerText = (trrVal > 0 ? '+' : (trrVal < 0 ? '-' : '')) + Math.abs(trrVal).toFixed(2) + '%';
-            trrEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlClass(trrVal, true);
+            trrEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlLightClass(trrVal);
             // 今年收益率
             const yrrEl = document.querySelector('#yearReturnRate');
             const yrrVal = Number(sum.yearReturnRate);
             yrrEl.innerText = (yrrVal > 0 ? '+' : (yrrVal < 0 ? '-' : '')) + Math.abs(yrrVal).toFixed(2) + '%';
-            yrrEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlClass(yrrVal, true);
+            yrrEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlLightClass(yrrVal);
 
             document.querySelector('#costYield').innerText = sum.costYield;
             document.querySelector('#marketYield').innerText = sum.marketYield;

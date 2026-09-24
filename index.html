@@ -288,18 +288,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
     <div id="pageHold" class="max-w-xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 我的持仓标题（置顶，汇总卡上方） -->
-        <div class="flex items-center gap-2 mb-3 mt-0">
-            <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-            <h2 class="text-lg font-semibold text-gray-800 tracking-wide">我的持仓</h2>
+        <!-- 我的持仓标题（置顶，汇总卡上方；右侧消息铃铛与其他一级页统一） -->
+        <div class="flex items-center justify-between mb-3 mt-0">
+            <div class="flex items-center gap-2">
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                <h2 class="text-xl font-semibold text-gray-800 tracking-wide">我的持仓</h2>
+            </div>
+            <button class="notif-bell relative w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30 flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
+                <i class="fa fa-bell text-[16px]"></i>
+                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+            </button>
         </div>
         <!-- 顶部汇总卡片 - 暖色调渐变，紧凑精致设计（首页直接展示资产卡，品牌区移至"我的"页） -->
         <div class="relative rounded-3xl px-4 py-2.5 mb-4 overflow-hidden" style="background:linear-gradient(180deg,#FFFFFF 0%,#FCFBF7 100%);box-shadow:0 2px 6px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.06), inset 0 -1px 0 rgba(15,23,42,0.06);">
-            <!-- 消息通知入口：右上角铃铛（与其他导航页一致，置于卡片右上角） -->
-            <button class="notif-bell absolute right-3 top-3 w-9 h-9 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center text-accent shadow-md shadow-gray-300/50 active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
-                <i class="fa fa-bell text-[15px]"></i>
-                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
-            </button>
             <!-- 顶部高光（浅色卡浮雕感） -->
             <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg, transparent, rgba(212,175,55,0.30), transparent);"></div>
             <!-- 内凹微阴影：卡内质感 -->
@@ -727,17 +728,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 资产新高记录独立页面（金色皇冠 · 每次破新高的里程碑轨迹） -->
     <div id="pageAssetHigh" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 顶部导航 -->
-        <div class="flex items-center gap-3 mb-4">
-            <button id="assetHighBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                <i class="fa fa-arrow-left"></i>
-            </button>
-            <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white shadow-sm shadow-amber-300"><i class="fa fa-trophy text-sm"></i></span>
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-800">资产新高记录</h3>
-                    <div class="text-[11px] text-gray-400">每一次总资产刷新历史最高点</div>
-                </div>
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="assetHighBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
+                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    资产新高记录
+                </h2>
+                <span class="ml-auto text-[10px] text-gray-400 text-right leading-tight">每一次总资产<br>刷新历史最高点</span>
             </div>
         </div>
         <div class="space-y-4">
@@ -779,7 +780,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             资产分析
-            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <button class="notif-bell absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
@@ -880,7 +881,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             统计
-            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <button class="notif-bell absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
@@ -894,8 +895,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <i class="fa fa-line-chart text-[16px] text-white"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-[14px] font-semibold text-gray-800">今日涨跌幅</div>
-                        <div id="statsCardSummaryToday" class="text-[11px] text-gray-400 mt-0.5 truncate">--</div>
+                        <div class="text-[15px] font-semibold text-gray-800">今日涨跌幅</div>
+                        <div id="statsCardSummaryToday" class="text-[12px] text-gray-500 mt-1 truncate">--</div>
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0 mr-1">
                         <span id="statsCardTodayPnl" class="text-[13px] font-bold tabular-nums text-gray-400">--</span>
@@ -904,53 +905,53 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <i class="fa fa-chevron-right text-[12px] text-gray-300 flex-shrink-0"></i>
                 </div>
             </button>
-            <button onclick="openStatsSection('yield')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-percent text-[13px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">现价股息排行</div>
-                <div id="statsCardSummaryYield" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('yield')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-percent text-[13px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">现价股息排行</div>
+                <div id="statsCardSummaryYield" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('position')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-pie-chart text-[13px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">仓位分布</div>
-                <div id="statsCardSummaryPosition" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('position')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-pie-chart text-[13px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">仓位分布</div>
+                <div id="statsCardSummaryPosition" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('pnl')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-balance-scale text-[13px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">累计盈亏排行</div>
-                <div id="statsCardSummaryPnl" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('pnl')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-balance-scale text-[13px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">累计盈亏排行</div>
+                <div id="statsCardSummaryPnl" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('divrank')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-cny text-[13px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">累计分红排行</div>
-                <div id="statsCardSummaryDivRank" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('divrank')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-cny text-[13px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">累计分红排行</div>
+                <div id="statsCardSummaryDivRank" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('schedule')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
+            <button onclick="openStatsSection('schedule')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
                 <div class="flex items-center gap-1 mb-2">
                     <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center flex-shrink-0"><i class="fa fa-calendar-check-o text-[13px] text-accent"></i></div>
                     <span id="statsCardScheduleBadge" class="hidden text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full today-reg-pulse whitespace-nowrap" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 1px 4px rgba(16,185,129,0.45)">即将分红</span>
                 </div>
-                <div class="text-[12px] font-semibold text-gray-800">分红派发日程</div>
-                <div id="statsCardSummarySchedule" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+                <div class="text-[13px] font-semibold text-gray-800">分红派发日程</div>
+                <div id="statsCardSummarySchedule" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('compare')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">分红升降对比</div>
-                <div id="statsCardSummaryCompare" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('compare')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">分红升降对比</div>
+                <div id="statsCardSummaryCompare" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('industry')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-building text-[12px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">行业资产分析</div>
-                <div id="statsCardSummaryIndustry" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('industry')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-building text-[12px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">行业资产分析</div>
+                <div id="statsCardSummaryIndustry" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('cash')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">资金流水</div>
-                <div id="statsCardSummaryCash" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('cash')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">资金流水</div>
+                <div id="statsCardSummaryCash" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('trade')" class="bg-white rounded-2xl card-shadow px-3 py-3 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2"><i class="fa fa-list-ul text-[12px] text-accent"></i></div>
-                <div class="text-[12px] font-semibold text-gray-800">交易明细</div>
-                <div id="statsCardSummaryTrade" class="text-[10px] text-gray-400 mt-0.5 truncate">--</div>
+            <button onclick="openStatsSection('trade')" class="bg-white rounded-2xl card-shadow px-3.5 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="w-8 h-8 rounded-xl bg-orange-50 ring-1 ring-orange-100 flex items-center justify-center mb-2.5"><i class="fa fa-list-ul text-[12px] text-accent"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">交易明细</div>
+                <div id="statsCardSummaryTrade" class="text-[11px] text-gray-500 mt-1 truncate">--</div>
             </button>
         </div>
 
@@ -1548,7 +1549,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <h2 class="relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
             我的
-            <button class="notif-bell absolute right-0 top-0 w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
+            <button class="notif-bell absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
@@ -1714,20 +1715,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 消息中心页面：当日重要信息（除权提醒 + 股息率提醒），券商级消息推送 -->
     <div id="pageNotifCenter" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <!-- 顶部导航 -->
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <button id="notifBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="notifBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     消息中心
                 </h2>
+                <button id="notifReadAllBtn" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 active:scale-95 transition-transform"><i class="fa fa-check-circle text-[11px]"></i>全部已读</button>
             </div>
-            <button id="notifReadAllBtn" class="text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 active:scale-95 transition-transform">
-                <i class="fa fa-check-circle text-[11px]"></i>全部已读
-            </button>
         </div>
 
         <!-- 今日概览横幅 -->
@@ -1754,20 +1753,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 分红明细页面：今年已收分红的每一笔来源（设置基准 + 各股票除权到账） -->
     <div id="pageDivDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <!-- 顶部导航（吸顶固定） -->
-        <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
-        <div class="flex items-center justify-between mb-0">
-            <div class="flex items-center gap-3">
-                <button id="divDetailBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="divDetailBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     分红明细
                 </h2>
+                <span id="divDetailTag" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">今年已收</span>
             </div>
-            <span id="divDetailTag" class="text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">今年已收</span>
-        </div>
         </div>
 
         <!-- 汇总横幅 -->
@@ -1796,20 +1793,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 投入成本明细页面：初始成本 + 历年净流入的来源 -->
     <div id="pageCostDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <!-- 顶部导航（吸顶固定） -->
-        <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
-        <div class="flex items-center justify-between mb-0">
-            <div class="flex items-center gap-3">
-                <button id="costDetailBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="costDetailBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     投入成本明细
                 </h2>
+                <span id="costDetailTag" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">投入成本</span>
             </div>
-            <span id="costDetailTag" class="text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">投入成本</span>
-        </div>
         </div>
 
         <!-- 汇总横幅 -->
@@ -1838,20 +1833,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 净值历史页面：每年最终净值 + 年度增长率（风格与投入成本明细统一） -->
     <div id="pageNavDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <!-- 顶部导航（吸顶固定） -->
-        <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
-        <div class="flex items-center justify-between mb-0">
-            <div class="flex items-center gap-3">
-                <button id="navDetailBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="navDetailBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     净值历史
                 </h2>
+                <span id="navDetailTag" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">每年最终净值</span>
             </div>
-            <span id="navDetailTag" class="text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">每年最终净值</span>
-        </div>
         </div>
 
         <!-- 汇总横幅 -->
@@ -1880,22 +1873,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 关注页面：自选股票行情 + 股息率阶梯提醒数据源 -->
     <div id="pageWatchList" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 顶部导航（吸顶固定） -->
-        <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
-        <div class="flex items-center justify-between mb-0">
-            <div class="flex items-center gap-3">
-                <button id="watchBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="watchBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     关注
                 </h2>
+                <button id="watchAddBtn" class="ml-auto w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform" title="添加关注"><i class="fa fa-plus"></i></button>
             </div>
-            <button id="watchAddBtn" class="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform" title="添加关注">
-                <i class="fa fa-plus"></i>
-            </button>
-        </div>
         </div>
 
         <!-- 添加关注卡片（默认隐藏） -->
@@ -1939,24 +1928,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 资产负债表页面：家庭资产负债盘点（资产 - 负债 = 净资产） -->
     <div id="pageBalanceSheet" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <!-- 吸顶区：顶部返回 + 可用净资产卡，下滑时固定在屏幕上方 -->
-        <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
-        <!-- 顶部返回 -->
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-3">
-                <button id="bsBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="bsBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     资产负债表
                 </h2>
+                <span class="ml-auto text-[10px] text-gray-400 text-right leading-tight">更新于<br><span id="bsUpdateAt" class="text-[11px] text-gray-500 font-medium tabular-nums">--</span></span>
             </div>
-            <span class="text-[10px] text-gray-400 text-right leading-tight">更新于<br><span id="bsUpdateAt" class="text-[11px] text-gray-500 font-medium tabular-nums">--</span></span>
         </div>
 
         <!-- 净资产卡：深棕金渐变（与持仓页资产卡同一质感） -->
-        <div class="relative overflow-hidden rounded-3xl p-5 text-white mb-0 shadow-2xl" style="background:linear-gradient(135deg,#2b2217 0%,#4a3218 55%,#6b451f 100%);">
+        <div class="relative overflow-hidden rounded-3xl p-5 text-white mb-4 shadow-2xl" style="background:linear-gradient(135deg,#2b2217 0%,#4a3218 55%,#6b451f 100%);">
             <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(253,230,138,.4),transparent);"></div>
             <div class="absolute -top-20 -right-14 w-52 h-52 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(253,230,138,.22) 0%,transparent 70%);"></div>
             <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.2);"></div>
@@ -1993,7 +1980,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        </div>
         <!-- 财务健康点评：本地规则引擎自动生成，无需联网 / AI -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
@@ -2058,20 +2044,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 年度投资报告页面（年度账单式沉浸报告） -->
     <div id="pageAnnualReport" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <!-- 顶部返回（吸顶固定；与资产负债表等二级页统一：返回 + accent 竖条大标题 + 右侧信息） -->
-        <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
-        <div class="flex items-center justify-between mb-0">
-            <div class="flex items-center gap-3">
-                <button id="annualReportBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="annualReportBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
                     年度投资报告
                 </h2>
+                <span class="ml-auto text-[10px] text-gray-400 text-right leading-tight">报告年度<br><span id="arHeaderYear" class="text-[11px] text-gray-500 font-medium tabular-nums">2026</span></span>
             </div>
-            <span class="text-[10px] text-gray-400 text-right leading-tight">报告年度<br><span id="arHeaderYear" class="text-[11px] text-gray-500 font-medium tabular-nums">2026</span></span>
-        </div>
         </div>
 
         <!-- 封面：品牌水滴 + 报告期间 + 年末总资产大数字（参考平安年度账单） -->
@@ -2563,15 +2547,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <div id="pageSettings" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <!-- 顶部导航 -->
-        <div class="flex items-center gap-3 mb-4">
-            <button id="settingsBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-                <i class="fa fa-arrow-left"></i>
-            </button>
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                设置
-            </h2>
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="settingsBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
+                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
+                    设置
+                </h2>
+                
+            </div>
         </div>
 
         <!-- 总资产 -->

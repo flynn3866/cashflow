@@ -11,6 +11,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="细水长流">
     <meta name="format-detection" content="telephone=no">
+    <!-- 手机桌面图标：玫瑰红图标（logos/meiguihongda.png 生成的标准尺寸） -->
+    <link rel="apple-touch-icon" sizes="180x180" href="logos/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="logos/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="logos/icon-512.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#D45329">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
     <script>window.APP_VERSION = '20260906.1';</script>
@@ -2385,9 +2391,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="text-amber-100/70 text-[10px] tracking-[0.2em]">DIVIDEND MILESTONE</div>
                     <div class="text-xl font-serif font-bold tracking-wide mt-0.5">分红里程碑</div>
                 </div>
-                <div class="text-right">
-                    <div class="text-[10px] text-amber-100/60 mb-0.5">已达成成就</div>
-                    <div class="text-2xl font-bold text-purple-300 tabular-nums"><span id="msDoneCount">0</span><span class="text-sm text-amber-100/50 font-normal"> / <span id="msTotalCount">0</span></span></div>
+                <div class="text-right flex flex-col items-end">
+                    <div class="text-[10px] text-amber-100/60 mb-1">已达成成就</div>
+                    <div class="flex items-center gap-2">
+                        <div id="msTrophyBadge" class="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12)">
+                            <i class="fa fa-trophy text-[14px]" style="color:rgba(255,255,255,0.4)"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-purple-300 tabular-nums"><span id="msDoneCount">0</span><span class="text-sm text-amber-100/50 font-normal"> / <span id="msTotalCount">0</span></span></div>
+                    </div>
                 </div>
             </div>
             <div class="relative z-10 mt-4 pt-3 border-t border-white/10 flex items-center gap-2 text-[11px] text-amber-100/70">
@@ -2397,36 +2408,63 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 当年进度卡 -->
+        <!-- 当年分红 + 分红之路（星光进度之路） -->
         <div class="bg-white rounded-2xl card-shadow p-4 mb-4">
-            <div class="flex items-center justify-between mb-2">
-                <div class="text-sm text-gray-500"><i class="fa fa-fire text-accent mr-1"></i>当年分红收入</div>
-                <div class="text-[10px] text-gray-400">距 <span class="text-accent font-medium" id="msNextLabel">--</span> 还差 <span class="font-medium tabular-nums" id="msNextGap">--</span></div>
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="text-sm text-gray-500"><i class="fa fa-fire text-accent mr-1"></i>当年分红收入</div>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span id="msCurYearDiv" class="text-[34px] font-bold tabular-nums tracking-tight" style="background:linear-gradient(180deg,#c0392b,#e8933c);-webkit-background-clip:text;background-clip:text;color:transparent;">0.00</span>
+                        <span class="text-xs text-gray-400">/ <span id="msNextValue">--</span></span>
+                    </div>
+                    <div class="text-[10px] text-gray-400 mt-0.5"><i class="fa fa-flag-o mr-1"></i>距离下一个成就</div>
+                </div>
+                <div id="msNextCapsule" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold text-amber-700 whitespace-nowrap flex-shrink-0 mt-1" style="background:linear-gradient(135deg,#fdf3e3,#fbe3c2);border:1px solid rgba(232,147,60,.4);box-shadow:0 2px 8px rgba(232,147,60,.18)">
+                    <i class="fa fa-bolt text-[10px] text-amber-600"></i>
+                    <span>下一站 <span id="msNextLabel" class="text-accent font-bold">--</span> · 还差 <span id="msNextGap" class="font-bold tabular-nums">--</span></span>
+                </div>
             </div>
-            <div class="flex items-baseline gap-2">
-                <span id="msCurYearDiv" class="text-[30px] font-bold text-accent tabular-nums tracking-tight">0.00</span>
-                <span class="text-xs text-gray-400">/ <span id="msNextValue">--</span></span>
+            <!-- 分红之路：渐变光带 + 节点站台 + 金币 -->
+            <div class="relative mt-5 h-9">
+                <svg class="absolute left-0 right-0 top-1/2 -translate-y-1/2 w-full h-6 pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 6">
+                    <path d="M0,3 Q25,0.5 50,3 T100,3" stroke="url(#msPathGrad)" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+                    <defs><linearGradient id="msPathGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d8cfc0"/><stop offset="0.6" stop-color="#f2c14e"/><stop offset="1" stop-color="#f6c453"/></linearGradient></defs>
+                </svg>
+                <div id="msPathNodes" class="absolute inset-0"></div>
+                <div id="msPathCoin" class="absolute w-3.5 h-3.5 flex items-center justify-center transition-all duration-700 z-10 pointer-events-none" style="left:0px;top:calc(50% - 7px)">
+                    <i class="fa fa-circle text-[11px]" style="color:#f6c453;text-shadow:0 0 8px rgba(246,196,83,.95),0 1px 3px rgba(0,0,0,.3)"></i>
+                </div>
             </div>
-            <!-- 进度条 -->
-            <div class="relative mt-3 h-3 rounded-full bg-gray-100 overflow-hidden">
-                <div id="msProgressBar" class="h-full rounded-full transition-all duration-700" style="width:0%; background: linear-gradient(90deg, #f6c453 0%, #e8933c 60%, #D45329 100%);"></div>
-                <div id="msTicks" class="absolute inset-0 pointer-events-none"></div>
-            </div>
-            <div class="mt-2 flex justify-between text-[10px] text-gray-400">
+            <div class="mt-1.5 flex justify-between text-[10px] text-gray-400">
                 <span>0</span>
                 <span id="msProgressPct" class="text-accent font-medium">0%</span>
                 <span id="msYearScaleRight">--</span>
             </div>
         </div>
 
-        <!-- 成就轨道 -->
+        <!-- 勋章殿堂 -->
         <div class="bg-white rounded-2xl card-shadow p-4 mb-4">
-            <div class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
-                成就轨道
+            <div class="flex items-center justify-between mb-0.5">
+                <div class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
+                    勋章殿堂
+                </div>
                 <span class="text-[10px] text-gray-400 font-normal">按每年分红收入判定</span>
             </div>
-            <div id="msTrack"></div>
+            <div class="text-[10px] text-gray-400 mt-0.5 mb-3">点击勋章查看详情 · 一旦达成永久点亮，不因后续年份回落</div>
+            <div id="msBadges" class="grid grid-cols-4 gap-1"></div>
+            <div id="msBadgeDetail" class="hidden mt-3 pt-3 border-t border-dashed border-gray-200"></div>
+            <!-- 下一站冲刺卡 -->
+            <div id="msSprintCard" class="mt-3.5 rounded-xl p-3 flex items-center gap-2.5" style="background:linear-gradient(135deg,#fdf6e9,#f9ecd6);border:1px solid rgba(232,147,60,.25)">
+                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0"><i class="fa fa-flag text-accent text-[13px]"></i></div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-[11px] text-gray-500">下一站冲刺 · 再收 <span id="msSprintGap" class="text-accent font-bold tabular-nums">--</span> 即可点亮「<span id="msSprintTarget">--</span>」勋章</div>
+                    <div class="h-1.5 rounded-full bg-white overflow-hidden mt-1.5">
+                        <div id="msSprintBar" class="h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#f6c453,#D45329)"></div>
+                    </div>
+                </div>
+                <i class="fa fa-chevron-right text-gray-300 text-xs flex-shrink-0"></i>
+            </div>
         </div>
 
         <!-- 累计分红征程 -->
@@ -2442,7 +2480,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <div class="text-[11px] text-gray-400 text-center leading-relaxed">
-            里程碑按"每年分红收入"判定 · 节点可在右上角设置
+            里程碑按"每年分红收入"判定 · 勋章一旦达成永久点亮 · 节点可在右上角设置
         </div>
     </div>
 
@@ -13105,110 +13143,187 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(nodeStates[i].achievedYear == null){ curIdx = i; break; }
             }
             const next = curIdx >= 0 ? milestones[curIdx] : null;
-            // 顶部横幅
+            // 顶部横幅：已达成计数 + 大奖杯徽章（达成点亮金色）
             document.querySelector('#msDoneCount').innerText = achievedCount;
             document.querySelector('#msTotalCount').innerText = milestones.length;
-            // 当年金额 & 进度
+            const msTrophy = document.querySelector('#msTrophyBadge');
+            if(msTrophy){
+                if(achievedCount > 0){
+                    msTrophy.style.background = 'linear-gradient(135deg,#f7d673,#c9911d)';
+                    msTrophy.style.borderColor = 'rgba(253,230,138,.65)';
+                    msTrophy.style.boxShadow = '0 0 14px rgba(246,196,83,.5)';
+                    msTrophy.querySelector('i').style.color = '#fff';
+                    msTrophy.querySelector('i').style.textShadow = '0 1px 4px rgba(0,0,0,.25)';
+                } else {
+                    msTrophy.style.background = 'rgba(255,255,255,0.06)';
+                    msTrophy.style.borderColor = 'rgba(255,255,255,0.12)';
+                    msTrophy.style.boxShadow = 'none';
+                    msTrophy.querySelector('i').style.color = 'rgba(255,255,255,0.4)';
+                    msTrophy.querySelector('i').style.textShadow = 'none';
+                }
+            }
+            // 当年金额 & 冲刺胶囊
             document.querySelector('#msCurYearDiv').innerText = fmtMoney(curYearDiv);
             if(next){
                 const pct = Math.min(curYearDiv / next * 100, 100);
                 document.querySelector('#msNextLabel').innerText = fmtMileVal(next);
                 document.querySelector('#msNextValue').innerText = fmtMileVal(next);
                 document.querySelector('#msNextGap').innerText = fmtMoney(Math.max(next - curYearDiv, 0));
-                document.querySelector('#msProgressPct').innerText = pct.toFixed(0) + '%';
-                document.querySelector('#msYearScaleRight').innerText = fmtMileVal(next);
-                document.querySelector('#msProgressBar').style.width = pct.toFixed(1) + '%';
-                // 进度条刻度：已达成里程碑位置（白色细线）
-                let ticksHtml = '';
-                nodeStates.forEach(function(n){
-                    if(n.achievedYear != null){
-                        const pos = Math.min(n.m / next * 100, 100);
-                        ticksHtml += '<div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:' + pos.toFixed(1) + '%"></div>';
-                    }
-                });
-                document.querySelector('#msTicks').innerHTML = ticksHtml;
+                const mLast = nodeStates.length ? nodeStates[nodeStates.length - 1].m : next;
+                const overall = Math.min(curYearDiv / mLast * 100, 100);
+                document.querySelector('#msProgressPct').innerText = overall.toFixed(0) + '%';
+                document.querySelector('#msYearScaleRight').innerText = fmtMileVal(mLast);
+                document.querySelector('#msNextCapsule').style.borderColor = 'rgba(232,147,60,.4)';
+                document.querySelector('#msNextCapsule').style.boxShadow = '0 2px 8px rgba(232,147,60,.18)';
             } else {
-                document.querySelector('#msNextLabel').innerText = '全部达成';
                 document.querySelector('#msNextValue').innerText = '全部达成';
-                document.querySelector('#msNextGap').innerText = '0.00';
                 document.querySelector('#msProgressPct').innerText = '100%';
-                document.querySelector('#msYearScaleRight').innerText = '全部达成';
-                document.querySelector('#msProgressBar').style.width = '100%';
-                document.querySelector('#msTicks').innerHTML = '';
+                document.querySelector('#msYearScaleRight').innerText = nodeStates.length ? fmtMileVal(nodeStates[nodeStates.length - 1].m) : '全部达成';
+                document.querySelector('#msNextCapsule').innerHTML = '<i class="fa fa-trophy text-[10px]" style="color:#c9911d"></i><span>全部里程碑已达成</span>';
+                document.querySelector('#msNextCapsule').style.borderColor = 'rgba(246,196,83,.55)';
+                document.querySelector('#msNextCapsule').style.boxShadow = '0 2px 10px rgba(246,196,83,.3)';
             }
-            // ===== 成就轨道 =====
-            let trackHtml = '';
-            nodeStates.forEach(function(n, i){
-                const isLast = i === nodeStates.length - 1;
-                const pb = isLast ? 'pb-1' : 'pb-6';
-                if(n.achievedYear != null){
-                    // 已达成：高贵紫色对勾节点 + 紫色渐变实线
-                    trackHtml += `
-                    <div class="flex gap-3">
-                        <div class="flex flex-col items-center">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-400/30 ring-4 ring-purple-100 flex-shrink-0">
-                                <i class="fa fa-check text-sm"></i>
-                            </div>
-                            ${isLast ? '' : '<div class="flex-1 w-0.5 mt-1 rounded" style="background: linear-gradient(180deg, #a78bfa, #e5e7eb);"></div>'}
-                        </div>
-                        <div class="flex-1 ${pb} min-w-0">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-base font-bold text-purple-600">${fmtMileVal(n.m)}</span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 font-medium border border-purple-200/60 whitespace-nowrap"><i class="fa fa-trophy mr-0.5 text-[9px]"></i>${n.achievedYear}年达成</span>
-                            </div>
-                            <div class="text-[11px] text-gray-400 mt-0.5">当年分红收入 <span class="text-purple-600 font-medium tabular-nums">${fmtMoney(n.div)}</span></div>
-                        </div>
-                    </div>`;
-                } else if(i === curIdx){
-                    // 当前目标：橙色旗标 + 发光 + 进度条
-                    const pct = Math.min(curYearDiv / n.m * 100, 100);
-                    trackHtml += `
-                    <div class="flex gap-3">
-                        <div class="flex flex-col items-center">
-                            <div class="w-10 h-10 rounded-full border-2 border-accent bg-accent/10 flex items-center justify-center text-accent shadow-md shadow-orange-500/20 flex-shrink-0" style="animation: msPulse 2s ease-in-out infinite;">
-                                <i class="fa fa-flag text-sm"></i>
-                            </div>
-                            ${isLast ? '' : '<div class="flex-1 w-0.5 mt-1 rounded bg-gray-200"></div>'}
-                        </div>
-                        <div class="flex-1 ${pb} min-w-0">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-base font-bold text-accent">${fmtMileVal(n.m)}</span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium whitespace-nowrap"><i class="fa fa-bolt mr-0.5 text-[9px]"></i>进行中 · ${pct.toFixed(0)}%</span>
-                            </div>
-                            <div class="mt-1.5">
-                                <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                                    <div class="h-full rounded-full" style="width:${pct.toFixed(1)}%; background: linear-gradient(90deg, #f6c453, #D45329);"></div>
-                                </div>
-                                <div class="text-[11px] text-gray-400 mt-1">当年分红收入 <span class="text-accent font-medium tabular-nums">${fmtMoney(curYearDiv)}</span>，还差 <span class="font-medium tabular-nums">${fmtMoney(Math.max(n.m - curYearDiv, 0))}</span></div>
-                            </div>
-                        </div>
-                    </div>`;
-                } else {
-                    // 未达成：灰色锁定
-                    trackHtml += `
-                    <div class="flex gap-3 opacity-60">
-                        <div class="flex flex-col items-center">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 flex-shrink-0">
-                                <i class="fa fa-lock text-sm"></i>
-                            </div>
-                            ${isLast ? '' : '<div class="flex-1 w-0.5 mt-1 rounded bg-gray-200"></div>'}
-                        </div>
-                        <div class="flex-1 ${pb} min-w-0">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-base font-bold text-gray-400">${fmtMileVal(n.m)}</span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 whitespace-nowrap">待解锁</span>
-                            </div>
-                            <div class="text-[11px] text-gray-300 mt-0.5">单年分红收入达到 ${fmtMileVal(n.m)} 即点亮</div>
-                        </div>
-                    </div>`;
-                }
-            });
-            document.querySelector('#msTrack').innerHTML = trackHtml;
+            // ===== 分红之路：节点站台 + 金币位置 =====
+            renderMsPath(nodeStates, next, curYearDiv);
+            // ===== 勋章殿堂：成就勋章横向一排 + 点击展开详情 =====
+            renderMsBadges(nodeStates, curYearDiv);
+            renderMsSprint(nodeStates, next, curYearDiv);
+            window._msNodeStates = nodeStates;
+            window._msCurYearDiv = curYearDiv;
+            window._msCurIdx = curIdx;
             // ===== 累计分红征程图（ECharts面积图：逐年累加，永不回落）=====
             renderMsChart(divMap, years, milestones);
             // 记录本次渲染的数据指纹：数据未变化时切换页面不重复渲染（避免每次切换全部重绘）
             _msDataFp = milestoneDataFingerprint();
         }
+        // ===== 分红之路：渐变光带节点 + 金币（方案A）=====
+        function renderMsPath(nodeStates, next, curYearDiv){
+            const wrap = document.querySelector('#msPathNodes');
+            const coin = document.querySelector('#msPathCoin');
+            if(!wrap || !coin) return;
+            // 节点按完整范围(0→最后一个里程碑)均匀分布，避免全部挤向末端重叠
+            const mLast = nodeStates.length ? nodeStates[nodeStates.length - 1].m : 0;
+            const scale = mLast > 0 ? mLast : 1;
+            let nodesHtml = '';
+            nodeStates.forEach(function(n){
+                const pos = Math.min(n.m / scale * 100, 100);
+                const achieved = n.achievedYear != null;
+                const isNext = next != null && n.m === next;
+                let dot = '<div class="w-3 h-3 rounded-full" style="';
+                let label = '';
+                if(achieved){
+                    dot += 'background:linear-gradient(135deg,#f7d673,#d99a1f);box-shadow:0 0 10px rgba(246,196,83,.75);';
+                    label = 'text-amber-600 font-medium';
+                } else if(isNext){
+                    dot += 'background:linear-gradient(135deg,#f6c453,#D45329);box-shadow:0 0 12px rgba(232,147,60,.7);';
+                    label = 'text-accent font-medium';
+                } else {
+                    dot += 'background:#e5e7eb;';
+                    label = 'text-gray-400';
+                }
+                dot += '"></div>';
+                nodesHtml += '<div class="absolute -translate-x-1/2" style="left:' + pos.toFixed(1) + '%;top:50%;z-index:2">' +
+                    dot +
+                    '<div class="absolute left-1/2 -translate-x-1/2 text-[9px] whitespace-nowrap ' + label + '" style="top:-17px">' + fmtMileVal(n.m) + '</div>' +
+                    '</div>';
+            });
+            wrap.innerHTML = nodesHtml;
+            // 金币按完整范围移动：进度到哪个里程碑，金币就到哪个站台
+            const pct = Math.min(curYearDiv / scale * 100, 100);
+            const waveY = Math.sin(pct / 100 * Math.PI * 2) * 5;
+            coin.style.left = 'calc(' + pct.toFixed(1) + '% - 7px)';
+            coin.style.top = 'calc(50% - 7px + ' + waveY.toFixed(1) + 'px)';
+        }
+        // ===== 勋章殿堂：成就勋章（铜/银/金/铂金）=====
+        function renderMsBadges(nodeStates, curYearDiv){
+            const wrap = document.querySelector('#msBadges');
+            if(!wrap) return;
+            const icons = ['fa-trophy','fa-star','fa-diamond','fa-crown'];
+            const grads = ['linear-gradient(135deg,#d9a06b,#a2622c)','linear-gradient(135deg,#e8e8ef,#9aa0b5)','linear-gradient(135deg,#f7d673,#c9911d)','linear-gradient(135deg,#c3cee8,#7a8fbe)'];
+            let curIdx = -1;
+            nodeStates.forEach(function(n, i){ if(curIdx < 0 && n.achievedYear == null) curIdx = i; });
+            let html = '';
+            nodeStates.forEach(function(n, i){
+                const icon = icons[i % 4];
+                const grad = grads[i % 4];
+                const achieved = n.achievedYear != null;
+                if(achieved){
+                    html += `
+                    <button type="button" onclick="toggleMsBadgeDetail(${i})" class="flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+                        <div class="relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style="background:${grad};box-shadow:0 4px 14px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.45);border:1.5px solid rgba(255,255,255,.65)">
+                            <div class="absolute inset-0 overflow-hidden rounded-full pointer-events-none"><div class="absolute top-0 bottom-0 w-8 bg-white/40 blur-md" style="animation:badgeShine 3.4s ease-in-out infinite"></div></div>
+                            <i class="fa ${icon} text-white text-xl relative z-10" style="text-shadow:0 2px 5px rgba(0,0,0,.28)"></i>
+                        </div>
+                        <span class="text-[11px] font-bold text-gray-800 tabular-nums">${fmtMileVal(n.m)}</span>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap" style="color:#b45309;background:#fef3c7;border:1px solid rgba(246,196,83,.45)">已达成 · ${n.achievedYear}</span>
+                    </button>`;
+                } else {
+                    const isNext = i === curIdx;
+                    const pct = Math.min(curYearDiv / n.m * 100, 100);
+                    html += `
+                    <button type="button" onclick="toggleMsBadgeDetail(${i})" class="flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+                        <div class="relative w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#f3f4f6,#e5e7eb);border:1.5px solid #e5e7eb">
+                            ${isNext ? '<div class="absolute inset-0 rounded-full" style="animation:msPulse 2s ease-in-out infinite"></div>' : ''}
+                            <i class="fa fa-lock text-[18px] text-gray-300 relative z-10"></i>
+                        </div>
+                        <span class="text-[11px] font-bold text-gray-400 tabular-nums">${fmtMileVal(n.m)}</span>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap" style="${isNext ? 'color:#D45329;background:rgba(212,83,41,.08)' : 'color:#9ca3af;background:#f3f4f6'}">${isNext ? '进行中 · ' + pct.toFixed(0) + '%' : '待解锁'}</span>
+                    </button>`;
+                }
+            });
+            wrap.innerHTML = html;
+        }
+        // ===== 下一站冲刺卡 =====
+        function renderMsSprint(nodeStates, next, curYearDiv){
+            const card = document.querySelector('#msSprintCard');
+            if(!card) return;
+            if(!next){
+                card.innerHTML = '<div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#f7d673,#c9911d)"><i class="fa fa-trophy text-white text-[13px]"></i></div><div class="text-[12px] font-semibold text-gray-700">全部里程碑已达成 · 勋章殿堂全点亮</div></div>';
+                return;
+            }
+            const gap = Math.max(next - curYearDiv, 0);
+            const pct = Math.min(curYearDiv / next * 100, 100);
+            const g = card.querySelector('#msSprintGap');
+            const t = card.querySelector('#msSprintTarget');
+            const b = card.querySelector('#msSprintBar');
+            if(g) g.innerText = fmtMoney(gap);
+            if(t) t.innerText = fmtMileVal(next);
+            if(b) b.style.width = pct.toFixed(1) + '%';
+        }
+        // ===== 勋章详情展开（点击勋章切换）=====
+        function toggleMsBadgeDetail(i){
+            const detail = document.querySelector('#msBadgeDetail');
+            if(!detail || !window._msNodeStates) return;
+            if(window._msBadgeOpen === i){ detail.classList.add('hidden'); window._msBadgeOpen = -1; return; }
+            const n = window._msNodeStates[i];
+            const icons = ['fa-trophy','fa-star','fa-diamond','fa-crown'];
+            const grads = ['linear-gradient(135deg,#d9a06b,#a2622c)','linear-gradient(135deg,#e8e8ef,#9aa0b5)','linear-gradient(135deg,#f7d673,#c9911d)','linear-gradient(135deg,#c3cee8,#7a8fbe)'];
+            const tierNames = ['青铜','白银','黄金','铂金'];
+            const achieved = n.achievedYear != null;
+            const curYearDiv = window._msCurYearDiv || 0;
+            const pct = Math.min(curYearDiv / n.m * 100, 100);
+            const isNext = window._msCurIdx === i;
+            let statusHtml = achieved ? ('已达成 · ' + n.achievedYear + '年') : (isNext ? '当前冲刺目标' : '待解锁');
+            let statusCls = achieved ? 'style="color:#b45309;background:#fef3c7;border:1px solid rgba(246,196,83,.45)"' : (isNext ? 'style="color:#D45329;background:rgba(212,83,41,.08)"' : 'style="color:#9ca3af;background:#f3f4f6"');
+            detail.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:${achieved ? grads[i % 4] : 'linear-gradient(135deg,#f3f4f6,#e5e7eb)'};border:1.5px solid ${achieved ? 'rgba(255,255,255,.7)' : '#e5e7eb'};${achieved ? 'box-shadow:0 3px 12px rgba(0,0,0,.14)' : ''}">
+                        <i class="fa ${icons[i % 4]} ${achieved ? 'text-white text-lg' : 'text-gray-300 text-[18px]'}" style="${achieved ? 'text-shadow:0 2px 5px rgba(0,0,0,.25)' : ''}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-sm font-bold text-gray-800">${fmtMileVal(n.m)} 勋章 · ${tierNames[i % 4]}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap" ${statusCls}>${statusHtml}</span>
+                        </div>
+                        <div class="text-[11px] text-gray-500 mt-1">单年分红收入达到 ${fmtMileVal(n.m)} 即点亮${achieved ? '' : '，点亮后永久保留、不因后续年份回落'}</div>
+                        ${achieved ? '<div class="text-[11px] mt-1" style="color:#b45309">达成那年分红收入 <span class="font-bold tabular-nums">' + fmtMoney(n.div) + '</span></div>' : ''}
+                        ${!achieved ? '<div class="mt-2"><div class="flex justify-between text-[10px] text-gray-400 mb-1"><span>当前进度</span><span class="text-accent font-medium">' + pct.toFixed(0) + '%</span></div><div class="h-1.5 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full" style="width:' + pct.toFixed(1) + '%;background:linear-gradient(90deg,#f6c453,#D45329)"></div></div><div class="text-[10px] text-gray-400 mt-1">还差 <span class="font-medium tabular-nums">' + fmtMoney(Math.max(n.m - curYearDiv, 0)) + '</span> 点亮</div></div>' : ''}
+                    </div>
+                </div>`;
+            detail.classList.remove('hidden');
+            window._msBadgeOpen = i;
+        }
+
         // 累计分红征程：X=年份，Y=累计分红总额；已达成的里程碑画紫色横线
         function renderMsChart(divMap, years, milestones){
             const el = document.querySelector('#msChart');
@@ -13369,7 +13484,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         if(!document.querySelector('#msPulseStyle')){
             const st = document.createElement('style');
             st.id = 'msPulseStyle';
-            st.textContent = '@keyframes msPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(212,83,41,0.25); } 50% { box-shadow: 0 0 0 6px rgba(212,83,41,0); } }';
+            st.textContent = '@keyframes msPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(212,83,41,0.25); } 50% { box-shadow: 0 0 0 6px rgba(212,83,41,0); } }@keyframes badgeShine { 0%,100% { transform: translateX(-160%) skewX(-18deg); } 50% { transform: translateX(320%) skewX(-18deg); } }';
             document.head.appendChild(st);
         }
 

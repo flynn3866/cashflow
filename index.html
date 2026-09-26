@@ -2435,8 +2435,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <defs><linearGradient id="msPathGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d8cfc0"/><stop offset="0.6" stop-color="#f2c14e"/><stop offset="1" stop-color="#f6c453"/></linearGradient></defs>
                 </svg>
                 <div id="msPathNodes" class="absolute inset-0"></div>
-                <div id="msPathCoin" class="absolute w-3.5 h-3.5 flex items-center justify-center transition-all duration-700 z-10 pointer-events-none" style="left:0px;top:calc(50% - 7px)">
-                    <i class="fa fa-circle text-[11px]" style="color:#f6c453;text-shadow:0 0 8px rgba(246,196,83,.95),0 1px 3px rgba(0,0,0,.3)"></i>
+                <div id="msPathCoin" class="absolute w-3 h-3 flex items-center justify-center transition-all duration-700 z-10 pointer-events-none" style="left:0px;top:calc(50% - 6px)">
+                    <i class="fa fa-circle text-[9px]" style="color:#7c3aed;text-shadow:0 0 6px rgba(124,58,237,.85),0 1px 2px rgba(0,0,0,.28)"></i>
                 </div>
             </div>
             <div class="mt-1.5 flex justify-between text-[10px] text-gray-400">
@@ -10085,10 +10085,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(cmpEl && typeof echarts !== 'undefined'){
                 let cmpChart = cmpEl._chart;
                 if(!cmpChart){ cmpChart = echarts.init(cmpEl); cmpEl._chart = cmpChart; }
-                const cmpRows = data.rows.filter(function(x){ return (x.mktPct || 0) >= 5; });
+                const cmpRows = data.rows.filter(function(x){ return (x.mktPct || 0) >= 2; });
                 if(!cmpRows.length){
                     try{ cmpChart.clear(); }catch(e){}
-                    if(cmpNote) cmpNote.innerHTML = '<i class="fa fa-info-circle text-[9px]"></i>暂无市值占比 ≥ 5% 的行业';
+                    if(cmpNote) cmpNote.innerHTML = '<i class="fa fa-info-circle text-[9px]"></i>暂无市值占比 ≥ 2% 的行业';
                     return;
                 }
                 // 点击图表外/空白处自动隐藏 tooltip（仅挂一次）
@@ -12201,13 +12201,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             c1.setOption(c1Option);
             analysisCharts.push(c1);
 
-            // ===== 图2：每年分红收入趋势（年度快照优先：当年最终分红已收） =====
+            // ===== 图2：每年分红收入趋势（年度快照优先；当年=首页"今年已收"实时口径，与持仓页顶部严格一致） =====
             const divYearSet = {};
             Object.keys(historyData.yearlyDiv || {}).forEach(function(y){ divYearSet[y] = Number(historyData.yearlyDiv[y]) || 0; });
             Object.keys(historyData.yearSnapshots || {}).forEach(function(y){
                 const sp = historyData.yearSnapshots[y];
                 if(sp && Number(sp.div) > 0) divYearSet[y] = Number(sp.div);
             });
+            // 当年：复用首页"今年已收"（手动基准 + 系统自动到账），不用年末归档（年末归档到年底才生成）
+            const divCurY = String(new Date().getFullYear());
+            divYearSet[divCurY] = getCurYearReceived() || 0;
             const years = Object.keys(divYearSet).sort();
             const divValues = years.map(function(y){ return divYearSet[y]; });
             // 显示最新分红
@@ -12238,8 +12241,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             analysisCharts.push(c2);
 
-            // ===== 图4：每年月均分红收入趋势（年度分红/12，紫色线呼应整站紫金风） =====
-            const avgDivValues = years.map(function(y){ return ((historyData.yearlyDiv[y] || 0) / 12); });
+            // ===== 图4：每年月均分红收入趋势（年度分红/12，紫色线呼应整站紫金风；复用图2 年份集合保证口径一致） =====
+            const avgDivValues = years.map(function(y){ return Number(divYearSet[y] || 0) / 12; });
             const latestAvgDiv = avgDivValues.length ? avgDivValues[avgDivValues.length - 1] : 0;
             document.querySelector('#analysisLatestAvgDiv').innerText = '最新：' + fmtTooltipMoney(latestAvgDiv);
             // X轴标签优化：与图2同一套年份动态间隔（避免几十年数据重叠）
@@ -12811,7 +12814,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const investTotal = getTotalInvested();
             const costYield = investTotal > 0 ? (totalYearDiv / investTotal * 100).toFixed(2) : 0;
             const marketYield = totalMarket > 0 ? (totalYearDiv / totalMarket *100).toFixed(2) : 0;
-            const monthDiv = (totalYearDiv /12).toFixed(2);
+            // 月均分红 = 今年已收 ÷ 12（复用首页今年已收实时口径，与年度预测分红无关）
+            const monthDiv = (getCurYearReceived() / 12).toFixed(2);
             const totalPnl = totalMarket - totalCost;
             // 总收益率 = 总盈亏 / 总成本 × 100%（类似券商开户至今总收益率）
             const totalReturnRate = totalCost > 0 ? (totalPnl / totalCost * 100) : 0;
@@ -13241,22 +13245,60 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 记录本次渲染的数据指纹：数据未变化时切换页面不重复渲染（避免每次切换全部重绘）
             _msDataFp = milestoneDataFingerprint();
         }
-        // ===== 分红之路：渐变光带节点 + 金币（方案A）=====
+        // ===== 分红之路：渐变光带节点 + 金币（方案A + 防挤压焦点刻度）=====
         function renderMsPath(nodeStates, next, curYearDiv){
             const wrap = document.querySelector('#msPathNodes');
             const coin = document.querySelector('#msPathCoin');
             if(!wrap || !coin) return;
-            // 节点按完整范围(0→最后一个里程碑)均匀分布，避免全部挤向末端重叠
+            // 刻度 = 平方根基准（低金额段拉开、高金额段压缩）
+            //      + 焦点拉伸（下一站所在区间额外加宽，冲刺目标更醒目）
+            //      + 最小间距兜底（小金额密集节点强制保证最小间距，绝不挤压重叠）
+            //      + 归一化（防终点溢出，顺带压缩高金额段过疏问题）
             const mLast = nodeStates.length ? nodeStates[nodeStates.length - 1].m : 0;
             const scale = mLast > 0 ? mLast : 1;
+            const basePos = nodeStates.map(function(n){ return Math.sqrt(n.m / scale) * 100; });
+            const ki = next != null ? nodeStates.findIndex(function(n){ return n.m === next; }) : -1;
+            let fLo = 0, fHi = 0, fSpan = 0, fBoost = 0;
+            if(ki > 0){
+                fLo = basePos[ki - 1]; fHi = basePos[ki]; fSpan = fHi - fLo;
+                if(fSpan > 0.5) fBoost = Math.min(fSpan * 0.9, 8);   // 焦点区间额外加宽（百分点）
+            }
+            function scalePos(v){
+                const b = Math.sqrt(v / scale) * 100;
+                if(ki > 0 && fSpan > 0.5){
+                    if(v >= nodeStates[ki - 1].m && v <= nodeStates[ki].m){
+                        const t = (b - fLo) / fSpan;
+                        return fLo + t * (fSpan + fBoost);
+                    }
+                    if(v > nodeStates[ki].m) return fHi + fBoost + (b - fHi);
+                }
+                return b;
+            }
+            let pos = nodeStates.map(function(n){ return scalePos(n.m); });
+            const minGap = 4.5;   // 最小节点间距（百分点），小金额阶段密集时兜底防挤压
+            for(let i = 1; i < pos.length; i++){
+                if(pos[i] - pos[i - 1] < minGap) pos[i] = pos[i - 1] + minGap;
+            }
+            const mx = pos[pos.length - 1] || 100;
+            if(mx > 100){   // 归一化：保证终点不超出右端（顺带压缩高金额段间距）
+                const f = 100 / mx;
+                pos = pos.map(function(x){ return x * f; });
+            }
+            // 金币位置先算（同一刻度），供节点判断"是否被金币超越"
+            let coinPct = Math.min(scalePos(curYearDiv), 100);
+            if(mx > 100) coinPct = coinPct / mx * 100;
             let nodesHtml = '';
-            nodeStates.forEach(function(n){
-                const pos = Math.min(n.m / scale * 100, 100);
+            nodeStates.forEach(function(n, i){
                 const achieved = n.achievedYear != null;
                 const isNext = next != null && n.m === next;
+                // 被金币超越：轨道位置已被当前分红进度金币覆盖（"已走过"），节点统一显示绿色
+                const surpassed = coinPct >= pos[i] - 0.5;
                 let dot = '<div class="w-3 h-3 rounded-full" style="';
                 let label = '';
-                if(achieved){
+                if(surpassed){
+                    dot += 'background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 0 8px rgba(22,163,74,.4);';
+                    label = 'text-green-700 font-medium';
+                } else if(achieved){
                     dot += 'background:linear-gradient(135deg,#f7d673,#d99a1f);box-shadow:0 0 10px rgba(246,196,83,.75);';
                     label = 'text-amber-600 font-medium';
                 } else if(isNext){
@@ -13267,30 +13309,28 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     label = 'text-gray-400';
                 }
                 dot += '"></div>';
-                nodesHtml += '<div class="absolute -translate-x-1/2" style="left:' + pos.toFixed(1) + '%;top:50%;z-index:2">' +
+                nodesHtml += '<div class="absolute -translate-x-1/2" style="left:' + pos[i].toFixed(1) + '%;top:50%;z-index:2">' +
                     dot +
                     '<div class="absolute left-1/2 -translate-x-1/2 text-[9px] whitespace-nowrap ' + label + '" style="top:-17px">' + fmtMileVal(n.m) + '</div>' +
                     '</div>';
             });
             wrap.innerHTML = nodesHtml;
-            // 金币按完整范围移动：进度到哪个里程碑，金币就到哪个站台
-            const pct = Math.min(curYearDiv / scale * 100, 100);
-            const waveY = Math.sin(pct / 100 * Math.PI * 2) * 5;
-            coin.style.left = 'calc(' + pct.toFixed(1) + '% - 7px)';
-            coin.style.top = 'calc(50% - 7px + ' + waveY.toFixed(1) + 'px)';
+            const waveY = Math.sin(coinPct / 100 * Math.PI * 2) * 5;
+            coin.style.left = 'calc(' + coinPct.toFixed(1) + '% - 6px)';
+            coin.style.top = 'calc(50% - 6px + ' + waveY.toFixed(1) + 'px)';
         }
         // ===== 勋章殿堂：成就勋章（铜/银/金/铂金）=====
         function renderMsBadges(nodeStates, curYearDiv){
             const wrap = document.querySelector('#msBadges');
             if(!wrap) return;
-            const icons = ['fa-trophy','fa-star','fa-diamond','fa-crown'];
-            const grads = ['linear-gradient(135deg,#d9a06b,#a2622c)','linear-gradient(135deg,#e8e8ef,#9aa0b5)','linear-gradient(135deg,#f7d673,#c9911d)','linear-gradient(135deg,#c3cee8,#7a8fbe)'];
+            const icons = ['fa-star-o','fa-star','fa-certificate','fa-diamond','fa-sun-o','fa-fire','fa-trophy','fa-empire'];
+            const grads = ['linear-gradient(135deg,#eef1f7,#9db0c9)','linear-gradient(135deg,#dce6f8,#6a7fc0)','linear-gradient(135deg,#fde68a,#d97706)','linear-gradient(135deg,#f87171,#b91c1c)','linear-gradient(135deg,#d946ef,#a21caf)','linear-gradient(135deg,#c9a9ff,#7c3aed)','linear-gradient(135deg,#a78bfa,#6d28d9)','linear-gradient(135deg,#fde68a,#fbbf24,#ef4444,#f97316,#facc15,#22c55e,#3b82f6,#6366f1,#a855f7,#fbbf24)'];
             let curIdx = -1;
             nodeStates.forEach(function(n, i){ if(curIdx < 0 && n.achievedYear == null) curIdx = i; });
             let html = '';
             nodeStates.forEach(function(n, i){
-                const icon = icons[i % 4];
-                const grad = grads[i % 4];
+                const icon = icons[i % 8];
+                const grad = grads[i % 8];
                 const achieved = n.achievedYear != null;
                 if(achieved){
                     html += `
@@ -13341,9 +13381,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!detail || !window._msNodeStates) return;
             if(window._msBadgeOpen === i){ detail.classList.add('hidden'); window._msBadgeOpen = -1; return; }
             const n = window._msNodeStates[i];
-            const icons = ['fa-trophy','fa-star','fa-diamond','fa-crown'];
-            const grads = ['linear-gradient(135deg,#d9a06b,#a2622c)','linear-gradient(135deg,#e8e8ef,#9aa0b5)','linear-gradient(135deg,#f7d673,#c9911d)','linear-gradient(135deg,#c3cee8,#7a8fbe)'];
-            const tierNames = ['青铜','白银','黄金','铂金'];
+            const icons = ['fa-star-o','fa-star','fa-certificate','fa-diamond','fa-sun-o','fa-fire','fa-trophy','fa-empire'];
+            const grads = ['linear-gradient(135deg,#eef1f7,#9db0c9)','linear-gradient(135deg,#dce6f8,#6a7fc0)','linear-gradient(135deg,#fde68a,#d97706)','linear-gradient(135deg,#f87171,#b91c1c)','linear-gradient(135deg,#d946ef,#a21caf)','linear-gradient(135deg,#c9a9ff,#7c3aed)','linear-gradient(135deg,#a78bfa,#6d28d9)','linear-gradient(135deg,#fde68a,#fbbf24,#ef4444,#f97316,#facc15,#22c55e,#3b82f6,#6366f1,#a855f7,#fbbf24)'];
+            const tierNames = ['秩序白银','荣耀黄金','尊贵铂金','永恒钻石','至尊星耀','无双王者','荣耀王者','传奇王者'];
             const achieved = n.achievedYear != null;
             const curYearDiv = window._msCurYearDiv || 0;
             const pct = Math.min(curYearDiv / n.m * 100, 100);
@@ -13352,12 +13392,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let statusCls = achieved ? 'style="color:#b45309;background:#fef3c7;border:1px solid rgba(246,196,83,.45)"' : (isNext ? 'style="color:#D45329;background:rgba(212,83,41,.08)"' : 'style="color:#9ca3af;background:#f3f4f6"');
             detail.innerHTML = `
                 <div class="flex items-start gap-3">
-                    <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:${achieved ? grads[i % 4] : 'linear-gradient(135deg,#f3f4f6,#e5e7eb)'};border:1.5px solid ${achieved ? 'rgba(255,255,255,.7)' : '#e5e7eb'};${achieved ? 'box-shadow:0 3px 12px rgba(0,0,0,.14)' : ''}">
-                        <i class="fa ${icons[i % 4]} ${achieved ? 'text-white text-lg' : 'text-gray-300 text-[18px]'}" style="${achieved ? 'text-shadow:0 2px 5px rgba(0,0,0,.25)' : ''}"></i>
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:${achieved ? grads[i % 8] : 'linear-gradient(135deg,#f3f4f6,#e5e7eb)'};border:1.5px solid ${achieved ? 'rgba(255,255,255,.7)' : '#e5e7eb'};${achieved ? 'box-shadow:0 3px 12px rgba(0,0,0,.14)' : ''}">
+                        <i class="fa ${icons[i % 8]} ${achieved ? 'text-white text-lg' : 'text-gray-300 text-[18px]'}" style="${achieved ? 'text-shadow:0 2px 5px rgba(0,0,0,.25)' : ''}"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-sm font-bold text-gray-800">${fmtMileVal(n.m)} 勋章 · ${tierNames[i % 4]}</span>
+                            <span class="text-sm font-bold text-gray-800">${fmtMileVal(n.m)} 勋章 · ${tierNames[i % 8]}</span>
                             <span class="text-[9px] px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap" ${statusCls}>${statusHtml}</span>
                         </div>
                         <div class="text-[11px] text-gray-500 mt-1">单年分红收入达到 ${fmtMileVal(n.m)} 即点亮${achieved ? '' : '，点亮后永久保留、不因后续年份回落'}</div>

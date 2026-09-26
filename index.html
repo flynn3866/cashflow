@@ -116,6 +116,15 @@
             .num-transition {
                 transition: color 0.3s ease;
             }
+            /* 二级详情页统一过渡：入场 0.35s push（由上方 [id^=pageStats] 等规则统一驱动）；
+               .detail-page 仅作详情页标识（供 findVisibleDetailPage 定位）；退场 0.25s 右滑淡出 */
+            .detail-exit {
+                animation: detailExitOut 0.25s ease-in forwards !important;
+            }
+            @keyframes detailExitOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(32px); opacity: 0; }
+            }
             /* 排名上升动画（无背景色，仅位移+淡入） */
             @keyframes rankUp {
                 0% { transform: translateY(8px); opacity: 0.5; }
@@ -170,7 +179,7 @@
         #pageYearSnapshot, #pageNotifCenter, #pageDivDetail, #pageCostDetail, #pageNavDetail, #pageWatchList,
         #pageBalanceSheet, #pageAnnualReport, #pageFundTransfer, #pageFundTransferAdd, #pageSettings,
         #pageIndustryMap, #pageStockScores{
-            animation: appSlideIn .6s cubic-bezier(.22,1,.36,1) backwards;
+            animation: appSlideIn .35s cubic-bezier(.22,1,.36,1) backwards;
         }
         @keyframes appFadeUp{
             from{ opacity:0; transform:translateY(12px); }
@@ -297,8 +306,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 我的持仓标题（置顶，汇总卡上方；右侧消息铃铛与其他一级页统一） -->
         <div class="flex items-center justify-between mb-3 mt-0">
             <div class="flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                <h2 class="text-xl font-semibold tracking-wide"><span style="color:#4285F4">我</span><span style="color:#EA4335">的</span><span style="color:#FBBC05">持</span><span style="color:#34A853">仓</span></h2>
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full opacity-50"></div>
+                <h2 class="text-xl font-semibold tracking-wide"><span style="color:#4285F4">细</span><span style="color:#EA4335">水</span><span style="color:#FBBC05">长</span><span style="color:#34A853">流</span></h2>
             </div>
             <button class="notif-bell relative w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30 flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
@@ -324,7 +333,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="flex items-center justify-center text-gray-400 active:scale-90 transition-transform"><i class="fa fa-chevron-right text-[9px]"></i></button>
                     </div>
                     <div class="flex items-baseline gap-1.5">
-                        <span class="text-[18px] font-bold tabular-nums tracking-tight num-transition text-accent" id="totalYearDiv">0.00</span>
+                        <span class="text-[18px] font-bold tabular-nums tracking-tight num-transition text-[#e03131]" id="totalYearDiv">0.00</span>
                     </div>
                 </div>
 
@@ -444,7 +453,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 新增股票弹窗，max‑2xl同步加宽弹窗最大宽度；背景与主页一致，高度可控可滚动 -->
     <!-- 新增/编辑持仓独立页面 -->
-    <div id="pageStockEdit" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStockEdit" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
         <div class="flex items-center gap-3 mb-4">
             <button id="stockEditBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
@@ -589,7 +598,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 买入/卖出交易独立页面（券商风格：买入红色主题 / 卖出绿色主题，摊薄成本法预览） -->
-    <div id="pageTrade" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageTrade" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航 -->
         <div class="flex items-center gap-3 mb-4">
             <button id="tradeBackBtn" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
@@ -663,7 +672,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 交易明细独立页面（买卖流水 + 分红到账时间线；手机上独立页面比弹窗体验更好，记录多时分页加载） -->
-    <div id="pageTradeLog" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageTradeLog" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航（吸顶固定，与其他详情页统一） -->
         <div class="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4" style="background:#f8f5ec;">
             <div class="flex items-center gap-3">
@@ -737,7 +746,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 资产新高记录独立页面（金色皇冠 · 每次破新高的里程碑轨迹） -->
-    <div id="pageAssetHigh" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageAssetHigh" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -972,7 +981,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：今日涨跌幅 -->
-    <div id="pageStatsToday" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsToday" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1010,7 +1019,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：现价股息排行 -->
-    <div id="pageStatsYield" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsYield" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1044,7 +1053,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：仓位分布 -->
-    <div id="pageStatsPosition" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsPosition" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1099,7 +1108,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：盈亏排行 -->
-    <div id="pageStatsPnl" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsPnl" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1162,7 +1171,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：累计分红排行 -->
-    <div id="pageStatsDivRank" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsDivRank" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1225,7 +1234,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：分红派发日程 -->
-    <div id="pageStatsSchedule" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsSchedule" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1266,7 +1275,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：分红升降对比 -->
-    <div id="pageStatsCompare" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsCompare" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1317,7 +1326,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：行业资产分布 -->
-    <div id="pageStatsIndustry" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsIndustry" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1418,7 +1427,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：资金流水 -->
-    <div id="pageStatsCashFlow" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsCashFlow" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1485,7 +1494,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 统计详情：交易明细（每笔买入/卖出 + 修改持仓事件，本地实时） -->
-    <div id="pageStatsTrade" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStatsTrade" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1693,7 +1702,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 年度快照页面：每年年末手动一键保存组合快照，永久留存用于多年回溯与报表 -->
-    <div id="pageYearSnapshot" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageYearSnapshot" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题 -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -1728,7 +1737,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 消息中心页面：当日重要信息（除权提醒 + 股息率提醒），券商级消息推送 -->
-    <div id="pageNotifCenter" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageNotifCenter" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1766,7 +1775,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 分红明细页面：今年已收分红的每一笔来源（设置基准 + 各股票除权到账） -->
-    <div id="pageDivDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageDivDetail" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1806,7 +1815,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 投入成本明细页面：初始成本 + 历年净流入的来源 -->
-    <div id="pageCostDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageCostDetail" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1846,7 +1855,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 净值历史页面：每年最终净值 + 年度增长率（风格与投入成本明细统一） -->
-    <div id="pageNavDetail" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageNavDetail" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1886,7 +1895,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 关注页面：自选股票行情 + 股息率阶梯提醒数据源 -->
-    <div id="pageWatchList" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageWatchList" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -1941,7 +1950,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 资产负债表页面：家庭资产负债盘点（资产 - 负债 = 净资产） -->
-    <div id="pageBalanceSheet" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageBalanceSheet" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -2057,7 +2066,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 年度投资报告页面（年度账单式沉浸报告） -->
-    <div id="pageAnnualReport" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
+    <div id="pageAnnualReport" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -2494,7 +2503,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 设置页面 -->
     <!-- 资金转账详情页：资金转入/取出记录 + 年度汇总（与资金流水同源，风格统一） -->
-    <div id="pageFundTransfer" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageFundTransfer" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题栏：标题 + 右侧醒目"新增流水"按钮 -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -2546,7 +2555,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 新增资金流水独立页面 -->
-    <div id="pageFundTransferAdd" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageFundTransferAdd" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题栏 -->
         <div class="relative bg-white rounded-2xl px-4 py-3 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -2592,7 +2601,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="text-center text-[10px] text-gray-300 mt-2.5">保存后自动累计到当年年度汇总，并同步到「统计 · 资金流水」</div>
     </div>
 
-    <div id="pageSettings" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageSettings" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
@@ -2748,7 +2757,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 行业映射配置页（我的 - 行业映射配置） -->
-    <div id="pageIndustryMap" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageIndustryMap" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部标题栏（白色卡片 + 吸顶固定，与其他详情页统一） -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -2837,7 +2846,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 股票评分页面（设置-股票评分：巴菲特式收息标准） -->
-    <div id="pageStockScores" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStockScores" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部标题栏（白色卡片 + 吸顶固定） -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -3934,8 +3943,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const monthlyAfter = Object.keys(historyData.monthlyAssets).length;
                         // 更新顶部关键指标（文本实时更新）
                         const sumA = calcSummary();
-                        document.querySelector('#analysisTotalAsset').innerText = fmtMoney(Number(sumA.totalMarket));
-                        document.querySelector('#analysisYearDiv').innerText = fmtMoney(Number(sumA.totalYearDiv));
+                        numTween(document.querySelector('#analysisTotalAsset'), sumA.totalMarket, fmtMoney);
+                        numTween(document.querySelector('#analysisYearDiv'), sumA.totalYearDiv, fmtMoney);
                         renderMaxDrawdown();
                         // 年化收益率 = 复利年化 XIRR（与我的页"持仓概览"同一口径）
                         const yrA = calcMineCagr();
@@ -3944,7 +3953,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             retElA.innerText = '--';
                             retElA.className = 'text-lg font-bold tabular-nums text-amber-100/70';
                         } else {
-                            retElA.innerText = (yrA >= 0 ? '+' : '') + yrA.toFixed(2) + '%';
+                            numTween(retElA, yrA, fmtPctNum);
                             retElA.className = 'text-lg font-bold tabular-nums ' + (yrA >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
                         }
                         // 只有月度数据新增时才重新渲染图表（避免每2秒重复渲染）
@@ -4437,10 +4446,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closeAssetHighModal(){
             restoreScroll();
             // 关闭资产新高页面，恢复持仓页
-            document.querySelector('#pageAssetHigh').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageAssetHigh'), function(){
             document.querySelector('#pageHold').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
-        }
+        
+
+            });
+    }
         document.querySelector('#assetHighBackBtn').addEventListener('click', closeAssetHighModal);
         // 月底归档：对已过去的月份，取该月最后一天的 dailyAssets 作为 monthlyAssets
         // （软件不常开时，次月初打开会自动补归档）
@@ -4691,11 +4703,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeModal(){
             // 关闭编辑页面，恢复持仓页
-            document.querySelector('#pageStockEdit').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageStockEdit'), function(){
             document.querySelector('#pageHold').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
             renderPage();
-        }
+        
+
+            });
+    }
         stockEditBackBtn.addEventListener('click', closeModal);
         cancelBtn.addEventListener('click', closeModal);
 
@@ -5207,6 +5222,61 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             saveHistory();
         }
 
+        // 数字平滑滚动动画（count-up）：首次渲染直接显示；同一会话内值变化时从旧值缓动到新值（约0.5s easeOutCubic）
+        const _numAnims = {};
+        function numTween(el, to, fmt, dur){
+            if(!el) return;
+            const target = Number(to);
+            if(!isFinite(target)){ el.innerText = fmt ? fmt(to) : String(to); return; }
+            const key = el.id || ('_' + Math.random());
+            if(!(key in _numAnims)){
+                _numAnims[key] = target;
+                el.innerText = fmt ? fmt(target) : String(target);
+                return;
+            }
+            const from = _numAnims[key];
+            if(Math.abs(from - target) < 1e-9) return;
+            const t0 = performance.now();
+            const d = dur || 500;
+            function step(t){
+                const p = Math.min(1, (t - t0) / d);
+                const e = 1 - Math.pow(1 - p, 3);
+                const v = from + (target - from) * e;
+                el.innerText = fmt ? fmt(v) : String(v);
+                if(p < 1){ requestAnimationFrame(step); }
+                else { _numAnims[key] = target; el.innerText = fmt ? fmt(target) : String(target); }
+            }
+            requestAnimationFrame(step);
+        }
+
+        // 二级详情页统一退场（0.25s 右滑淡出后隐藏并恢复父页面）
+        function exitDetailPage(el, done){
+            if(!el || el.classList.contains('hidden')){
+                if(done) done();
+                return;
+            }
+            // 内联动画强制退场（inline 优先级最高，确保覆盖页面级入场动画）
+            el.style.animation = 'detailExitOut 0.25s ease-in forwards';
+            setTimeout(function(){
+                el.style.animation = '';
+                el.classList.add('hidden');
+                if(done) done();
+            }, 250);
+        }
+        // 当前可见的二级详情页（统计页多详情用）
+        function findVisibleDetailPage(){
+            const list = document.querySelectorAll('.detail-page');
+            for(let i = 0; i < list.length; i++){
+                if(!list[i].classList.contains('hidden')) return list[i];
+            }
+            return null;
+        }
+
+        // 数字平滑滚动用格式器（与上方 numTween 配套）
+        function fmtNum2(v){ return Number(v).toFixed(2); }
+        function fmtPctNum(v){ v = Number(v); return (v > 0 ? '+' : (v < 0 ? '-' : '')) + Math.abs(v).toFixed(2) + '%'; }
+        function fmtPnlNum(v){ v = Number(v); return (v > 0 ? '+' : (v < 0 ? '-' : '')) + fmtMoney(Math.abs(v)); }
+
         // 金额格式化：不加千分位逗号；超过10万以"万"为单位（如 38.28万）
         function fmtMoney(v){
             const neg = v < 0;
@@ -5565,12 +5635,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closeTradeModal(){
             restoreScroll();
             // 关闭交易页面，恢复持仓页
-            document.querySelector('#pageTrade').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageTrade'), function(){
             document.querySelector('#pageHold').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
             tradeItemId = null;
             renderPage();
-        }
+        
+
+            });
+    }
         // 实时预览：预估金额 / 买入后成本 / 卖出后持仓
         function updateTradePreview(){
             const item = holdDataList.find(it => it.id === tradeItemId);
@@ -5815,14 +5888,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeTradeLogPage(){
             restoreScroll();
-            document.querySelector('#pageTradeLog').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageTradeLog'), function(){
             document.querySelector('#pageHold').classList.remove('hidden');
             // 恢复新增按钮（仅持仓页显示）
             if(activeTab === 'hold'){
                 document.querySelector('#openModalBtn').classList.remove('hidden');
             }
             renderPage();
-        }
+        
+
+            });
+    }
         // 渲染流水列表（分页：每批50条，倒序）
         let histSectionOpen = false;
         function toggleHistSection(){
@@ -5988,8 +6064,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 // 更新顶部关键指标
                 const sum = calcSummary();
-                document.querySelector('#analysisTotalAsset').innerText = fmtMoney(Number(sum.totalMarket));
-                document.querySelector('#analysisYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
+                numTween(document.querySelector('#analysisTotalAsset'), sum.totalMarket, fmtMoney);
+                numTween(document.querySelector('#analysisYearDiv'), sum.totalYearDiv, fmtMoney);
                 // 最大回撤（年末资产快照经典算法，每天计算一次缓存，其余读存储）
                 renderMaxDrawdown();
                 // 年化收益率 = 复利年化 XIRR（与我的页"持仓概览"同一口径，资金按日期折现）
@@ -5999,7 +6075,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     retEl.innerText = '--';
                     retEl.className = 'text-lg font-bold tabular-nums text-amber-100/70';
                 } else {
-                    retEl.innerText = (yr >= 0 ? '+' : '') + yr.toFixed(2) + '%';
+                    numTween(retEl, yr, fmtPctNum);
                     retEl.className = 'text-lg font-bold tabular-nums ' + (yr >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
                 }
                 // 只有首次切换到分析页面时才渲染图表，之后切换不重复渲染
@@ -6346,11 +6422,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeYearSnapshot(){
             restoreScroll();
-            document.querySelector('#pageYearSnapshot').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageYearSnapshot'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
             renderMinePage();
-        }
+        
+
+            });
+    }
         function saveYearSnapshot(){
             const curY = String(new Date().getFullYear());
             const sum = calcSummary();
@@ -6593,9 +6672,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 saveStatsDaily(snapM);
             }
             const mS = loadStatsDaily().mine || {};
-            document.querySelector('#mineTotalAsset').innerText = fmtMoney(Number(sum.totalMarket)); // 总资产实时
-            document.querySelector('#mineYearDiv').innerText = fmtMoney(Number(mS.yearDiv != null ? mS.yearDiv : sum.totalYearDiv));
-            document.querySelector('#mineTotalDiv').innerText = fmtMoney(Number(mS.totalDiv != null ? mS.totalDiv : sum.totalDivReceived));
+            numTween(document.querySelector('#mineTotalAsset'), sum.totalMarket, fmtMoney); // 总资产实时（平滑滚动）
+            numTween(document.querySelector('#mineYearDiv'), mS.yearDiv != null ? mS.yearDiv : sum.totalYearDiv, fmtMoney);
+            numTween(document.querySelector('#mineTotalDiv'), mS.totalDiv != null ? mS.totalDiv : sum.totalDivReceived, fmtMoney);
             // 关注数量：本地实时数据（增删即时变化），不依赖每日快照
             const mcEl = document.querySelector('#mineWatchCount');
             if(mcEl) mcEl.innerText = loadWatchList().length + '只';
@@ -6630,7 +6709,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cumPnl = Number(sum.totalMarket) - investTotalV;
             const pnlEl = document.querySelector('#mineTotalPnl');
             if(pnlEl){
-                pnlEl.innerText = (cumPnl >= 0 ? '+' : '') + fmtMoney(cumPnl);
+                numTween(pnlEl, cumPnl, fmtPnlNum);
                 pnlEl.className = 'text-[15px] font-bold tabular-nums whitespace-nowrap mt-1 ' + (cumPnl >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
             }
             // 持仓概览：复利年化 CAGR（交易日 6:00/20:00 快照，其余时间读存储；缺失回退实时）
@@ -6774,11 +6853,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeBalanceSheet(){
             restoreScroll();
-            document.querySelector('#pageBalanceSheet').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageBalanceSheet'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', bsReturnTab !== 'hold');
             renderPage();
-        }
+        
+
+            });
+    }
         function renderBalanceSheet(){
             const curSum = bsSum('assets', 'current');
             const nonSum = bsSum('assets', 'noncurrent');
@@ -7515,12 +7597,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeNotifCenter(){
             restoreScroll();
-            document.querySelector('#pageNotifCenter').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageNotifCenter'), function(){
             const pageEl = document.querySelector('#' + (notifReturnTab === 'hold' ? 'pageHold' : notifReturnTab === 'stats' ? 'pageStats' : notifReturnTab === 'analysis' ? 'pageAnalysis' : notifReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', notifReturnTab !== 'hold');
             renderPage();
-        }
+        
+
+            });
+    }
 
         // ==================== 分红明细（今年已收：设置基准 + 各股除权到账） ====================
         let divDetailReturnTab = 'hold';
@@ -7539,12 +7624,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeDivDetail(){
             restoreScroll();
-            document.querySelector('#pageDivDetail').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageDivDetail'), function(){
             const pageEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', divDetailReturnTab !== 'hold');
             renderPage();
-        }
+        
+
+            });
+    }
         // ============ 净值历史（我的页 - 持仓概览 - 最新净值） ============
         let navDetailReturnTab = 'mine';
         function openNavDetail(){
@@ -7558,11 +7646,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeNavDetail(){
             restoreScroll();
-            document.querySelector('#pageNavDetail').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageNavDetail'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', navDetailReturnTab !== 'hold');
             renderPage();
-        }
+        
+
+            });
+    }
         // 渲染净值历史：年份倒序，当年置顶带"今年"标识
         function renderNavDetail(){
             ensureNavArchiveFresh();
@@ -7631,11 +7722,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeCostDetail(){
             restoreScroll();
-            document.querySelector('#pageCostDetail').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageCostDetail'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', costDetailReturnTab !== 'hold');
             renderPage();
-        }
+        
+
+            });
+    }
         // 渲染投入成本明细：初始投入 + 每笔资金流水（日期倒序，当年带"今年"标识）
         function renderCostDetail(){
             const entries = [];
@@ -7987,12 +8081,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeWatchPage(){
             restoreScroll();
-            document.querySelector('#pageWatchList').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageWatchList'), function(){
             const pageEl = document.querySelector('#' + (watchReturnTab === 'hold' ? 'pageHold' : watchReturnTab === 'stats' ? 'pageStats' : watchReturnTab === 'analysis' ? 'pageAnalysis' : watchReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', watchReturnTab !== 'hold');
             renderPage();
-        }
+        
+
+            });
+    }
         // 渲染关注列表
         function renderWatchPage(){
             const list = loadWatchList();
@@ -8151,11 +8248,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeAnnualReport(){
             restoreScroll();
-            document.querySelector('#pageAnnualReport').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageAnnualReport'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
             renderPage();
-        }
+        
+
+            });
+    }
         // 获取某年年初市值：上年年终总资产（yearlyAssets → monthlyAssets 12月 → dailyAssets 12月31日 → yearStart 快照兜底）
         function getYearStartMarket(yrStr){
             const prevY = String(Number(yrStr) - 1);
@@ -9334,14 +9434,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closeStatsSection(){
             restoreScroll();
             hideAllChartTips();
-            for(const k in STATS_SECTION_PAGES){
-                const el = document.querySelector('#' + STATS_SECTION_PAGES[k]);
-                if(el) el.classList.add('hidden');
-            }
-            activeStatsSection = null;
-            document.querySelector('#pageStats').classList.remove('hidden');
-            renderStatsPage();
-            window.scrollTo(0, 0);
+            const cur = findVisibleDetailPage();
+            exitDetailPage(cur, function(){
+                for(const k in STATS_SECTION_PAGES){
+                    const el = document.querySelector('#' + STATS_SECTION_PAGES[k]);
+                    if(el) el.classList.add('hidden');
+                }
+                activeStatsSection = null;
+                document.querySelector('#pageStats').classList.remove('hidden');
+                renderStatsPage();
+                window.scrollTo(0, 0);
+            });
         }
         // 统计页卡片宫格摘要：今日卡右侧为当日合计盈亏（复用详情页顶部数据），其余卡片显示各板块数据最新刷新时间（纯本地，不额外拉取）
         function refreshStatsCardSummaries(){
@@ -9625,10 +9728,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeIndustryMapPage(){
             restoreScroll();
-            document.querySelector('#pageIndustryMap').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageIndustryMap'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
-        }
+        
+
+            });
+    }
         function renderIndustryMapPage(){
             const cfg = loadIndustryMapCfg();
             const list = document.querySelector('#industryMapList');
@@ -13067,35 +13173,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#hkCount').innerText = sum.hkShareNum;
 
             // 年度分红收入（纯数字，无货币符号）
-            document.querySelector('#totalYearDiv').innerText = fmtMoney(Number(sum.totalYearDiv));
+            numTween(document.querySelector('#totalYearDiv'), sum.totalYearDiv, fmtMoney);
             // 累计分红总额
-            document.querySelector('#totalDivReceived').innerText = fmtMoney(Number(sum.totalDivReceived));
+            numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
             // 今年已收
-            document.querySelector('#incomeNow').innerText = fmtMoney(Number(sum.totalReceived));
+            numTween(document.querySelector('#incomeNow'), sum.totalReceived, fmtMoney);
             // 持仓盈亏
             const totalPnlEl = document.querySelector('#totalPnl');
             const pnlVal = Number(sum.totalPnl);
-            totalPnlEl.innerText = formatPnl(pnlVal);
+            numTween(totalPnlEl, pnlVal, fmtPnlNum);
             totalPnlEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
-            // 总资产
-            document.querySelector('#totalMarket').innerText = fmtMoney(Number(sum.totalMarket));
+            // 总资产（平滑滚动动画：首次直接显示，值变化时0.5s滚动）
+            numTween(document.querySelector('#totalMarket'), sum.totalMarket, fmtMoney);
             // 资产新高（金色皇冠徽章，点击查看破新高记录）
             renderAssetHigh();
             // 总收益率
             const trrEl = document.querySelector('#totalReturnRate');
             const trrVal = Number(sum.totalReturnRate);
-            trrEl.innerText = (trrVal > 0 ? '+' : (trrVal < 0 ? '-' : '')) + Math.abs(trrVal).toFixed(2) + '%';
+            numTween(trrEl, trrVal, fmtPctNum);
             trrEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlLightClass(trrVal);
             // 今年收益率
             const yrrEl = document.querySelector('#yearReturnRate');
             const yrrVal = Number(sum.yearReturnRate);
-            yrrEl.innerText = (yrrVal > 0 ? '+' : (yrrVal < 0 ? '-' : '')) + Math.abs(yrrVal).toFixed(2) + '%';
+            numTween(yrrEl, yrrVal, fmtPctNum);
             yrrEl.className = 'text-[14px] font-bold tabular-nums num-transition ' + pnlLightClass(yrrVal);
 
-            document.querySelector('#costYield').innerText = sum.costYield;
-            document.querySelector('#marketYield').innerText = sum.marketYield;
+            numTween(document.querySelector('#costYield'), sum.costYield, fmtNum2);
+            numTween(document.querySelector('#marketYield'), sum.marketYield, fmtNum2);
             // 月均分红
-            document.querySelector('#monthDiv').innerText = fmtMoney(Number(sum.monthDiv));
+            numTween(document.querySelector('#monthDiv'), sum.monthDiv, fmtMoney);
             // 回本里程碑（成本为负的股票汇总统计）
             renderRecoverMilestone();
 
@@ -14666,11 +14772,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeStockScores(){
             restoreScroll();
-            document.querySelector('#pageStockScores').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageStockScores'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
             window.scrollTo(0, 0);
-        }
+        
+
+            });
+    }
         function toggleScoreDetail(btn, key){
             const wrap = btn.parentElement;
             const detail = wrap.querySelector('.score-detail');
@@ -15056,11 +15165,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeFundTransfer(){
             restoreScroll();
-            document.querySelector('#pageFundTransfer').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageFundTransfer'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
             window.scrollTo(0, 0);
-        }
+        
+
+            });
+    }
         // 按年聚合资金流水（含初始投入；与 XIRR/净值使用同一 getFundFlows 数据源）
         function getFundYearSummary(){
             const flows = getFundFlows();
@@ -15152,10 +15264,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeFundTransferAdd(){
             restoreScroll();
-            document.querySelector('#pageFundTransferAdd').classList.add('hidden');
+            exitDetailPage(document.querySelector('#pageFundTransferAdd'), function(){
             document.querySelector('#pageFundTransfer').classList.remove('hidden');
             renderFundTransfer();
-        }
+        
+
+            });
+    }
         let fundTransferType = 'in';
         function setFundTransferType(t){
             fundTransferType = t;
@@ -15243,10 +15358,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 隐藏设置页面，返回"我的"
         function hideSettings(){
             restoreScroll();
-            document.querySelector('#pageSettings').classList.add('hidden');
-            document.querySelector('#pageMine').classList.remove('hidden');
-            // 设置页保存的资金投入/分红等会实时影响我的页概览，返回时立即刷新
-            renderMinePage();
+            exitDetailPage(document.querySelector('#pageSettings'), function(){
+                document.querySelector('#pageMine').classList.remove('hidden');
+                // 设置页保存的资金投入/分红等会实时影响我的页概览，返回时立即刷新
+                renderMinePage();
+            });
         }
 
         // 保存设置

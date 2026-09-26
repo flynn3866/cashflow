@@ -13256,7 +13256,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             //      + 归一化（防终点溢出，顺带压缩高金额段过疏问题）
             const mLast = nodeStates.length ? nodeStates[nodeStates.length - 1].m : 0;
             const scale = mLast > 0 ? mLast : 1;
-            const basePos = nodeStates.map(function(n){ return Math.sqrt(n.m / scale) * 100; });
+            // 分段线性舒适刻度：低段 5万 靠前（≈12%），中段 10-30万 均匀拉开，高段自然收拢
+            function piecePos(v){
+                const pts = [[0,0],[0.05,12],[0.10,27],[0.15,38],[0.20,49],[0.30,64],[0.40,76],[0.60,89],[1,100]];
+                const p = v / scale;
+                if(p <= 0) return 0;
+                for(let k = 1; k < pts.length; k++){
+                    if(p <= pts[k][0]){
+                        const t = (p - pts[k - 1][0]) / (pts[k][0] - pts[k - 1][0]);
+                        return pts[k - 1][1] + t * (pts[k][1] - pts[k - 1][1]);
+                    }
+                }
+                return 100;
+            }
+            const basePos = nodeStates.map(function(n){ return piecePos(n.m); });
             const ki = next != null ? nodeStates.findIndex(function(n){ return n.m === next; }) : -1;
             let fLo = 0, fHi = 0, fSpan = 0, fBoost = 0;
             if(ki > 0){
@@ -13264,7 +13277,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(fSpan > 0.5) fBoost = Math.min(fSpan * 0.9, 8);   // 焦点区间额外加宽（百分点）
             }
             function scalePos(v){
-                const b = Math.sqrt(v / scale) * 100;
+                const b = piecePos(v);
                 if(ki > 0 && fSpan > 0.5){
                     if(v >= nodeStates[ki - 1].m && v <= nodeStates[ki].m){
                         const t = (b - fLo) / fSpan;

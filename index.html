@@ -298,7 +298,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="flex items-center justify-between mb-3 mt-0">
             <div class="flex items-center gap-2">
                 <div class="w-1 h-5 bg-gradient-to-b from-accent to-orange-600 rounded-full"></div>
-                <h2 class="text-xl font-semibold text-gray-800 tracking-wide">我的持仓</h2>
+                <h2 class="text-xl font-semibold tracking-wide"><span style="color:#4285F4">我</span><span style="color:#EA4335">的</span><span style="color:#FBBC05">持</span><span style="color:#34A853">仓</span></h2>
             </div>
             <button class="notif-bell relative w-10 h-10 rounded-full bg-orange-50 border border-orange-100 card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30 flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
                 <i class="fa fa-bell text-[16px]"></i>
@@ -1566,6 +1566,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </h2>
         <!-- 用户信息卡片 -->
         <div class="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-2xl p-5 card-shadow mb-4 relative overflow-hidden">
+            <!-- Google 四色"我的"品牌点缀（右上角，与持仓页多彩标题呼应） -->
+            <div class="absolute top-3.5 right-4 z-10 text-[11px] font-semibold tracking-[0.14em] flex items-center gap-0.5 opacity-95" style="text-shadow:0 1px 2px rgba(0,0,0,.45)">
+                <span style="color:#4285F4">我</span><span style="color:#EA4335">的</span>
+            </div>
             <div class="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div class="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
             <div class="flex items-center gap-3 mb-4 relative z-10">
@@ -13256,20 +13260,30 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             //      + 归一化（防终点溢出，顺带压缩高金额段过疏问题）
             const mLast = nodeStates.length ? nodeStates[nodeStates.length - 1].m : 0;
             const scale = mLast > 0 ? mLast : 1;
-            // 分段线性舒适刻度：低段 5万 靠前（≈12%），中段 10-30万 均匀拉开，高段自然收拢
-            function piecePos(v){
-                const pts = [[0,0],[0.05,12],[0.10,27],[0.15,38],[0.20,49],[0.30,64],[0.40,76],[0.60,89],[1,100]];
-                const p = v / scale;
-                if(p <= 0) return 0;
-                for(let k = 1; k < pts.length; k++){
-                    if(p <= pts[k][0]){
-                        const t = (p - pts[k - 1][0]) / (pts[k][0] - pts[k - 1][0]);
-                        return pts[k - 1][1] + t * (pts[k][1] - pts[k - 1][1]);
-                    }
-                }
-                return 100;
+            // 等距基础 + 数值差额加权：起点→首节点与相邻节点间距均匀；差额大的区间（如60→100万）适当加宽；前进节点额外焦点放大
+            const nCnt = nodeStates.length;
+            const avgGap = nCnt > 1 ? 100 / nCnt : 100;
+            const gapsRaw = [];
+            let prev = 0;
+            for(let i = 0; i < nCnt; i++){
+                const d = nodeStates[i].m - prev;
+                gapsRaw.push(d);
+                prev = nodeStates[i].m;
             }
-            const basePos = nodeStates.map(function(n){ return piecePos(n.m); });
+            const sumD = gapsRaw.reduce(function(a,b){ return a + b; }, 0);
+            const avgDiff = gapsRaw.length && sumD > 0 ? sumD / gapsRaw.length : 1;
+            const segGaps = gapsRaw.map(function(d){
+                const w = 1 + 0.5 * (d - avgDiff) / avgDiff;
+                return avgGap * Math.max(0.55, Math.min(w, 1.45));
+            });
+            let rawPos = [];
+            let acc = 0;
+            for(let i = 0; i < nCnt; i++){
+                acc += segGaps[i];
+                rawPos.push(acc);
+            }
+            const mxRaw = rawPos[rawPos.length - 1] || 1;
+            const basePos = rawPos.map(function(x){ return x * 100 / mxRaw; });
             const ki = next != null ? nodeStates.findIndex(function(n){ return n.m === next; }) : -1;
             let fLo = 0, fHi = 0, fSpan = 0, fBoost = 0;
             if(ki > 0){
@@ -13277,13 +13291,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(fSpan > 0.5) fBoost = Math.min(fSpan * 0.9, 8);   // 焦点区间额外加宽（百分点）
             }
             function scalePos(v){
-                const b = piecePos(v);
+                if(nCnt < 2) return 0;
+                if(v <= 0) return 0;
+                if(v <= nodeStates[0].m) return nodeStates[0].m > 0 ? basePos[0] * v / nodeStates[0].m : 0;
+                if(v >= mLast) return 100;
+                let seg = nCnt - 1;
+                for(let k = 1; k < nCnt; k++){
+                    if(v <= nodeStates[k].m){ seg = k; break; }
+                }
+                const lo = nodeStates[seg - 1].m, hi = nodeStates[seg].m;
+                const t = (v - lo) / (hi - lo);
+                let b = basePos[seg - 1] + t * (basePos[seg] - basePos[seg - 1]);
                 if(ki > 0 && fSpan > 0.5){
-                    if(v >= nodeStates[ki - 1].m && v <= nodeStates[ki].m){
-                        const t = (b - fLo) / fSpan;
-                        return fLo + t * (fSpan + fBoost);
-                    }
-                    if(v > nodeStates[ki].m) return fHi + fBoost + (b - fHi);
+                    if(seg === ki) b = fLo + t * (fSpan + fBoost);
+                    else if(seg > ki) b = fHi + fBoost + (b - fHi);
                 }
                 return b;
             }

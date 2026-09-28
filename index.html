@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.33';</script>
+    <script>window.APP_VERSION = '20260928.36';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -296,7 +296,7 @@
             to{ opacity:1; transform:translateY(0); }
         }
         @keyframes appSlideIn{
-            from{ opacity:.3; transform:translateX(40px); }
+            from{ opacity:.45; transform:translateX(24px); }
             to{ opacity:1; transform:translateX(0); }
         }
         .bottomTab{ -webkit-tap-highlight-color:transparent; }
@@ -5583,6 +5583,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         // 二级详情页统一退场（0.25s 右滑淡出后隐藏并恢复父页面）
+        // 详情页数据渲染延后：先让浏览器绘制页面壳（标题栏/白卡），下一帧再填充数据，避免同步渲染阻塞首帧造成卡顿
+        function deferRender(fn){
+            if(typeof fn !== 'function') return;
+            requestAnimationFrame(function(){ requestAnimationFrame(fn); });
+        }
         function exitDetailPage(el, done){
             if(!el || el.classList.contains('hidden')){
                 if(done) done();
@@ -5632,7 +5637,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function restoreScroll(){
             const t = __scrollStack.length ? __scrollStack.pop() : 0;
-            setTimeout(function(){ window.scrollTo(0, t); }, 0);
+            requestAnimationFrame(function(){ window.scrollTo(0, t); });
         }
         function showToast(msg){
             const el = document.querySelector('#toast');
@@ -7283,6 +7288,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const ssSnapE = ensureStockScores();
                 ssEntryEl.innerText = (ssSnapE && ssSnapE.list) ? (ssSnapE.list.length + ' 只') : '0只';
             }
+            // 行业映射配置入口条数（本地配置即时更新，与详情页同源）
+            const imEntryEl = document.querySelector('#industryMapEntryCount');
+            if(imEntryEl){
+                const imCfgM = loadIndustryMapCfg();
+                imEntryEl.innerText = (imCfgM && imCfgM.rules && imCfgM.rules.length) ? (imCfgM.rules.length + '条') : '0条';
+            }
             // A股/港股数量
             document.querySelector('#mineAShare').innerText = mS.aShareNum != null ? mS.aShareNum : sum.aShareNum;
             document.querySelector('#mineHKShare').innerText = mS.hkShareNum != null ? mS.hkShareNum : sum.hkShareNum;
@@ -8205,7 +8216,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageDivDetail').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
-            renderDivDetail();
+            deferRender(renderDivDetail);
         }
         function closeDivDetail(){
             restoreScroll();
@@ -8227,7 +8238,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageNavDetail').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
-            renderNavDetail();
+            deferRender(renderNavDetail);
         }
         function closeNavDetail(){
             restoreScroll();
@@ -10090,19 +10101,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             activeStatsSection = key;
             window.scrollTo(0, 0);
             // 行业资产分布 / 资金流水：打开时即时构建渲染（本地数据，无需网络）
-            if(key === 'industry'){ renderIndustryMulti(); }
-            if(key === 'cash'){ renderStatsCashFlow(); }
-            if(key === 'trade'){ renderStatsTrade(); }
+            if(key === 'industry'){ deferRender(renderIndustryMulti); }
+            if(key === 'cash'){ deferRender(renderStatsCashFlow); }
+            if(key === 'trade'){ deferRender(renderStatsTrade); }
             // 仓位分布详情页：强制渲染一次（快照存在则读快照、映射变更后快照已失效则按最新映射重算），再 resize 饼图
             if(key === 'position'){
-                renderStatsPage();
-                setTimeout(function(){
-                    const pieEl = document.querySelector('#industryPieChart');
-                    if(pieEl && pieEl._chart) pieEl._chart.resize();
-                }, 80);
+                deferRender(function(){
+                    renderStatsPage();
+                    setTimeout(function(){
+                        const pieEl = document.querySelector('#industryPieChart');
+                        if(pieEl && pieEl._chart) pieEl._chart.resize();
+                    }, 80);
+                });
             }
             if(key === 'schedule'){
-                setTimeout(function(){
+                deferRender(function(){
                     const mcEl = document.querySelector('#chartStatsDivMonth');
                     if(mcEl){
                         if(mcEl._chart) mcEl._chart.resize();
@@ -10112,7 +10125,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             if(mc2 && mc2._chart) mc2._chart.resize();
                         }
                     }
-                }, 80);
+                });
             }
         }
         function closeStatsSection(){

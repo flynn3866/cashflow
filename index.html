@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.31';</script>
+    <script>window.APP_VERSION = '20260928.33';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1958,7 +1958,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
         <div class="text-[11px] text-gray-400 mt-4 text-center leading-relaxed">
             数据保存在浏览器本地，清除浏览器数据会丢失<br>
-            行情来源：腾讯财经 · 分红来源：东方财富
+            <span id="appVersionLine">版本 --</span>
         </div>
     </div>
 
@@ -4292,6 +4292,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!savedVersion){
                 localStorage.setItem('appVersion', currentVersion);
             }
+            const appVerLine = document.getElementById('appVersionLine');
+            if(appVerLine) appVerLine.innerText = '版本 ' + currentVersion;
             const localStr = localStorage.getItem(STORAGE_KEY);
             if(localStr) {
                 holdDataList = JSON.parse(localStr);
@@ -14863,7 +14865,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         ? ';border-bottom:0.6px solid #F0EDE7'
                         : '';
                     htmlStr += `
-                    <div class="hold-row ${rowBgClass} mx-2 mt-1 mb-1 rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr${rowDivider}">
+                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr${rowDivider}">
                         <div class="text-left pl-0.5 pr-2">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}

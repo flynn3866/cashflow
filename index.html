@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.39';</script>
+    <script>window.APP_VERSION = '20260928.44';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5589,18 +5589,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function exitDetailPage(el, done){
             if(!el || el.classList.contains('hidden')){
-                restoreScroll();
                 if(done) done();
+                restoreScroll();
                 return;
             }
             // 内联动画强制退场（inline 优先级最高，确保覆盖页面级入场动画）
-            el.style.animation = 'detailExitOut 0.25s ease-in forwards';
+            el.style.animation = 'detailExitOut 0.28s cubic-bezier(.4,0,.2,1) forwards';
             setTimeout(function(){
                 el.style.animation = '';
                 el.classList.add('hidden');
-                // 动画结束后再恢复主页面滚动：详情页退场期间滚动位置保持不变，不再"先跳回顶部再消失"
-                restoreScroll();
+                // 先执行 done（显示主页面并重渲染，文档高度恢复），再恢复滚动——若先恢复，详情页隐藏后文档变短，滚动位置会被浏览器钳制
                 if(done) done();
+                restoreScroll();
             }, 250);
         }
         // 当前可见的二级详情页（统计页多详情用）
@@ -8219,7 +8219,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pageEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', divDetailReturnTab !== 'hold');
-            renderPage();
+            deferRender(renderPage);
         
 
             });
@@ -10092,21 +10092,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             activeStatsSection = key;
             window.scrollTo(0, 0);
             // 行业资产分布 / 资金流水：打开时即时构建渲染（本地数据，无需网络）
-            if(key === 'industry'){ deferRender(renderIndustryMulti); }
-            if(key === 'cash'){ deferRender(renderStatsCashFlow); }
-            if(key === 'trade'){ deferRender(renderStatsTrade); }
-            // 仓位分布详情页：强制渲染一次（快照存在则读快照、映射变更后快照已失效则按最新映射重算），再 resize 饼图
+            // 本地数据轻渲染：同步执行，保证共享元素过渡动画开始时页面内容已就绪（避免"先壳后内容"的两次感）
+            if(key === 'industry'){ renderIndustryMulti(); }
+            if(key === 'cash'){ renderStatsCashFlow(); }
+            if(key === 'trade'){ renderStatsTrade(); }
+            // 仓位分布详情页：内容已在 switchTab(stats) 时随 renderStatsPage 渲染就绪，此处只 resize 饼图，
+            // 不再整页重复渲染（重复渲染会造成"像打开两次"的闪烁）
             if(key === 'position'){
-                deferRender(function(){
-                    renderStatsPage();
-                    setTimeout(function(){
-                        const pieEl = document.querySelector('#industryPieChart');
-                        if(pieEl && pieEl._chart) pieEl._chart.resize();
-                    }, 80);
-                });
+                setTimeout(function(){
+                    const pieEl = document.querySelector('#industryPieChart');
+                    if(pieEl && pieEl._chart) pieEl._chart.resize();
+                }, 80);
             }
+            // 分红派发日程：图表已在 renderStatsPage 初始化，打开仅 resize（未初始化时才兜底重建）
             if(key === 'schedule'){
-                deferRender(function(){
+                setTimeout(function(){
                     const mcEl = document.querySelector('#chartStatsDivMonth');
                     if(mcEl){
                         if(mcEl._chart) mcEl._chart.resize();
@@ -10116,7 +10116,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             if(mc2 && mc2._chart) mc2._chart.resize();
                         }
                     }
-                });
+                }, 80);
             }
         }
         function closeStatsSection(){
@@ -10129,8 +10129,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 activeStatsSection = null;
                 document.querySelector('#pageStats').classList.remove('hidden');
-                renderStatsPage();
-                window.scrollTo(0, 0);
+                // 主页先显示（隐藏期间数据未变），重渲染延后一帧，避免关闭瞬间同步大渲染卡顿
+                deferRender(renderStatsPage);
             });
         }
         // 统计页卡片宫格摘要：今日卡右侧为当日合计盈亏（复用详情页顶部数据），其余卡片显示各板块数据最新刷新时间（纯本地，不额外拉取）
@@ -15603,9 +15603,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 打开评分页：从"我的"进入；读存储（缺失则构建），并异步补齐财务数据后自动刷新
         function openStockScores(){
             rememberScroll();
-            window.scrollTo(0, 0);
-            document.querySelector('#pageStockScores').classList.remove('hidden');
             document.querySelector('#pageMine').classList.add('hidden');
+            document.querySelector('#pageStockScores').classList.remove('hidden');
+            window.scrollTo(0, 0);
             const snap = ensureStockScores();
             renderStockScores(snap);
             ensureFinFetch();
@@ -15614,7 +15614,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             exitDetailPage(document.querySelector('#pageStockScores'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
-            window.scrollTo(0, 0);
         
 
             });
@@ -16731,13 +16730,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         pageEl.__growLock = true;
         var toRect = pageEl.getBoundingClientRect();
         var toW = toRect.width || 320;
-        var s = Math.min(Math.max(fromRect.width / toW, 0.55), 1);
+        // 用宽高比取小者决定起点缩放：横跨大卡（宽高比接近1）与窄卡统一都有生长感，避免"直接弹射"
+        var toH = Math.max(toRect.height, 200);
+        var s = Math.min(Math.max(Math.min(fromRect.width / toW, fromRect.height / toH), 0.35), 1);
         // 统一方向：去掉位移，transform-origin 锚定入口卡片中心 → 从点击处同心膨胀（iOS/顶级财富 App morph 语言）
         var sx = fromRect.left + fromRect.width / 2, sy = fromRect.top + fromRect.height / 2;
         var ox = Math.max(0, sx - toRect.left), oy = Math.max(0, sy - toRect.top);
         var st = pageEl.style;
         st.willChange = 'transform, opacity';
         st.transformOrigin = ox + 'px ' + oy + 'px';
+        // 抑制页级 appSlideIn 入场动画：生长动画已提供入场，双动画叠加（scale+translateX）会让页面含标题栏重绘闪烁，观感"渲染两次"
+        st.animation = 'none';
         try {
             var anim = pageEl.animate([
                 { transform: 'scale(' + s + ')', opacity: 0.25 },

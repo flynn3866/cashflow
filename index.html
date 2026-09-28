@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.36';</script>
+    <script>window.APP_VERSION = '20260928.39';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -4726,7 +4726,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
         }
         function closeAssetHighModal(){
-            restoreScroll();
             // 关闭资产新高页面，恢复持仓页
             exitDetailPage(document.querySelector('#pageAssetHigh'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
@@ -5590,6 +5589,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function exitDetailPage(el, done){
             if(!el || el.classList.contains('hidden')){
+                restoreScroll();
                 if(done) done();
                 return;
             }
@@ -5598,6 +5598,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             setTimeout(function(){
                 el.style.animation = '';
                 el.classList.add('hidden');
+                // 动画结束后再恢复主页面滚动：详情页退场期间滚动位置保持不变，不再"先跳回顶部再消失"
+                restoreScroll();
                 if(done) done();
             }, 250);
         }
@@ -5637,7 +5639,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function restoreScroll(){
             const t = __scrollStack.length ? __scrollStack.pop() : 0;
-            requestAnimationFrame(function(){ window.scrollTo(0, t); });
+            window.scrollTo(0, t);
         }
         function showToast(msg){
             const el = document.querySelector('#toast');
@@ -5982,7 +5984,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
         }
         function closeDivEntry(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageDivEntry'), function(){
                 document.querySelector('#pageMine').classList.remove('hidden');
                 renderMinePage();
@@ -6213,7 +6214,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             setTimeout(function(){ document.querySelector('#tradeQty').focus(); }, 100);
         }
         function closeTradeModal(){
-            restoreScroll();
             // 关闭交易页面，恢复持仓页
             exitDetailPage(document.querySelector('#pageTrade'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
@@ -6467,7 +6467,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderTradeLogList();
         }
         function closeTradeLogPage(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageTradeLog'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
             // 恢复新增按钮（仅持仓页显示）
@@ -7011,7 +7010,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
         }
         function closeYearSnapshot(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageYearSnapshot'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
@@ -7448,7 +7446,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderBalanceSheet();
         }
         function closeBalanceSheet(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageBalanceSheet'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', bsReturnTab !== 'hold');
@@ -8192,7 +8189,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             markAllNotifRead();
         }
         function closeNotifCenter(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageNotifCenter'), function(){
             const pageEl = document.querySelector('#' + (notifReturnTab === 'hold' ? 'pageHold' : notifReturnTab === 'stats' ? 'pageStats' : notifReturnTab === 'analysis' ? 'pageAnalysis' : notifReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
@@ -8219,7 +8215,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             deferRender(renderDivDetail);
         }
         function closeDivDetail(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageDivDetail'), function(){
             const pageEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
@@ -8241,7 +8236,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             deferRender(renderNavDetail);
         }
         function closeNavDetail(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageNavDetail'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', navDetailReturnTab !== 'hold');
@@ -8317,7 +8311,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderCostDetail();
         }
         function closeCostDetail(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageCostDetail'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', costDetailReturnTab !== 'hold');
@@ -8775,7 +8768,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderWatchPage();
         }
         function closeWatchPage(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageWatchList'), function(){
             const pageEl = document.querySelector('#' + (watchReturnTab === 'hold' ? 'pageHold' : watchReturnTab === 'stats' ? 'pageStats' : watchReturnTab === 'analysis' ? 'pageAnalysis' : watchReturnTab === 'milestone' ? 'pageMilestone' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
@@ -8942,7 +8934,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             fetchAnnualIndex();
         }
         function closeAnnualReport(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageAnnualReport'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.remove('hidden');
@@ -10129,7 +10120,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
         function closeStatsSection(){
-            restoreScroll();
             hideAllChartTips();
             const cur = findVisibleDetailPage();
             exitDetailPage(cur, function(){
@@ -10529,7 +10519,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderIndustryMapPage();
         }
         function closeIndustryMapPage(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageIndustryMap'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
@@ -15622,7 +15611,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             ensureFinFetch();
         }
         function closeStockScores(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageStockScores'), function(){
             document.querySelector('#pageMine').classList.remove('hidden');
             renderMinePage();
@@ -16015,7 +16003,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderFundTransfer();
         }
         function closeFundTransfer(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageFundTransfer'), function(){
                 document.querySelector('#pageMine').classList.remove('hidden');
                 renderMinePage();
@@ -16111,7 +16098,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageFundTransferAdd').classList.remove('hidden');
         }
         function closeFundTransferAdd(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageFundTransferAdd'), function(){
             document.querySelector('#pageFundTransfer').classList.remove('hidden');
             renderFundTransfer();
@@ -16205,7 +16191,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // 隐藏设置页面，返回"我的"
         function hideSettings(){
-            restoreScroll();
             exitDetailPage(document.querySelector('#pageSettings'), function(){
                 document.querySelector('#pageMine').classList.remove('hidden');
                 // 设置页保存的资金投入/分红等会实时影响我的页概览，返回时立即刷新
@@ -16731,11 +16716,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     // 点击捕获：记录打开详情页的入口卡片位置（capture 阶段先于 inline onclick / addEventListener）
     window.__growFrom = null;
     document.addEventListener('click', function(ev){
-        var b = ev.target && ev.target.closest ? ev.target.closest('[onclick], #annualReportBtn, #balanceSheetBtn, #watchBtn') : null;
+        var b = ev.target && ev.target.closest ? ev.target.closest('[onclick], #annualReportBtn, #balanceSheetBtn, #watchBtn, #settingsBtn, #yearSnapshotBtn, #notifCenterBtn') : null;
         if(!b) return;
         var oc = (b.getAttribute && b.getAttribute('onclick')) || '';
         var id = b.id || '';
-        var hit = /^(openStatsSection|openDivDetail|openAssetHighModal|openAnnualReport|openBalanceSheet|openStockScores|openWatchPage|openNotifCenter|openNavDetail)\(/.test(oc.trim())
+        var hit = /^(openStatsSection|openDivDetail|openAssetHighModal|openAnnualReport|openBalanceSheet|openStockScores|openWatchPage|openNotifCenter|openNavDetail|openCostDetail|openIndustryMapPage|openFundTransfer|openFundTransferAdd|openTradeLogPage|openTradeModal|openDivEntry|openYearSnapshot|showSettings)\(/.test(oc.trim())
               || id === 'annualReportBtn' || id === 'balanceSheetBtn' || id === 'watchBtn';
         if(hit) window.__growFrom = b.getBoundingClientRect();
     }, true);
@@ -16747,21 +16732,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var toRect = pageEl.getBoundingClientRect();
         var toW = toRect.width || 320;
         var s = Math.min(Math.max(fromRect.width / toW, 0.55), 1);
+        // 统一方向：去掉位移，transform-origin 锚定入口卡片中心 → 从点击处同心膨胀（iOS/顶级财富 App morph 语言）
         var sx = fromRect.left + fromRect.width / 2, sy = fromRect.top + fromRect.height / 2;
-        var tx = toRect.left + toRect.width / 2, ty = toRect.top + toRect.height / 2;
+        var ox = Math.max(0, sx - toRect.left), oy = Math.max(0, sy - toRect.top);
         var st = pageEl.style;
         st.willChange = 'transform, opacity';
+        st.transformOrigin = ox + 'px ' + oy + 'px';
         try {
             var anim = pageEl.animate([
-                { transform: 'translate(' + (sx - tx) + 'px,' + (sy - ty) + 'px) scale(' + s + ')', opacity: 0.2 },
-                { transform: 'translate(0,0) scale(1)', opacity: 1 }
+                { transform: 'scale(' + s + ')', opacity: 0.25 },
+                { transform: 'scale(1)', opacity: 1 }
             ], { duration: 380, easing: 'cubic-bezier(.16,.8,.3,1)', fill: 'none' });
             anim.onfinish = function(){
-                st.transform = ''; st.opacity = ''; st.willChange = '';
+                st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = '';
                 pageEl.__growLock = false;
             };
         } catch(err){
-            st.transform = ''; st.opacity = ''; st.willChange = '';
+            st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = '';
             pageEl.__growLock = false;
         }
     }
@@ -16776,7 +16763,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         ['openStockScores', function(){ return 'pageStockScores'; }],
         ['openWatchPage', function(){ return 'pageWatchList'; }],
         ['openNotifCenter', function(){ return 'pageNotifCenter'; }],
-        ['openNavDetail', function(){ return 'pageNavDetail'; }]
+        ['openNavDetail', function(){ return 'pageNavDetail'; }],
+        ['openCostDetail', function(){ return 'pageCostDetail'; }],
+        ['openIndustryMapPage', function(){ return 'pageIndustryMap'; }],
+        ['openFundTransfer', function(){ return 'pageFundTransfer'; }],
+        ['openFundTransferAdd', function(){ return 'pageFundTransferAdd'; }],
+        ['openTradeLogPage', function(){ return 'pageTradeLog'; }],
+        ['openTradeModal', function(){ return 'pageTrade'; }],
+        ['openDivEntry', function(){ return 'pageDivEntry'; }],
+        ['openYearSnapshot', function(){ return 'pageYearSnapshot'; }],
+        ['showSettings', function(){ return 'pageSettings'; }]
     ];
     for(var i = 0; i < map.length; i++){
         (function(name, getPage){

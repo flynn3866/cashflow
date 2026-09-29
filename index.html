@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.69';</script>
+    <script>window.APP_VERSION = '20260928.82';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -374,6 +374,9 @@
         #toast{ transition: opacity .3s ease, transform .3s ease; }
         /* 底部导航毛玻璃（iOS 式） */
         #bottomNav{ background: rgba(255,255,255,.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
+        /* 自选页列表：横向平移由 JS touch 驱动（见横向平移 IIFE），列表本身不是滚动容器（overflow visible），
+           纵向触摸直接由外层整页滚动容器原生处理，保证上下滚动始终可用 */
 
         /* 全局背景：纯 CSS 高级羊皮纸——双颗粒噪点（深浅层次）+ 横/竖/斜三层纤维 + 淡香槟暖光聚拢 + 边缘暗角；底色 #f5efe3 */
         body{
@@ -1155,50 +1158,50 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
-    <!-- 自选页：东方财富通风格（标题栏 + 指数汇总卡固定不动，仅列表内容滚动；表头纵向固定、首列横向固定） -->
-    <div id="pageWatchSel" class="hidden max-w-2xl mx-auto fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+60px)] z-30 flex flex-col px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-2" style="overflow:hidden;">
-        <!-- 标题栏（固定不动） -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-3 overflow-hidden flex-none">
-            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
-            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
-            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
-            <div class="flex items-center gap-2.5 relative z-10">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">自选</span>
-                <span class="text-[10px] text-gray-400 font-normal whitespace-nowrap" id="watchSelCount">0 只</span>
-                <button class="ml-auto w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
-            </div>
-        </div>
-
-        <!-- 指数汇总卡（固定不动）：深棕黑渐变，与首页/我的页汇总卡同一质感 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white card-shadow mb-3 flex-none" style="background:linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.55),transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
-            <div class="relative z-10 grid grid-cols-3">
-                <div class="text-center px-1">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">上证指数</div>
-                    <div id="idxSh" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
-                    <div id="idxShPct" class="text-[11px] font-semibold tabular-nums mt-0.5 text-amber-100/70">--</div>
-                </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">创业板指数</div>
-                    <div id="idxSz" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
-                    <div id="idxSzPct" class="text-[11px] font-semibold tabular-nums mt-0.5 text-amber-100/70">--</div>
-                </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">恒生指数</div>
-                    <div id="idxHk" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
-                    <div id="idxHkPct" class="text-[11px] font-semibold tabular-nums mt-0.5 text-amber-100/70">--</div>
+    <!-- 自选页：东方财富通风格（标题栏 + 指数汇总卡 + 表头吸顶固定；列表按内容自然长度延伸，自选页整页滚动到底，同首页体验） -->
+    <div id="pageWatchSel" class="hidden max-w-2xl mx-auto fixed inset-0 z-30 px-3" style="overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
+        <!-- 吸顶区：标题栏 + 指数汇总卡 + 表头（纵向滚动时整体固定在顶部，背景与页面一致） -->
+        <div id="watchSelSticky" class="sticky top-0 z-50" style="background:#f5efe3;margin:0 -0.75rem;padding:calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 0;">
+            <!-- 标题栏（固定不动） -->
+            <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-3 overflow-hidden flex-none">
+                <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+                <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+                <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+                <div class="flex items-center gap-2.5 relative z-10">
+                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <span class="text-gray-800 text-[17px] font-semibold tracking-wide">自选</span>
+                    <span class="text-[10px] text-gray-400 font-normal whitespace-nowrap" id="watchSelCount">0 只</span>
+                    <button class="ml-auto w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
                 </div>
             </div>
-        </div>
 
-        <!-- 列表滚动区：表头+数据行在同一滚动容器（纵向滚动时表头 sticky 固定在容器顶部；
-             横向滚动时表头与内容列同源整体滑动，绝无脱节；首列横向 sticky 固定不动） -->
-        <div id="watchSelScroll" class="flex-1 min-h-0 overflow-auto bg-white rounded-2xl card-shadow pb-3" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;">
-            <div class="sticky top-0 z-40 min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white">
-                <div class="sticky left-0 bg-white z-50 px-3 py-2 text-[11px] text-gray-500 font-medium">股票</div>
+            <!-- 指数汇总卡（固定不动）：深棕黑渐变，与首页/我的页汇总卡同一质感 -->
+            <div class="relative overflow-hidden rounded-2xl p-4 text-white card-shadow mb-3 flex-none" style="background:linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);">
+                <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.55),transparent);"></div>
+                <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+                <div class="relative z-10 grid grid-cols-3">
+                    <div class="text-center px-1">
+                        <div class="text-[11px] text-amber-100/60 mb-1.5">上证指数</div>
+                        <div id="idxSh" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                        <div id="idxShPct" class="text-[11px] font-semibold tabular-nums mt-0.5 text-amber-100/70">--</div>
+                    </div>
+                    <div class="text-center px-1 border-l border-white/10">
+                        <div class="text-[11px] text-amber-100/60 mb-1.5">创业板指数</div>
+                        <div id="idxSz" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                        <div id="idxSzPct" class="text-[11px] font-semibold tabular-nums mt-0.5 text-amber-100/70">--</div>
+                    </div>
+                    <div class="text-center px-1 border-l border-white/10">
+                        <div class="text-[11px] text-amber-100/60 mb-1.5">恒生指数</div>
+                        <div id="idxHk" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                        <div id="idxHkPct" class="text-[11px] font-semibold tabular-nums mt-0.5 text-amber-100/70">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 表头行（横向随列表镜像滑动、同源无脱节；表头首列 JS 固定不动） -->
+            <div id="watchSelHeadRow" class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white rounded-t-2xl will-change-transform">
+                <div id="watchSelHeadFirst" class="relative bg-white z-50 px-3 py-2 text-[11px] text-gray-500 font-medium" data-fixcol>股票</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">最新</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">涨幅</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">股息率</div>
@@ -1206,10 +1209,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">市净率</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">资产负债率</div>
             </div>
-            <div id="watchSelList" class="min-w-[600px] rounded-b-2xl">
-                <div class="py-10 text-center text-gray-400 text-sm">暂无自选股票，点击右上角 + 添加</div>
-            </div>
         </div>
+
+        <!-- 数据列表：横向滚动容器；纵向按内容自然长度延伸（整页滚动由自选页覆盖层负责，同首页列表体验） -->
+        <div id="watchSelList" class="relative z-0 min-w-full bg-white rounded-b-2xl" style="overflow:visible;">
+            <div class="py-10 text-center text-gray-400 text-sm">暂无自选股票，点击右上角 + 添加</div>
+        </div>
+
+        <!-- 汇总卡片：股票数量总和（随列表自然长度滚动） -->
+        <div class="mt-3 mb-2 bg-white rounded-2xl card-shadow px-4 py-3 flex items-center justify-between">
+            <span class="text-[13px] text-gray-500 font-medium">汇总</span>
+            <span class="text-[13px] font-semibold text-gray-800"><span id="watchSelTotal">0</span> 只</span>
+        </div>
+
     </div>
 
     <!-- 添加自选股票浮层：自选页右上角 + 直接弹出（全站模态，独立于页面） -->
@@ -6723,12 +6735,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // 切换到自选页时渲染自选列表（本地数据轻渲染）
             if(tab === 'watch'){
-                // 自选页为 fixed 覆盖层：底部精确避让导航条（读取导航实际高度含安全区 + 14px 余量，
-                // 计算列表可用高度，iPhone 13 Pro Max 等机型底部内容不被导航遮挡）
+                // 自选页：整页滚动模式——标题栏/指数卡/表头吸顶固定，列表按内容自然长度延伸，
+                // 自选页覆盖层自身纵向滚动（像首页列表一样能滚到底，看到列表底部与背景板）；
+                // html/body 外层滚动禁用，只有自选页内部滚动
                 const navEl = document.querySelector('#bottomNav');
-                if(navEl){
-                    const wpSel = document.querySelector('#pageWatchSel');
-                    if(wpSel) wpSel.style.bottom = (navEl.offsetHeight + 14) + 'px';
+                const wpSel = document.querySelector('#pageWatchSel');
+                if(navEl && wpSel){
+                    // 底部留出导航高 + 14px 空隙：滚动到底列表底部与页面背景完整可见（同首页）
+                    wpSel.style.paddingBottom = (navEl.offsetHeight + 14) + 'px';
+                    wpSel.scrollTop = 0;
                 }
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
@@ -8901,7 +8916,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const divEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="divYield"]');
                 if(divEl){
                     divEl.innerText = divYield != null ? divYield.toFixed(2) + '%' : '--';
-                    divEl.className = 'px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + (divYield != null ? 'text-gray-800' : 'text-gray-400');
+                    divEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (divYield != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 // 市盈率 / 市净率（跟随最新行情）
                 const pe = (q.pe != null && !isNaN(q.pe) && q.pe > 0) ? q.pe : null;
@@ -8910,11 +8925,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pbEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="pb"]');
                 if(peEl){
                     peEl.innerText = pe != null ? pe.toFixed(2) : '--';
-                    peEl.className = 'px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + (pe != null ? 'text-gray-800' : 'text-gray-400');
+                    peEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (pe != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 if(pbEl){
                     pbEl.innerText = pb != null ? pb.toFixed(2) : '--';
-                    pbEl.className = 'px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + (pb != null ? 'text-gray-800' : 'text-gray-400');
+                    pbEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (pb != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 // 资产负债率：显示当前缓存值（财务数据非行情驱动，不重复拉取）
                 const dc = debtRatioCache[w.code];
@@ -8922,7 +8937,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(debtEl){
                     const v = dc ? dc.v : null;
                     debtEl.innerText = v != null ? v.toFixed(2) + '%' : '--';
-                    debtEl.className = 'px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + (v != null ? 'text-gray-800' : 'text-gray-400');
+                    debtEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (v != null ? 'text-gray-800' : 'text-gray-400');
                 }
             });
         }
@@ -8932,6 +8947,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cntEl = document.querySelector('#watchSelCount');
             if(!el) return;
             if(cntEl) cntEl.innerText = list.length + ' 只';
+            const totalEl = document.querySelector('#watchSelTotal');
+            if(totalEl) totalEl.innerText = list.length;
             if(!list.length){
                 el.innerHTML = '<div class="py-10 text-center text-gray-400 text-sm">暂无自选股票，点击右上角 + 添加</div>';
                 return;
@@ -8963,20 +8980,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pbCls = pb != null ? 'text-gray-800' : 'text-gray-400';
                 const debtCls = debtVal != null ? 'text-gray-800' : 'text-gray-400';
                 html += '<div class="grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-50">'
-                    + '<div class="sticky left-0 bg-white z-20 px-3 py-2.5 flex items-center gap-2 min-w-0">'
+                    + '<div class="relative bg-white z-20 px-3 py-2.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
-                    + '<div class="text-[14px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
-                    + '<div class="text-[10px] text-gray-400 tabular-nums mt-0.5">' + w.code + '</div>'
+                    + '<div class="text-[15px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
+                    + '<div class="text-[11px] text-gray-400 tabular-nums mt-0.5">' + w.code + '</div>'
                     + '</div></div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[13px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="price">' + priceText + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[13px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="changePct">' + pctText + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + divCls + '" data-code="' + w.code + '" data-field="divYield">' + (divYield != null ? divYield.toFixed(2) + '%' : '--') + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
+                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="price">' + priceText + '</div>'
+                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="changePct">' + pctText + '</div>'
+                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + divCls + '" data-code="' + w.code + '" data-field="divYield">' + (divYield != null ? divYield.toFixed(2) + '%' : '--') + '</div>'
+                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
+                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
+                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
                     + '</div>';
             });
             el.innerHTML = html;
+            // 重建后更新横向平移范围与位置（行内容/表头/首列 transform 复位到当前平移量）
+            if(window.__watchCalcMax) window.__watchCalcMax();
+            if(window.__watchSync) window.__watchSync();
             // 资产负债率：无有效缓存时异步拉取（仅 A 股），拉到后更新对应行
             list.forEach(function(w){
                 if(w.market === 'A' && !hasValidDebtCache(w.code)){
@@ -8987,7 +9007,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             const debtEl = document.querySelector('#debt_' + w.code);
                             if(debtEl){
                                 debtEl.innerText = v.toFixed(2) + '%';
-                                debtEl.className = 'px-2 py-2.5 flex items-center justify-end text-[13px] font-medium tabular-nums text-gray-800';
+                                debtEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums text-gray-800';
                             }
                         }
                     });
@@ -16787,7 +16807,72 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         document.querySelector('#notifCenterBtn').addEventListener('click', openNotifCenter);
         document.querySelector('#notifBackBtn').addEventListener('click', closeNotifCenter);
         document.querySelector('#notifReadAllBtn').addEventListener('click', markAllNotifRead);
-        // 自选页表头与数据行在同一滚动容器内（sticky 表头），横向滚动同源，无需 JS 同步
+        // 自选页横向平移（JS touch 驱动，替代原生 overflow-x 滚动容器）：
+        // #watchSelList 不是滚动容器（overflow:visible），纵向触摸由外层整页原生滚动处理——
+        // 彻底解决 iOS 上横向滚动容器吞掉纵向触摸导致"列表滚不动"；
+        // 横向滑动时行内容左移（transform），表头镜像同步，首列 transform 抵消固定在左缘
+        (function(){
+            const listEl = document.querySelector('#watchSelList');
+            const wpEl = document.querySelector('#pageWatchSel');
+            const headRow = document.querySelector('#watchSelHeadRow');
+            const headFirst = document.querySelector('#watchSelHeadFirst');
+            if(!listEl || !wpEl || !headRow || !headFirst) return;
+            let X = 0, maxX = 0, _tX = 0, _tY = 0, _mode = null, _vel = 0, _lastT = 0, _anim = null;
+            function calcMax(){
+                maxX = Math.max(0, listEl.scrollWidth - listEl.clientWidth);
+                if(X > maxX) X = maxX;
+            }
+            function sync(){
+                const rows = document.querySelectorAll('#watchSelList > div');
+                for(let i = 0; i < rows.length; i++){
+                    rows[i].style.transform = 'translateX(' + (-X) + 'px)';
+                    const f = rows[i].firstElementChild;
+                    if(f) f.style.transform = 'translateX(' + X + 'px)';
+                }
+                headRow.style.transform = 'translateX(' + (-X) + 'px)';
+                headFirst.style.transform = 'translateX(' + X + 'px)';
+            }
+            window.__watchSync = sync;
+            window.__watchCalcMax = function(){ calcMax(); };
+            listEl.addEventListener('touchstart', function(e){
+                if(_anim){ cancelAnimationFrame(_anim); _anim = null; }
+                const t = e.touches[0];
+                _tX = t.clientX; _tY = t.clientY;
+                _mode = null; _vel = 0; _lastT = Date.now();
+            }, { passive: true });
+            listEl.addEventListener('touchmove', function(e){
+                const t = e.touches[0];
+                const dx = t.clientX - _tX, dy = t.clientY - _tY;
+                if(_mode === null){
+                    if(Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) _mode = 'h';
+                    else if(Math.abs(dy) > 6) _mode = 'v';
+                }
+                if(_mode === 'h'){
+                    e.preventDefault();
+                    const dt = Date.now() - _lastT;
+                    if(dt > 0) _vel = -dx / (dt / 16.7);
+                    X = Math.max(0, Math.min(maxX, X - dx));
+                    _tX = t.clientX; _tY = t.clientY; _lastT = Date.now();
+                    sync();
+                }
+                // v 模式：不阻止默认，交给外层整页原生滚动
+            }, { passive: false });
+            listEl.addEventListener('touchend', function(){
+                if(_mode === 'h' && Math.abs(_vel) > 0.3){
+                    const step = function(){
+                        X += _vel; _vel *= 0.92;
+                        if(X <= 0){ X = 0; _vel = 0; }
+                        if(X >= maxX){ X = maxX; _vel = 0; }
+                        sync();
+                        if(Math.abs(_vel) > 0.1) _anim = requestAnimationFrame(step);
+                        else _anim = null;
+                    };
+                    _anim = requestAnimationFrame(step);
+                }
+                _mode = null;
+            }, { passive: true });
+            calcMax();
+        })();
         // 添加自选浮层：取消/确认/回车/市场切换/输入自动查询（自选页右上角 + 弹出）
         document.querySelector('#watchCancelBtn').addEventListener('click', function(){
             document.querySelector('#watchAddCard').classList.add('hidden');

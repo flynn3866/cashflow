@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.82';</script>
+    <script>window.APP_VERSION = '20260928.92';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -572,8 +572,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="col-span-3 mt-0 mb-2.5" style="height:1px;background:rgba(230,210,163,0.14);transform:scaleY(0.6);"></div>
                     <!-- 回本里程碑（账户级成就信息，卡内底部横幅；仅存在已回本股票时显示） -->
                     <div id="recoverMilestone" class="hidden col-span-3 mb-0.5 mx-4 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden">
-                        <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#c4b5fd,#7c3aed)"></span>
-                        <i class="fa fa-trophy text-[11px] text-purple-300 flex-shrink-0" style="text-shadow:0 1px 3px rgba(139,92,246,.45)"></i>
+                        <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#d9bc74,#a9642a)"></span>
+                        <i class="fa fa-trophy text-[11px] text-[#d9bc74] flex-shrink-0" style="text-shadow:0 1px 3px rgba(169,100,42,.45)"></i>
                         <span class="text-[11px] text-[#cfc0a6] whitespace-nowrap">已回本 <span id="recoverCount" class="text-[12px] font-semibold text-[#cfc0a6] tabular-nums">0</span>只</span>
                         <span class="h-3.5 w-px bg-[#cfc0a6]/20 flex-shrink-0"></span>
                         <span class="text-[11px] text-[#cfc0a6] whitespace-nowrap">超额回收 <span id="recoverExtra" class="text-[12px] font-semibold text-[#cfc0a6] tabular-nums">0.00</span></span>
@@ -1162,17 +1162,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <div id="pageWatchSel" class="hidden max-w-2xl mx-auto fixed inset-0 z-30 px-3" style="overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <!-- 吸顶区：标题栏 + 指数汇总卡 + 表头（纵向滚动时整体固定在顶部，背景与页面一致） -->
         <div id="watchSelSticky" class="sticky top-0 z-50" style="background:#f5efe3;margin:0 -0.75rem;padding:calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 0;">
-            <!-- 标题栏（固定不动） -->
-            <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-3 overflow-hidden flex-none">
-                <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
-                <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
-                <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
-                <div class="flex items-center gap-2.5 relative z-10">
+            <!-- 标题栏（与其他主页面一致：font-serif 裸标题 + 竖杆 + 米色圆角按钮；吸顶区结构不动） -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-serif text-xl font-semibold text-gray-800 flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                    <span class="text-gray-800 text-[17px] font-semibold tracking-wide">自选</span>
+                    自选
                     <span class="text-[10px] text-gray-400 font-normal whitespace-nowrap" id="watchSelCount">0 只</span>
-                    <button class="ml-auto w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
-                </div>
+                </h2>
+                <button class="w-9 h-9 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
             </div>
 
             <!-- 指数汇总卡（固定不动）：深棕黑渐变，与首页/我的页汇总卡同一质感 -->
@@ -1200,26 +1197,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <!-- 表头行（横向随列表镜像滑动、同源无脱节；表头首列 JS 固定不动） -->
-            <div id="watchSelHeadRow" class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white rounded-t-2xl will-change-transform">
-                <div id="watchSelHeadFirst" class="relative bg-white z-50 px-3 py-2 text-[11px] text-gray-500 font-medium" data-fixcol>股票</div>
-                <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">最新</div>
-                <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">涨幅</div>
-                <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">股息率</div>
-                <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">市盈率(TTM)</div>
-                <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">市净率</div>
-                <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">资产负债率</div>
+            <div id="watchSelHeadRow" class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
+                <div id="watchSelHeadFirst" class="relative bg-white z-50 pl-4 pr-3 py-2 text-[11px] text-gray-500 font-medium" data-fixcol>股票</div>
+                <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">最新</div>
+                <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">涨幅</div>
+                <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">股息率</div>
+                <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">市盈率(TTM)</div>
+                <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">市净率</div>
+                <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">资产负债率</div>
             </div>
         </div>
 
         <!-- 数据列表：横向滚动容器；纵向按内容自然长度延伸（整页滚动由自选页覆盖层负责，同首页列表体验） -->
-        <div id="watchSelList" class="relative z-0 min-w-full bg-white rounded-b-2xl" style="overflow:visible;">
+        <div id="watchSelList" class="relative z-0 min-w-full bg-white" style="overflow:visible;margin:0 -0.75rem;">
             <div class="py-10 text-center text-gray-400 text-sm">暂无自选股票，点击右上角 + 添加</div>
-        </div>
-
-        <!-- 汇总卡片：股票数量总和（随列表自然长度滚动） -->
-        <div class="mt-3 mb-2 bg-white rounded-2xl card-shadow px-4 py-3 flex items-center justify-between">
-            <span class="text-[13px] text-gray-500 font-medium">汇总</span>
-            <span class="text-[13px] font-semibold text-gray-800"><span id="watchSelTotal">0</span> 只</span>
         </div>
 
     </div>
@@ -2985,22 +2976,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </button>
             <button data-tab="stats" class="bottomTab flex-1 py-2.5 flex flex-col items-center gap-1 text-gray-300 relative transition-colors">
                 <div class="absolute top-0 w-8 h-0.5 bg-transparent rounded-full"></div>
-                <i class="fa fa-bar-chart text-xl"></i>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="20" x2="4" y2="10"/><line x1="10" y1="20" x2="10" y2="4"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
                 <span class="text-[11px] font-medium">统计</span>
             </button>
             <button data-tab="watch" class="bottomTab flex-1 py-2.5 flex flex-col items-center gap-1 text-gray-300 relative transition-colors">
                 <div class="absolute top-0 w-8 h-0.5 bg-transparent rounded-full"></div>
-                <i class="fa fa-star text-xl"></i>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 17.3 4.9 3.2-1.3-5.6 4.4-4.3-5.8-.5L12 5 9.8 10.1 4 10.6l4.4 4.3-1.3 5.6z"/></svg>
                 <span class="text-[11px] font-medium">自选</span>
             </button>
             <button data-tab="milestone" class="bottomTab flex-1 py-2.5 flex flex-col items-center gap-1 text-gray-300 relative transition-colors">
                 <div class="absolute top-0 w-8 h-0.5 bg-transparent rounded-full"></div>
-                <i class="fa fa-trophy text-xl"></i>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/><path d="M6 4H4.5a2.5 2.5 0 0 0 0 5H6"/><path d="M18 4h1.5a2.5 2.5 0 0 1 0 5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/></svg>
                 <span class="text-[11px] font-medium">里程碑</span>
             </button>
             <button data-tab="mine" class="bottomTab flex-1 py-2.5 flex flex-col items-center gap-1 text-gray-300 relative transition-colors">
                 <div class="absolute top-0 w-8 h-0.5 bg-transparent rounded-full"></div>
-                <i class="fa fa-user text-xl"></i>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <span class="text-[11px] font-medium">我的</span>
             </button>
         </div>
@@ -8916,7 +8907,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const divEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="divYield"]');
                 if(divEl){
                     divEl.innerText = divYield != null ? divYield.toFixed(2) + '%' : '--';
-                    divEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (divYield != null ? 'text-gray-800' : 'text-gray-400');
+                    divEl.className = 'pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (divYield != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 // 市盈率 / 市净率（跟随最新行情）
                 const pe = (q.pe != null && !isNaN(q.pe) && q.pe > 0) ? q.pe : null;
@@ -8925,11 +8916,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pbEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="pb"]');
                 if(peEl){
                     peEl.innerText = pe != null ? pe.toFixed(2) : '--';
-                    peEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (pe != null ? 'text-gray-800' : 'text-gray-400');
+                    peEl.className = 'pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (pe != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 if(pbEl){
                     pbEl.innerText = pb != null ? pb.toFixed(2) : '--';
-                    pbEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (pb != null ? 'text-gray-800' : 'text-gray-400');
+                    pbEl.className = 'pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (pb != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 // 资产负债率：显示当前缓存值（财务数据非行情驱动，不重复拉取）
                 const dc = debtRatioCache[w.code];
@@ -8937,7 +8928,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(debtEl){
                     const v = dc ? dc.v : null;
                     debtEl.innerText = v != null ? v.toFixed(2) + '%' : '--';
-                    debtEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (v != null ? 'text-gray-800' : 'text-gray-400');
+                    debtEl.className = 'pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + (v != null ? 'text-gray-800' : 'text-gray-400');
                 }
             });
         }
@@ -8980,17 +8971,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pbCls = pb != null ? 'text-gray-800' : 'text-gray-400';
                 const debtCls = debtVal != null ? 'text-gray-800' : 'text-gray-400';
                 html += '<div class="grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-50">'
-                    + '<div class="relative bg-white z-20 px-3 py-2.5 flex items-center gap-2 min-w-0" data-fixcol>'
+                    + '<div class="relative bg-white z-20 pl-4 pr-3 py-2.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
                     + '<div class="text-[15px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
                     + '<div class="text-[11px] text-gray-400 tabular-nums mt-0.5">' + w.code + '</div>'
                     + '</div></div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="price">' + priceText + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="changePct">' + pctText + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + divCls + '" data-code="' + w.code + '" data-field="divYield">' + (divYield != null ? divYield.toFixed(2) + '%' : '--') + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
-                    + '<div class="px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
+                    + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="price">' + priceText + '</div>'
+                    + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="changePct">' + pctText + '</div>'
+                    + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + divCls + '" data-code="' + w.code + '" data-field="divYield">' + (divYield != null ? divYield.toFixed(2) + '%' : '--') + '</div>'
+                    + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
+                    + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
+                    + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
                     + '</div>';
             });
             el.innerHTML = html;
@@ -9007,7 +8998,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             const debtEl = document.querySelector('#debt_' + w.code);
                             if(debtEl){
                                 debtEl.innerText = v.toFixed(2) + '%';
-                                debtEl.className = 'px-2 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums text-gray-800';
+                                debtEl.className = 'pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums text-gray-800';
                             }
                         }
                     });
@@ -15175,9 +15166,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             // 外层白色卡片（去掉overflow-hidden，让表头sticky相对于视口定位）
             htmlStr += `
-            <div class="bg-white rounded-2xl card-shadow overflow-visible">
+            <div class="bg-white overflow-visible" style="margin:0 -0.75rem;">
                 <!-- 表头：sticky固定在顶部，滚动时一直可见 -->
-                <div class="sticky top-0 z-20 grid px-2 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-2xl" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr">
+                <div class="sticky top-0 z-20 grid pl-4 pr-4 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-lg" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr">
                     <div class="text-left text-[12px] text-gray-400 font-medium pr-2">名称/市值</div>
                     <div class="text-right text-[12px] text-gray-400 font-medium">个股仓位</div>
                     <div class="text-right text-[12px] text-gray-400 font-medium">成本/现价</div>
@@ -15193,7 +15184,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 行业标题行：左侧彩色竖条 + 行业名 + 股票数 + 仓位百分比（靠着标题右边）
                 htmlStr += `
                 <div class="grid grid-cols-12 mx-0 mt-3 mb-1.5 rounded-xl overflow-hidden items-center" style="background:#faf5e9;border:1px solid rgba(176,101,47,.18)">
-                    <div class="col-span-12 flex items-center gap-2 px-3 py-2.5">
+                    <div class="col-span-12 flex items-center gap-2 pl-[15px] pr-3 py-2.5">
                         <span class="w-1 h-4 rounded-full flex-shrink-0" style="background:${indColor}"></span>
                         <span class="text-[14px] font-bold text-gray-700">${ind.name}</span>
                         <span class="text-[12px] text-gray-400">${ind.stocks.length}只</span>
@@ -15275,7 +15266,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         : '';
                     htmlStr += `
                     <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" data-hold-code="${item.marketType}|${item.code}" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr${rowDivider}">
-                        <div class="text-left pl-0.5 pr-2">
+                        <div class="text-left pl-[6px] pr-2">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
                                 <span class="text-[13.8px] font-medium ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'}">${shortName}</span>
@@ -15284,19 +15275,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                             <div class="text-[13.8px] font-medium ${marketValueClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="market" style="margin-left:${mvMargin}px">${mvText}</div>
                         </div>
-                        <div class="text-right px-0.5">
+                        <div class="text-right pl-0.5 pr-[6px]">
                             <div class="text-[13.8px] font-medium text-gray-700 tabular-nums">${item.count}</div>
                             <div class="text-[13.8px] font-medium text-gray-700 mt-1 tabular-nums list-num" data-field="holdPct">${holdPct}%</div>
                         </div>
-                        <div class="text-right px-0.5">
+                        <div class="text-right pl-0.5 pr-[6px]">
                             <div class="text-[13.8px] font-medium text-gray-700 tabular-nums"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtCost(item.costPrice)}</div>
                             <div class="text-[13.8px] font-medium text-gray-700 mt-1 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
                         </div>
-                        <div class="text-right px-0.5">
+                        <div class="text-right pl-0.5 pr-[6px]">
                             <div class="text-[13.8px] font-medium ${itemPnlClass2} tabular-nums list-num" data-field="pnl">${formatPnl(itemPnl2)}</div>
                             <div class="text-[13.8px] font-medium ${itemPnlClass2} mt-1 tabular-nums list-num" data-field="pnlPct">${pnlPctText2}</div>
                         </div>
-                        <div class="text-right px-0.5">
+                        <div class="text-right pl-0.5 pr-[6px]">
                             <div class="text-[13.8px] font-medium ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
                             <div class="text-[13.8px] font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>

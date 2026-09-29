@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.44';</script>
+    <script>window.APP_VERSION = '20260928.54';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -493,10 +493,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <!-- 今日盈亏 -->
                             <div class="py-2 text-center">
                                 <div class="text-[#cfc0a6] text-[10.5px] mb-1 flex items-center justify-center gap-1.5">
-                                    <i class="fa fa-clock-o text-[11px]" style="color:rgba(246,196,83,.8)"></i>
-                                    <span>今日盈亏</span>
+                                    <button type="button" onclick="openStatsFromHold()" title="查看今日涨跌幅排行" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform"><i class="fa fa-clock-o text-[11px]" style="color:rgba(246,196,83,.8)"></i><span>今日盈亏</span><i class="fa fa-chevron-right text-[9px]"></i></button>
                                 </div>
-                                <div class="text-[18px] font-bold tabular-nums num-transition text-gray-400" id="todayPnlPct">--</div>
+                                <div class="flex items-baseline justify-center gap-[8px]">
+                                    <span class="text-[20px] font-bold tabular-nums num-transition text-gray-400" id="todayPnl">--</span>
+                                    <span class="text-[11px] font-medium tabular-nums num-transition text-gray-400" id="todayPnlPct">--</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -552,11 +554,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 </div>
                                 <div class="text-[13px] font-bold tabular-nums num-transition" id="totalPnl">0.00</div>
                             </div>
-                            <!-- 第二行：总收益率 -->
+                            <!-- 第二行：开户至今收益率（时间加权 TWR） -->
                             <div class="py-2 pl-2 text-right">
                                 <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
                                     <i class="fa fa-area-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span>总收益率</span>
+                                    <span class="whitespace-nowrap">开户至今收益率</span>
                                 </div>
                                 <div class="text-[13px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                             </div>
@@ -4209,10 +4211,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // 行情刷新后：更新关注股息率阶梯提醒（突破 4%/5%/6% 各提醒一次）
                     updateYieldNotif();
                     // 耗电优化：持仓页不可见时不渲染持仓 DOM（切回时 switchTab 立即渲染一次）
-                    if(activeTab === 'hold') renderPage();
-                    // 如果当前在统计页，同步刷新统计数据
+                    // A：持仓页可见 → 增量更新数字（不重建列表 DOM）；滚动中跳过，滚动停止后补一次
+                    if(activeTab === 'hold'){
+                        if(window.__pageScrolling){ window.__pageDirty = true; }
+                        else updateHoldQuotes();
+                    }
+                    // B：统计页可见 → 滚动中跳过整页重建，停止后补一次（涨跌幅排行重排依赖整页渲染）
                     if(activeTab === 'stats'){
-                        renderStatsPage();
+                        if(window.__pageScrolling){ window.__pageDirty = true; }
+                        else renderStatsPage();
                     }
                     // 如果当前在分析页，同步更新顶部关键指标（文本实时更新，图表不频繁渲染）
                     if(activeTab === 'analysis'){
@@ -6573,6 +6580,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 当前激活的 Tab
         let activeTab = 'hold';
         // 切换底部导航 Tab
+        // 持仓结构指纹：新增/编辑/删除/清仓/分红录入/行业配置变化 → 指纹变化，切回持仓页全量渲染；
+        // 仅行情刷新（价格/涨跌幅）不变指纹 → 切回时增量更新（DOM 缓存，零重建）
+        let _holdFp = null;
+        function holdStructFingerprint(){
+            var s = '';
+            for(var i = 0; i < holdDataList.length; i++){
+                const it = holdDataList[i];
+                s += (it.id || '') + '|' + (it.count || 0) + '|' + (it.costPrice != null ? it.costPrice : '')
+                    + '|' + (it.marketType || '') + '|' + (it.code || '')
+                    + '|' + (it.divPaidRecords ? it.divPaidRecords.length : 0)
+                    + '|' + (it.divPerShare != null ? it.divPerShare : '')
+                    + '|' + getStockIndustry(it) + ';';
+            }
+            return s;
+        }
         function switchTab(tab){
             activeTab = tab;
             // 导航切换时不恢复滚动位置（详情页直接导航切换等效返回，清空记忆栈防错位）
@@ -6673,13 +6695,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     analysisChartsRendered = true;
                 }
             }
-            // 切换到持仓页时立即渲染一次（耗电优化：行情刷新仅在持仓页可见时渲染 DOM）
+            // 切换到持仓页：结构未变 → 增量更新（DOM 缓存，切回零重建）；首次/结构变化 → 全量渲染。
+            // 均延后一帧执行，避免切换点击处理内同步大渲染造成首帧卡顿（与详情页关闭同款策略）
             if(tab === 'hold'){
-                renderPage();
+                const holdListDomNow = document.querySelector('#holdList');
+                const fp = holdStructFingerprint();
+                const hasDom = holdListDomNow && holdListDomNow.querySelector('.hold-card, .hold-row');
+                if(hasDom && fp === _holdFp){
+                    requestAnimationFrame(function(){ updateHoldQuotes(); });
+                } else {
+                    _holdFp = fp;
+                    requestAnimationFrame(function(){ renderPage(); });
+                }
             }
-            // 切换到我的页时更新数据
+            // 切换到我的页时更新数据（延后一帧）
             if(tab === 'mine'){
-                renderMinePage();
+                requestAnimationFrame(function(){ renderMinePage(); });
             }
             // 切换到里程碑页：首次渲染；之后数据（分红/持仓/里程碑配置）变化才重渲染一次，未变化仅 resize，
             // 兼顾"切换不重复渲染"与"数据源变化实时更新"
@@ -6687,28 +6718,48 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const msTrackEl = document.querySelector('#msTrack');
                 const alreadyRendered = msChartInited && msTrackEl && msTrackEl.children.length > 0;
                 if(!alreadyRendered){
-                    renderMilestonePage();
+                    requestAnimationFrame(function(){ renderMilestonePage(); });
                 } else {
                     const fp = milestoneDataFingerprint();
                     if(fp !== _msDataFp){
                         _msDataFp = fp;
-                        renderMilestonePage();
+                        requestAnimationFrame(function(){ renderMilestonePage(); });
                     } else if(msChartInited){
-                        setTimeout(function(){ if(msChart) msChart.resize(); }, 60);
+                        requestAnimationFrame(function(){ if(msChart) msChart.resize(); });
                     }
                 }
             }
-            // 切换到统计页时渲染统计数据
+            // 切换到统计页时渲染统计数据（延后一帧，避免切换同步大渲染卡顿）
             if(tab === 'stats'){
-                renderStatsPage();
+                requestAnimationFrame(function(){ renderStatsPage(); });
             }
             window.scrollTo(0, 0);
         }
         // ---- 吸顶标题栏滚动阴影（iOS 式层次感：滚动后标题栏下方浮现投影） ----
         const stickyBars = Array.prototype.slice.call(document.querySelectorAll('.sticky.top-0'));
+        // B：滚动期间暂停行情刷新整页重建（持仓/统计页），滚动停止 150ms 后补一次渲染
+        let __scrollPauseTimer = null;
+        window.__pageScrolling = false;
+        window.__pageDirty = false;
         window.addEventListener('scroll', function(){
             const scrolled = window.scrollY > 4;
             stickyBars.forEach(function(el){ el.classList.toggle('sticky-scrolled', scrolled); });
+            const holdVisible = !document.getElementById('pageHold').classList.contains('hidden');
+            const statsVisible = !document.getElementById('pageStats').classList.contains('hidden');
+            if(holdVisible || statsVisible){
+                window.__pageScrolling = true;
+                clearTimeout(__scrollPauseTimer);
+                __scrollPauseTimer = setTimeout(function(){
+                    window.__pageScrolling = false;
+                    if(window.__pageDirty){
+                        window.__pageDirty = false;
+                        try{
+                            if(activeTab === 'hold') updateHoldQuotes();
+                            else if(activeTab === 'stats') renderStatsPage();
+                        }catch(e){}
+                    }
+                }, 150);
+            }
         }, { passive: true });
         // ---- 双击吸顶标题栏回顶部（顶级 APP 手势） ----
         document.addEventListener('dblclick', function(e){
@@ -10099,14 +10150,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 仓位分布详情页：内容已在 switchTab(stats) 时随 renderStatsPage 渲染就绪，此处只 resize 饼图，
             // 不再整页重复渲染（重复渲染会造成"像打开两次"的闪烁）
             if(key === 'position'){
-                setTimeout(function(){
+                requestAnimationFrame(function(){
                     const pieEl = document.querySelector('#industryPieChart');
                     if(pieEl && pieEl._chart) pieEl._chart.resize();
-                }, 80);
+                });
             }
             // 分红派发日程：图表已在 renderStatsPage 初始化，打开仅 resize（未初始化时才兜底重建）
             if(key === 'schedule'){
-                setTimeout(function(){
+                requestAnimationFrame(function(){
                     const mcEl = document.querySelector('#chartStatsDivMonth');
                     if(mcEl){
                         if(mcEl._chart) mcEl._chart.resize();
@@ -10116,21 +10167,36 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             if(mc2 && mc2._chart) mc2._chart.resize();
                         }
                     }
-                }, 80);
+                });
             }
+        }
+        // 首页汇总卡"今日盈亏"入口：打开统计页"今日涨跌幅"详情（同步渲染内容保证生长动画开始即就绪），
+        // 返回时回到首页（与 openDivDetail 的"从哪来回哪去"模式一致）
+        function openStatsFromHold(){
+            window.__statsFromHold = true;
+            renderStatsPage();
+            document.querySelector('#pageHold').classList.add('hidden');
+            openStatsSection('today');
         }
         function closeStatsSection(){
             hideAllChartTips();
             const cur = findVisibleDetailPage();
+            const fromHold = !!window.__statsFromHold;
+            window.__statsFromHold = false;
             exitDetailPage(cur, function(){
                 for(const k in STATS_SECTION_PAGES){
                     const el = document.querySelector('#' + STATS_SECTION_PAGES[k]);
                     if(el) el.classList.add('hidden');
                 }
                 activeStatsSection = null;
-                document.querySelector('#pageStats').classList.remove('hidden');
-                // 主页先显示（隐藏期间数据未变），重渲染延后一帧，避免关闭瞬间同步大渲染卡顿
-                deferRender(renderStatsPage);
+                if(fromHold){
+                    // 从首页"今日盈亏"进入：返回回首页（滚动位置由 exitDetailPage 恢复）
+                    document.querySelector('#pageHold').classList.remove('hidden');
+                } else {
+                    document.querySelector('#pageStats').classList.remove('hidden');
+                    // 主页先显示（隐藏期间数据未变），重渲染延后一帧，避免关闭瞬间同步大渲染卡顿
+                    deferRender(renderStatsPage);
+                }
             });
         }
         // 统计页卡片宫格摘要：今日卡右侧为当日合计盈亏（复用详情页顶部数据），其余卡片显示各板块数据最新刷新时间（纯本地，不额外拉取）
@@ -13794,6 +13860,49 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
 
+                // ============ 开户至今收益率 = 时间加权收益率 TWR（券商口径） ============
+        // 分段点 = 每笔资金变动日（资金流水 getFundFlows，含初始投入与转入/取出）；
+        // 每段：期初资产 = 变动日前最近资产快照（snapBeforeDate，与净值同源，严格早于变动日），
+        //       资金变动 = 当日流水合计，期末资产 = 下一变动日前最近资产快照（最后一段 = 当前总资产）；
+        // 段收益率 r = 期末 / (期初 + 变动) - 1；TWR = Π(1 + r) - 1
+        // 无任何资金记录或无资产快照可分段时返回 null（调用方回退原口径）
+        function calcTwrReturn(curAsset){
+            const flows = getFundFlows();
+            const assetV = (curAsset != null) ? Number(curAsset) : (Number(calcSummary().totalMarket) || 0);
+            if(!flows.length || !(assetV > 0)) return null;
+            // 同日资金变动合并（同一天多笔转入/取出共享同一分段点）
+            const byDate = {};
+            flows.forEach(function(f){
+                const d = f.date;
+                byDate[d] = (byDate[d] || 0) + (Number(f.amount) || 0);
+            });
+            const dates = Object.keys(byDate).sort();
+            let multiplier = 1;
+            let segs = 0;
+            for(let i = 0; i < dates.length; i++){
+                const d = dates[i];
+                const cf = Number(byDate[d]) || 0;
+                // 期初资产：变动日前最近资产快照；首笔投入前无资产 = 0
+                const snap = snapBeforeDate(d);
+                const start = snap ? Number(snap.value) : 0;
+                const base = start + cf;
+                if(!(base > 0) || !isFinite(base)) continue;
+                // 期末资产：下一笔变动日前最近资产快照；最后一笔变动后 = 当前总资产
+                let end = assetV;
+                if(i < dates.length - 1){
+                    const snapNext = snapBeforeDate(dates[i + 1]);
+                    if(!snapNext) continue; // 无快照无法分段（数据缺失，跳过该段）
+                    end = Number(snapNext.value);
+                }
+                if(!(end > 0) || !isFinite(end)) continue;
+                const r = end / base - 1;
+                multiplier *= (1 + r);
+                segs++;
+            }
+            if(!segs) return null;
+            return (multiplier - 1) * 100;
+        }
+
         // 渲染整个页面
         // 触发闪烁效果：上涨红色，下跌绿色（仅用于统计页和列表模式的当日盈亏百分比）
         function flashElement(el, isUp){
@@ -13958,67 +14067,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 更新顶部汇总卡片 & 筛选标签数量
             const stNumEl = document.querySelector('#stockNum');
             if(stNumEl) stNumEl.innerText = sum.holdLen;
-            document.querySelector('#allCount').innerText = sum.holdLen;
-            document.querySelector('#aCount').innerText = sum.aShareNum;
-            document.querySelector('#hkCount').innerText = sum.hkShareNum;
-
-            // 年度分红收入（纯数字，无货币符号）
-            numTween(document.querySelector('#totalYearDiv'), sum.totalYearDiv, fmtMoney);
-            // 累计分红总额
-            numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
-            // 今年已收
-            numTween(document.querySelector('#incomeNow'), sum.totalReceived, fmtMoney);
-            // 持仓盈亏
-            const totalPnlEl = document.querySelector('#totalPnl');
-            const pnlVal = Number(sum.totalPnl);
-            numTween(totalPnlEl, pnlVal, fmtPnlNum);
-            totalPnlEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
-            // 总资产（平滑滚动动画：首次直接显示，值变化时0.5s滚动）
-            numTween(document.querySelector('#totalMarket'), sum.totalMarket, fmtMoney);
-            // 资产新高（金色皇冠徽章，点击查看破新高记录）
-            renderAssetHigh();
-            // 总收益率
-            const trrEl = document.querySelector('#totalReturnRate');
-            const trrVal = Number(sum.totalReturnRate);
-            numTween(trrEl, trrVal, fmtPctNum);
-            trrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(trrVal);
-            // 今年收益率
-            const yrrEl = document.querySelector('#yearReturnRate');
-            const yrrVal = Number(sum.yearReturnRate);
-            numTween(yrrEl, yrrVal, fmtPctNum);
-            yrrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(yrrVal);
-
-            numTween(document.querySelector('#costYield'), sum.costYield, fmtNum2);
-            numTween(document.querySelector('#marketYield'), sum.marketYield, fmtNum2);
-            // 月均分红
-            numTween(document.querySelector('#monthDiv'), sum.monthDiv, fmtMoney);
-
-            // 今日盈亏（百分比）：当日盈亏合计 ÷ 昨日总市值，口径与统计详情页一致
-            const todayPnlPctEl = document.querySelector('#todayPnlPct');
-            if(todayPnlPctEl){
-                let totalDayPnl = 0, totalMarketValue = 0, hasValidDayPct = false;
-                holdDataList.forEach(function(it){
-                    const effPct = getEffectiveChangePct(it.changePct);
-                    if(effPct != null && !isNaN(effPct) && it.nowPrice && it.count){
-                        hasValidDayPct = true;
-                        const fx = it.marketType === 'HK' ? hkFxRate : 1;
-                        const mv = it.nowPrice * it.count * fx;
-                        totalDayPnl += mv * effPct / (100 + effPct);
-                        totalMarketValue += mv;
-                    }
-                });
-                if(!hasValidDayPct){
-                    todayPnlPctEl.innerText = '--';
-                    todayPnlPctEl.className = 'text-[18px] font-bold tabular-nums text-gray-400';
-                } else {
-                    const yesterdayMarketValue = totalMarketValue - totalDayPnl;
-                    const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
-                    const pctText = (dayPnlPct > 0.005 ? '+' : '') + dayPnlPct.toFixed(2) + '%';
-                    const pctClass = dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-gray-500');
-                    todayPnlPctEl.innerText = pctText;
-                    todayPnlPctEl.className = 'text-[18px] font-bold tabular-nums ' + pctClass;
-                }
-            }
+            updateSummaryCard(sum);
             // 回本里程碑（成本为负的股票汇总统计）
             renderRecoverMilestone();
 
@@ -14034,6 +14083,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     ? '暂无持仓，点击右上角加号添加股票'
                     : (activeFilter === 'A' ? '暂无 A 股持仓，点击右上角加号添加' : '暂无港股持仓，点击右上角加号添加');
                 holdListDom.innerHTML = emptyTipHTML({ title: tip, sub: (activeFilter === 'all' ? '每一笔分红，都会在这里生根发芽' : '切换筛选标签，或点击右上角 + 添加持仓') });
+                _holdFp = holdStructFingerprint();
                 return;
             }
             // 根据模式渲染
@@ -14042,6 +14092,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             } else {
                 renderHoldCardMode(sorted, sum);
             }
+            _holdFp = holdStructFingerprint();
         }
 
         // ================= 分红收入里程碑 =================
@@ -14544,6 +14595,206 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(arrow) arrow.classList.toggle('rotate-180', willOpen);
             if(label) label.textContent = willOpen ? '收起指标' : '更多指标';
         };
+        // ==================== 行情刷新增量更新（A：只更新数字节点，不重建列表） ====================
+        // 顶部汇总卡增量更新（含今日盈亏/资产新高）：renderPage 全量渲染与行情刷新共用同一段逻辑
+        function updateSummaryCard(sum){
+            const stNumEl = document.querySelector('#stockNum');
+            if(stNumEl) stNumEl.innerText = sum.holdLen;
+            document.querySelector('#allCount').innerText = sum.holdLen;
+            document.querySelector('#aCount').innerText = sum.aShareNum;
+            document.querySelector('#hkCount').innerText = sum.hkShareNum;
+            numTween(document.querySelector('#totalYearDiv'), sum.totalYearDiv, fmtMoney);
+            numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
+            numTween(document.querySelector('#incomeNow'), sum.totalReceived, fmtMoney);
+            const totalPnlEl = document.querySelector('#totalPnl');
+            const pnlVal = Number(sum.totalPnl);
+            numTween(totalPnlEl, pnlVal, fmtPnlNum);
+            totalPnlEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
+            numTween(document.querySelector('#totalMarket'), sum.totalMarket, fmtMoney);
+            renderAssetHigh();
+            const trrEl = document.querySelector('#totalReturnRate');
+            // 开户至今收益率 = 时间加权收益率 TWR（券商口径），与资金流水/资产快照同源；
+            // 数据不足以分段（无资金记录或无资产快照）时回退原"持仓成本收益率"口径
+            const twrV = calcTwrReturn(sum.totalMarket);
+            const trrVal = (twrV != null && isFinite(twrV)) ? twrV : Number(sum.totalReturnRate);
+            numTween(trrEl, trrVal, fmtPctNum);
+            trrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(trrVal);
+            const yrrEl = document.querySelector('#yearReturnRate');
+            const yrrVal = Number(sum.yearReturnRate);
+            numTween(yrrEl, yrrVal, fmtPctNum);
+            yrrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(yrrVal);
+            numTween(document.querySelector('#costYield'), sum.costYield, fmtNum2);
+            numTween(document.querySelector('#marketYield'), sum.marketYield, fmtNum2);
+            numTween(document.querySelector('#monthDiv'), sum.monthDiv, fmtMoney);
+            // 今日盈亏：金额为主（20px 加粗，涨红跌绿）+ 百分比为副（11px 金色小字，同行基线对齐）；
+            // 当日盈亏金额 = Σ 市值 × 涨跌%/（100+涨跌%），百分比 = 当日盈亏 ÷ 昨日总市值（口径与统计详情页一致）
+            const todayPnlEl = document.querySelector('#todayPnl');
+            const todayPnlPctEl = document.querySelector('#todayPnlPct');
+            if(todayPnlEl && todayPnlPctEl){
+                let totalDayPnl = 0, totalMarketValue = 0, hasValidDayPct = false;
+                holdDataList.forEach(function(it){
+                    const effPct = getEffectiveChangePct(it.changePct);
+                    if(effPct != null && !isNaN(effPct) && it.nowPrice && it.count){
+                        hasValidDayPct = true;
+                        const fx = it.marketType === 'HK' ? hkFxRate : 1;
+                        const mv = it.nowPrice * it.count * fx;
+                        totalDayPnl += mv * effPct / (100 + effPct);
+                        totalMarketValue += mv;
+                    }
+                });
+                if(!hasValidDayPct){
+                    todayPnlEl.innerText = '--';
+                    todayPnlEl.className = 'text-[20px] font-bold tabular-nums num-transition text-gray-400';
+                    todayPnlPctEl.innerText = '--';
+                    todayPnlPctEl.className = 'text-[11px] font-medium tabular-nums num-transition text-gray-400';
+                } else {
+                    const yesterdayMarketValue = totalMarketValue - totalDayPnl;
+                    const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
+                    // 金额主色：涨红跌绿
+                    const amtCls = totalDayPnl > 0.005 ? 'text-[#e03131]' : (totalDayPnl < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
+                    todayPnlEl.innerText = fmtPnlNum(totalDayPnl);
+                    todayPnlEl.className = 'text-[20px] font-bold tabular-nums num-transition ' + amtCls;
+                    // 百分比副色：与金额一致涨红跌绿（无数据灰色已在上面处理）
+                    const pctText = (dayPnlPct > 0.005 ? '+' : '') + dayPnlPct.toFixed(2) + '%';
+                    const pctCls = dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
+                    todayPnlPctEl.innerText = pctText;
+                    todayPnlPctEl.className = 'text-[11px] font-medium tabular-nums num-transition ' + pctCls;
+                }
+            }
+        }
+
+        // 节点文本/颜色更新助手：保留节点内前缀货币符号 span，只替换尾部文本与颜色 class
+        function setNumText(el, txt, cls){
+            if(!el) return;
+            const lastN = el.lastChild;
+            if(lastN && lastN.nodeType === 3) lastN.nodeValue = txt;
+            else el.innerText = txt;
+            if(cls){
+                el.className = el.className.replace(/text-\[#e03131\]|text-\[#00a05c\]|text-gray-400|text-gray-500|text-gray-600|text-gray-700|text-gray-800|text-purple-600|text-purple-700/g, '');
+                el.className += ' ' + cls;
+            }
+        }
+
+        // 卡片模式：每张卡只更新行情相关数字节点（与 renderHoldCardMode 同公式同口径）
+        function updateCardHoldNumbers(sumQ){
+            const map = {};
+            holdDataList.forEach(function(it){ map[it.marketType + '|' + it.code] = it; });
+            const totalMarketForPct = Number(sumQ.totalMarket) || 1;
+            document.querySelectorAll('#holdList .hold-card[data-hold-code]').forEach(function(card){
+                const item = map[card.getAttribute('data-hold-code')];
+                if(!item) return;
+                const isHk = item.marketType === 'HK';
+                const isCostRecovered = item.costPrice < 0;
+                const itemCostTotal = item.count * item.costPrice * (isHk ? hkFxRate : 1);
+                const itemMarketTotal = getMarketValue(item);
+                const itemAnnualDiv = getAnnualDiv(item);
+                const stockYield = itemMarketTotal>0 ? ((itemAnnualDiv / itemMarketTotal)*100).toFixed(2) : 0;
+                const itemPnl = getPnl(item);
+                const itemPnlClass = pnlClass(itemPnl, false);
+                const pnlPct = itemCostTotal !== 0 ? (itemPnl / itemCostTotal * 100) : 0;
+                const pnlPctText = (pnlPct>0?'+':(pnlPct<0?'-':'')) + Math.abs(pnlPct).toFixed(2) + '%';
+                const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1) : 0;
+                const dayPct = getEffectiveChangePct(item.changePct);
+                let dayPnlText = '--', dayPnlClass = 'text-gray-400', dayPnlPctText = '--';
+                if(dayPct != null && !isNaN(dayPct) && item.nowPrice && item.count){
+                    const fx = isHk ? hkFxRate : 1;
+                    const dayPnl = item.nowPrice * item.count * fx * dayPct / (100 + dayPct);
+                    if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
+                    else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
+                    else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
+                    dayPnlPctText = (dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%';
+                }
+                const ytdPct = getYtdPct(item);
+                const ytdPnl = getYtdPnl(item);
+                let ytdText = '--', ytdPnlText = '--', ytdClass = 'text-gray-400', ytdPnlClass = 'text-gray-400';
+                if(ytdPct != null && !isNaN(ytdPct)){
+                    ytdText = (ytdPct >= 0 ? '+' : '') + ytdPct.toFixed(2) + '%';
+                    ytdClass = ytdPct > 0 ? 'text-[#e03131]' : (ytdPct < 0 ? 'text-[#00a05c]' : 'text-gray-500');
+                }
+                if(ytdPnl != null && !isNaN(ytdPnl)){
+                    ytdPnlText = formatPnl(ytdPnl);
+                    ytdPnlClass = ytdPnl > 0 ? 'text-[#e03131]' : (ytdPnl < 0 ? 'text-[#00a05c]' : 'text-gray-500');
+                }
+                let effChange = getEffectiveChange(item.change);
+                let dayChangeAmtText = '--', dayChangePctText = '--', dayChangeClass = 'text-gray-400';
+                if(effChange != null && !isNaN(effChange)){
+                    const chgPct = dayPct != null && !isNaN(dayPct) ? dayPct : 0;
+                    const sign = effChange > 0 ? '+' : '';
+                    dayChangeAmtText = sign + Number(effChange).toFixed(isEtfCode(item.code) || item.marketType === 'HK' ? 3 : 2);
+                    dayChangePctText = (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%';
+                    dayChangeClass = effChange > 0 ? 'text-[#e03131]' : (effChange < 0 ? 'text-[#00a05c]' : 'text-gray-500');
+                }
+                setNumText(card.querySelector('.hq-daypnl'), dayPnlText, dayPnlClass);
+                setNumText(card.querySelector('.hq-daypnlpct'), dayPnlPctText, dayPnlClass);
+                setNumText(card.querySelector('.hq-mv'), fmtMoney(itemMarketTotal), isCostRecovered ? 'text-purple-600' : 'text-gray-800');
+                setNumText(card.querySelector('.hq-pct'), holdPct + '%', 'text-gray-700');
+                setNumText(card.querySelector('.hq-pct2'), holdPct + '%', 'text-gray-800');
+                setNumText(card.querySelector('.hq-ytdpnl'), ytdPnlText, ytdPnlClass);
+                setNumText(card.querySelector('.hq-ytd'), ytdText, ytdClass);
+                setNumText(card.querySelector('.hq-pnl'), formatPnl(itemPnl), itemPnlClass);
+                setNumText(card.querySelector('.hq-pnlpct'), pnlPctText, itemPnlClass);
+                setNumText(card.querySelector('.hq-price'), fmtPrice(item.nowPrice, item.code, isHk), 'text-gray-800');
+                setNumText(card.querySelector('.hq-yield'), stockYield + '%', 'text-gray-800');
+                setNumText(card.querySelector('.hq-chg'), dayChangeAmtText, dayChangeClass);
+                setNumText(card.querySelector('.hq-chgpct'), dayChangePctText, dayChangeClass);
+            });
+        }
+
+        // 列表模式：行内 data-field 锚点（market/price/dayPnl/dayPnlPct/holdPct/pnl/pnlPct）
+        function updateListHoldNumbers(sumQ){
+            const map = {};
+            holdDataList.forEach(function(it){ map[it.marketType + '|' + it.code] = it; });
+            const totalMarketForPct = Number(sumQ.totalMarket) || 1;
+            document.querySelectorAll('#holdList .hold-row[data-hold-code]').forEach(function(row){
+                const item = map[row.getAttribute('data-hold-code')];
+                if(!item) return;
+                const isHk = item.marketType === 'HK';
+                const isCostRecovered = item.costPrice < 0;
+                const itemMarketTotal = getMarketValue(item);
+                const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1) : 0;
+                const itemPnl2 = getPnl(item);
+                const itemPnlClass2 = pnlClass(itemPnl2, false);
+                const costTotal2 = (Number(item.count)||0) * (Number(item.costPrice)||0) * (isHk ? hkFxRate : 1);
+                const pnlPct2 = costTotal2 !== 0 ? (itemPnl2 / costTotal2 * 100) : 0;
+                const pnlPctText2 = (pnlPct2>0?'+':(pnlPct2<0?'-':'')) + Math.abs(pnlPct2).toFixed(2) + '%';
+                const pct = getEffectiveChangePct(item.changePct);
+                let dayPnlText = '--', dayPnlClass = 'text-gray-400', dayPnlPctText = '--';
+                if(pct != null && !isNaN(pct) && item.nowPrice && item.count){
+                    const fx = isHk ? hkFxRate : 1;
+                    const dayPnl = item.nowPrice * item.count * fx * pct / (100 + pct);
+                    if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
+                    else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
+                    else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
+                    dayPnlPctText = (pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%';
+                }
+                setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal), isCostRecovered ? 'text-purple-600' : 'text-gray-800');
+                setNumText(row.querySelector('[data-field="holdPct"]'), holdPct + '%', 'text-gray-700');
+                setNumText(row.querySelector('[data-field="price"]'), fmtPrice(item.nowPrice, item.code, isHk), 'text-gray-700');
+                setNumText(row.querySelector('[data-field="dayPnl"]'), dayPnlText, dayPnlClass);
+                const dayPnlPctEl = row.querySelector('[data-field="dayPnlPct"]');
+                setNumText(dayPnlPctEl, dayPnlPctText, dayPnlClass);
+                setNumText(row.querySelector('[data-field="pnl"]'), formatPnl(itemPnl2), itemPnlClass2);
+                setNumText(row.querySelector('[data-field="pnlPct"]'), pnlPctText2, itemPnlClass2);
+                // 当日盈亏百分比闪烁（与全量渲染一致：东方财富通风格）
+                const code = item.code;
+                if(dayPnlPctEl && listPrevValues.dayPnlPct[code] != null && listPrevValues.dayPnlPct[code] !== pct){
+                    const isUp = (pct || 0) > (listPrevValues.dayPnlPct[code] || 0);
+                    dayPnlPctEl.classList.add(isUp ? 'soft-flash-up' : 'soft-flash-down');
+                    setTimeout(function(){ dayPnlPctEl.classList.remove('soft-flash-up', 'soft-flash-down'); }, 600);
+                }
+                listPrevValues.dayPnlPct[code] = pct;
+            });
+        }
+
+        // 持仓页行情增量刷新入口（A）：非滚动时由 refreshAll 调用；滚动停止后补渲染
+        function updateHoldQuotes(){
+            if(!holdDataList.length) return;
+            const sumQ = calcSummary();
+            updateSummaryCard(sumQ);
+            if(holdViewMode === 'list') updateListHoldNumbers(sumQ);
+            else updateCardHoldNumbers(sumQ);
+        }
+
         function renderHoldCardMode(sorted, sum){
             const holdListDom = document.querySelector('#holdList');
             const totalMarketForPct = Number(sum.totalMarket) || 1;
@@ -14638,7 +14889,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     dayChangeClass = effChange > 0 ? 'text-[#e03131]' : (effChange < 0 ? 'text-[#00a05c]' : 'text-gray-500');
                 }
                 htmlStr += `
-                <div class="${cardOuterClass} hold-card">
+                <div class="${cardOuterClass} hold-card" data-hold-code="${item.marketType}|${item.code}">
                     ${topBanner}
                     <!-- 主行：股票名（左）+ 当日盈亏（右） -->
                     <div class="px-3 pt-3 pb-2">
@@ -14657,19 +14908,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                             <div class="text-right">
                                 <div class="text-[10px] text-gray-400 tracking-wide">当日盈亏</div>
-                                <div class="text-[15px] font-bold ${dayPnlClass} tabular-nums leading-tight mt-0.5">${dayPnlText}</div>
-                                <div class="text-[11px] font-medium ${dayPnlClass} tabular-nums mt-0.5">${dayPnlPctText}</div>
+                                <div class="text-[15px] font-bold ${dayPnlClass} tabular-nums leading-tight mt-0.5 hq-daypnl">${dayPnlText}</div>
+                                <div class="text-[11px] font-medium ${dayPnlClass} tabular-nums mt-0.5 hq-daypnlpct">${dayPnlPctText}</div>
                             </div>
                         </div>
                         <!-- 副行：市值 / 仓位 / 预测分红 -->
                         <div class="mt-2.5 pt-2 border-t border-[#F0EDE7] flex items-center gap-5">
                             <div class="flex items-baseline gap-1.5">
                                 <span class="text-[10px] text-gray-400">市值</span>
-                                <span class="text-[13px] font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'} tabular-nums">${fmtMoney(itemMarketTotal)}</span>
+                                <span class="text-[13px] font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'} tabular-nums hq-mv">${fmtMoney(itemMarketTotal)}</span>
                             </div>
                             <div class="flex items-baseline gap-1.5">
                                 <span class="text-[10px] text-gray-400">仓位</span>
-                                <span class="text-[12px] font-medium text-gray-700 tabular-nums">${holdPct}%</span>
+                                <span class="text-[12px] font-medium text-gray-700 tabular-nums hq-pct">${holdPct}%</span>
                             </div>
                             <div class="flex items-baseline gap-1.5">
                                 <span class="text-[10px] text-gray-400">预测分红</span>
@@ -14690,7 +14941,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                             <div class="px-1 py-2 text-center split-line">
                                 <div class="text-[10px] text-gray-400">持仓占比</div>
-                                <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums">${holdPct}%</div>
+                                <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums hq-pct2">${holdPct}%</div>
                             </div>
                             <div class="px-1 py-2 text-center split-line">
                                 <div class="text-[10px] text-gray-400">持仓成本</div>
@@ -14702,23 +14953,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                             <div class="px-1 py-2 text-center">
                                 <div class="text-[10px] text-gray-400">今年涨幅</div>
-                                <div class="text-xs font-semibold mt-0.5 ${ytdPnlClass} tabular-nums">${ytdPnlText}</div>
-                                <div class="text-[11px] font-medium mt-0.5 ${ytdClass} tabular-nums">${ytdText}</div>
+                                <div class="text-xs font-semibold mt-0.5 ${ytdPnlClass} tabular-nums hq-ytdpnl">${ytdPnlText}</div>
+                                <div class="text-[11px] font-medium mt-0.5 ${ytdClass} tabular-nums hq-ytd">${ytdText}</div>
                             </div>
                             <div class="px-1 py-2 text-center split-line">
                                 <div class="text-[10px] text-gray-400">累计盈亏</div>
-                                <div class="text-xs font-semibold mt-0.5 ${itemPnlClass} tabular-nums">${formatPnl(itemPnl)}</div>
-                                <div class="text-[11px] font-medium mt-0.5 ${itemPnlClass} tabular-nums">${pnlPctText}</div>
+                                <div class="text-xs font-semibold mt-0.5 ${itemPnlClass} tabular-nums hq-pnl">${formatPnl(itemPnl)}</div>
+                                <div class="text-[11px] font-medium mt-0.5 ${itemPnlClass} tabular-nums hq-pnlpct">${pnlPctText}</div>
                             </div>
                             <div class="px-1 py-2 text-center split-line">
                                 <div class="text-[10px] text-gray-400">现价/息率</div>
-                                <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
-                                <div class="text-[11px] font-medium mt-0.5 text-gray-800 tabular-nums">${stockYield}%</div>
+                                <div class="text-xs font-semibold text-gray-800 mt-0.5 tabular-nums hq-price"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
+                                <div class="text-[11px] font-medium mt-0.5 text-gray-800 tabular-nums hq-yield">${stockYield}%</div>
                             </div>
                             <div class="px-1 py-2 text-center split-line">
                                 <div class="text-[10px] text-gray-400">最新涨幅</div>
-                                <div class="text-xs font-semibold mt-0.5 ${dayChangeClass} tabular-nums">${dayChangeAmtText}</div>
-                                <div class="text-[11px] font-medium mt-0.5 ${dayChangeClass} tabular-nums">${dayChangePctText}</div>
+                                <div class="text-xs font-semibold mt-0.5 ${dayChangeClass} tabular-nums hq-chg">${dayChangeAmtText}</div>
+                                <div class="text-[11px] font-medium mt-0.5 ${dayChangeClass} tabular-nums hq-chgpct">${dayChangePctText}</div>
                             </div>
                         </div>
                     </div>
@@ -14867,7 +15118,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         ? ';border-bottom:0.6px solid #F0EDE7'
                         : '';
                     htmlStr += `
-                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr${rowDivider}">
+                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" data-hold-code="${item.marketType}|${item.code}" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr${rowDivider}">
                         <div class="text-left pl-0.5 pr-2">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
@@ -14879,15 +15130,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         </div>
                         <div class="text-right px-0.5">
                             <div class="text-[13.8px] font-medium text-gray-700 tabular-nums">${item.count}</div>
-                            <div class="text-[13.8px] font-medium text-gray-700 mt-1 tabular-nums">${holdPct}%</div>
+                            <div class="text-[13.8px] font-medium text-gray-700 mt-1 tabular-nums list-num" data-field="holdPct">${holdPct}%</div>
                         </div>
                         <div class="text-right px-0.5">
                             <div class="text-[13.8px] font-medium text-gray-700 tabular-nums"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtCost(item.costPrice)}</div>
                             <div class="text-[13.8px] font-medium text-gray-700 mt-1 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
                         </div>
                         <div class="text-right px-0.5">
-                            <div class="text-[13.8px] font-medium ${itemPnlClass2} tabular-nums">${formatPnl(itemPnl2)}</div>
-                            <div class="text-[13.8px] font-medium ${itemPnlClass2} mt-1 tabular-nums">${pnlPctText2}</div>
+                            <div class="text-[13.8px] font-medium ${itemPnlClass2} tabular-nums list-num" data-field="pnl">${formatPnl(itemPnl2)}</div>
+                            <div class="text-[13.8px] font-medium ${itemPnlClass2} mt-1 tabular-nums list-num" data-field="pnlPct">${pnlPctText2}</div>
                         </div>
                         <div class="text-right px-0.5">
                             <div class="text-[13.8px] font-medium ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
@@ -16719,7 +16970,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         if(!b) return;
         var oc = (b.getAttribute && b.getAttribute('onclick')) || '';
         var id = b.id || '';
-        var hit = /^(openStatsSection|openDivDetail|openAssetHighModal|openAnnualReport|openBalanceSheet|openStockScores|openWatchPage|openNotifCenter|openNavDetail|openCostDetail|openIndustryMapPage|openFundTransfer|openFundTransferAdd|openTradeLogPage|openTradeModal|openDivEntry|openYearSnapshot|showSettings)\(/.test(oc.trim())
+        var hit = /^(openStatsSection|openStatsFromHold|openDivDetail|openAssetHighModal|openAnnualReport|openBalanceSheet|openStockScores|openWatchPage|openNotifCenter|openNavDetail|openCostDetail|openIndustryMapPage|openFundTransfer|openFundTransferAdd|openTradeLogPage|openTradeModal|openDivEntry|openYearSnapshot|showSettings)\(/.test(oc.trim())
               || id === 'annualReportBtn' || id === 'balanceSheetBtn' || id === 'watchBtn';
         if(hit) window.__growFrom = b.getBoundingClientRect();
     }, true);
@@ -16759,6 +17010,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     // 包装入口函数：调用原逻辑后，对目标页做生长过渡；并重绑定 addEventListener 入口
     var map = [
         ['openStatsSection', function(key){ return (window.STATS_SECTION_PAGES && STATS_SECTION_PAGES[key]) || ''; }],
+        ['openStatsFromHold', function(){ return 'pageStatsToday'; }],
         ['openDivDetail', function(){ return 'pageDivDetail'; }],
         ['openAssetHighModal', function(){ return 'pageAssetHigh'; }],
         ['openAnnualReport', function(){ return 'pageAnnualReport'; }],
@@ -16788,7 +17040,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     var pid = getPage.apply(null, arguments);
                     if(pid){
                         var el = document.getElementById(pid);
-                        if(el) setTimeout(function(){ growPageFrom(el, r); }, 20);
+                        // 与页面显示同一帧执行生长动画：首帧即动画起点（35%），避免"完整页闪现后缩回"造成标题栏两次感/跳动
+                        if(el) growPageFrom(el, r);
                     }
                 }
                 return res;

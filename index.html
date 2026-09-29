@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.54';</script>
+    <script>window.APP_VERSION = '20260928.59';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -36,6 +36,7 @@
             'caret-down': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>',
             'plus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
             'plus-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+            'minus-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
             'minus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
             'times': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
             'check-circle': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
@@ -274,8 +275,8 @@
         }
         /* 今日登记徽章脉动（置于 Tailwind @layer 外，确保 CDN 不丢弃） */
         @keyframes todayRegPulse {
-            0%, 100% { box-shadow: 0 2px 8px rgba(16,185,129,0.40); }
-            50% { box-shadow: 0 2px 16px rgba(16,185,129,0.65); }
+            0%, 100% { box-shadow: 0 2px 8px rgba(224,49,49,0.35); }
+            50% { box-shadow: 0 2px 16px rgba(224,49,49,0.60); }
         }
         .today-reg-pulse { animation: todayRegPulse 2.2s ease-in-out infinite; }
         /* 个股仓位预警条：显示时页面内容下移让位，隐藏时不占版面 */
@@ -505,7 +506,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <!-- 更多指标：收纳折叠（默认收起，点击展开 5 项次要指标） -->
                     <div class="col-span-3">
                         <button type="button" id="moreMetricsToggle" onclick="toggleMoreMetrics()" class="w-full flex items-center justify-center gap-1.5 py-1 text-[10.5px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-all">
-                            <i class="fa fa-plus-circle text-[11px]" style="color:rgba(246,196,83,.7)"></i>
+                            <i class="fa fa-plus-circle text-[11px]" style="color:rgba(246,196,83,.7)" id="moreMetricsIcon"></i>
                             <span>更多指标</span>
                             <i class="fa fa-chevron-down text-[10px] transition-transform duration-300" id="moreMetricsChevron"></i>
                         </button>
@@ -1201,11 +1202,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="statsCardSummaryDivRank" class="text-[13px] font-bold text-accent mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubDivRank" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('schedule')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="flex items-center gap-1 mb-2">
-                    <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-calendar-check-o text-[13px] text-accent"></i></div>
-                    <span id="statsCardScheduleBadge" class="hidden text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full today-reg-pulse whitespace-nowrap" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 1px 4px rgba(16,185,129,0.45)">即将分红</span>
-                </div>
+            <button onclick="openStatsSection('schedule')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform relative">
+                <span id="statsCardScheduleBadge" class="hidden absolute -top-1.5 -right-1.5 z-10 text-[10px] font-semibold text-white pl-2 pr-2 py-1 rounded-full today-reg-pulse whitespace-nowrap" style="background:linear-gradient(135deg,#e03131,#b0332f);box-shadow:0 2px 8px rgba(224,49,49,0.4)">今日 0 笔</span>
+                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-calendar-check-o text-[13px] text-accent"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">分红派发日程</div>
                 <div id="statsCardSummarySchedule" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubSchedule" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
@@ -1230,7 +1229,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </button>
             <button onclick="openStatsSection('trade')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><svg class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
-                <div class="text-[13px] font-semibold text-gray-800">交易明细</div>
+                <div class="text-[13px] font-semibold text-gray-800">交易统计</div>
                 <div id="statsCardSummaryTrade" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubTrade" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
@@ -1764,7 +1763,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">交易明细</span>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">交易统计</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
                     <span id="statsTradeTime">-- 更新</span>
@@ -1776,22 +1775,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
             <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
-            <div class="relative z-10 grid grid-cols-4">
+            <div class="relative z-10 grid grid-cols-3">
                 <div class="text-center px-1">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">总买入</div>
-                    <div id="tradeTotalBuy" class="text-base font-bold tabular-nums" style="color:#ffb3a7">--</div>
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">今年换手率</div>
+                    <div id="tradeTurnoverYtd" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
                 <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">总卖出</div>
-                    <div id="tradeTotalSell" class="text-base font-bold tabular-nums" style="color:#9ef0cf">--</div>
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">开户至今换手率</div>
+                    <div id="tradeTurnoverSince" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
                 <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">净买入</div>
-                    <div id="tradeTotalNet" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
-                </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">交易笔数</div>
-                    <div id="tradeTotalCount" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">年均换手率</div>
+                    <div id="tradeTurnoverAnnual" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
             </div>
         </div>
@@ -1835,11 +1830,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
             </button>
         </h2>
-        <!-- 用户信息卡片 -->
-        <div class="card-rise rounded-2xl p-5 card-shadow mb-4 relative overflow-hidden" style="background:linear-gradient(160deg,#3a3329 0%,#524736 55%,#685944 100%);box-shadow:0 10px 26px rgba(26,20,12,0.26), 0 2px 6px rgba(26,20,12,0.16), inset 0 1px 0 rgba(255,255,255,0.10);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg, transparent, rgba(230,210,163,0.30), transparent);"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-1/2 translate-x-1/2" style="background:radial-gradient(circle, rgba(230,210,163,0.10) 0%, rgba(230,210,163,0) 70%);"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 rounded-full -translate-y-1/2 translate-x-1/2" style="background:radial-gradient(circle, rgba(230,210,163,0.06) 0%, rgba(230,210,163,0) 70%);"></div>
+        <!-- 用户信息卡片：与首页汇总卡同语言（同款深棕黑渐变 + 整块半透明核心数据面板 + 无装饰光晕），
+             顶部深色卡与下方白色持仓概览形成材质对比，更简洁大气、低调内敛 -->
+        <div class="card-rise rounded-3xl p-5 card-shadow mb-4 relative overflow-hidden" style="background:linear-gradient(180deg,#3f382e 0%,#393229 55%,#322c23 100%);box-shadow:0 10px 26px rgba(26,20,12,0.26), 0 2px 6px rgba(26,20,12,0.16), inset 0 1px 0 rgba(255,255,255,0.08);">
+            <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.20);"></div>
+            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg, transparent, rgba(230,210,163,0.25), transparent);"></div>
             <div class="flex items-center gap-3 mb-4 relative z-10">
                 <div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#d9bc74] to-[#a8843c] flex items-center justify-center text-2xl text-white shadow-lg shadow-[#a8843c]/30"><i class="fa fa-tint"></i></div>
                 <div>
@@ -1847,22 +1842,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="text-[11px] text-[#cfc0a6]">股息持仓记录 · 价值投资</div>
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-2.5 text-center relative z-10">
-                <div class="bg-white/15 rounded-xl px-3 py-3">
-                    <div class="text-[10px] text-[#cfc0a6]">总资产</div>
-                    <div class="text-[17px] font-bold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums" id="mineTotalAsset">0</div>
-                </div>
-                <div class="bg-white/15 rounded-xl px-3 py-3">
-                    <div class="text-[10px] text-[#cfc0a6]">累计盈亏</div>
-                    <div class="text-[17px] font-bold tabular-nums whitespace-nowrap mt-1" id="mineTotalPnl">0.00</div>
-                </div>
-                <div class="bg-white/15 rounded-xl px-3 py-3">
-                    <div class="text-[10px] text-[#cfc0a6]">今年分红</div>
-                    <div class="text-[17px] font-bold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums" id="mineYearDiv">0</div>
-                </div>
-                <div class="bg-white/15 rounded-xl px-3 py-3">
-                    <div class="text-[10px] text-[#cfc0a6]">累计收息</div>
-                    <div class="text-[17px] font-bold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums" id="mineTotalDiv">0</div>
+            <!-- 核心数据面板：与首页核心指标区同款（rgba(255,255,255,0.12) 整块 + 内凹高光，内部 2×2 居中无分隔） -->
+            <div class="relative z-10 rounded-xl overflow-hidden" style="background:rgba(255,255,255,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16);">
+                <div class="grid grid-cols-2 gap-0 px-2 py-1">
+                    <div class="py-2.5 px-3 text-center">
+                        <div class="text-[10.5px] text-[#cfc0a6]">总资产</div>
+                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineTotalAsset">0</div>
+                    </div>
+                    <div class="py-2.5 px-3 text-center">
+                        <div class="text-[10.5px] text-[#cfc0a6]">累计盈亏</div>
+                        <div class="text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 num-transition" id="mineTotalPnl">0.00</div>
+                    </div>
+                    <div class="py-2.5 px-3 text-center">
+                        <div class="text-[10.5px] text-[#cfc0a6]">今年分红</div>
+                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineYearDiv">0</div>
+                    </div>
+                    <div class="py-2.5 px-3 text-center">
+                        <div class="text-[10.5px] text-[#cfc0a6]">累计收息</div>
+                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineTotalDiv">0</div>
+                    </div>
                 </div>
             </div>
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/10 relative z-10">
@@ -5551,6 +5549,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!panel) return;
             const folded = panel.classList.toggle('hidden');
             if(chevron) chevron.style.transform = folded ? '' : 'rotate(180deg)';
+            const icon = document.querySelector('#moreMetricsIcon');
+            if(icon){
+                icon.className = 'fa ' + (folded ? 'fa-plus-circle' : 'fa-minus-circle') + ' text-[11px]';
+                const svg = window.ICON_SVG && window.ICON_SVG[folded ? 'plus-circle' : 'minus-circle'];
+                if(svg){
+                    icon.setAttribute('data-ic', '1');
+                    icon.classList.add('fa-svg');
+                    icon.innerHTML = svg;
+                } else {
+                    icon.removeAttribute('data-ic');
+                    icon.classList.remove('fa-svg');
+                    icon.innerHTML = '';
+                }
+            }
         }
 
         function numTween(el, to, fmt, dur){
@@ -7355,7 +7367,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pnlEl = document.querySelector('#mineTotalPnl');
             if(pnlEl){
                 numTween(pnlEl, cumPnl, fmtPnlNum);
-                pnlEl.className = 'text-[17px] font-bold tabular-nums whitespace-nowrap mt-1 ' + (cumPnl >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
+                pnlEl.className = 'text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 num-transition ' + (cumPnl >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
             }
             // 持仓概览：复利年化 CAGR（交易日 6:00/20:00 快照，其余时间读存储；缺失回退实时）
             const cagrEl = document.querySelector('#mineCagr');
@@ -10364,8 +10376,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let tradeCnt = 0;
             holdDataList.forEach(function(it){ tradeCnt += (it.transactions || []).length; });
             tradeCnt += (historyData.stockEditLog || []).length;
-            set('statsCardSummaryTrade', tradeCnt ? (tradeCnt + ' 笔') : '暂无交易');
-            sub('statsCardSubTrade', '买入卖出记录');
+            // 卡片主数字：今年换手率（与详情页顶部汇总卡同源口径）；无交易时显示暂无交易
+            const ytdTurn = calcTurnoverStats().ytd;
+            set('statsCardSummaryTrade', ytdTurn !== '--' ? (ytdTurn + '%') : (tradeCnt ? '暂无换手率' : '暂无交易'));
+            sub('statsCardSubTrade', ytdTurn !== '--' ? '今年换手率' : (tradeCnt ? '今年换手率' : '买入卖出记录'));
         }
 
         // ============ 交易明细（统计页）：每笔买入/卖出 + 修改持仓事件，本地实时 ============
@@ -10405,6 +10419,74 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 f += '#E' + el.length + ':' + (el.length ? el[el.length - 1].t : 0);
                 return f;
             }catch(e){ return 'fp-err-' + Date.now(); }
+        }
+        // 换手率统计（口径参考 calcPeriodTurnover：min(买入,卖出) / 平均证券市值）：
+        // 今年换手率 = min(今年买入,今年卖出) / ((年初市值+当前市值)/2)
+        // 开户至今换手率 = min(累计买入,累计卖出) / ((开户期初市值+当前市值)/2)
+        // 年均换手率 = 开户至今换手率 / 开户年数（按天数/365）
+        function collectTradeEvents(){
+            const evs = [];
+            holdDataList.forEach(function(it){
+                (it.transactions || []).forEach(function(t){
+                    const delta = Number(t.delta) || 0;
+                    if(delta === 0) return;
+                    evs.push({ time: Number(t.t) || 0, type: delta > 0 ? 'buy' : 'sell', amount: Math.abs(delta) * (Number(t.price) || 0) });
+                });
+            });
+            (historyData.closedStocks || []).forEach(function(c){
+                (c.transactions || []).forEach(function(t){
+                    const delta = Number(t.delta) || 0;
+                    if(delta === 0) return;
+                    evs.push({ time: Number(t.t) || 0, type: delta > 0 ? 'buy' : 'sell', amount: Math.abs(delta) * (Number(t.price) || 0) });
+                });
+            });
+            return evs;
+        }
+        function calcTurnoverStats(){
+            const curY = String(new Date().getFullYear());
+            const y0t = new Date(curY + '-01-01').getTime();
+            let yBuy = 0, ySell = 0, allBuy = 0, allSell = 0;
+            collectTradeEvents().forEach(function(ev){
+                const amt = ev.amount;
+                if(ev.time >= y0t){
+                    if(ev.type === 'buy') yBuy += amt; else ySell += amt;
+                }
+                if(ev.type === 'buy') allBuy += amt; else allSell += amt;
+            });
+            const curMarket = Number(calcSummary().totalMarket) || 0;
+            // 年初市值：与首页"今年收益率"同源（去年年终资产）
+            let yearStart = 0;
+            const lastYear = String(new Date().getFullYear() - 1);
+            if(historyData.yearlyAssets && historyData.yearlyAssets[lastYear] > 0) yearStart = historyData.yearlyAssets[lastYear];
+            else if(historyData.monthlyAssets && historyData.monthlyAssets[lastYear + '-12'] > 0) yearStart = historyData.monthlyAssets[lastYear + '-12'];
+            else if(historyData.dailyAssets && historyData.dailyAssets[lastYear + '-12-31'] > 0) yearStart = historyData.dailyAssets[lastYear + '-12-31'];
+            if(yearStart <= 0 && historyData.yearStart && historyData.yearStart.market > 0) yearStart = historyData.yearStart.market;
+            // 开户期初市值：初始投入优先 → 最早资产记录 → 组合起始年快照
+            let acctStart = Number(historyData.initialCost) || 0;
+            let acctStartDate = historyData.initialCostDate || null;
+            if(acctStart <= 0){
+                const daKeys = Object.keys(historyData.dailyAssets || {}).sort();
+                if(daKeys.length){ acctStart = historyData.dailyAssets[daKeys[0]]; acctStartDate = daKeys[0]; }
+            }
+            if(acctStart <= 0 && historyData.yearStart && historyData.yearStart.market > 0){
+                acctStart = historyData.yearStart.market;
+                acctStartDate = historyData.yearStart.date || (String(historyData.portfolioStartYear || curY) + '-01-01');
+            }
+            let ytd = null, since = null, annual = null;
+            const yAvg = (yearStart + curMarket) / 2;
+            if(yAvg > 0 && (yBuy > 0 || ySell > 0)) ytd = Math.min(yBuy, ySell) / yAvg * 100;
+            const sAvg = (acctStart + curMarket) / 2;
+            if(sAvg > 0 && (allBuy > 0 || allSell > 0)) since = Math.min(allBuy, allSell) / sAvg * 100;
+            if(since != null && acctStartDate){
+                const days = Math.max((new Date() - new Date(String(acctStartDate).substring(0, 10))) / 86400000, 1);
+                const years = days / 365;
+                if(years > 0) annual = since / years;
+            }
+            return {
+                ytd: ytd != null ? ytd.toFixed(2) : '--',
+                since: since != null ? since.toFixed(2) : '--',
+                annual: annual != null ? annual.toFixed(2) : '--'
+            };
         }
         function buildStatsTrade(){
             const events = [];
@@ -10481,14 +10563,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const tEl = document.querySelector('#statsTradeTime');
             if(tEl) tEl.innerText = (snapTime || statsRefreshNow()).slice(0, 5) + ' 更新';
             window._statsTradeEvents = data.events;
-            const e1 = document.querySelector('#tradeTotalBuy');
-            const e2 = document.querySelector('#tradeTotalSell');
-            const e3 = document.querySelector('#tradeTotalNet');
-            const e4 = document.querySelector('#tradeTotalCount');
-            if(e1) e1.innerText = fmtMoney(data.buy);
-            if(e2) e2.innerText = fmtMoney(data.sell);
-            if(e3) e3.innerText = fmtMoney(data.net);
-            if(e4) e4.innerText = data.events.length + ' 笔';
+            const to = calcTurnoverStats();
+            const t1 = document.querySelector('#tradeTurnoverYtd');
+            const t2 = document.querySelector('#tradeTurnoverSince');
+            const t3 = document.querySelector('#tradeTurnoverAnnual');
+            if(t1) t1.innerText = (to.ytd === '--' ? '--' : to.ytd + '%');
+            if(t2) t2.innerText = (to.since === '--' ? '--' : to.since + '%');
+            if(t3) t3.innerText = (to.annual === '--' ? '--' : to.annual + '%');
             statsTradeFilter = 'all';
             statsTradePageCount = 50;
             updateStatsTradeFilterUI();
@@ -12780,6 +12861,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(schedBadge){
                     if(todayRegCount > 0){
                         schedBadge.classList.remove('hidden');
+                        // 右上角红色数字角标：数字放大醒目，"笔"为小字
+                        schedBadge.innerHTML = '今日 <span class="text-[12px] font-bold">' + todayRegCount + '</span> 笔';
                     } else {
                         schedBadge.classList.add('hidden');
                     }

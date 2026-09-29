@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.67';</script>
+    <script>window.APP_VERSION = '20260928.69';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1156,7 +1156,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 自选页：东方财富通风格（标题栏 + 指数汇总卡固定不动，仅列表内容滚动；表头纵向固定、首列横向固定） -->
-    <div id="pageWatchSel" class="hidden max-w-2xl mx-auto h-[100dvh] flex flex-col px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-2">
+    <div id="pageWatchSel" class="hidden max-w-2xl mx-auto fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom)+60px)] z-30 flex flex-col px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-2" style="overflow:hidden;">
         <!-- 标题栏（固定不动） -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-3 overflow-hidden flex-none">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -1194,10 +1194,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 列表表头卡（固定区：与标题/指数卡一起完全不随滚动移动；横向随列表内容同步滚动，首列横向固定） -->
-        <div id="watchSelHeadWrap" class="flex-none overflow-x-auto overflow-y-hidden bg-white rounded-t-2xl card-shadow" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;">
-            <div class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white">
-                <div class="sticky left-0 bg-white z-40 px-3 py-2 text-[11px] text-gray-500 font-medium">股票</div>
+        <!-- 列表滚动区：表头+数据行在同一滚动容器（纵向滚动时表头 sticky 固定在容器顶部；
+             横向滚动时表头与内容列同源整体滑动，绝无脱节；首列横向 sticky 固定不动） -->
+        <div id="watchSelScroll" class="flex-1 min-h-0 overflow-auto bg-white rounded-2xl card-shadow pb-3" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+            <div class="sticky top-0 z-40 min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white">
+                <div class="sticky left-0 bg-white z-50 px-3 py-2 text-[11px] text-gray-500 font-medium">股票</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">最新</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">涨幅</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">股息率</div>
@@ -1205,10 +1206,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right">市净率</div>
                 <div class="px-2 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">资产负债率</div>
             </div>
-        </div>
-        <!-- 列表滚动区：仅列表行内容上下/左右滚动（表头及以上全部固定不动） -->
-        <div id="watchSelScroll" class="flex-1 min-h-0 overflow-auto">
-            <div id="watchSelList" class="min-w-[600px] bg-white rounded-b-2xl card-shadow">
+            <div id="watchSelList" class="min-w-[600px] rounded-b-2xl">
                 <div class="py-10 text-center text-gray-400 text-sm">暂无自选股票，点击右上角 + 添加</div>
             </div>
         </div>
@@ -6725,13 +6723,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // 切换到自选页时渲染自选列表（本地数据轻渲染）
             if(tab === 'watch'){
-                // 东方财富通式滚动：标题/指数卡/表头完全不随页面滚动，body 外层滚动禁用，仅列表容器内部滚动
+                // 自选页为 fixed 覆盖层：底部精确避让导航条（读取导航实际高度含安全区 + 14px 余量，
+                // 计算列表可用高度，iPhone 13 Pro Max 等机型底部内容不被导航遮挡）
+                const navEl = document.querySelector('#bottomNav');
+                if(navEl){
+                    const wpSel = document.querySelector('#pageWatchSel');
+                    if(wpSel) wpSel.style.bottom = (navEl.offsetHeight + 14) + 'px';
+                }
                 document.body.style.overflow = 'hidden';
-                const wpSel = document.querySelector('#pageWatchSel');
-                if(wpSel) wpSel.style.height = window.innerHeight + 'px';
+                document.documentElement.style.overflow = 'hidden';
                 requestAnimationFrame(function(){ renderWatchSelPage(); refreshIndexQuotes(); });
             } else {
                 document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
             }
             window.scrollTo(0, 0);
         }
@@ -16783,18 +16787,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         document.querySelector('#notifCenterBtn').addEventListener('click', openNotifCenter);
         document.querySelector('#notifBackBtn').addEventListener('click', closeNotifCenter);
         document.querySelector('#notifReadAllBtn').addEventListener('click', markAllNotifRead);
-        // 自选页列表横向滚动与表头卡同步（表头固定区不随纵向滚动，横向与列表内容对齐）
-        (function(){
-            const headWrap = document.querySelector('#watchSelHeadWrap');
-            const bodyScroll = document.querySelector('#watchSelScroll');
-            if(headWrap && bodyScroll){
-                bodyScroll.addEventListener('scroll', function(){
-                    if(Math.abs(headWrap.scrollLeft - bodyScroll.scrollLeft) > 1){
-                        headWrap.scrollLeft = bodyScroll.scrollLeft;
-                    }
-                }, { passive: true });
-            }
-        })();
+        // 自选页表头与数据行在同一滚动容器内（sticky 表头），横向滚动同源，无需 JS 同步
         // 添加自选浮层：取消/确认/回车/市场切换/输入自动查询（自选页右上角 + 弹出）
         document.querySelector('#watchCancelBtn').addEventListener('click', function(){
             document.querySelector('#watchAddCard').classList.add('hidden');

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.117';</script>
+    <script>window.APP_VERSION = '20260928.119';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -16985,17 +16985,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 headRow.style.transform = 'translateX(' + (-X) + 'px)';
                 headFirst.style.transform = 'translateX(' + X + 'px)';
             }
-            window.__watchSync = sync;
-            window.__watchCalcMax = function(){ calcMax(); };
-            // 拖拽落位等场景强制重置手势状态，避免残留干扰下一次横向滑动
-            window.__watchResetTouch = function(){ _mode = null; _vel = 0; _anim = null; _tX = 0; _tY = 0; _lastT = 0; };
-            listEl.addEventListener('touchstart', function(e){
+            function onTs(e){
                 if(_anim){ cancelAnimationFrame(_anim); _anim = null; }
                 const t = e.touches[0];
                 _tX = t.clientX; _tY = t.clientY;
                 _mode = null; _vel = 0; _lastT = Date.now();
-            }, { passive: true });
-            listEl.addEventListener('touchmove', function(e){
+            }
+            function onTm(e){
                 const t = e.touches[0];
                 const dx = t.clientX - _tX, dy = t.clientY - _tY;
                 if(_mode === null){
@@ -17011,8 +17007,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     sync();
                 }
                 // v 模式：不阻止默认，交给外层整页原生滚动
-            }, { passive: false });
-            listEl.addEventListener('touchend', function(){
+            }
+            function onTe(){
                 if(_mode === 'h' && Math.abs(_vel) > 0.3){
                     const step = function(){
                         X += _vel; _vel *= 0.92;
@@ -17025,7 +17021,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     _anim = requestAnimationFrame(step);
                 }
                 _mode = null;
-            }, { passive: true });
+            }
+            function bind(){
+                listEl.addEventListener('touchstart', onTs, { passive: true });
+                listEl.addEventListener('touchmove', onTm, { passive: false });
+                listEl.addEventListener('touchend', onTe, { passive: true });
+            }
+            window.__watchSync = sync;
+            window.__watchCalcMax = function(){ calcMax(); };
+            window.__watchResetTouch = function(){ _mode = null; _vel = 0; _anim = null; _tX = 0; _tY = 0; _lastT = 0; };
+            // 拖拽落位等场景重绑定触摸监听：刷新触摸目标/监听器状态，确保横向滑动恢复
+            window.__watchRebind = function(){
+                listEl.removeEventListener('touchstart', onTs);
+                listEl.removeEventListener('touchmove', onTm);
+                listEl.removeEventListener('touchend', onTe);
+                _mode = null; _vel = 0; _anim = null; _tX = 0; _tY = 0; _lastT = 0;
+                bind();
+            };
+            bind();
             calcMax();
         })();
         // ===== 自选页拖拽重排：桌面 HTML5 DnD + 移动端 touch（grip 拦截事件，与横向平移互斥；行跟随 + 实时插入让位；落定保存顺序） =====
@@ -17118,7 +17131,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 row.style.transform = 'translateX(' + getX(row) + 'px)';
                 if(window.__watchCalcMax) window.__watchCalcMax();
                 if(window.__watchSync) window.__watchSync();
-                if(window.__watchResetTouch) window.__watchResetTouch();
+                if(window.__watchRebind) window.__watchRebind();
+                // 强制刷新 iOS 触摸命中缓存：重排后下一次横向滑动目标才能重新命中
+                list.style.pointerEvents = 'none';
+                void list.offsetHeight;
+                list.style.pointerEvents = '';
                 commitWatchOrder();
             }
             // list 级 dragover/drop 只绑一次（避免每次渲染累积监听器）
@@ -17195,15 +17212,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         e.stopPropagation();
                         const s = list._sort;
                         if(s && s.row === row){
-                            // 延迟落位到下一帧：触摸事件处理器内重排 DOM 会使后续触摸目标定位异常（iOS 已知问题），导致横滑失灵
-                            setTimeout(function(){ settle(s); list._sort = null; }, 0);
+                            // 延迟落位到下一渲染帧：触摸事件处理器内/紧邻重排 DOM 会使后续触摸目标定位异常（iOS 已知问题），导致横滑失灵
+                            setTimeout(function(){
+                                requestAnimationFrame(function(){ settle(s); list._sort = null; });
+                            }, 0);
                         }
                     }, { passive: true });
                     grip.addEventListener('touchcancel', function(e){
                         e.stopPropagation();
                         const s = list._sort;
                         if(s && s.row === row){
-                            setTimeout(function(){ settle(s); list._sort = null; }, 0);
+                            setTimeout(function(){
+                                requestAnimationFrame(function(){ settle(s); list._sort = null; });
+                            }, 0);
                         }
                     }, { passive: true });
                 })(rows[i]);

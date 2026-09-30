@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.122';</script>
+    <script>window.APP_VERSION = '20260928.123';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -9111,6 +9111,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '</div>';
             });
             el.innerHTML = html;
+            // 重建行后重置拖拽状态：防止落位异常残留 _sort/_dragActive 持续拦截横向滑动
+            el._sort = null;
+            el._dragActive = false;
             // 重建后更新横向平移范围与位置（行内容/表头/首列 transform 复位到当前平移量）
             if(window.__watchCalcMax) window.__watchCalcMax();
             if(window.__watchSync) window.__watchSync();
@@ -17010,7 +17013,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             function onDocTm(e){
                 if(!_active) return;
-                if(listEl._sort) return; // 拖拽进行中：让 grip 手势处理，不参与横滑
+                if(listEl._dragActive) return; // 拖拽物理进行中：让 grip 手势处理；拖拽结束后立即清除，横滑即时恢复
                 const t = e.touches[0];
                 if(!t) return;
                 const dx = t.clientX - _tX, dy = t.clientY - _tY;
@@ -17162,7 +17165,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(!over || over.dataset.code === code) return;
                     const dragRow = list.querySelector('.watch-row[data-code="' + code + '"]');
                     if(!dragRow) return;
-                    if(!list._sort) list._sort = { row: dragRow, index: rowIndex(dragRow), rowH: dragRow.offsetHeight, lastTargetIdx: rowIndex(dragRow), movedSet: null };
+                    if(!list._sort){ list._sort = { row: dragRow, index: rowIndex(dragRow), rowH: dragRow.offsetHeight, lastTargetIdx: rowIndex(dragRow), movedSet: null }; list._dragActive = true; }
                     const s = list._sort;
                     const targetIdx = computeTarget(e.clientY, dragRow);
                     if(targetIdx !== s.lastTargetIdx){
@@ -17173,7 +17176,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 list.addEventListener('drop', function(e){
                     e.preventDefault();
                     const s = list._sort;
-                    if(s){ settle(s); list._sort = null; }
+                    list._sort = null;
+                    list._dragActive = false;
+                    if(s){ try{ settle(s); }catch(err){} }
                     list._dragCode = null;
                 });
             }
@@ -17194,7 +17199,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     grip.addEventListener('dragend', function(){
                         row.classList.remove('watch-dragging');
                         const s = list._sort;
-                        if(s){ settle(s); list._sort = null; }
+                        list._sort = null;
+                        list._dragActive = false;
+                        if(s){ try{ settle(s); }catch(err){} }
                         list._dragCode = null;
                     });
                     // ---- 移动：touch 拖拽（grip 拦截；被拖行 transform 跟手 + 其他行让位动画；松手一次性落位） ----
@@ -17203,6 +17210,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const t = e.touches[0];
                         const s = { row: row, grabY: t.clientY, startTop: row.getBoundingClientRect().top, rowH: row.offsetHeight, index: rowIndex(row), lastTargetIdx: rowIndex(row), movedSet: null };
                         list._sort = s;
+                        list._dragActive = true;
                         row.classList.add('watch-dragging');
                         row.style.transition = 'none';
                     }, { passive: true });
@@ -17224,19 +17232,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     grip.addEventListener('touchend', function(e){
                         e.stopPropagation();
                         const s = list._sort;
+                        // 立即清除拖拽状态：横滑恢复不依赖落位（iOS 触摸后 rAF 可能延迟，等 rAF 清 _sort 会长时间拦截横滑）
+                        list._sort = null;
+                        list._dragActive = false;
                         if(s && s.row === row){
-                            // 延迟落位到下一渲染帧：触摸事件处理器内/紧邻重排 DOM 会使后续触摸目标定位异常（iOS 已知问题），导致横滑失灵
+                            // 延迟落位到下一渲染帧：触摸事件处理器内/紧邻重排 DOM 会使后续触摸目标定位异常（iOS 已知问题）
                             setTimeout(function(){
-                                requestAnimationFrame(function(){ settle(s); list._sort = null; });
+                                requestAnimationFrame(function(){ try{ settle(s); }catch(e){} });
                             }, 0);
                         }
                     }, { passive: true });
                     grip.addEventListener('touchcancel', function(e){
                         e.stopPropagation();
                         const s = list._sort;
+                        list._sort = null;
+                        list._dragActive = false;
                         if(s && s.row === row){
                             setTimeout(function(){
-                                requestAnimationFrame(function(){ settle(s); list._sort = null; });
+                                requestAnimationFrame(function(){ try{ settle(s); }catch(e){} });
                             }, 0);
                         }
                     }, { passive: true });

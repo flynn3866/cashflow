@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.108';</script>
+    <script>window.APP_VERSION = '20260928.110';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -425,15 +425,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         /* 联想下拉反馈小字：靠右对齐 */
         #watchAddHint{ text-align: right; }
-        /* ===== 自选页左滑删除：移动端左滑露出右侧删除按钮，桌面 hover 淡入 ===== */
-        .watch-swipe-wrap{ position: relative; overflow: hidden; }
+        /* 自选列表行：基础定位与白底（左滑删除已移除，行保留完整横向滑动） */
         .watch-row{ position: relative; z-index: 2; background: #fff; }
-        .watch-del{ position: absolute; top: 0; bottom: 0; right: 0; width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: linear-gradient(135deg, #e03131, #c92a2a); color: #fff; font-size: 12px; font-weight: 500; letter-spacing: 2px; opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 5; }
-        .watch-swipe-wrap.swipe-open .watch-del{ opacity: 1; pointer-events: auto; }
-        .watch-row.swipe-anim{ transition: transform .24s cubic-bezier(.25,.8,.35,1); }
-        @media (hover:hover){
-            .watch-swipe-wrap:hover .watch-del{ opacity: 1; pointer-events: auto; }
-        }
 
 </style>
 </head>
@@ -9100,12 +9093,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const peCls = pe != null ? 'text-gray-800' : 'text-gray-400';
                 const pbCls = pb != null ? 'text-gray-800' : 'text-gray-400';
                 const debtCls = debtVal != null ? 'text-gray-800' : 'text-gray-400';
-                html += '<div class="watch-swipe-wrap">'
-                    + '<button class="watch-del" onclick="deleteWatchStock(\'' + w.code + '\')">'
-                    + '<svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
-                    + '<span class="text-xs">删除</span>'
-                    + '</button>'
-                    + '<div class="watch-row grid grid-cols-[112px_76px_74px_82px_92px_74px_92px_40px] border-b border-gray-50" data-code="' + w.code + '">'
+                html += '<div class="watch-row grid grid-cols-[112px_76px_74px_82px_92px_74px_92px_40px] border-b border-gray-50" data-code="' + w.code + '">'
                     + '<div class="relative bg-white z-20 pl-4 pr-3 py-2.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
                     + '<div class="text-[15px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
@@ -9118,7 +9106,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
                     + '<div class="watch-grip pl-2 pr-4 py-2.5 flex items-center justify-center text-gray-300 select-none"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg></div>'
-                    + '</div>'
                     + '</div>';
             });
             el.innerHTML = html;
@@ -9127,8 +9114,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(window.__watchSync) window.__watchSync();
             // 拖拽重排绑定（行新建后重新绑定）
             if(window.initWatchSort) window.initWatchSort();
-            // 左滑删除绑定（行新建后重新绑定）
-            if(window.initWatchSwipeDel) window.initWatchSwipeDel();
             // 资产负债率：无有效缓存时异步拉取（仅 A 股），拉到后更新对应行
             list.forEach(function(w){
                 if(w.market === 'A' && !hasValidDebtCache(w.code)){
@@ -17152,79 +17137,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
         // 自选页左滑删除：行主体横向左滑露出右侧删除按钮；与 grip 拖拽、容器横向平移互斥
-        function initWatchSwipeDel(){
-            const list = document.getElementById('watchSelList');
-            if(!list) return;
-            const rows = list.querySelectorAll('.watch-row');
-            for(let i = 0; i < rows.length; i++){
-                (function(row){
-                    if(row._swipeBound) return;
-                    row._swipeBound = true;
-                    let _sX = 0, _sY = 0, _swiping = false, _bx = 0;
-                    const baseX = function(){
-                        const m = (row.style.transform || '').match(/translateX\((-?[\d.]+)px\)/);
-                        return m ? parseFloat(m[1]) : 0;
-                    };
-                    row.addEventListener('touchstart', function(e){
-                        _sX = e.touches[0].clientX; _sY = e.touches[0].clientY;
-                        _swiping = false;
-                        _bx = baseX();
-                    }, { passive: true });
-                    row.addEventListener('touchmove', function(e){
-                        const t = e.touches[0];
-                        const dx = t.clientX - _sX, dy = t.clientY - _sY;
-                        if(Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)){
-                            if(dx < 0){
-                                // 左滑：行删除手势（拦截容器横向平移）
-                                e.preventDefault(); e.stopPropagation();
-                                _swiping = true;
-                                const off = Math.max(-64, dx);
-                                row.style.transform = 'translateX(' + (_bx + off) + 'px)';
-                            } else if(row.classList.contains('swipe-open')){
-                                // 已滑开行右滑：关闭
-                                e.preventDefault(); e.stopPropagation();
-                                _swiping = true;
-                                row.style.transform = 'translateX(' + (_bx + Math.min(0, dx)) + 'px)';
-                            }
-                            // 未滑开行右滑：放行容器横向平移
-                        } else if(_swiping){
-                            e.preventDefault(); e.stopPropagation();
-                        }
-                    }, { passive: false });
-                    row.addEventListener('touchend', function(e){
-                        if(!_swiping) return;
-                        const t = e.changedTouches[0];
-                        const dx = t.clientX - _sX;
-                        const wrap = row.parentNode;
-                        const open = row.classList.contains('swipe-open');
-                        if(open && dx > 30){
-                            row.classList.remove('swipe-open');
-                            if(wrap) wrap.classList.remove('swipe-open');
-                        } else if(!open && dx < -40){
-                            row.classList.add('swipe-open');
-                            if(wrap) wrap.classList.add('swipe-open');
-                        }
-                        row.classList.add('swipe-anim');
-                        row.style.transform = row.classList.contains('swipe-open') ? 'translateX(-64px)' : 'translateX(' + _bx + 'px)';
-                        setTimeout(function(){ row.classList.remove('swipe-anim'); }, 280);
-                        _swiping = false;
-                    }, { passive: true });
-                    row.addEventListener('touchcancel', function(){
-                        _swiping = false;
-                        row.classList.remove('swipe-open');
-                        if(row.parentNode) row.parentNode.classList.remove('swipe-open');
-                        row.classList.add('swipe-anim');
-                        row.style.transform = 'translateX(' + _bx + 'px)';
-                        setTimeout(function(){ row.classList.remove('swipe-anim'); }, 280);
-                    }, { passive: true });
-                })(rows[i]);
-            }
-        }
-        // 删除自选股（左滑删除按钮 / 桌面 hover 删除按钮）
+        // 删除自选股（候选列表 ✓ 点击删除）
         function deleteWatchStock(code){
             const cur = loadWatchList().filter(function(x){ return x.code !== code; });
             saveWatchList(cur);
             delete watchQuotes[code];
+            // 局部更新候选按钮：该行 ✓ → +（浮层结果保持不动，不重新搜索、不清空）
+            document.querySelectorAll('#watchSuggestList .watch-suggest-item[data-code="' + code + '"] .watch-suggest-add.added').forEach(function(b){
+                b.classList.remove('added', 'bg-[#e8f5e9]', 'text-[#2e7d32]');
+                b.classList.add('bg-accent', 'text-white');
+                b.removeAttribute('title');
+                b.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+            });
+            // 只刷新自选列表（数据已变），不整页渲染
             renderWatchSelPage();
         }
         // 渲染搜索候选：名称区点击=填码查价，行尾 + =一键添加；已在自选显示 ✓；emptyText 自定义空态文案
@@ -17248,7 +17173,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const inList = cur.some(function(x){ return x.code === it.code; });
                 const c1 = it.name.charAt(0);
                 const btn = inList
-                    ? '<button class="watch-suggest-add added flex-shrink-0 w-7 h-7 rounded-full bg-[#e8f5e9] text-[#2e7d32] flex items-center justify-center cursor-default"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>'
+                    ? '<button class="watch-suggest-add added flex-shrink-0 w-7 h-7 rounded-full bg-[#e8f5e9] text-[#2e7d32] flex items-center justify-center cursor-pointer active:scale-90 transition-transform" title="点击从自选删除"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>'
                     : '<button class="watch-suggest-add flex-shrink-0 w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center active:scale-90 transition-transform"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>';
                 html += '<div class="watch-suggest-item px-3 py-2.5 flex items-center gap-3 cursor-pointer border-b border-gray-100 last:border-0 hover:bg-[#faf3e3] active:bg-[#f5ecdc] transition-colors" data-code="' + it.code + '" data-market="' + it.market + '">'
                     + '<div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[13px] font-semibold ' + (isHk ? 'bg-blue-50 text-blue-700' : 'bg-[#faf3e3] text-accent') + '">' + c1 + '</div>'
@@ -17387,7 +17312,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!item) return;
             if(addBtn){
                 e.stopPropagation();
-                if(addBtn.classList.contains('added')) return; // 已添加，忽略
+                if(addBtn.classList.contains('added')){
+                    // 已添加：点击 ✓ 从自选删除，按钮变回 +；浮层结果保持不动，不重新搜索
+                    deleteWatchStock(item.dataset.code);
+                    return;
+                }
                 const nameEl = item.querySelector('.watch-suggest-name');
                 addWatchFromSuggest(item.dataset.code, item.dataset.market, nameEl ? nameEl.innerText : item.dataset.code, addBtn);
                 return;

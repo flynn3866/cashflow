@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.110';</script>
+    <script>window.APP_VERSION = '20260928.113';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -421,7 +421,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         /* ===== 自选页拖拽重排：手柄 + 拖拽中行状态 ===== */
         .watch-grip{ cursor: grab; touch-action: none; -webkit-touch-callout: none; }
         .watch-grip:hover, .watch-grip:active{ color: #b0652f; }
-        .watch-row.watch-dragging{ opacity: 0.55; box-shadow: 0 10px 24px rgba(15,23,42,0.12); position: relative; z-index: 30; background: #fff; }
+        .watch-row.watch-dragging{ opacity: 1; box-shadow: 0 14px 30px rgba(15,23,42,0.18); position: relative; z-index: 60; background: #fff; }
+        .watch-row.watch-move{ transition: transform .18s cubic-bezier(.25,.8,.35,1); }
 
         /* 联想下拉反馈小字：靠右对齐 */
         #watchAddHint{ text-align: right; }
@@ -17044,6 +17045,78 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function initWatchSort(){
             const list = document.getElementById('watchSelList');
             if(!list) return;
+            function getX(el){
+                const m = (el.style.transform || '').match(/translateX\((-?[\d.]+)px\)/);
+                return m ? m[1] : '0';
+            }
+            function rowIndex(el){
+                let i = 0, c = list.firstElementChild;
+                while(c){ if(c === el) return i; c = c.nextElementSibling; i++; }
+                return -1;
+            }
+            // 按指针 Y 计算目标插入位置：全遍历，被拖行视觉顶越过某行中点即排其后（向上/向下拖均生效）
+            function computeTarget(pointerY, row){
+                const all = list.children;
+                const others = [];
+                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
+                let targetIdx = 0;
+                for(let j = 0; j < others.length; j++){
+                    const ob = others[j].getBoundingClientRect();
+                    if(pointerY >= ob.top + ob.height / 2) targetIdx = j + 1;
+                }
+                return targetIdx;
+            }
+            // 让位视觉：按目标位置让中间行位移 ±rowH（不移动 DOM，只 transform，带过渡动画）
+            function applyShift(targetIdx, row, rowH, s){
+                const all = list.children;
+                const others = [];
+                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
+                // 清旧让位（瞬时，无动画）
+                if(s.movedSet){
+                    s.movedSet.forEach(function(o){
+                        o.style.transition = 'none';
+                        o.style.transform = 'translateX(' + getX(o) + 'px) translateY(0)';
+                        o.classList.remove('watch-move');
+                    });
+                }
+                const moved = [];
+                const lo = Math.min(targetIdx, s.index);
+                const hi = Math.max(targetIdx, s.index);
+                const dir = targetIdx > s.index ? -1 : 1; // 向下拖：中间行上移让位；向上拖：中间行下移让位
+                for(let j = lo; j < hi; j++){
+                    const o = others[j];
+                    if(o === row) continue;
+                    o.classList.add('watch-move');
+                    o.style.transition = '';
+                    o.style.transform = 'translateX(' + getX(o) + 'px) translateY(' + (dir * rowH) + 'px)';
+                    moved.push(o);
+                }
+                s.movedSet = moved;
+            }
+            // 落位：重置所有行 transform → 一次性重排 DOM → 保存顺序
+            function settle(s){
+                const row = s.row;
+                const all = list.children;
+                for(let j = 0; j < all.length; j++){
+                    const o = all[j];
+                    o.classList.remove('watch-move', 'watch-dragging');
+                    o.style.transition = 'none';
+                    o.style.transform = 'translateX(' + getX(o) + 'px)';
+                }
+                const others = [];
+                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
+                const targetIdx = Math.max(0, Math.min(s.lastTargetIdx == null ? s.index : s.lastTargetIdx, others.length));
+                if(targetIdx >= others.length){
+                    list.appendChild(row);
+                } else {
+                    list.insertBefore(row, others[targetIdx]);
+                }
+                row.style.transition = 'none';
+                row.style.transform = 'translateX(' + getX(row) + 'px)';
+                if(window.__watchCalcMax) window.__watchCalcMax();
+                if(window.__watchSync) window.__watchSync();
+                commitWatchOrder();
+            }
             // list 级 dragover/drop 只绑一次（避免每次渲染累积监听器）
             if(!list._dndBound){
                 list._dndBound = true;
@@ -17053,14 +17126,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(!code) return;
                     const over = e.target && e.target.closest ? e.target.closest('.watch-row') : null;
                     if(!over || over.dataset.code === code) return;
-                    const r = over.getBoundingClientRect();
-                    const after = (e.clientY - r.top) > r.height / 2;
-                    const ref = after ? over.nextElementSibling : over;
                     const dragRow = list.querySelector('.watch-row[data-code="' + code + '"]');
-                    if(!dragRow || ref === dragRow) return;
-                    list.insertBefore(dragRow, ref);
+                    if(!dragRow) return;
+                    if(!list._sort) list._sort = { row: dragRow, index: rowIndex(dragRow), rowH: dragRow.offsetHeight, lastTargetIdx: rowIndex(dragRow), movedSet: null };
+                    const s = list._sort;
+                    const targetIdx = computeTarget(e.clientY, dragRow);
+                    if(targetIdx !== s.lastTargetIdx){
+                        applyShift(targetIdx, dragRow, s.rowH, s);
+                        s.lastTargetIdx = targetIdx;
+                    }
                 });
-                list.addEventListener('drop', function(e){ e.preventDefault(); });
+                list.addEventListener('drop', function(e){
+                    e.preventDefault();
+                    const s = list._sort;
+                    if(s){ settle(s); list._sort = null; }
+                    list._dragCode = null;
+                });
             }
             const rows = list.querySelectorAll('.watch-row');
             for(let i = 0; i < rows.length; i++){
@@ -17068,37 +17149,28 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const grip = row.querySelector('.watch-grip');
                     if(!grip || grip._sortBound) return;
                     grip._sortBound = true;
-                    // 结束拖拽（touch/touchcancel 共用）：清态 + 恢复横平 transform + 保存顺序
-                    function endDrag(){
-                        const s = list._sort;
-                        list._sort = null;
-                        if(!s || s.row !== row) return;
-                        row.classList.remove('watch-dragging');
-                        let x = '';
-                        const m = (row.style.transform || '').match(/translateX\(([-\d.]+)px\)/);
-                        if(m) x = 'translateX(' + m[1] + 'px)';
-                        row.style.transform = x;
-                        commitWatchOrder();
-                    }
-                    // ---- 桌面：HTML5 DnD ----
+                    // ---- 桌面：HTML5 DnD（让位视觉 + drop 一次性落位） ----
                     grip.setAttribute('draggable', 'true');
                     grip.addEventListener('dragstart', function(e){
                         e.dataTransfer.setData('text/plain', row.dataset.code);
                         e.dataTransfer.effectAllowed = 'move';
                         list._dragCode = row.dataset.code;
-                        setTimeout(function(){ row.classList.add('watch-dragging'); }, 0);
+                        row.classList.add('watch-dragging');
                     });
                     grip.addEventListener('dragend', function(){
                         row.classList.remove('watch-dragging');
+                        const s = list._sort;
+                        if(s){ settle(s); list._sort = null; }
                         list._dragCode = null;
-                        commitWatchOrder();
                     });
-                    // ---- 移动：touch 拖拽（grip 拦截，行跟随 + 实时插入） ----
+                    // ---- 移动：touch 拖拽（grip 拦截；被拖行 transform 跟手 + 其他行让位动画；松手一次性落位） ----
                     grip.addEventListener('touchstart', function(e){
                         e.stopPropagation();
                         const t = e.touches[0];
-                        list._sort = { row: row, grabY: t.clientY, visualTop: row.getBoundingClientRect().top };
+                        const s = { row: row, grabY: t.clientY, startTop: row.getBoundingClientRect().top, rowH: row.offsetHeight, index: rowIndex(row), lastTargetIdx: rowIndex(row), movedSet: null };
+                        list._sort = s;
                         row.classList.add('watch-dragging');
+                        row.style.transition = 'none';
                     }, { passive: true });
                     grip.addEventListener('touchmove', function(e){
                         e.preventDefault();
@@ -17106,32 +17178,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const s = list._sort;
                         if(!s || s.row !== row) return;
                         const t = e.touches[0];
-                        const vTop = s.visualTop + (t.clientY - s.grabY);
-                        // 目标插入点：视觉顶越过某行的中点则插到其后
-                        const all = list.querySelectorAll('.watch-row');
-                        let target = null;
-                        for(let j = 0; j < all.length; j++){
-                            const o = all[j];
-                            if(o === row) continue;
-                            const ob = o.getBoundingClientRect();
-                            if(vTop > ob.top + ob.height / 2) target = o;
+                        const dy = t.clientY - s.grabY;
+                        // 被拖行跟手（速度与手指一致），保留横向位移
+                        row.style.transform = 'translateX(' + getX(row) + 'px) translateY(' + dy + 'px)';
+                        const targetIdx = computeTarget(s.startTop + dy, row);
+                        if(targetIdx !== s.lastTargetIdx){
+                            applyShift(targetIdx, row, s.rowH, s);
+                            s.lastTargetIdx = targetIdx;
                         }
-                        if(target && target.nextElementSibling !== row){
-                            list.insertBefore(row, target.nextElementSibling);
-                        }
-                        // 视觉连续：translateY = 视觉顶 - 当前文档流顶（DOM 移动后自动补偿）
-                        let x = '';
-                        const m = (row.style.transform || '').match(/translateX\(([-\d.]+)px\)/);
-                        if(m) x = 'translateX(' + m[1] + 'px) ';
-                        row.style.transform = x + 'translateY(' + (vTop - row.getBoundingClientRect().top) + 'px)';
                     }, { passive: false });
                     grip.addEventListener('touchend', function(e){
                         e.stopPropagation();
-                        endDrag();
+                        const s = list._sort;
+                        if(s && s.row === row){ settle(s); list._sort = null; }
                     }, { passive: true });
                     grip.addEventListener('touchcancel', function(e){
                         e.stopPropagation();
-                        endDrag();
+                        const s = list._sort;
+                        if(s && s.row === row){ settle(s); list._sort = null; }
                     }, { passive: true });
                 })(rows[i]);
             }

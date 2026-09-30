@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.92';</script>
+    <script>window.APP_VERSION = '20260928.108';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -418,6 +418,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         i.fa-svg { font-style: normal; }
         i.fa-svg svg { width: 1em; height: 1em; display: block; }
 
+        /* ===== 自选页拖拽重排：手柄 + 拖拽中行状态 ===== */
+        .watch-grip{ cursor: grab; touch-action: none; -webkit-touch-callout: none; }
+        .watch-grip:hover, .watch-grip:active{ color: #b0652f; }
+        .watch-row.watch-dragging{ opacity: 0.55; box-shadow: 0 10px 24px rgba(15,23,42,0.12); position: relative; z-index: 30; background: #fff; }
+
+        /* 联想下拉反馈小字：靠右对齐 */
+        #watchAddHint{ text-align: right; }
+        /* ===== 自选页左滑删除：移动端左滑露出右侧删除按钮，桌面 hover 淡入 ===== */
+        .watch-swipe-wrap{ position: relative; overflow: hidden; }
+        .watch-row{ position: relative; z-index: 2; background: #fff; }
+        .watch-del{ position: absolute; top: 0; bottom: 0; right: 0; width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: linear-gradient(135deg, #e03131, #c92a2a); color: #fff; font-size: 12px; font-weight: 500; letter-spacing: 2px; opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 5; }
+        .watch-swipe-wrap.swipe-open .watch-del{ opacity: 1; pointer-events: auto; }
+        .watch-row.swipe-anim{ transition: transform .24s cubic-bezier(.25,.8,.35,1); }
+        @media (hover:hover){
+            .watch-swipe-wrap:hover .watch-del{ opacity: 1; pointer-events: auto; }
+        }
+
 </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
@@ -631,23 +648,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
         <div class="bg-white rounded-2xl card-shadow p-5">
             <form id="stockForm" class="space-y-3.5">
-                <!-- 市场类型 -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">市场类型</label>
-                    <div class="flex gap-2">
-                        <button type="button" data-market="A" class="market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent">A股</button>
-                        <button type="button" data-market="HK" class="market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200">港股</button>
-                    </div>
-                    <input type="hidden" id="marketType" value="A">
-                </div>
+                <!-- 市场类型：按输入代码自动判断（5位港股 / 6位A股），隐藏字段供提交与编辑使用 -->
+                <input type="hidden" id="marketType" value="A">
                 <!-- 股票代码 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">股票代码</label>
                     <div class="relative">
-                        <input type="text" id="stockCode" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="例如 600795" required>
+                        <input type="text" id="stockCode" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="例如 600795 / 茅台 / mt" required>
                         <i class="fa fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                        <!-- 联想下拉浮层：输入名称/拼音联想，点击行直接填充代码+名称并自动获取行情（无 + 按钮） -->
+                        <div id="stockSuggestPanel" class="hidden absolute top-full left-0 right-0 mt-1.5 z-40 min-h-[168px] overflow-hidden rounded-xl bg-white border border-[#eedfc0] card-shadow">
+                            <div id="stockSuggestList" class="overflow-y-auto max-h-[42vh] min-h-[0]"></div>
+                            <div id="stockSuggestHint" class="px-3 py-1.5 border-t border-gray-100 text-[11px] text-gray-400"></div>
+                        </div>
                     </div>
-                    <div class="mt-1.5 text-xs text-gray-400" id="codeHint">输入 6 位 A 股代码或 5 位港股代码，自动获取名称、股价与每股分红</div>
+                    <div class="mt-1.5 text-xs text-gray-400" id="codeHint">输入代码 / 名称 / 拼音联想选择，或直接输入 6 位 A 股 / 5 位港股代码自动获取</div>
                 </div>
                 <!-- 股票名称（自动获取，不可编辑） -->
                 <div>
@@ -1169,7 +1184,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     自选
                     <span class="text-[10px] text-gray-400 font-normal whitespace-nowrap" id="watchSelCount">0 只</span>
                 </h2>
-                <button class="w-9 h-9 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
+                <!-- 添加自选：右上角 + 号原位变输入框（嵌入标题栏一行；添加完成后还原 + 号） -->
+                <div id="watchAddSlot" class="relative flex items-center justify-end flex-1 min-w-0 ml-4 max-w-[240px]">
+                    <button id="watchAddBtn" class="w-9 h-9 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
+                    <div id="watchSearchBar" class="hidden items-center w-full">
+                        <div class="relative w-full">
+                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]"></i>
+                            <input id="watchCodeInput" type="text" class="w-full h-9 bg-white rounded-xl pl-8 pr-8 text-[13px] border-2 border-accent/60 focus:border-accent focus:outline-none transition-colors" placeholder="代码 / 名称 / 拼音" autocomplete="off">
+                            <button id="watchClearInput" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[12px] leading-none flex items-center justify-center active:scale-90 transition-transform">×</button>
+                        </div>
+                    </div>
+                    <!-- 联想下拉浮层：绝对定位于输入框下方（随标题栏吸顶），浮在页面上覆盖列表，不推挤其他内容；纯候选列表 + 底部反馈，无按钮 -->
+                    <div id="watchSearchPanel" class="hidden absolute top-full right-0 mt-1.5 z-40 w-[320px] max-w-[calc(100vw-1.5rem)] min-h-[168px] overflow-hidden rounded-xl bg-white border border-[#eedfc0] card-shadow">
+                        <div id="watchSuggestList" class="overflow-y-auto max-h-[42vh] min-h-[0]"></div>
+                        <div id="watchAddHint" class="px-3 py-1.5 border-t border-gray-100 text-[11px] text-gray-400"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- 指数汇总卡（固定不动）：深棕黑渐变，与首页/我的页汇总卡同一质感 -->
@@ -1197,7 +1227,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <!-- 表头行（横向随列表镜像滑动、同源无脱节；表头首列 JS 固定不动） -->
-            <div id="watchSelHeadRow" class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
+            <div id="watchSelHeadRow" class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px_40px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
                 <div id="watchSelHeadFirst" class="relative bg-white z-50 pl-4 pr-3 py-2 text-[11px] text-gray-500 font-medium" data-fixcol>股票</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">最新</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">涨幅</div>
@@ -1205,6 +1235,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">市盈率(TTM)</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">市净率</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">资产负债率</div>
+                <div class="pl-2 pr-4 py-2 flex items-center justify-center text-gray-300"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg></div>
             </div>
         </div>
 
@@ -1215,31 +1246,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     </div>
 
-    <!-- 添加自选股票浮层：自选页右上角 + 直接弹出（全站模态，独立于页面） -->
-    <div id="watchAddCard" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-6" onclick="closeWatchPage()" style="background:rgba(34,26,14,0.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);">
-        <div class="w-full max-w-sm bg-white rounded-2xl card-shadow p-5 relative overflow-hidden" onclick="event.stopPropagation()">
-            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
-            <div class="absolute -top-7 -right-7 w-24 h-24 rounded-full opacity-[0.06] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
-            <div class="flex items-center gap-1.5 mb-1 mt-1 relative z-10">
-                <i class="fa fa-plus-circle text-accent text-sm"></i>
-                <span class="text-sm font-semibold text-gray-700">添加自选股票</span>
-            </div>
-            <div class="text-[11px] text-gray-400 mb-3 relative z-10">输入代码自动显示名称，不存在则无法添加</div>
-            <div class="flex gap-2 mb-3">
-                <button type="button" data-market="A" class="watch-market-btn flex-1 py-2 rounded-xl border-2 font-medium text-sm bg-accent text-white border-accent">A股</button>
-                <button type="button" data-market="HK" class="watch-market-btn flex-1 py-2 rounded-xl border-2 font-medium text-sm bg-white text-gray-500 border-gray-200">港股</button>
-            </div>
-            <div class="relative mb-3">
-                <input id="watchCodeInput" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="输入 6 位 A股 / 5 位港股代码">
-                <i class="fa fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
-            </div>
-            <div class="flex gap-2">
-                <button id="watchCancelBtn" class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 font-medium text-sm active:bg-gray-50">取消</button>
-                <button id="watchConfirmBtn" class="flex-1 py-2.5 rounded-xl bg-accent text-white font-medium text-sm active:opacity-90">添加</button>
-            </div>
-            <div id="watchAddHint" class="mt-2 text-xs text-gray-400 relative z-10">输入代码后自动获取名称与最新价</div>
-        </div>
-    </div>
+
 
     <!-- 统计页面 -->
     <div id="pageStats" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
@@ -3192,6 +3199,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const divRangeGroupEl = document.querySelector('#divRangeGroup');
         const divPerShareLabelEl = document.querySelector('#divPerShareLabel');
         const stockIndustryEl = document.querySelector('#stockIndustry');
+        const stockSuggestPanel = document.querySelector('#stockSuggestPanel');
+        const stockSuggestList = document.querySelector('#stockSuggestList');
+        const stockSuggestHint = document.querySelector('#stockSuggestHint');
         // 筛选标签 & 港股税率相关
         const filterGroupEl = document.querySelector('#filterGroup');
         const hkTaxGroupEl = document.querySelector('#hkTaxGroup');
@@ -3327,6 +3337,55 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             loadScript(url, 'GBK', finish, finish);
             setTimeout(finish, 8000);
         }
+
+        // 腾讯搜索建议（JSONP，GBK，固定回调 v_hint）：支持代码 / 中文 / 拼音 / 拼音首字母模糊联想（自选页添加用）
+        function searchWatchSuggest(kw, done){
+            const seq = (window.__watchSuggestSeq = (window.__watchSuggestSeq || 0) + 1);
+            window.__watchSuggestDone = done;
+            const url = 'https://smartbox.gtimg.cn/s3/?v=2&q=' + encodeURIComponent(kw) + '&t=all';
+            const s = document.createElement('script');
+            s.src = url;
+            s.charset = 'GBK';
+            const cleanup = function(){
+                setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 3000);
+            };
+            s.onload = function(){
+                cleanup();
+                if(seq !== window.__watchSuggestSeq) return; // 过期结果丢弃
+                const raw = window.v_hint;
+                const arr = [];
+                try{
+                    if(raw){
+                        String(raw).split('^').forEach(function(seg){
+                            if(!seg) return;
+                            const f = seg.split('~');
+                            if(f.length < 5) return;
+                            const mk = f[0], code = f[1], name = f[2], type = f[4];
+                            let market = null;
+                            if(mk === 'sh' || mk === 'sz') market = 'A';
+                            else if(mk === 'hk') market = 'HK';
+                            // 类型过滤：仅 A 股(GP-A) 与港股(mk=hk 且 GP)，排除指数(ZS)/ETF/美股(us)
+                            if(type !== 'GP-A' && !(market === 'HK' && type === 'GP')) return;
+                            if(market === 'HK' && !/^\d{5}$/.test(code)) return;
+                            if(market === 'A' && !/^\d{6}$/.test(code)) return;
+                            if(!name) return;
+                            arr.push({ code: code, name: name, market: market });
+                        });
+                    }
+                }catch(e){}
+                window.__watchSuggestDone(arr);
+            };
+            s.onerror = function(){
+                cleanup();
+                if(seq !== window.__watchSuggestSeq) return;
+                window.__watchSuggestDone([]);
+            };
+            document.head.appendChild(s);
+            setTimeout(function(){
+                if(seq === window.__watchSuggestSeq){ window.__watchSuggestDone([]); }
+            }, 8000);
+        }
+
 
         // 抓取港币→人民币实时汇率（open.er-api，支持 CORS，无需脚本注入）
         function fetchFxRate(done){
@@ -3541,22 +3600,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             stockNameEl.value = '';
             nowPriceEl.value = '';
             divPerShareEl.value = '';
-            // 重置市场类型为A股，并更新按钮状态
+            // 重置市场类型为A股（按输入代码自动判断）
             marketTypeEl.value = 'A';
-            document.querySelectorAll('.market-type-btn').forEach(function(b){
-                if(b.getAttribute('data-market') === 'A'){
-                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent';
-                } else {
-                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200';
-                }
-            });
+            hideStockSuggest();
             // 新增时默认A股，分红字段readonly
             const divInput = document.querySelector('#divPerShare');
             const divLockIcon = document.querySelector('#divLockIcon');
             divInput.readOnly = true;
             divInput.className = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed';
             divLockIcon.style.display = '';
-            codeHintEl.innerText = '输入 6 位 A 股代码，自动获取名称、股价与每股分红';
+            codeHintEl.innerText = '输入代码 / 名称 / 拼音联想选择，或直接输入 6 位 A 股 / 5 位港股代码自动获取';
             codeHintEl.className = 'mt-1.5 text-xs text-gray-400';
             divHintEl.innerText = '输入股票代码后，自动获取所选口径的年均每股派息（含税）';
             divHintEl.className = 'mt-1.5 text-xs text-gray-400';
@@ -3577,7 +3630,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             clearTimeout(fetchTimer);
             const token = ++fetchToken;
             const code = stockCodeEl.value.trim();
-            const market = marketTypeEl.value;
+            // 市场按代码位数自动判断：5位港股 / 6位A股（联想选中后同样生效）
+            const market = code.length === 5 ? 'HK' : 'A';
+            marketTypeEl.value = market;
 
             // 随市场切换更新币种标签 & 港股税率区块
             priceLabelEl.innerHTML = market === 'HK'
@@ -3665,36 +3720,85 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }, 400);
         }
 
-        stockCodeEl.addEventListener('input', onCodeInput);
-        // 市场类型按钮点击事件
-        document.querySelectorAll('.market-type-btn').forEach(function(btn){
-            btn.addEventListener('click', function(){
-                const market = btn.getAttribute('data-market');
-                marketTypeEl.value = market;
-                // 更新按钮状态
-                document.querySelectorAll('.market-type-btn').forEach(function(b){
-                    if(b.getAttribute('data-market') === market){
-                        b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent';
-                    } else {
-                        b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200';
+        // ===== 新增持仓页：股票代码联想（复用搜索建议接口；点击行直接填充，无 + 按钮） =====
+        function hideStockSuggest(){
+            if(stockSuggestPanel) stockSuggestPanel.classList.add('hidden');
+            if(stockSuggestList) stockSuggestList.innerHTML = '';
+            if(stockSuggestHint) stockSuggestHint.innerText = '';
+            clearTimeout(window.__stockSuggestTimer);
+        }
+        function stockCodeSuggest(code){
+            if(!stockSuggestPanel) return;
+            clearTimeout(window.__stockSuggestTimer);
+            stockSuggestPanel.classList.remove('hidden');
+            stockSuggestList.innerHTML = '<div class="px-3 py-6 text-xs text-gray-400 text-center">正在搜索...</div>';
+            stockSuggestList.classList.remove('hidden');
+            stockSuggestHint.innerText = '';
+            window.__stockSuggestTimer = setTimeout(function(){
+                searchWatchSuggest(code, function(items){
+                    const curVal = stockCodeEl.value.trim();
+                    if(!curVal){ hideStockSuggest(); return; }
+                    if(items && items.length){
+                        window.__stockSuggestOk = code;
+                        renderStockSuggest(items);
+                    } else if(window.__stockSuggestOk !== code){
+                        renderStockSuggest(items);
                     }
                 });
-                // 切换市场类型时，控制分红字段的readonly
-                // A股：分红自动获取，readonly；港股：分红可手动输入（没拉取到时）
-                const divInput = document.querySelector('#divPerShare');
-                const divLockIcon = document.querySelector('#divLockIcon');
-                if(market === 'A'){
-                    divInput.readOnly = true;
-                    divInput.className = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed';
-                    divLockIcon.style.display = '';
-                } else {
-                    divInput.readOnly = false;
-                    divInput.className = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors';
-                    divLockIcon.style.display = 'none';
-                }
-                // 触发代码输入，重新获取行情
-                onCodeInput();
+            }, 250);
+        }
+        function renderStockSuggest(items){
+            if(!stockSuggestList) return;
+            if(!items.length){
+                stockSuggestList.innerHTML = '<div class="px-3 py-6 text-xs text-gray-400 text-center">未找到相关股票，试试中文名或完整代码</div>';
+                stockSuggestList.classList.remove('hidden');
+                return;
+            }
+            let html = '';
+            items.forEach(function(it){
+                const isHk = it.market === 'HK';
+                const c1 = it.name.charAt(0);
+                html += '<div class="stock-suggest-item px-3 py-2.5 flex items-center gap-3 cursor-pointer border-b border-gray-100 last:border-0 hover:bg-[#faf3e3] active:bg-[#f5ecdc] transition-colors" data-code="' + it.code + '" data-market="' + it.market + '">'
+                    + '<div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[13px] font-semibold ' + (isHk ? 'bg-blue-50 text-blue-700' : 'bg-[#faf3e3] text-accent') + '">' + c1 + '</div>'
+                    + '<div class="flex-1 min-w-0"><div class="text-[14px] font-medium text-gray-800 truncate">' + it.name + '</div><div class="text-[10px] text-gray-400 tabular-nums mt-0.5">' + it.code + '</div></div>'
+                    + '<span class="text-[10px] px-2 py-1 rounded-full font-medium flex-shrink-0 ' + (isHk ? 'bg-blue-50 text-blue-700' : 'bg-[#faf3e3] text-accent') + '">' + (isHk ? '港股' : 'A股') + '</span>'
+                    + '</div>';
             });
+            stockSuggestList.innerHTML = html;
+        }
+        // 股票代码输入分流：纯数字/空 → 自动获取行情；名称/拼音 → 联想浮层
+        stockCodeEl.addEventListener('input', function(){
+            const code = stockCodeEl.value.trim();
+            if(!code || /^\d{5,6}$/.test(code)){
+                hideStockSuggest();
+                onCodeInput();
+            } else {
+                stockCodeSuggest(code);
+            }
+        });
+        // 联想行点击：直接填充代码 + 市场，触发自动获取（自动回填名称/股价/分红）
+        stockSuggestList.addEventListener('click', function(e){
+            const item = e.target.closest('.stock-suggest-item');
+            if(!item) return;
+            stockCodeEl.value = item.dataset.code;
+            marketTypeEl.value = item.dataset.market;
+            hideStockSuggest();
+            onCodeInput();
+        });
+        // 点击输入框与浮层外部：收起联想
+        document.addEventListener('click', function(e){
+            const panel = stockSuggestPanel;
+            if(!panel || panel.classList.contains('hidden')) return;
+            const wrap = stockCodeEl.parentNode;
+            if(wrap && wrap.contains(e.target)) return;
+            hideStockSuggest();
+        });
+        // Esc：收起联想
+        document.addEventListener('keydown', function(e){
+            if(e.key === 'Escape'){
+                const panel = stockSuggestPanel;
+                if(panel && !panel.classList.contains('hidden')) hideStockSuggest();
+            }
         });
         divRangeGroupEl.addEventListener('click', function(e){
             const btn = e.target.closest('.divRange');
@@ -4900,19 +5004,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 弹窗模式切换：false=新增，true=编辑（股数/成本/每股分红可改，其余锁定）
         function setModalMode(editing){
             document.querySelector('#modalTitle').innerText = editing ? '编辑持仓' : '新增持仓股票';
-            // 市场、代码、名称、现价 在编辑时锁定
-            // 市场类型按钮禁用/启用
-            document.querySelectorAll('.market-type-btn').forEach(function(btn){
-                if(editing){
-                    btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-                } else {
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-                }
-            });
-            // 代码在编辑时锁定
+            // 市场（按代码长度自动判断）、代码在编辑时锁定
             if(editing){
                 stockCodeEl.readOnly = true;
                 stockCodeEl.classList.add('bg-gray-50', 'cursor-not-allowed');
+                hideStockSuggest();
             } else {
                 stockCodeEl.readOnly = false;
                 stockCodeEl.classList.remove('bg-gray-50', 'cursor-not-allowed');
@@ -4953,14 +5049,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!item) return;
             editingId = id;
             marketTypeEl.value = item.marketType;
-            // 更新市场类型按钮状态
-            document.querySelectorAll('.market-type-btn').forEach(function(b){
-                if(b.getAttribute('data-market') === item.marketType){
-                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent';
-                } else {
-                    b.className = 'market-type-btn flex-1 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200';
-                }
-            });
+            hideStockSuggest();
             // 编辑时分红字段：A股readonly，港股可编辑
             const divInput = document.querySelector('#divPerShare');
             const divLockIcon = document.querySelector('#divLockIcon');
@@ -5007,13 +5096,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
         }
         function closeModal(){
-            // 关闭编辑页面，恢复持仓页
+            // 关闭编辑页面，恢复持仓页（不重渲染：仅查看返回时保留卡片顺序/折叠/滚动；保存路径在提交处显式 renderPage）
             exitDetailPage(document.querySelector('#pageStockEdit'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
             document.querySelector('#openModalBtn').classList.toggle('hidden', activeTab !== 'hold');
-            renderPage();
-        
-
             });
     }
         stockEditBackBtn.addEventListener('click', closeModal);
@@ -5036,6 +5122,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 交易日9:00后进入实时取数时段
             if(hour >= 9) return true;
             return false;
+        }
+
+        // 自选页"最新/涨幅"时段显示：交易日 9:15 前（含 9 点前）尚无当日最新价，统一显示"--"；
+        // 周末 / 收盘后返回 false（显示接口返回的最近数据：上一交易日收盘），与券商"当日无数据即 --"一致
+        function isPreOpenWide(){
+            const now = new Date();
+            if(now.getDay() === 0 || now.getDay() === 6) return false;
+            const timeMin = now.getHours() * 60 + now.getMinutes();
+            return timeMin < 9 * 60 + 15;
         }
 
         // 集合竞价前（交易日 9:00-9:15）：尚无当日数据，显示"--"（两条横杆，券商逻辑）
@@ -5760,6 +5855,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     } else {
                         el.value = ''; // 非必填项清空无效值
                     }
+                }
+            }
+            // 新增模式：校验股票代码有效性（自动获取成功才有名称与现价，杜绝乱填数字保存）
+            if(editingId == null){
+                const codeVal = stockCodeEl.value.trim();
+                const nameVal = stockNameEl.value.trim();
+                const priceVal = nowPriceEl.value.trim();
+                if(!/^\d+$/.test(codeVal) || !nameVal || !priceVal || isNaN(Number(priceVal))){
+                    showToast('股票代码无效，请通过联想选择或输入正确的股票代码');
+                    codeHintEl.innerText = '未能识别该股票，请通过联想选择或输入正确的代码';
+                    codeHintEl.className = 'mt-1.5 text-xs text-red-500';
+                    stockCodeEl.focus();
+                    return;
                 }
             }
             // 编辑模式：更新该股票的股数、成本、每股分红、行业（港股可改税率）
@@ -6503,9 +6611,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(activeTab === 'hold'){
                 document.querySelector('#openModalBtn').classList.remove('hidden');
             }
-            renderPage();
-        
-
+            // 流水页仅查看，返回不重渲染：保留卡片顺序/折叠/滚动；行情由增量更新维护
             });
     }
         // 渲染流水列表（分页：每批50条，倒序）
@@ -8819,19 +8925,37 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let watchReturnTab = 'mine';
         // 打开关注页面
         function openWatchPage(){
-            // 自选页右上角 +：直接弹出"添加自选股票"浮层（原关注页已移除）
-            const card = document.querySelector('#watchAddCard');
-            if(!card) return;
-            card.classList.remove('hidden');
+            // 自选页右上角 +：原位变为标题栏内嵌输入框（非浮层），候选面板随吸顶区显示于标题栏下方
+            const bar = document.querySelector('#watchSearchBar');
+            const btn = document.querySelector('#watchAddBtn');
+            const panel = document.querySelector('#watchSearchPanel');
             const inp = document.querySelector('#watchCodeInput');
-            const hint = document.querySelector('#watchAddHint');
+            if(bar) bar.classList.remove('hidden');
+            if(btn) btn.classList.add('hidden');
+            if(panel) panel.classList.add('hidden');
             if(inp){ inp.value = ''; window.__watchQueryName = null; }
-            if(hint){ hint.innerText = '输入 5 位港股或 6 位 A 股代码'; hint.className = 'mt-2 text-xs text-gray-400'; }
+            const hint = document.querySelector('#watchAddHint');
+            if(hint){ hint.innerText = ''; hint.className = 'text-[11px] text-gray-400'; }
+            const sList = document.querySelector('#watchSuggestList');
+            if(sList){ sList.classList.add('hidden'); sList.innerHTML = ''; }
+            const clearBtn = document.querySelector('#watchClearInput');
+            if(clearBtn) clearBtn.classList.add('hidden');
             setTimeout(function(){ if(inp) inp.focus(); }, 80);
         }
         function closeWatchPage(){
-            const card = document.querySelector('#watchAddCard');
-            if(card) card.classList.add('hidden');
+            // 还原 + 号并收起搜索态
+            const bar = document.querySelector('#watchSearchBar');
+            const btn = document.querySelector('#watchAddBtn');
+            const panel = document.querySelector('#watchSearchPanel');
+            const inp = document.querySelector('#watchCodeInput');
+            if(bar) bar.classList.add('hidden');
+            if(btn) btn.classList.remove('hidden');
+            if(panel) panel.classList.add('hidden');
+            if(inp){ inp.value = ''; window.__watchQueryName = null; }
+            const hint = document.querySelector('#watchAddHint');
+            if(hint){ hint.innerText = ''; hint.className = 'text-[11px] text-gray-400'; }
+            const sList = document.querySelector('#watchSuggestList');
+            if(sList){ sList.classList.add('hidden'); sList.innerHTML = ''; }
         }
         // ==================== 自选页（东方财富通风格） ====================
         // 资产负债率拉取：东方财富 F10 财务指标（最新报告期，仅 A 股支持；缓存 + 并发锁防重复请求）
@@ -8884,18 +9008,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             list.forEach(function(w){
                 const q = watchQuotes[w.code];
                 if(!q || q.price == null || isNaN(q.price) || !(q.price > 0)) return;
+                const preOpenWide = isPreOpenWide();
                 const pct = (q.changePct != null && !isNaN(q.changePct)) ? q.changePct : null;
-                const color = pct == null ? '#b8b8b8' : (pct > 0 ? '#e03131' : (pct < 0 ? '#00a05c' : '#b8b8b8'));
-                // 现价 / 涨跌幅
+                const showPx = !preOpenWide;
+                const color = pct == null ? '#b8b8b8' : (pct > 0 ? '#e03131' : (pct < 0 ? '#00a05c' : '#1f2937'));
+                // 现价 / 涨跌幅（交易日 9:15 前统一显示 "--"，9:15 后显示最新）
                 const priceEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="price"]');
                 const pctEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="changePct"]');
                 if(priceEl){
-                    priceEl.innerText = w.market === 'HK' ? fmtPrice(q.price, w.code, true) : fmtPrice(q.price, w.code, false);
-                    priceEl.style.color = color;
+                    priceEl.innerText = showPx ? (w.market === 'HK' ? fmtPrice(q.price, w.code, true) : fmtPrice(q.price, w.code, false)) : '--';
+                    priceEl.style.color = showPx ? color : '#b8b8b8';
                 }
                 if(pctEl){
-                    pctEl.innerText = pct == null ? '--' : (pct > 0 ? '+' : '') + pct.toFixed(2) + '%';
-                    pctEl.style.color = color;
+                    pctEl.innerText = (!preOpenWide && pct != null) ? (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' : '--';
+                    pctEl.style.color = (!preOpenWide && pct != null) ? color : '#b8b8b8';
                 }
                 // 股息率：近1年每股分红 ÷ 最新价（现算，与现价股息排行同口径，随行情每 2 秒更新）
                 let divYield = null;
@@ -8962,15 +9088,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const dc = debtRatioCache[w.code];
                 const debtVal = dc ? dc.v : null;
                 const debtText = debtVal != null ? debtVal.toFixed(2) + '%' : '--';
-                const pctColor = pct == null ? '#b8b8b8' : (pct > 0 ? '#e03131' : (pct < 0 ? '#00a05c' : '#b8b8b8'));
-                const pctText = pct == null ? '--' : (pct > 0 ? '+' : '') + pct.toFixed(2) + '%';
-                const priceText = price != null ? (w.market === 'HK' ? fmtPrice(price, w.code, true) : fmtPrice(price, w.code, false)) : '--';
+                const preOpenWide = isPreOpenWide();
+                // 盘前（9:15 前）统一浅灰占位色；非盘前：涨幅 0 用默认字段深灰
+                const pctColor = preOpenWide ? '#b8b8b8' : (pct == null ? '#b8b8b8' : (pct > 0 ? '#e03131' : (pct < 0 ? '#00a05c' : '#1f2937')));
+                const effPct = (!preOpenWide && pct != null && !isNaN(pct)) ? pct : null;
+                const pctText = effPct == null ? '--' : (effPct > 0 ? '+' : '') + effPct.toFixed(2) + '%';
+                const effPrice = (!preOpenWide && price != null) ? price : null;
+                const priceText = effPrice != null ? (w.market === 'HK' ? fmtPrice(effPrice, w.code, true) : fmtPrice(effPrice, w.code, false)) : '--';
                 // 涨跌相关（最新/涨跌幅）涨红跌绿；其余字段（股息率/PE/PB/资产负债率）字体颜色统一与股票名称一致（深灰），占位 -- 弱化浅灰
                 const divCls = divYield != null ? 'text-gray-800' : 'text-gray-400';
                 const peCls = pe != null ? 'text-gray-800' : 'text-gray-400';
                 const pbCls = pb != null ? 'text-gray-800' : 'text-gray-400';
                 const debtCls = debtVal != null ? 'text-gray-800' : 'text-gray-400';
-                html += '<div class="grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-50">'
+                html += '<div class="watch-swipe-wrap">'
+                    + '<button class="watch-del" onclick="deleteWatchStock(\'' + w.code + '\')">'
+                    + '<svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
+                    + '<span class="text-xs">删除</span>'
+                    + '</button>'
+                    + '<div class="watch-row grid grid-cols-[112px_76px_74px_82px_92px_74px_92px_40px] border-b border-gray-50" data-code="' + w.code + '">'
                     + '<div class="relative bg-white z-20 pl-4 pr-3 py-2.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
                     + '<div class="text-[15px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
@@ -8982,12 +9117,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
+                    + '<div class="watch-grip pl-2 pr-4 py-2.5 flex items-center justify-center text-gray-300 select-none"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg></div>'
+                    + '</div>'
                     + '</div>';
             });
             el.innerHTML = html;
             // 重建后更新横向平移范围与位置（行内容/表头/首列 transform 复位到当前平移量）
             if(window.__watchCalcMax) window.__watchCalcMax();
             if(window.__watchSync) window.__watchSync();
+            // 拖拽重排绑定（行新建后重新绑定）
+            if(window.initWatchSort) window.initWatchSort();
+            // 左滑删除绑定（行新建后重新绑定）
+            if(window.initWatchSwipeDel) window.initWatchSwipeDel();
             // 资产负债率：无有效缓存时异步拉取（仅 A 股），拉到后更新对应行
             list.forEach(function(w){
                 if(w.market === 'A' && !hasValidDebtCache(w.code)){
@@ -9075,18 +9216,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const hint = document.querySelector('#watchAddHint');
             if(!/^\d{5,6}$/.test(code)){
                 hint.innerText = '请输入 5 位港股或 6 位 A 股代码';
-                hint.className = 'mt-2 text-xs text-red-500';
+                hint.className = 'text-[11px] text-red-500';
                 return;
             }
-            const market = document.querySelector('.watch-market-btn[data-market="A"]').classList.contains('bg-accent') ? 'A' : 'HK';
+            const market = code.length === 5 ? 'HK' : 'A';
             const cur = loadWatchList();
             if(cur.some(function(x){ return x.code === code; })){
                 hint.innerText = '该股票已在自选列表中';
-                hint.className = 'mt-2 text-xs text-orange-500';
+                hint.className = 'text-[11px] text-orange-500';
                 return;
             }
             hint.innerText = '正在获取行情...';
-            hint.className = 'mt-2 text-xs text-gray-400';
+            hint.className = 'text-[11px] text-gray-400';
             fetchQuotesBatch([{market: market, code: code}], function(q){
                 const key = getTencentPrefix(market, code);
                 const quote = q[key];
@@ -9102,15 +9243,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     };
                     saveWatchQuotes();
                     hint.innerText = '已添加：' + (quote.name || code);
-                    hint.className = 'mt-2 text-xs text-green-500';
-                    document.querySelector('#watchCodeInput').value = '';
-                    document.querySelector('#watchAddCard').classList.add('hidden');
-                    renderWatchSelPage();
-                    // 触发一次刷新：让自选股分红缓存尽快就绪（股息率计算用）
-                    refreshAll();
+                    hint.className = 'text-[11px] text-green-500';
+                    // 添加成功：短暂显示反馈后收起搜索条还原 + 号
+                    setTimeout(function(){
+                        closeWatchPage();
+                        renderWatchSelPage();
+                        // 触发一次刷新：让自选股分红缓存尽快就绪（股息率计算用）
+                        refreshAll();
+                    }, 500);
                 } else {
                     hint.innerText = '未找到该股票，请检查代码或市场类型';
-                    hint.className = 'mt-2 text-xs text-red-500';
+                    hint.className = 'text-[11px] text-red-500';
                 }
             });
         }
@@ -14944,6 +15087,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function renderHoldCardMode(sorted, sum){
             const holdListDom = document.querySelector('#holdList');
+            // 保留各卡片"更多指标"展开状态（全量渲染后恢复，避免返回/刷新时折叠被重置）
+            const prevOpenMap = {};
+            if(holdListDom){
+                holdListDom.querySelectorAll('.hold-card').forEach(function(c){
+                    const b = c.querySelector('.hold-more-body');
+                    if(b && !b.classList.contains('hidden')){
+                        prevOpenMap[c.getAttribute('data-hold-code')] = true;
+                    }
+                });
+            }
             const totalMarketForPct = Number(sum.totalMarket) || 1;
             let htmlStr = '';
             sorted.forEach(function(item, index){
@@ -15119,18 +15272,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 <div class="text-[11px] font-medium mt-0.5 ${dayChangeClass} tabular-nums hq-chgpct">${dayChangePctText}</div>
                             </div>
                         </div>
+                        <!-- 折叠区底部：低频管理操作（流水 / 编辑）左对齐，与右侧主操作（买入/卖出）分居两侧 -->
+                        <div class="flex justify-start items-center gap-4 px-3 py-2 border-t border-[#F0EDE7]">
+                            <button onclick="openTradeLogPage(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>流水</button>
+                            <button onclick="editItem(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>编辑</button>
+                        </div>
                     </div>
                     <div class="flex justify-end items-center gap-2.5 px-2 py-2">
                         <button onclick="openTradeModal(${item.id},'buy')" class="px-3.5 py-1 rounded-lg bg-red-50 text-[#e03131] text-xs font-semibold active:scale-95 transition-transform">买入</button>
                         <button onclick="openTradeModal(${item.id},'sell')" class="px-3.5 py-1 rounded-lg bg-green-50 text-[#00b57a] text-xs font-semibold active:scale-95 transition-transform">卖出</button>
-                        <button onclick="openTradeLogPage(${item.id})" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs font-semibold active:scale-95 transition-transform"><svg class="w-3 h-3 mr-1 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>流水</button>
-                        <button onclick="editItem(${item.id})" class="text-gray-500 text-xs active:text-gray-700 transition-colors">编辑</button>
-                        <button onclick="deleteItem(${item.id})" class="text-gray-400 text-xs active:text-gray-600 transition-colors">删除</button>
                     </div>
                 </div>
                 `
             })
             holdListDom.innerHTML = htmlStr;
+            // 恢复"更多指标"展开状态
+            Object.keys(prevOpenMap).forEach(function(k){
+                let target = null;
+                holdListDom.querySelectorAll('.hold-card').forEach(function(c){
+                    if(c.getAttribute('data-hold-code') === k) target = c;
+                });
+                if(target){
+                    const body = target.querySelector('.hold-more-body');
+                    const arrow = target.querySelector('.more-arrow');
+                    const label = target.querySelector('.more-label');
+                    if(body) body.classList.remove('hidden');
+                    if(arrow) arrow.classList.add('rotate-180');
+                    if(label) label.textContent = '收起指标';
+                }
+            });
         }
 
         // 列表模式渲染（卡片风格：整个表格在一个白色卡片上，按行业分组显示）
@@ -16817,8 +16987,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const rows = document.querySelectorAll('#watchSelList > div');
                 for(let i = 0; i < rows.length; i++){
                     rows[i].style.transform = 'translateX(' + (-X) + 'px)';
-                    const f = rows[i].firstElementChild;
+                    const rowEl = rows[i].querySelector('.watch-row');
+                    const f = rowEl ? rowEl.firstElementChild : rows[i].firstElementChild;
                     if(f) f.style.transform = 'translateX(' + X + 'px)';
+                    if(rowEl && !rowEl.classList.contains('swipe-anim')){
+                        // 滑开行保持 -64px；普通行归 0（横向位移由 wrap 承担）
+                        rowEl.style.transform = rowEl.classList.contains('swipe-open') ? 'translateX(-64px)' : 'translateX(0)';
+                    }
                 }
                 headRow.style.transform = 'translateX(' + (-X) + 'px)';
                 headFirst.style.transform = 'translateX(' + X + 'px)';
@@ -16864,57 +17039,372 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }, { passive: true });
             calcMax();
         })();
-        // 添加自选浮层：取消/确认/回车/市场切换/输入自动查询（自选页右上角 + 弹出）
-        document.querySelector('#watchCancelBtn').addEventListener('click', function(){
-            document.querySelector('#watchAddCard').classList.add('hidden');
-        });
-        document.querySelector('#watchConfirmBtn').addEventListener('click', addWatchStock);
-        document.querySelector('#watchCodeInput').addEventListener('keydown', function(e){
-            if(e.key === 'Enter'){ e.preventDefault(); addWatchStock(); }
-        });
-        // 输入股票代码后自动查询：显示股票名称与最新价；不存在则报错（添加时校验拦截）
-        document.querySelector('#watchCodeInput').addEventListener('input', function(){
-            const code = this.value.replace(/\s+/g, '');
+        // ===== 自选页拖拽重排：桌面 HTML5 DnD + 移动端 touch（grip 拦截事件，与横向平移互斥；行跟随 + 实时插入让位；落定保存顺序） =====
+        function commitWatchOrder(){
+            const list = document.getElementById('watchSelList');
+            if(!list) return;
+            const rows = list.querySelectorAll('.watch-row');
+            if(!rows.length) return;
+            const codes = [];
+            for(let i = 0; i < rows.length; i++) codes.push(rows[i].dataset.code);
+            const arr = loadWatchList();
+            const rank = {};
+            codes.forEach(function(c, i){ rank[c] = i; });
+            arr.sort(function(a, b){
+                const ra = rank[a.code], rb = rank[b.code];
+                return (ra == null ? 9999 : ra) - (rb == null ? 9999 : rb);
+            });
+            saveWatchList(arr);
+        }
+        function initWatchSort(){
+            const list = document.getElementById('watchSelList');
+            if(!list) return;
+            // list 级 dragover/drop 只绑一次（避免每次渲染累积监听器）
+            if(!list._dndBound){
+                list._dndBound = true;
+                list.addEventListener('dragover', function(e){
+                    e.preventDefault();
+                    const code = list._dragCode;
+                    if(!code) return;
+                    const over = e.target && e.target.closest ? e.target.closest('.watch-row') : null;
+                    if(!over || over.dataset.code === code) return;
+                    const r = over.getBoundingClientRect();
+                    const after = (e.clientY - r.top) > r.height / 2;
+                    const ref = after ? over.nextElementSibling : over;
+                    const dragRow = list.querySelector('.watch-row[data-code="' + code + '"]');
+                    if(!dragRow || ref === dragRow) return;
+                    list.insertBefore(dragRow, ref);
+                });
+                list.addEventListener('drop', function(e){ e.preventDefault(); });
+            }
+            const rows = list.querySelectorAll('.watch-row');
+            for(let i = 0; i < rows.length; i++){
+                (function(row){
+                    const grip = row.querySelector('.watch-grip');
+                    if(!grip || grip._sortBound) return;
+                    grip._sortBound = true;
+                    // 结束拖拽（touch/touchcancel 共用）：清态 + 恢复横平 transform + 保存顺序
+                    function endDrag(){
+                        const s = list._sort;
+                        list._sort = null;
+                        if(!s || s.row !== row) return;
+                        row.classList.remove('watch-dragging');
+                        let x = '';
+                        const m = (row.style.transform || '').match(/translateX\(([-\d.]+)px\)/);
+                        if(m) x = 'translateX(' + m[1] + 'px)';
+                        row.style.transform = x;
+                        commitWatchOrder();
+                    }
+                    // ---- 桌面：HTML5 DnD ----
+                    grip.setAttribute('draggable', 'true');
+                    grip.addEventListener('dragstart', function(e){
+                        e.dataTransfer.setData('text/plain', row.dataset.code);
+                        e.dataTransfer.effectAllowed = 'move';
+                        list._dragCode = row.dataset.code;
+                        setTimeout(function(){ row.classList.add('watch-dragging'); }, 0);
+                    });
+                    grip.addEventListener('dragend', function(){
+                        row.classList.remove('watch-dragging');
+                        list._dragCode = null;
+                        commitWatchOrder();
+                    });
+                    // ---- 移动：touch 拖拽（grip 拦截，行跟随 + 实时插入） ----
+                    grip.addEventListener('touchstart', function(e){
+                        e.stopPropagation();
+                        const t = e.touches[0];
+                        list._sort = { row: row, grabY: t.clientY, visualTop: row.getBoundingClientRect().top };
+                        row.classList.add('watch-dragging');
+                    }, { passive: true });
+                    grip.addEventListener('touchmove', function(e){
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const s = list._sort;
+                        if(!s || s.row !== row) return;
+                        const t = e.touches[0];
+                        const vTop = s.visualTop + (t.clientY - s.grabY);
+                        // 目标插入点：视觉顶越过某行的中点则插到其后
+                        const all = list.querySelectorAll('.watch-row');
+                        let target = null;
+                        for(let j = 0; j < all.length; j++){
+                            const o = all[j];
+                            if(o === row) continue;
+                            const ob = o.getBoundingClientRect();
+                            if(vTop > ob.top + ob.height / 2) target = o;
+                        }
+                        if(target && target.nextElementSibling !== row){
+                            list.insertBefore(row, target.nextElementSibling);
+                        }
+                        // 视觉连续：translateY = 视觉顶 - 当前文档流顶（DOM 移动后自动补偿）
+                        let x = '';
+                        const m = (row.style.transform || '').match(/translateX\(([-\d.]+)px\)/);
+                        if(m) x = 'translateX(' + m[1] + 'px) ';
+                        row.style.transform = x + 'translateY(' + (vTop - row.getBoundingClientRect().top) + 'px)';
+                    }, { passive: false });
+                    grip.addEventListener('touchend', function(e){
+                        e.stopPropagation();
+                        endDrag();
+                    }, { passive: true });
+                    grip.addEventListener('touchcancel', function(e){
+                        e.stopPropagation();
+                        endDrag();
+                    }, { passive: true });
+                })(rows[i]);
+            }
+        }
+        // 自选页左滑删除：行主体横向左滑露出右侧删除按钮；与 grip 拖拽、容器横向平移互斥
+        function initWatchSwipeDel(){
+            const list = document.getElementById('watchSelList');
+            if(!list) return;
+            const rows = list.querySelectorAll('.watch-row');
+            for(let i = 0; i < rows.length; i++){
+                (function(row){
+                    if(row._swipeBound) return;
+                    row._swipeBound = true;
+                    let _sX = 0, _sY = 0, _swiping = false, _bx = 0;
+                    const baseX = function(){
+                        const m = (row.style.transform || '').match(/translateX\((-?[\d.]+)px\)/);
+                        return m ? parseFloat(m[1]) : 0;
+                    };
+                    row.addEventListener('touchstart', function(e){
+                        _sX = e.touches[0].clientX; _sY = e.touches[0].clientY;
+                        _swiping = false;
+                        _bx = baseX();
+                    }, { passive: true });
+                    row.addEventListener('touchmove', function(e){
+                        const t = e.touches[0];
+                        const dx = t.clientX - _sX, dy = t.clientY - _sY;
+                        if(Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)){
+                            if(dx < 0){
+                                // 左滑：行删除手势（拦截容器横向平移）
+                                e.preventDefault(); e.stopPropagation();
+                                _swiping = true;
+                                const off = Math.max(-64, dx);
+                                row.style.transform = 'translateX(' + (_bx + off) + 'px)';
+                            } else if(row.classList.contains('swipe-open')){
+                                // 已滑开行右滑：关闭
+                                e.preventDefault(); e.stopPropagation();
+                                _swiping = true;
+                                row.style.transform = 'translateX(' + (_bx + Math.min(0, dx)) + 'px)';
+                            }
+                            // 未滑开行右滑：放行容器横向平移
+                        } else if(_swiping){
+                            e.preventDefault(); e.stopPropagation();
+                        }
+                    }, { passive: false });
+                    row.addEventListener('touchend', function(e){
+                        if(!_swiping) return;
+                        const t = e.changedTouches[0];
+                        const dx = t.clientX - _sX;
+                        const wrap = row.parentNode;
+                        const open = row.classList.contains('swipe-open');
+                        if(open && dx > 30){
+                            row.classList.remove('swipe-open');
+                            if(wrap) wrap.classList.remove('swipe-open');
+                        } else if(!open && dx < -40){
+                            row.classList.add('swipe-open');
+                            if(wrap) wrap.classList.add('swipe-open');
+                        }
+                        row.classList.add('swipe-anim');
+                        row.style.transform = row.classList.contains('swipe-open') ? 'translateX(-64px)' : 'translateX(' + _bx + 'px)';
+                        setTimeout(function(){ row.classList.remove('swipe-anim'); }, 280);
+                        _swiping = false;
+                    }, { passive: true });
+                    row.addEventListener('touchcancel', function(){
+                        _swiping = false;
+                        row.classList.remove('swipe-open');
+                        if(row.parentNode) row.parentNode.classList.remove('swipe-open');
+                        row.classList.add('swipe-anim');
+                        row.style.transform = 'translateX(' + _bx + 'px)';
+                        setTimeout(function(){ row.classList.remove('swipe-anim'); }, 280);
+                    }, { passive: true });
+                })(rows[i]);
+            }
+        }
+        // 删除自选股（左滑删除按钮 / 桌面 hover 删除按钮）
+        function deleteWatchStock(code){
+            const cur = loadWatchList().filter(function(x){ return x.code !== code; });
+            saveWatchList(cur);
+            delete watchQuotes[code];
+            renderWatchSelPage();
+        }
+        // 渲染搜索候选：名称区点击=填码查价，行尾 + =一键添加；已在自选显示 ✓；emptyText 自定义空态文案
+        function renderWatchSuggest(items, emptyText){
+            const sList = document.querySelector('#watchSuggestList');
+            const panel = document.querySelector('#watchSearchPanel');
+            if(!sList) return;
+            if(panel) panel.classList.remove('hidden');
+            // 渲染新结果时清空底部反馈（已添加等反馈由 + 操作单独写入）
             const hint = document.querySelector('#watchAddHint');
-            if(!/^\d{5,6}$/.test(code)){
-                hint.innerText = '输入 5 位港股或 6 位 A 股代码';
-                hint.className = 'mt-2 text-xs text-gray-400';
-                window.__watchQueryName = null;
+            if(hint){ hint.innerText = ''; hint.className = 'text-[11px] text-gray-400'; }
+            if(!items.length){
+                sList.innerHTML = '<div class="px-3 py-6 text-xs text-gray-400 text-center">' + (emptyText || '未找到相关股票，试试中文名或完整代码') + '</div>';
+                sList.classList.remove('hidden');
                 return;
             }
-            const market = document.querySelector('.watch-market-btn[data-market="A"]').classList.contains('bg-accent') ? 'A' : 'HK';
-            hint.innerText = '正在查询...';
-            hint.className = 'mt-2 text-xs text-gray-400';
-            window.__watchQueryName = null;
+            const cur = loadWatchList();
+            let html = '';
+            items.forEach(function(it){
+                const isHk = it.market === 'HK';
+                const inList = cur.some(function(x){ return x.code === it.code; });
+                const c1 = it.name.charAt(0);
+                const btn = inList
+                    ? '<button class="watch-suggest-add added flex-shrink-0 w-7 h-7 rounded-full bg-[#e8f5e9] text-[#2e7d32] flex items-center justify-center cursor-default"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>'
+                    : '<button class="watch-suggest-add flex-shrink-0 w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center active:scale-90 transition-transform"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>';
+                html += '<div class="watch-suggest-item px-3 py-2.5 flex items-center gap-3 cursor-pointer border-b border-gray-100 last:border-0 hover:bg-[#faf3e3] active:bg-[#f5ecdc] transition-colors" data-code="' + it.code + '" data-market="' + it.market + '">'
+                    + '<div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[13px] font-semibold ' + (isHk ? 'bg-blue-50 text-blue-700' : 'bg-[#faf3e3] text-accent') + '">' + c1 + '</div>'
+                    + '<div class="flex-1 min-w-0"><div class="watch-suggest-name text-[14px] font-medium text-gray-800 truncate">' + it.name + '</div><div class="text-[10px] text-gray-400 tabular-nums mt-0.5">' + it.code + '</div></div>'
+                    + '<span class="text-[10px] px-2 py-1 rounded-full font-medium flex-shrink-0 ' + (isHk ? 'bg-blue-50 text-blue-700' : 'bg-[#faf3e3] text-accent') + '">' + (isHk ? '港股' : 'A股') + '</span>'
+                    + btn
+                    + '</div>';
+            });
+            sList.innerHTML = html;
+            sList.classList.remove('hidden');
+        }
+        // 候选 + 一键添加：去重校验 → 拉行情 → 入列表 → 按钮变 ✓
+        function addWatchFromSuggest(code, market, name, btnEl){
+            const hint = document.querySelector('#watchAddHint');
+            const cur = loadWatchList();
+            if(cur.some(function(x){ return x.code === code; })){
+                hint.innerText = '该股票已在自选列表中';
+                hint.className = 'text-[11px] text-orange-500';
+                markAdded(btnEl);
+                return;
+            }
+            hint.innerText = '正在获取行情...';
+            hint.className = 'text-[11px] text-gray-400';
             fetchQuotesBatch([{market: market, code: code}], function(q){
                 const key = getTencentPrefix(market, code);
                 const quote = q[key];
-                const curCode = document.querySelector('#watchCodeInput').value.replace(/\s+/g, '');
-                if(curCode !== code) return; // 输入已变化，忽略过期结果
                 if(quote && quote.price != null && !isNaN(quote.price) && quote.price > 0){
-                    window.__watchQueryName = quote.name || code;
-                    hint.innerText = (quote.name || code) + ' ' + quote.price + '，可添加';
-                    hint.className = 'mt-2 text-xs text-green-500';
+                    cur.unshift({ code: code, market: market, name: quote.name || name });
+                    saveWatchList(cur);
+                    watchQuotes[code] = {
+                        name: quote.name || name,
+                        price: quote.price,
+                        changePct: quote.changePct,
+                        change: quote.change,
+                        prevClose: quote.prevClose
+                    };
+                    saveWatchQuotes();
+                    hint.innerText = '';
+                    hint.className = 'text-[11px] text-gray-400';
+                    markAdded(btnEl);
+                    // 一键添加成功：行尾 + 变 ✓，面板保持显示可继续添加其他股票
+                    renderWatchSelPage();
                 } else {
-                    window.__watchQueryName = null;
-                    hint.innerText = '未找到该股票代码，请核对后重试';
-                    hint.className = 'mt-2 text-xs text-red-500';
+                    hint.innerText = '未找到该股票，请检查代码或市场类型';
+                    hint.className = 'text-[11px] text-red-500';
                 }
             });
+        }
+        function markAdded(btnEl){
+            if(!btnEl) return;
+            btnEl.classList.add('added');
+            btnEl.classList.remove('bg-accent', 'text-white');
+            btnEl.classList.add('bg-[#e8f5e9]', 'text-[#2e7d32]', 'cursor-default');
+            btnEl.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        }
+        // 添加自选：回车确认 / Esc 或点击输入区外部收起还原 + 号 / 市场切换 / 输入自动查询（标题栏内嵌搜索）
+        document.querySelector('#watchCodeInput').addEventListener('keydown', function(e){
+            if(e.key === 'Enter'){ e.preventDefault(); addWatchStock(); }
         });
-        document.querySelectorAll('.watch-market-btn').forEach(function(btn){
-            btn.addEventListener('click', function(){
-                document.querySelectorAll('.watch-market-btn').forEach(function(b){
-                    b.classList.remove('bg-accent', 'text-white', 'border-accent');
-                    b.classList.add('bg-white', 'text-gray-500', 'border-gray-200');
+        document.addEventListener('keydown', function(e){
+            if(e.key === 'Escape'){
+                const bar = document.querySelector('#watchSearchBar');
+                if(bar && !bar.classList.contains('hidden')) closeWatchPage();
+            }
+        });
+        document.addEventListener('click', function(e){
+            const bar = document.querySelector('#watchSearchBar');
+            if(!bar || bar.classList.contains('hidden')) return;
+            const slot = document.querySelector('#watchAddSlot');
+            const panel = document.querySelector('#watchSearchPanel');
+            if(slot && slot.contains(e.target)) return;
+            if(panel && panel.contains(e.target)) return;
+            closeWatchPage();
+        });
+        // 输入后自动查询：纯数字代码 → 代码精确查询；其他 → 拼音/中文/代码模糊联想（候选常驻，不自动消失）
+        document.querySelector('#watchCodeInput').addEventListener('input', function(){
+            const code = this.value.replace(/\s+/g, '');
+            const hint = document.querySelector('#watchAddHint');
+            const sList = document.querySelector('#watchSuggestList');
+            const panel = document.querySelector('#watchSearchPanel');
+            const clearBtn = document.querySelector('#watchClearInput');
+            if(clearBtn) clearBtn.classList.toggle('hidden', !code);
+            clearTimeout(window.__watchSuggestTimer);
+            if(!code){
+                hint.innerText = '';
+                hint.className = 'text-[11px] text-gray-400';
+                window.__watchQueryName = null;
+                sList.classList.add('hidden');
+                sList.innerHTML = '';
+                panel.classList.add('hidden');
+                return;
+            }
+            panel.classList.remove('hidden');
+            if(/^\d{5,6}$/.test(code)){
+                // 纯数字：代码精确查询（5位港股 / 6位A股），结果渲染进候选列表（行尾 + 一键添加），与联想统一
+                const market = code.length === 5 ? 'HK' : 'A';
+                hint.innerText = '正在查询...';
+                hint.className = 'text-[11px] text-gray-400';
+                window.__watchQueryName = null;
+                fetchQuotesBatch([{market: market, code: code}], function(q){
+                    const key = getTencentPrefix(market, code);
+                    const quote = q[key];
+                    const curCode = document.querySelector('#watchCodeInput').value.replace(/\s+/g, '');
+                    if(curCode !== code) return; // 输入已变化，忽略过期结果
+                    if(quote && quote.price != null && !isNaN(quote.price) && quote.price > 0){
+                        window.__watchQueryName = quote.name || code;
+                        renderWatchSuggest([{ code: code, market: market, name: quote.name || code }]);
+                    } else {
+                        window.__watchQueryName = null;
+                        renderWatchSuggest([], '未找到该股票代码，请核对后重试');
+                    }
                 });
-                this.classList.remove('bg-white', 'text-gray-500', 'border-gray-200');
-                this.classList.add('bg-accent', 'text-white', 'border-accent');
-                // 切换市场后：若已输入有效代码，自动重新查询名称
-                const inp = document.querySelector('#watchCodeInput');
-                if(inp && /^\d{5,6}$/.test(inp.value.replace(/\s+/g, ''))) inp.dispatchEvent(new Event('input'));
-            });
+                return;
+            }
+            // 模糊搜索：防抖 250ms 调搜索建议接口；结果冻结——成功后输入未变则保持，忽略后续空回包（超时兜底等）
+            sList.innerHTML = '<div class="px-3 py-6 text-xs text-gray-400 text-center">正在搜索...</div>';
+            sList.classList.remove('hidden');
+            window.__watchSuggestTimer = setTimeout(function(){
+                searchWatchSuggest(code, function(items){
+                    const curVal = document.querySelector('#watchCodeInput').value.replace(/\s+/g, '');
+                    if(!curVal) return;
+                    if(items && items.length){
+                        window.__watchSuggestOk = code; // 记录本次成功查询
+                        renderWatchSuggest(items);
+                    } else if(window.__watchSuggestOk !== code){
+                        renderWatchSuggest(items); // 首次即空 → 显示未找到
+                    }
+                    // 已有成功结果且输入未变 → 忽略空回包，保持原结果
+                });
+            }, 250);
         });
+        // 候选交互：名称区点击 → 填码 + 自动切市场 + 查价；行尾 + 按钮 → 一键添加（点击后变 ✓）
+        document.querySelector('#watchSuggestList').addEventListener('click', function(e){
+            const addBtn = e.target.closest('.watch-suggest-add');
+            const item = e.target.closest('.watch-suggest-item');
+            if(!item) return;
+            if(addBtn){
+                e.stopPropagation();
+                if(addBtn.classList.contains('added')) return; // 已添加，忽略
+                const nameEl = item.querySelector('.watch-suggest-name');
+                addWatchFromSuggest(item.dataset.code, item.dataset.market, nameEl ? nameEl.innerText : item.dataset.code, addBtn);
+                return;
+            }
+            const code = item.dataset.code;
+            const inp = document.querySelector('#watchCodeInput');
+            inp.value = code;
+            inp.dispatchEvent(new Event('input'));
+        });
+        // 清除按钮：清空输入并收起候选
+        document.querySelector('#watchClearInput').addEventListener('click', function(){
+            const inp = document.querySelector('#watchCodeInput');
+            inp.value = '';
+            inp.dispatchEvent(new Event('input'));
+            inp.focus();
+        });
+
         // 页面加载后：初始化消息角标（除权/股息率消息跨会话恢复）
         updateNotifBadge();
         // 年度报告年份切换：左右切换查看往年报告

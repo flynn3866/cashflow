@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.123';</script>
+    <script>window.APP_VERSION = '20261001.124';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5119,13 +5119,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return false;
         }
 
-        // 自选页"最新/涨幅"时段显示：交易日 9:15 前（含 9 点前）尚无当日最新价，统一显示"--"；
-        // 周末 / 收盘后返回 false（显示接口返回的最近数据：上一交易日收盘），与券商"当日无数据即 --"一致
+        // 自选页"最新/涨幅"时段显示：与首页列表模式统一 —— 仅交易日 9:00-9:15（集合竞价前）尚无当日
+        // 最新价，显示"--"；9:15 后显示实时；其他时间（9 点前 / 周末 / 节假日）显示接口返回的最近数据（上一交易日收盘）
         function isPreOpenWide(){
-            const now = new Date();
-            if(now.getDay() === 0 || now.getDay() === 6) return false;
-            const timeMin = now.getHours() * 60 + now.getMinutes();
-            return timeMin < 9 * 60 + 15;
+            return isTradingTimeStarted() && isPreOpen();
         }
 
         // 集合竞价前（交易日 9:00-9:15）：尚无当日数据，显示"--"（两条横杆，券商逻辑）
@@ -17004,8 +17001,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(!pageActive()){ _active = false; return; }
                 const t = e.touches[0];
                 if(!t){ _active = false; return; }
-                const el = document.elementFromPoint(t.clientX, t.clientY);
-                if(!el || !listEl.contains(el)){ _active = false; return; }
+                // 用容器几何区域判断触摸是否落在列表内（不依赖 elementFromPoint：
+                // iOS 在行 transform / DOM 重排后命中缓存可能失效，正是拖拽后横滑失灵的根源）
+                const r = listEl.getBoundingClientRect();
+                if(t.clientX < r.left - 4 || t.clientX > r.right + 4 || t.clientY < r.top - 4 || t.clientY > r.bottom + 4){
+                    _active = false;
+                    return;
+                }
                 _active = true;
                 if(_anim){ cancelAnimationFrame(_anim); _anim = null; }
                 _tX = t.clientX; _tY = t.clientY;
@@ -17149,6 +17151,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(window.__watchSync) window.__watchSync();
                 if(window.__watchRebind) window.__watchRebind();
                 // 强制刷新 iOS 触摸命中缓存：重排后下一次横向滑动目标才能重新命中
+                // display 切换触发完整 layout 重建（同帧同步执行，无视觉闪烁），比 pointer-events 切换更彻底
+                list.style.display = 'none';
+                void list.offsetHeight;
+                list.style.display = '';
                 list.style.pointerEvents = 'none';
                 void list.offsetHeight;
                 list.style.pointerEvents = '';

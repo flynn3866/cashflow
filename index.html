@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.116';</script>
+    <script>window.APP_VERSION = '20260928.117';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -421,6 +421,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         /* ===== 自选页拖拽重排：手柄 + 拖拽中行状态 ===== */
         .watch-grip{ cursor: grab; touch-action: none; -webkit-touch-callout: none; }
         .watch-grip:hover, .watch-grip:active{ color: #b0652f; }
+        .watch-row > div{ background: #fff; }
         .watch-row.watch-dragging{ opacity: 1; box-shadow: 0 14px 30px rgba(15,23,42,0.18); position: relative; z-index: 60; background: #fff; }
         .watch-row.watch-move{ transition: transform .18s cubic-bezier(.25,.8,.35,1); }
 
@@ -17193,12 +17194,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     grip.addEventListener('touchend', function(e){
                         e.stopPropagation();
                         const s = list._sort;
-                        if(s && s.row === row){ settle(s); list._sort = null; }
+                        if(s && s.row === row){
+                            // 延迟落位到下一帧：触摸事件处理器内重排 DOM 会使后续触摸目标定位异常（iOS 已知问题），导致横滑失灵
+                            setTimeout(function(){ settle(s); list._sort = null; }, 0);
+                        }
                     }, { passive: true });
                     grip.addEventListener('touchcancel', function(e){
                         e.stopPropagation();
                         const s = list._sort;
-                        if(s && s.row === row){ settle(s); list._sort = null; }
+                        if(s && s.row === row){
+                            setTimeout(function(){ settle(s); list._sort = null; }, 0);
+                        }
                     }, { passive: true });
                 })(rows[i]);
             }

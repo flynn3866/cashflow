@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261001.129';</script>
+    <script>window.APP_VERSION = '20261001.130';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -9300,6 +9300,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 返回自选页：恢复自选页内部滚动模式（外层滚动禁用）
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
+                // 重置横向平移手势状态（主页已无拖拽，确保横滑状态干净）
+                if(window.__watchRebind) window.__watchRebind();
                 showToast('自选顺序已保存');
             });
         }
@@ -9362,14 +9364,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '</div>';
             });
             el.innerHTML = html;
-            // 重建行后重置拖拽状态：防止落位异常残留 _sort/_dragActive 持续拦截横向滑动
-            el._sort = null;
-            el._dragActive = false;
             // 重建后更新横向平移范围与位置（行内容/表头/首列 transform 复位到当前平移量）
             if(window.__watchCalcMax) window.__watchCalcMax();
             if(window.__watchSync) window.__watchSync();
-            // 拖拽重排绑定（行新建后重新绑定）
-            if(window.initWatchSort) window.initWatchSort();
             // 资产负债率：无有效缓存时异步拉取（仅 A 股），拉到后更新对应行
             list.forEach(function(w){
                 if(w.market === 'A' && !hasValidDebtCache(w.code)){
@@ -17269,7 +17266,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             function onDocTm(e){
                 if(!_active) return;
-                if(listEl._dragActive) return; // 拖拽物理进行中：让 grip 手势处理；拖拽结束后立即清除，横滑即时恢复
                 const t = e.touches[0];
                 if(!t) return;
                 const dx = t.clientX - _tX, dy = t.clientY - _tY;
@@ -17316,204 +17312,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.__watchRebind = window.__watchResetTouch;
             calcMax();
         })();
-        // ===== 自选页拖拽重排：桌面 HTML5 DnD + 移动端 touch（grip 拦截事件，与横向平移互斥；行跟随 + 实时插入让位；落定保存顺序） =====
-        function commitWatchOrder(){
-            const list = document.getElementById('watchSelList');
-            if(!list) return;
-            const rows = list.querySelectorAll('.watch-row');
-            if(!rows.length) return;
-            const codes = [];
-            for(let i = 0; i < rows.length; i++) codes.push(rows[i].dataset.code);
-            const arr = loadWatchList();
-            const rank = {};
-            codes.forEach(function(c, i){ rank[c] = i; });
-            arr.sort(function(a, b){
-                const ra = rank[a.code], rb = rank[b.code];
-                return (ra == null ? 9999 : ra) - (rb == null ? 9999 : rb);
-            });
-            saveWatchList(arr);
-        }
-        function initWatchSort(){
-            const list = document.getElementById('watchSelList');
-            if(!list) return;
-            function getX(el){
-                const m = (el.style.transform || '').match(/translateX\((-?[\d.]+)px\)/);
-                return m ? m[1] : '0';
-            }
-            function rowIndex(el){
-                let i = 0, c = list.firstElementChild;
-                while(c){ if(c === el) return i; c = c.nextElementSibling; i++; }
-                return -1;
-            }
-            // 按指针 Y 计算目标插入位置：全遍历，被拖行视觉顶越过某行中点即排其后（向上/向下拖均生效）
-            function computeTarget(pointerY, row){
-                const all = list.children;
-                const others = [];
-                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
-                let targetIdx = 0;
-                for(let j = 0; j < others.length; j++){
-                    const ob = others[j].getBoundingClientRect();
-                    if(pointerY >= ob.top + ob.height / 2) targetIdx = j + 1;
-                }
-                return targetIdx;
-            }
-            // 让位视觉：按目标位置让中间行位移 ±rowH（不移动 DOM，只 transform，带过渡动画）
-            function applyShift(targetIdx, row, rowH, s){
-                const all = list.children;
-                const others = [];
-                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
-                // 清旧让位（瞬时，无动画）
-                if(s.movedSet){
-                    s.movedSet.forEach(function(o){
-                        o.style.transition = 'none';
-                        o.style.transform = 'translateX(' + getX(o) + 'px) translateY(0)';
-                        o.classList.remove('watch-move');
-                    });
-                }
-                const moved = [];
-                const lo = Math.min(targetIdx, s.index);
-                const hi = Math.max(targetIdx, s.index);
-                const dir = targetIdx > s.index ? -1 : 1; // 向下拖：中间行上移让位；向上拖：中间行下移让位
-                for(let j = lo; j < hi; j++){
-                    const o = others[j];
-                    if(o === row) continue;
-                    o.classList.add('watch-move');
-                    o.style.transition = '';
-                    o.style.transform = 'translateX(' + getX(o) + 'px) translateY(' + (dir * rowH) + 'px)';
-                    moved.push(o);
-                }
-                s.movedSet = moved;
-            }
-            // 落位：重置所有行 transform → 一次性重排 DOM → 保存顺序
-            function settle(s){
-                const row = s.row;
-                const all = list.children;
-                for(let j = 0; j < all.length; j++){
-                    const o = all[j];
-                    o.classList.remove('watch-move', 'watch-dragging');
-                    o.style.transition = 'none';
-                    o.style.transform = 'translateX(' + getX(o) + 'px)';
-                }
-                const others = [];
-                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
-                const targetIdx = Math.max(0, Math.min(s.lastTargetIdx == null ? s.index : s.lastTargetIdx, others.length));
-                if(targetIdx >= others.length){
-                    list.appendChild(row);
-                } else {
-                    list.insertBefore(row, others[targetIdx]);
-                }
-                row.style.transition = 'none';
-                row.style.transform = 'translateX(' + getX(row) + 'px)';
-                if(window.__watchCalcMax) window.__watchCalcMax();
-                if(window.__watchSync) window.__watchSync();
-                if(window.__watchRebind) window.__watchRebind();
-                // 不在此处做 display/pointer-events 强制刷新：
-                // display:none 会使自选页滚动容器高度骤减、scrollTop 被钳到顶部（页面跳顶），
-                // 且 iOS 触摸系统在最小干预下自然恢复；触摸命中已改用容器几何区域判断，不依赖命中缓存
-                commitWatchOrder();
-            }
-            // list 级 dragover/drop 只绑一次（避免每次渲染累积监听器）
-            if(!list._dndBound){
-                list._dndBound = true;
-                list.addEventListener('dragover', function(e){
-                    e.preventDefault();
-                    const code = list._dragCode;
-                    if(!code) return;
-                    const over = e.target && e.target.closest ? e.target.closest('.watch-row') : null;
-                    if(!over || over.dataset.code === code) return;
-                    const dragRow = list.querySelector('.watch-row[data-code="' + code + '"]');
-                    if(!dragRow) return;
-                    if(!list._sort){ list._sort = { row: dragRow, index: rowIndex(dragRow), rowH: dragRow.offsetHeight, lastTargetIdx: rowIndex(dragRow), movedSet: null }; list._dragActive = true; }
-                    const s = list._sort;
-                    const targetIdx = computeTarget(e.clientY, dragRow);
-                    if(targetIdx !== s.lastTargetIdx){
-                        applyShift(targetIdx, dragRow, s.rowH, s);
-                        s.lastTargetIdx = targetIdx;
-                    }
-                });
-                list.addEventListener('drop', function(e){
-                    e.preventDefault();
-                    const s = list._sort;
-                    list._sort = null;
-                    list._dragActive = false;
-                    if(s){ try{ settle(s); }catch(err){} }
-                    list._dragCode = null;
-                });
-            }
-            const rows = list.querySelectorAll('.watch-row');
-            for(let i = 0; i < rows.length; i++){
-                (function(row){
-                    const grip = row.querySelector('.watch-grip');
-                    if(!grip || grip._sortBound) return;
-                    grip._sortBound = true;
-                    // ---- 桌面：HTML5 DnD（让位视觉 + drop 一次性落位） ----
-                    grip.setAttribute('draggable', 'true');
-                    grip.addEventListener('dragstart', function(e){
-                        e.dataTransfer.setData('text/plain', row.dataset.code);
-                        e.dataTransfer.effectAllowed = 'move';
-                        list._dragCode = row.dataset.code;
-                        row.classList.add('watch-dragging');
-                    });
-                    grip.addEventListener('dragend', function(){
-                        row.classList.remove('watch-dragging');
-                        const s = list._sort;
-                        list._sort = null;
-                        list._dragActive = false;
-                        if(s){ try{ settle(s); }catch(err){} }
-                        list._dragCode = null;
-                    });
-                    // ---- 移动：touch 拖拽（grip 拦截；被拖行 transform 跟手 + 其他行让位动画；松手一次性落位） ----
-                    grip.addEventListener('touchstart', function(e){
-                        e.stopPropagation();
-                        const t = e.touches[0];
-                        const s = { row: row, grabY: t.clientY, startTop: row.getBoundingClientRect().top, rowH: row.offsetHeight, index: rowIndex(row), lastTargetIdx: rowIndex(row), movedSet: null };
-                        list._sort = s;
-                        list._dragActive = true;
-                        row.classList.add('watch-dragging');
-                        row.style.transition = 'none';
-                    }, { passive: true });
-                    grip.addEventListener('touchmove', function(e){
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const s = list._sort;
-                        if(!s || s.row !== row) return;
-                        const t = e.touches[0];
-                        const dy = t.clientY - s.grabY;
-                        // 被拖行跟手（速度与手指一致），保留横向位移
-                        row.style.transform = 'translateX(' + getX(row) + 'px) translateY(' + dy + 'px)';
-                        const targetIdx = computeTarget(s.startTop + dy, row);
-                        if(targetIdx !== s.lastTargetIdx){
-                            applyShift(targetIdx, row, s.rowH, s);
-                            s.lastTargetIdx = targetIdx;
-                        }
-                    }, { passive: false });
-                    grip.addEventListener('touchend', function(e){
-                        e.stopPropagation();
-                        const s = list._sort;
-                        // 立即清除拖拽状态：横滑恢复不依赖落位（iOS 触摸后 rAF 可能延迟，等 rAF 清 _sort 会长时间拦截横滑）
-                        list._sort = null;
-                        list._dragActive = false;
-                        if(s && s.row === row){
-                            // 延迟落位到下一渲染帧：触摸事件处理器内/紧邻重排 DOM 会使后续触摸目标定位异常（iOS 已知问题）
-                            setTimeout(function(){
-                                requestAnimationFrame(function(){ try{ settle(s); }catch(e){} });
-                            }, 0);
-                        }
-                    }, { passive: true });
-                    grip.addEventListener('touchcancel', function(e){
-                        e.stopPropagation();
-                        const s = list._sort;
-                        list._sort = null;
-                        list._dragActive = false;
-                        if(s && s.row === row){
-                            setTimeout(function(){
-                                requestAnimationFrame(function(){ try{ settle(s); }catch(e){} });
-                            }, 0);
-                        }
-                    }, { passive: true });
-                })(rows[i]);
-            }
-        }
         // 自选页左滑删除：行主体横向左滑露出右侧删除按钮；与 grip 拖拽、容器横向平移互斥
         // 删除自选股（候选列表 ✓ 点击删除）
         function deleteWatchStock(code){

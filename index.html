@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.119';</script>
+    <script>window.APP_VERSION = '20260928.120';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -16966,6 +16966,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const headFirst = document.querySelector('#watchSelHeadFirst');
             if(!listEl || !wpEl || !headRow || !headFirst) return;
             let X = 0, maxX = 0, _tX = 0, _tY = 0, _mode = null, _vel = 0, _lastT = 0, _anim = null;
+            let _active = false; // 当前触摸是否落在自选列表区域内
+            function pageActive(){
+                return wpEl.style.display !== 'none' && wpEl.offsetParent !== null;
+            }
             function calcMax(){
                 maxX = Math.max(0, listEl.scrollWidth - listEl.clientWidth);
                 if(X > maxX) X = maxX;
@@ -16985,14 +16989,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 headRow.style.transform = 'translateX(' + (-X) + 'px)';
                 headFirst.style.transform = 'translateX(' + X + 'px)';
             }
-            function onTs(e){
-                if(_anim){ cancelAnimationFrame(_anim); _anim = null; }
+            // 触摸监听挂在 document 捕获阶段：任何触摸先经捕获，不受列表行 DOM 重建/重排影响，
+            // 彻底规避拖拽后列表元素触摸目标失效导致的横向滑动失灵（上下滚动走原生不受影响）
+            function onDocTs(e){
+                if(!pageActive()){ _active = false; return; }
                 const t = e.touches[0];
+                if(!t){ _active = false; return; }
+                const el = document.elementFromPoint(t.clientX, t.clientY);
+                if(!el || !listEl.contains(el)){ _active = false; return; }
+                _active = true;
+                if(_anim){ cancelAnimationFrame(_anim); _anim = null; }
                 _tX = t.clientX; _tY = t.clientY;
                 _mode = null; _vel = 0; _lastT = Date.now();
             }
-            function onTm(e){
+            function onDocTm(e){
+                if(!_active) return;
+                if(listEl._sort) return; // 拖拽进行中：让 grip 手势处理，不参与横滑
                 const t = e.touches[0];
+                if(!t) return;
                 const dx = t.clientX - _tX, dy = t.clientY - _tY;
                 if(_mode === null){
                     if(Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) _mode = 'h';
@@ -17008,7 +17022,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 // v 模式：不阻止默认，交给外层整页原生滚动
             }
-            function onTe(){
+            function onDocTe(){
+                if(!_active) return;
+                _active = false;
                 if(_mode === 'h' && Math.abs(_vel) > 0.3){
                     const step = function(){
                         X += _vel; _vel *= 0.92;
@@ -17022,23 +17038,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 _mode = null;
             }
-            function bind(){
-                listEl.addEventListener('touchstart', onTs, { passive: true });
-                listEl.addEventListener('touchmove', onTm, { passive: false });
-                listEl.addEventListener('touchend', onTe, { passive: true });
-            }
+            document.addEventListener('touchstart', onDocTs, { passive: true, capture: true });
+            document.addEventListener('touchmove', onDocTm, { passive: false, capture: true });
+            document.addEventListener('touchend', onDocTe, { passive: true, capture: true });
             window.__watchSync = sync;
             window.__watchCalcMax = function(){ calcMax(); };
-            window.__watchResetTouch = function(){ _mode = null; _vel = 0; _anim = null; _tX = 0; _tY = 0; _lastT = 0; };
-            // 拖拽落位等场景重绑定触摸监听：刷新触摸目标/监听器状态，确保横向滑动恢复
-            window.__watchRebind = function(){
-                listEl.removeEventListener('touchstart', onTs);
-                listEl.removeEventListener('touchmove', onTm);
-                listEl.removeEventListener('touchend', onTe);
-                _mode = null; _vel = 0; _anim = null; _tX = 0; _tY = 0; _lastT = 0;
-                bind();
-            };
-            bind();
+            window.__watchResetTouch = function(){ _mode = null; _vel = 0; _anim = null; _tX = 0; _tY = 0; _lastT = 0; _active = false; };
+            // 落位后重置手势状态（document 级监听无需重绑）
+            window.__watchRebind = window.__watchResetTouch;
             calcMax();
         })();
         // ===== 自选页拖拽重排：桌面 HTML5 DnD + 移动端 touch（grip 拦截事件，与横向平移互斥；行跟随 + 实时插入让位；落定保存顺序） =====

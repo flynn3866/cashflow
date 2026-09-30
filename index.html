@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261001.125';</script>
+    <script>window.APP_VERSION = '20261001.128';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1222,7 +1222,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <!-- 表头行（横向随列表镜像滑动、同源无脱节；表头首列 JS 固定不动） -->
-            <div id="watchSelHeadRow" class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px_40px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
+            <div id="watchSelHeadRow" class="min-w-[600px] grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
                 <div id="watchSelHeadFirst" class="relative bg-white z-50 pl-4 pr-3 py-2 text-[11px] text-gray-500 font-medium" data-fixcol>股票</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">最新</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">涨幅</div>
@@ -1230,7 +1230,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">市盈率(TTM)</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right">市净率</div>
                 <div class="pl-2 pr-4 py-2 text-[11px] text-gray-500 font-medium text-right whitespace-nowrap">资产负债率</div>
-                <div class="pl-2 pr-4 py-2 flex items-center justify-center text-gray-300"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg></div>
             </div>
         </div>
 
@@ -1239,6 +1238,37 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="py-10 text-center text-gray-400 text-sm">暂无自选股票，点击右上角 + 添加</div>
         </div>
 
+        <!-- 底部管理入口：打开管理自选股详情页（拖拽排序，点"完成"应用顺序） -->
+        <div id="watchMgrBtnWrap" class="hidden mt-3 pb-2">
+            <button onclick="openWatchManage()" class="w-full h-11 rounded-xl bg-white border border-[#eedfc0] card-shadow flex items-center justify-center gap-2 text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform">
+                <i class="fa fa-sliders text-accent text-[13px]"></i>管理
+                <span class="text-[10px] text-gray-400 font-normal">拖拽调整自选顺序</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ==================== 管理自选股详情页（拖拽排序：点"完成"应用顺序并返回主页面） ==================== -->
+    <div id="pageWatchManage" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-24">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button onclick="applyWatchOrder()" class="h-9 px-4 rounded-xl bg-gradient-to-b from-[#6b4a21] to-[#4a3218] text-amber-50 text-[13px] font-semibold flex items-center gap-1.5 active:scale-95 transition-transform">
+                    <i class="fa fa-check text-[11px]"></i>完成
+                </button>
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">管理自选股</span>
+                <span class="ml-auto text-[10px] text-gray-400 whitespace-nowrap" id="watchMgrCount">0 只</span>
+            </div>
+        </div>
+        <!-- 提示卡 -->
+        <div class="bg-white rounded-2xl card-shadow px-4 py-3 mb-3 flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0"><i class="fa fa-arrows-v text-amber-600 text-[13px]"></i></div>
+            <div class="text-[11px] text-gray-500 leading-relaxed">按住右侧 <span class="text-gray-700 font-medium">拖拽图标</span> 上下拖动调整顺序，点右上角"完成"保存并返回自选页</div>
+        </div>
+        <div id="watchMgrList" class="bg-white rounded-2xl card-shadow overflow-hidden">
+            <div class="py-10 text-center text-gray-400 text-sm">暂无自选股票</div>
+        </div>
     </div>
 
 
@@ -6738,6 +6768,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageFundTransfer').classList.add('hidden');
             document.querySelector('#pageFundTransferAdd').classList.add('hidden');
             document.querySelector('#pageDivEntry').classList.add('hidden');
+            document.querySelector('#pageWatchManage').classList.add('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageWatchSel').classList.toggle('hidden', tab !== 'watch');
@@ -9050,6 +9081,228 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             });
         }
+        function openWatchManage(){
+            // 打开管理自选股详情页（拖拽排序；主页面隐藏，顺序在"完成"时应用）
+            rememberScroll();
+            document.querySelector('#pageWatchSel').classList.add('hidden');
+            document.querySelector('#pageWatchManage').classList.remove('hidden');
+            // 自选页 tab 切到后 body/html overflow 为 hidden（自选页内部滚动模式）；
+            // 管理页是整页滚动详情页，必须恢复外层滚动，否则滚轮固定死
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            window.scrollTo(0, 0);
+            renderWatchManage();
+        }
+        function renderWatchManage(){
+            const list = loadWatchList();
+            const el = document.querySelector('#watchMgrList');
+            if(!el) return;
+            const cnt = document.querySelector('#watchMgrCount');
+            if(cnt) cnt.innerText = list.length + ' 只';
+            if(!list.length){
+                el.innerHTML = '<div class="py-10 text-center text-gray-400 text-sm">暂无自选股票</div>';
+                return;
+            }
+            el.innerHTML = list.map(function(w){
+                const q = watchQuotes[w.code] || {};
+                return '<div class="watch-mgr-row grid grid-cols-[1fr_52px] border-b border-gray-50" data-code="' + w.code + '">'
+                    + '<div class="pl-4 pr-3 py-3 flex items-center gap-2 min-w-0">'
+                    + '<div class="min-w-0">'
+                    + '<div class="text-[15px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
+                    + '<div class="text-[11px] text-gray-400 tabular-nums mt-0.5">' + w.code + '</div>'
+                    + '</div></div>'
+                    + '<div class="watch-grip pl-1 pr-4 py-3 flex items-center justify-center text-gray-300 select-none touch-none"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg></div>'
+                    + '</div>';
+            }).join('');
+            if(window.initWatchMgrSort) window.initWatchMgrSort();
+        }
+        // 管理页拖拽排序（与主页 self 无关：仅两列列表，行 transform 只有 translateY 让位，松手一次性落位）
+        function initWatchMgrSort(){
+            const list = document.getElementById('watchMgrList');
+            if(!list || list._mgrBound) return;
+            list._mgrBound = true;
+            // 桌面：HTML5 DnD（让位视觉 + drop 一次性落位），复用同一套 computeTarget/applyShift/settle
+            if(!list._mgrDndBound){
+                list._mgrDndBound = true;
+                list.addEventListener('dragover', function(e){
+                    e.preventDefault();
+                    const code = list._dragCode;
+                    if(!code) return;
+                    const over = e.target && e.target.closest ? e.target.closest('.watch-mgr-row') : null;
+                    if(!over || over.dataset.code === code) return;
+                    const dragRow = list.querySelector('.watch-mgr-row[data-code="' + code + '"]');
+                    if(!dragRow) return;
+                    if(!list._sort) list._sort = { row: dragRow, index: rowIndex(dragRow), rowH: dragRow.offsetHeight, lastTargetIdx: rowIndex(dragRow), movedSet: null };
+                    const s = list._sort;
+                    const targetIdx = computeTarget(e.clientY, dragRow);
+                    if(targetIdx !== s.lastTargetIdx){
+                        applyShift(targetIdx, dragRow, s.rowH, s);
+                        s.lastTargetIdx = targetIdx;
+                    }
+                });
+                list.addEventListener('drop', function(e){
+                    e.preventDefault();
+                    const s = list._sort;
+                    list._sort = null;
+                    list._dragActive = false;
+                    if(s){ try{ settle(s); }catch(err){} }
+                    list._dragCode = null;
+                });
+            }
+            function rowIndex(el){
+                let i = 0, c = list.firstElementChild;
+                while(c){ if(c === el) return i; c = c.nextElementSibling; i++; }
+                return -1;
+            }
+            function computeTarget(pointerY, row){
+                const all = list.children;
+                const others = [];
+                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
+                let targetIdx = 0;
+                for(let j = 0; j < others.length; j++){
+                    const ob = others[j].getBoundingClientRect();
+                    if(pointerY >= ob.top + ob.height / 2) targetIdx = j + 1;
+                }
+                return targetIdx;
+            }
+            function applyShift(targetIdx, row, rowH, s){
+                const all = list.children;
+                const others = [];
+                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
+                if(s.movedSet){
+                    s.movedSet.forEach(function(o){
+                        o.style.transition = 'none';
+                        o.style.transform = '';
+                        o.classList.remove('watch-move');
+                    });
+                }
+                const moved = [];
+                const lo = Math.min(targetIdx, s.index);
+                const hi = Math.max(targetIdx, s.index);
+                const dir = targetIdx > s.index ? -1 : 1;
+                for(let j = lo; j < hi; j++){
+                    const o = others[j];
+                    if(o === row) continue;
+                    o.classList.add('watch-move');
+                    o.style.transition = '';
+                    o.style.transform = 'translateY(' + (dir * rowH) + 'px)';
+                    moved.push(o);
+                }
+                s.movedSet = moved;
+            }
+            function settle(s){
+                const row = s.row;
+                const all = list.children;
+                for(let j = 0; j < all.length; j++){
+                    const o = all[j];
+                    o.classList.remove('watch-move', 'watch-dragging');
+                    o.style.transition = 'none';
+                    o.style.transform = '';
+                }
+                const others = [];
+                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
+                const targetIdx = Math.max(0, Math.min(s.lastTargetIdx == null ? s.index : s.lastTargetIdx, others.length));
+                if(targetIdx >= others.length){
+                    list.appendChild(row);
+                } else {
+                    list.insertBefore(row, others[targetIdx]);
+                }
+                row.style.transition = 'none';
+                row.style.transform = '';
+                list._dragActive = false;
+            }
+            const rows = list.querySelectorAll('.watch-mgr-row');
+            for(let i = 0; i < rows.length; i++){
+                (function(row){
+                    const grip = row.querySelector('.watch-grip');
+                    if(!grip || grip._sortBound) return;
+                    grip._sortBound = true;
+                    // 桌面：grip 可拖拽（HTML5 DnD）
+                    grip.setAttribute('draggable', 'true');
+                    grip.addEventListener('dragstart', function(e){
+                        e.dataTransfer.setData('text/plain', row.dataset.code);
+                        e.dataTransfer.effectAllowed = 'move';
+                        list._dragCode = row.dataset.code;
+                        row.classList.add('watch-dragging');
+                    });
+                    grip.addEventListener('dragend', function(){
+                        row.classList.remove('watch-dragging');
+                        const s = list._sort;
+                        list._sort = null;
+                        list._dragActive = false;
+                        if(s){ try{ settle(s); }catch(err){} }
+                        list._dragCode = null;
+                    });
+                    grip.addEventListener('touchstart', function(e){
+                        e.stopPropagation();
+                        const t = e.touches[0];
+                        const s = { row: row, grabY: t.clientY, startTop: row.getBoundingClientRect().top, rowH: row.offsetHeight, index: rowIndex(row), lastTargetIdx: rowIndex(row), movedSet: null };
+                        list._sort = s;
+                        list._dragActive = true;
+                        row.classList.add('watch-dragging');
+                        row.style.transition = 'none';
+                    }, { passive: true });
+                    grip.addEventListener('touchmove', function(e){
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const s = list._sort;
+                        if(!s || s.row !== row) return;
+                        const t = e.touches[0];
+                        const dy = t.clientY - s.grabY;
+                        row.style.transform = 'translateY(' + dy + 'px)';
+                        const targetIdx = computeTarget(s.startTop + dy, row);
+                        if(targetIdx !== s.lastTargetIdx){
+                            applyShift(targetIdx, row, s.rowH, s);
+                            s.lastTargetIdx = targetIdx;
+                        }
+                    }, { passive: false });
+                    grip.addEventListener('touchend', function(e){
+                        e.stopPropagation();
+                        const s = list._sort;
+                        list._sort = null;
+                        list._dragActive = false;
+                        if(s && s.row === row){
+                            setTimeout(function(){
+                                requestAnimationFrame(function(){ try{ settle(s); }catch(err){} });
+                            }, 0);
+                        }
+                    }, { passive: true });
+                    grip.addEventListener('touchcancel', function(e){
+                        e.stopPropagation();
+                        const s = list._sort;
+                        list._sort = null;
+                        list._dragActive = false;
+                        if(s && s.row === row){
+                            setTimeout(function(){
+                                requestAnimationFrame(function(){ try{ settle(s); }catch(err){} });
+                            }, 0);
+                        }
+                    }, { passive: true });
+                })(rows[i]);
+            }
+        }
+        function applyWatchOrder(){
+            // 读管理页 DOM 顺序 → 应用到自选列表 → 刷新主页面 → 返回
+            const mgr = document.querySelector('#watchMgrList');
+            const rows = mgr ? mgr.querySelectorAll('.watch-mgr-row') : [];
+            const order = [];
+            for(let i = 0; i < rows.length; i++) order.push(rows[i].dataset.code);
+            const cur = loadWatchList();
+            const map = {};
+            cur.forEach(function(w){ map[w.code] = w; });
+            const next = [];
+            order.forEach(function(code){ if(map[code] && next.indexOf(map[code]) < 0) next.push(map[code]); });
+            cur.forEach(function(w){ if(next.indexOf(w) < 0) next.push(w); });
+            saveWatchList(next);
+            renderWatchSelPage();
+            exitDetailPage(document.querySelector('#pageWatchManage'), function(){
+                document.querySelector('#pageWatchSel').classList.remove('hidden');
+                // 返回自选页：恢复自选页内部滚动模式（外层滚动禁用）
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+                showToast('自选顺序已保存');
+            });
+        }
         function renderWatchSelPage(){
             const list = loadWatchList();
             const el = document.querySelector('#watchSelList');
@@ -9058,6 +9311,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(cntEl) cntEl.innerText = list.length + ' 只';
             const totalEl = document.querySelector('#watchSelTotal');
             if(totalEl) totalEl.innerText = list.length;
+            const mgrWrap = document.querySelector('#watchMgrBtnWrap');
+            if(mgrWrap) mgrWrap.classList.toggle('hidden', !list.length);
             if(!list.length){
                 el.innerHTML = '<div class="py-10 text-center text-gray-400 text-sm">暂无自选股票，点击右上角 + 添加</div>';
                 return;
@@ -9092,7 +9347,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const peCls = pe != null ? 'text-gray-800' : 'text-gray-400';
                 const pbCls = pb != null ? 'text-gray-800' : 'text-gray-400';
                 const debtCls = debtVal != null ? 'text-gray-800' : 'text-gray-400';
-                html += '<div class="watch-row grid grid-cols-[112px_76px_74px_82px_92px_74px_92px_40px] border-b border-gray-50" data-code="' + w.code + '">'
+                html += '<div class="watch-row grid grid-cols-[112px_76px_74px_82px_92px_74px_92px] border-b border-gray-50" data-code="' + w.code + '">'
                     + '<div class="relative bg-white z-20 pl-4 pr-3 py-2.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
                     + '<div class="text-[15px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
@@ -9104,7 +9359,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
                     + '<div class="pl-2 pr-4 py-2.5 flex items-center justify-end text-[14px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
-                    + '<div class="watch-grip pl-2 pr-4 py-2.5 flex items-center justify-center text-gray-300 select-none"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg></div>'
                     + '</div>';
             });
             el.innerHTML = html;

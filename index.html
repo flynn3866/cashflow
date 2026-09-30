@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261001.128';</script>
+    <script>window.APP_VERSION = '20261001.129';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -9119,9 +9119,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 管理页拖拽排序（与主页 self 无关：仅两列列表，行 transform 只有 translateY 让位，松手一次性落位）
         function initWatchMgrSort(){
             const list = document.getElementById('watchMgrList');
-            if(!list || list._mgrBound) return;
-            list._mgrBound = true;
-            // 桌面：HTML5 DnD（让位视觉 + drop 一次性落位），复用同一套 computeTarget/applyShift/settle
+            if(!list) return;
+            // 桌面：HTML5 DnD（让位视觉 + drop 一次性落位），复用同一套 computeTarget/applyShift/settle；
+            // list 级监听只绑定一次（_mgrDndBound），行级 grip 每次渲染后按 _sortBound 逐个绑定
             if(!list._mgrDndBound){
                 list._mgrDndBound = true;
                 list.addEventListener('dragover', function(e){

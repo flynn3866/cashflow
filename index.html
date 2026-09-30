@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20260928.113';</script>
+    <script>window.APP_VERSION = '20260928.116';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -16986,6 +16986,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             window.__watchSync = sync;
             window.__watchCalcMax = function(){ calcMax(); };
+            // 拖拽落位等场景强制重置手势状态，避免残留干扰下一次横向滑动
+            window.__watchResetTouch = function(){ _mode = null; _vel = 0; _anim = null; _tX = 0; _tY = 0; _lastT = 0; };
             listEl.addEventListener('touchstart', function(e){
                 if(_anim){ cancelAnimationFrame(_anim); _anim = null; }
                 const t = e.touches[0];
@@ -17115,6 +17117,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 row.style.transform = 'translateX(' + getX(row) + 'px)';
                 if(window.__watchCalcMax) window.__watchCalcMax();
                 if(window.__watchSync) window.__watchSync();
+                if(window.__watchResetTouch) window.__watchResetTouch();
                 commitWatchOrder();
             }
             // list 级 dragover/drop 只绑一次（避免每次渲染累积监听器）

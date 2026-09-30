@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261001.124';</script>
+    <script>window.APP_VERSION = '20261001.125';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -17022,6 +17022,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(_mode === null){
                     if(Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) _mode = 'h';
                     else if(Math.abs(dy) > 6) _mode = 'v';
+                } else if(_mode === 'v' && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5){
+                    // 横滑迹象明确时从纵向切回横向（手指初始微小纵向位移不应永久锁死方向）
+                    _mode = 'h';
                 }
                 if(_mode === 'h'){
                     e.preventDefault();
@@ -17150,14 +17153,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(window.__watchCalcMax) window.__watchCalcMax();
                 if(window.__watchSync) window.__watchSync();
                 if(window.__watchRebind) window.__watchRebind();
-                // 强制刷新 iOS 触摸命中缓存：重排后下一次横向滑动目标才能重新命中
-                // display 切换触发完整 layout 重建（同帧同步执行，无视觉闪烁），比 pointer-events 切换更彻底
-                list.style.display = 'none';
-                void list.offsetHeight;
-                list.style.display = '';
-                list.style.pointerEvents = 'none';
-                void list.offsetHeight;
-                list.style.pointerEvents = '';
+                // 不在此处做 display/pointer-events 强制刷新：
+                // display:none 会使自选页滚动容器高度骤减、scrollTop 被钳到顶部（页面跳顶），
+                // 且 iOS 触摸系统在最小干预下自然恢复；触摸命中已改用容器几何区域判断，不依赖命中缓存
                 commitWatchOrder();
             }
             // list 级 dragover/drop 只绑一次（避免每次渲染累积监听器）

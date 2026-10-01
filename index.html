@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261001.131';</script>
+    <script>window.APP_VERSION = '20261001.138';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -297,8 +297,8 @@
             to{ opacity:1; transform:translateY(0); }
         }
         @keyframes appSlideIn{
-            from{ opacity:.45; transform:translateX(24px); }
-            to{ opacity:1; transform:translateX(0); }
+            from{ opacity:.35; }
+            to{ opacity:1; }
         }
         .bottomTab{ -webkit-tap-highlight-color:transparent; }
         .bottomTab i{ transition: transform .2s ease, color .2s ease; }
@@ -317,6 +317,8 @@
             to{ opacity:1; transform:scale(1) translateY(0); }
         }
         body{ -webkit-tap-highlight-color:transparent; overscroll-behavior-y:none; }
+        .no-spinner::-webkit-inner-spin-button,.no-spinner::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+        .no-spinner{ -moz-appearance:textfield; }
         [onclick]{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
         button{ -webkit-tap-highlight-color:transparent; }
         .sticky.top-0.bg-white{
@@ -1304,7 +1306,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </button>
             <button onclick="openStatsSection('analysis')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-area-chart text-[13px] text-accent"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">资产分析图表</div>
+                <div class="text-[13px] font-semibold text-gray-800">资产分析</div>
                 <div id="statsCardSummaryAnalysis" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubAnalysis" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
@@ -1316,32 +1318,32 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </button>
             <button onclick="openStatsSection('pnl')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-balance-scale text-[13px] text-accent"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">累计盈亏排行</div>
+                <div class="text-[13px] font-semibold text-gray-800">盈亏排行</div>
                 <div id="statsCardSummaryPnl" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubPnl" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('divrank')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-cny text-[13px] text-accent"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">累计分红排行</div>
+                <div class="text-[13px] font-semibold text-gray-800">分红排行</div>
                 <div id="statsCardSummaryDivRank" class="text-[13px] font-bold text-accent mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubDivRank" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('schedule')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform relative">
                 <span id="statsCardScheduleBadge" class="hidden absolute -top-1.5 -right-1.5 z-10 text-[10px] font-semibold text-white pl-2 pr-2 py-1 rounded-full today-reg-pulse whitespace-nowrap" style="background:linear-gradient(135deg,#e03131,#b0332f);box-shadow:0 2px 8px rgba(224,49,49,0.4)">今日 0 笔</span>
                 <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-calendar-check-o text-[13px] text-accent"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">分红派发日程</div>
+                <div class="text-[13px] font-semibold text-gray-800">分红派发</div>
                 <div id="statsCardSummarySchedule" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubSchedule" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('compare')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">分红升降对比</div>
+                <div class="text-[13px] font-semibold text-gray-800">分红对比</div>
                 <div id="statsCardSummaryCompare" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubCompare" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('industry')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
                 <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-building text-[12px] text-accent"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">行业资产分析</div>
+                <div class="text-[13px] font-semibold text-gray-800">行业资产</div>
                 <div id="statsCardSummaryIndustry" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubIndustry" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
@@ -1634,7 +1636,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">分红升降对比</span>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">分红对比统计</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
                     <span id="statsDivCompareRefreshTime">每日更新 · -- 更新</span>
@@ -1642,36 +1644,75 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
-
-            <div id="statsDivCompareWrap">
-            <!-- 总额对比 -->
-            <div class="px-5 py-3.5 border-b border-gray-100 bg-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-[11px] text-gray-400 mb-0.5">年度分红总额</div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-lg font-bold text-gray-800" id="divCompareThisYear">0</span>
-                            <span class="text-[11px] text-gray-400">今年</span>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-[11px] text-gray-400 mb-0.5">较去年</div>
-                        <div class="flex items-center justify-end gap-1" id="divCompareTotalChange">
-                            <span class="text-base font-bold">+0.00%</span>
-                        </div>
+            <!-- 口径说明 -->
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5 bg-white">
+                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
+                <div class="text-[11px] text-gray-500 leading-relaxed">今年分红预测 = 最新持仓股数 × 全年每股分红（已发布均计入）；去年分红收入 = 该股票去年实际到账分红</div>
+            </div>
+            <!-- 表头 -->
+            <div id="statsDivCompareHead" class="grid grid-cols-[1.3fr_1fr_1fr_1fr] px-3 py-2.5 border-b border-gray-100 bg-gray-50/70">
+                <div class="pl-1 text-[11px] text-gray-500 font-medium">股票</div>
+                <div class="pr-1 text-[11px] text-gray-500 font-medium text-right">今年分红预测</div>
+                <div class="pr-1 text-[11px] text-gray-500 font-medium text-right">去年分红收入</div>
+                <div class="pr-1 text-[11px] text-gray-500 font-medium text-right">对比结果</div>
+            </div>
+            <!-- 列表 -->
+            <div id="statsDivCompareList" class="divide-y divide-gray-50">
+                <div class="px-4 py-10 text-center text-gray-400 text-sm">暂无对比数据</div>
+            </div>
+            <!-- 汇总行 -->
+            <div id="statsDivCompareTotal" class="hidden grid grid-cols-[1.3fr_1fr_1fr_1fr] px-3 py-3 border-t-2 border-[#e2cf9c] bg-[#f7f1e0] items-center"></div>
+            <!-- 调仓分析对比：本次会话内有效，不持久化；每次进入详情页重置 -->
+            <div class="relative bg-white rounded-2xl card-shadow overflow-hidden mt-6">
+                <!-- 顶部金色渐变线：与详情页标题栏同款，强化"模块标题栏"分区感 -->
+                <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f59e0b,#a9642a,transparent)"></div>
+                <!-- 分区标题栏：调仓分析对比（做测算） -->
+                <div class="px-4 py-3.5 border-b border-[#eedfc0] flex items-center gap-2.5 bg-white">
+                    <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-balance-scale text-[12px] text-accent"></i></div>
+                    <div class="min-w-0">
+                        <div class="text-[14px] font-semibold text-gray-800">调仓分析对比</div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-amber-400 to-[#b0893f] rounded-full" id="divCompareBar" style="width: 50%"></div>
+                <!-- 可用调仓额资金条：金色金额条，像"资金池"，一眼可见可动用的额度 -->
+                <div class="px-4 py-3 flex items-center justify-between bg-[#faf7ef] border-b border-[#eedfc0]">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa fa-coins text-[12px] text-accent"></i>
+                        <span class="text-[11px] font-medium text-gray-500">可用调仓额</span>
+                        <span class="text-[10px] text-gray-400">减仓释放 · 用于换股</span>
                     </div>
-                    <span class="text-[10px] text-gray-400 whitespace-nowrap">去年 <span id="divCompareLastYear">0</span></span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="adjAvailDiv" class="text-[22px] font-bold text-accent tabular-nums leading-none">0.00</span>
+                        <span class="text-[10px] text-gray-400">元</span>
+                    </div>
                 </div>
-            </div>
-            <!-- 个股对比列表 -->
-            <div id="statsDivCompareList" class="divide-y divide-gray-100">
-                <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无对比数据</div>
-            </div>
+                <div class="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100 bg-[#faf7ef]">
+                    <div class="px-2 py-3 text-center">
+                        <div class="text-[10px] text-gray-400 mb-1">调仓前分红</div>
+                        <div id="adjBeforeDiv" class="text-[15px] font-bold text-gray-800 tabular-nums">0.00</div>
+                    </div>
+                    <div class="px-2 py-3 text-center">
+                        <div class="text-[10px] text-gray-400 mb-1">调仓后分红</div>
+                        <div id="adjAfterDiv" class="text-[15px] font-bold text-accent tabular-nums">0.00</div>
+                    </div>
+                    <div class="px-2 py-3 text-center">
+                        <div class="text-[10px] text-gray-400 mb-1">分红增减</div>
+                        <div id="adjDiffDiv" class="flex items-center justify-center gap-1"><span class="text-[15px] font-bold tabular-nums text-gray-800">0.00</span></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-[1.2fr_1fr_1fr] px-3 py-2.5 border-b border-gray-100 bg-gray-50/70">
+                    <div class="pl-1 text-[11px] text-gray-500 font-medium">股票</div>
+                    <div class="pr-1 text-[11px] text-gray-500 font-medium text-right">当前持仓数</div>
+                    <div class="pr-1 text-[11px] text-gray-500 font-medium text-right">调仓后持仓数</div>
+                </div>
+                <div id="statsDivAdjList" class="divide-y divide-gray-50">
+                    <div class="mx-3 my-3 rounded-xl border-2 border-dashed border-[#e2d3b0] bg-[#fdfbf5] flex flex-col items-center justify-center py-7 gap-1.5">
+                        <div class="w-8 h-8 rounded-full bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center"><i class="fa fa-plus text-[13px] text-accent"></i></div>
+                        <div class="text-[12px] text-gray-400">点击下方按钮添加调仓股票</div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 border-t border-gray-100">
+                    <button onclick="adjAddRow()" class="w-full h-10 rounded-xl border border-dashed border-[#e2d3b0] bg-[#fdfbf5] text-[13px] font-medium text-accent active:scale-95 transition-transform flex items-center justify-center gap-1.5"><i class="fa fa-plus text-[12px]"></i>添加调仓股票</button>
+                </div>
             </div>
         </div>
     </div>
@@ -4343,6 +4384,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // B：统计页可见 → 滚动中跳过整页重建，停止后补一次（涨跌幅排行重排依赖整页渲染）
                     if(activeTab === 'stats'){
                         if(window.__pageScrolling){ window.__pageDirty = true; }
+                        // 分红对比统计详情页含手动输入框：跳过整页重建（重建会替换输入框、清空输入、打断焦点），只刷新统计页卡片摘要
+                        else if(document.getElementById('pageStatsCompare') && !document.getElementById('pageStatsCompare').classList.contains('hidden')){
+                            refreshStatsCardSummaries();
+                        }
                         else renderStatsPage();
                     }
                     // C：自选页可见 → 交易时间内每 2 秒增量更新全部字段（现价/涨跌幅/股息率/PE/PB/资产负债率，
@@ -10671,6 +10716,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
             // 行业资产分布 / 资金流水：打开时即时构建渲染（本地数据，无需网络）
             // 本地数据轻渲染：同步执行，保证共享元素过渡动画开始时页面内容已就绪（避免"先壳后内容"的两次感）
+            if(key === 'compare'){ adjRows = []; }
             if(key === 'industry'){ renderIndustryMulti(); }
             if(key === 'cash'){ renderStatsCashFlow(); }
             if(key === 'trade'){ renderStatsTrade(); }
@@ -13330,269 +13376,433 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 });
             }
 
-            // ===== 3. 分红升降对比（今年 vs 去年） =====
+            // ===== 3. 股票分红对比（最新持仓股统计）：今年分红预测 vs 去年实际到账 =====
             const compareList = document.querySelector('#statsDivCompareList');
+            const compareTotalEl = document.querySelector('#statsDivCompareTotal');
             const curYearNum = new Date().getFullYear();
             const lastYearNum = curYearNum - 1;
             const curYearStr = String(curYearNum);
             const lastYearStr = String(lastYearNum);
-            let totalThisYear = 0;   // 今年总分红（金额）
-            let totalLastYear = 0;   // 去年总分红（金额）
-            const compareItems = [];
-
-            holdDataList.forEach(function(it){
-                if(it.marketType !== 'A') return;
-                const cache = divCacheMap[it.code];
-                if(!cache || !cache.records || !cache.records.length) return;
-                let thisYearPer = 0;  // 今年每股分红
-                let lastYearPer = 0;  // 去年每股分红
-                const thisYearDetails = [];  // 今年每次分红明细
-                const lastYearDetails = [];  // 去年每次分红明细
-                // 防重：同一笔分红预案+实施多条记录只算一次（实施按"除权日|金额"去重；预案若当年已有同金额实施记录则跳过）
-                const cmpSeenE = {}, cmpImplemented = {};
+            // 今年已发布分红方案的每股金额（A股，含已实施与未实施预案；"只要发布了都算"）
+            function getYearDivPerShareForecast(code, yStr){
+                const cache = divCacheMap[code];
+                if(!cache || !cache.records) return 0;
+                const seen = {}, implemented = {};
+                let per = 0;
                 cache.records.forEach(function(r){
+                    const p = Number(r.PRETAX_BONUS_RMB);
+                    if(r.PRETAX_BONUS_RMB == null || isNaN(p) || p <= 0) return;
                     const noticeDate = String(r.NOTICE_DATE || '').substring(0, 10);
                     const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0, 10);
                     const year = exDate ? exDate.substring(0, 4) : (noticeDate ? noticeDate.substring(0, 4) : '');
-                    const per10 = Number(r.PRETAX_BONUS_RMB);
-                    if(isNaN(per10) || per10 <= 0) return;
-                    const perShare = per10 / 10;
-                    // 同一笔分红多条记录（预案+实施）只算一次
+                    if(year !== yStr) return;
+                    // 同一笔分红多条记录（预案+实施）只算一次：实施记录优先，同金额预案跳过
                     if(exDate.length === 10){
-                        const dk = 'E' + exDate + '|' + per10;
-                        if(cmpSeenE[dk]) return;
-                        cmpSeenE[dk] = true;
-                        (cmpImplemented[year] = cmpImplemented[year] || {})[per10] = 1;
+                        const dk = 'E' + exDate + '|' + p;
+                        if(seen[dk]) return;
+                        seen[dk] = true;
+                        (implemented[year] = implemented[year] || {})[p] = 1;
                     } else {
-                        if(cmpImplemented[year] && cmpImplemented[year][per10]) return; // 该年已有同金额实施记录 → 预案跳过
-                        const dk = 'N' + noticeDate + '|' + per10;
-                        if(cmpSeenE[dk]) return;
-                        cmpSeenE[dk] = true;
+                        if(implemented[year] && implemented[year][p]) return;
+                        const dk = 'N' + noticeDate + '|' + p;
+                        if(seen[dk]) return;
+                        seen[dk] = true;
                     }
-                    // 判断是年中还是年终分红：根据除权日月份
-                    const month = exDate ? Number(exDate.substring(5, 7)) : (noticeDate ? Number(noticeDate.substring(5, 7)) : 0);
-                    const periodLabel = month >= 7 && month <= 12 ? '年中' : '年终';
-                    const detail = {
-                        perShare: perShare,
-                        month: month,
-                        periodLabel: periodLabel,
-                        exDate: exDate,
-                        dateStr: exDate || noticeDate || ''
-                    };
-                    if(year === curYearStr){
-                        thisYearPer += perShare;
-                        thisYearDetails.push(detail);
-                    } else if(year === lastYearStr){
-                        lastYearPer += perShare;
-                        lastYearDetails.push(detail);
-                    }
+                    per += p / 10;
                 });
-                // 如果今年没有分红数据但有divPerShare，用divPerShare作为今年
-                if(thisYearPer === 0 && it.divPerShare > 0){
-                    thisYearPer = it.divPerShare;
-                    thisYearDetails.push({ perShare: it.divPerShare, month: 0, periodLabel: '预计', exDate: '', dateStr: '' });
-                }
-                // 按月份排序
-                thisYearDetails.sort(function(a, b){ return a.month - b.month; });
-                lastYearDetails.sort(function(a, b){ return a.month - b.month; });
-                const thisYearAmount = thisYearPer * it.count;
-                const lastYearAmount = lastYearPer * it.count;
-                totalThisYear += thisYearAmount;
-                totalLastYear += lastYearAmount;
-                const diff = thisYearPer - lastYearPer;
-                const diffPct = lastYearPer > 0 ? (diff / lastYearPer * 100) : (thisYearPer > 0 ? 100 : 0);
-                // 分析哪次分红提升/降低
-                let changeNote = '';
-                if(thisYearDetails.length && lastYearDetails.length){
-                    const notes = [];
-                    thisYearDetails.forEach(function(td, ti){
-                        const ld = lastYearDetails[ti];
-                        if(ld){
-                            const d = td.perShare - ld.perShare;
-                            if(Math.abs(d) > 0.001){
-                                const label = td.periodLabel || '分红';
-                                notes.push(label + (d > 0 ? '提升' : '降低') + Math.abs(d).toFixed(3));
-                            }
-                        }
-                    });
-                    if(thisYearDetails.length > lastYearDetails.length){
-                        notes.push('新增' + (thisYearDetails.length - lastYearDetails.length) + '次分红');
-                    } else if(thisYearDetails.length < lastYearDetails.length){
-                        notes.push('减少' + (lastYearDetails.length - thisYearDetails.length) + '次分红');
-                    }
-                    changeNote = notes.join('，');
-                }
-                compareItems.push({
-                    name: it.name,
-                    code: it.code,
-                    thisYearPer: thisYearPer,
-                    lastYearPer: lastYearPer,
-                    thisYearAmount: thisYearAmount,
-                    lastYearAmount: lastYearAmount,
-                    diff: diff,
-                    diffPct: diffPct,
-                    isUp: diff >= 0,
-                    thisYearCount: thisYearDetails.length,
-                    lastYearCount: lastYearDetails.length,
-                    thisYearDetails: thisYearDetails,
-                    lastYearDetails: lastYearDetails,
-                    changeNote: changeNote
-                });
-            });
-
-            const _cmpUp = compareItems.filter(function(it){ return it.isUp; });
-            window._statsCardCompare = compareItems.length ? ('提升 ' + _cmpUp.length + ' 只 · 下降 ' + (compareItems.length - _cmpUp.length) + ' 只') : '暂无对比';
-            // 渲染总额对比
-            document.querySelector('#divCompareThisYear').innerText = fmtMoney(totalThisYear);
-            document.querySelector('#divCompareLastYear').innerText = fmtMoney(totalLastYear);
-            const totalDiff = totalThisYear - totalLastYear;
-            const totalDiffPct = totalLastYear > 0 ? (totalDiff / totalLastYear * 100) : (totalThisYear > 0 ? 100 : 0);
-            const totalChangeEl = document.querySelector('#divCompareTotalChange');
-            const totalColor = totalDiff >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]';
-            const totalArrow = totalDiff >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-            totalChangeEl.innerHTML = '<i class="fa ' + totalArrow + ' text-xs ' + totalColor + '"></i>'
-                + '<span class="text-base font-bold ' + totalColor + '">' + (totalDiff >= 0 ? '+' : '') + totalDiffPct.toFixed(1) + '%</span>'
-                + '<span class="text-[11px] ' + totalColor + ' ml-1">' + (totalDiff >= 0 ? '+' : '') + fmtMoney(totalDiff) + '</span>';
-            // 进度条：今年占比
-            const maxTotal = Math.max(totalThisYear, totalLastYear, 1);
-            const barPct = Math.min(100, (totalThisYear / maxTotal) * 100);
-            document.querySelector('#divCompareBar').style.width = barPct + '%';
-
-            // 渲染个股对比列表
-            if(!compareItems.length){
-                const hasAStock = holdDataList.some(function(it){ return it.marketType === 'A'; });
-                const divLoading = hasAStock && holdDataList.some(function(it){
-                    return it.marketType === 'A' && !divCacheMap[it.code];
-                });
-                // 超时判断：加载超过15秒则认为加载完成（无数据）
-                const loadTimeout = statsDivLoadStartTime > 0 && (Date.now() - statsDivLoadStartTime > 15000);
-                if(divLoading && !loadTimeout){
-                    compareList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm"><i class="fa fa-spinner fa-spin mr-2"></i>分红数据加载中...</div>';
-                } else if(!hasAStock){
-                    compareList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无A股持仓<br><span class="text-[11px]">港股分红为手动填写，暂不纳入对比</span></div>';
-                } else {
-                    compareList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无分红数据</div>';
-                }
-            } else {
-                // 排序：提升的在前（按提升幅度降序），下降的在后（按下降幅度升序）
-                compareItems.sort(function(a, b){
-                    if(a.isUp && !b.isUp) return -1;
-                    if(!a.isUp && b.isUp) return 1;
-                    return b.diffPct - a.diffPct;
-                });
-                let html = '';
-                // 提升部分
-                const upItems = compareItems.filter(function(it){ return it.isUp; });
-                const downItems = compareItems.filter(function(it){ return !it.isUp; });
-                if(upItems.length){
-                    const upCompareCollapsed = statsSubCollapse.divUp === true;
-                    const upCompareIcon = upCompareCollapsed ? 'fa-chevron-down' : 'fa-chevron-up';
-                    html += '<div class="px-5 py-2.5 bg-red-50/50 border-b border-red-100 flex items-center justify-between cursor-pointer stats-sub-collapse" data-section="divUp">'
-                        + '<div class="flex items-center gap-1.5">'
-                        + '<i class="fa fa-arrow-up text-[11px] text-[#e03131]"></i>'
-                        + '<span class="text-[12px] font-semibold text-[#e03131]">分红提升</span>'
-                        + '</div>'
-                        + '<div class="flex items-center gap-2">'
-                        + '<span class="text-[11px] text-gray-400">' + upItems.length + '只</span>'
-                        + '<i class="fa ' + upCompareIcon + ' text-[10px] text-gray-400"></i>'
-                        + '</div>'
-                        + '</div>';
-                    if(!upCompareCollapsed){
-                    upItems.forEach(function(item){
-                        const pctColor = item.diffPct > 0 ? 'text-[#e03131]' : 'text-gray-400';
-                        // 渲染每次分红明细标签
-                        const renderDetails = function(details, color){
-                            if(!details.length) return '<span class="text-gray-300">无</span>';
-                            return details.map(function(d){
-                                return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] ' + color + ' bg-gray-50 mr-1 mb-0.5">'
-                                    + d.periodLabel + ' ' + d.perShare.toFixed(3) + '</span>';
-                            }).join('');
-                        };
-                        html += '<div class="px-5 py-3 active:bg-gray-50">'
-                            + '<div class="flex items-center justify-between mb-1">'
-                            + '<div class="text-sm font-medium text-gray-800 truncate">' + item.name
-                            + '<span class="text-[10px] text-gray-400 ml-1.5">今年' + item.thisYearCount + '次·去年' + item.lastYearCount + '次</span>'
-                            + '</div>'
-                            + '<div class="flex items-center gap-1 flex-shrink-0 ml-2">'
-                            + (item.diff > 0 ? '<i class="fa fa-arrow-up text-[10px] text-[#e03131]"></i>' : '')
-                            + '<span class="text-sm font-bold ' + pctColor + '">' + (item.diffPct > 0 ? '+' : '') + item.diffPct.toFixed(1) + '%</span>'
-                            + '</div>'
-                            + '</div>'
-                            + '<div class="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">'
-                            + '<span>今年每股 <span class="text-accent font-medium">' + item.thisYearPer.toFixed(3) + '</span></span>'
-                            + '<span>去年每股 ' + item.lastYearPer.toFixed(3) + '</span>'
-                            + '<span class="' + pctColor + '">' + (item.diff >= 0 ? '+' : '') + item.diff.toFixed(3) + '/股</span>'
-                            + '</div>'
-                            + '<div class="text-[10px] text-gray-500 leading-relaxed">'
-                            + '<span class="text-gray-400">今年：</span>' + renderDetails(item.thisYearDetails, 'text-accent')
-                            + (item.changeNote ? '<div class="mt-1 text-[#e03131]"><i class="fa fa-info-circle mr-1"></i>' + item.changeNote + '</div>' : '')
-                            + '</div>'
-                            + '</div>';
-                    });
-                    }
-                }
-                // 下降部分
-                if(downItems.length){
-                    if(upItems.length) html += '<div class="h-2 bg-gray-50"></div>';
-                    const downCompareCollapsed = statsSubCollapse.divDown === true;
-                    const downCompareIcon = downCompareCollapsed ? 'fa-chevron-down' : 'fa-chevron-up';
-                    html += '<div class="px-5 py-2.5 bg-green-50/50 border-b border-green-100 flex items-center justify-between cursor-pointer stats-sub-collapse" data-section="divDown">'
-                        + '<div class="flex items-center gap-1.5">'
-                        + '<i class="fa fa-arrow-down text-[11px] text-[#00a05c]"></i>'
-                        + '<span class="text-[12px] font-semibold text-[#00a05c]">分红下降</span>'
-                        + '</div>'
-                        + '<div class="flex items-center gap-2">'
-                        + '<span class="text-[11px] text-gray-400">' + downItems.length + '只</span>'
-                        + '<i class="fa ' + downCompareIcon + ' text-[10px] text-gray-400"></i>'
-                        + '</div>'
-                        + '</div>';
-                    if(!downCompareCollapsed){
-                    downItems.forEach(function(item){
-                        // 渲染每次分红明细标签
-                        const renderDetails = function(details, color){
-                            if(!details.length) return '<span class="text-gray-300">无</span>';
-                            return details.map(function(d){
-                                return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] ' + color + ' bg-gray-50 mr-1 mb-0.5">'
-                                    + d.periodLabel + ' ' + d.perShare.toFixed(3) + '</span>';
-                            }).join('');
-                        };
-                        html += '<div class="px-5 py-3 active:bg-gray-50">'
-                            + '<div class="flex items-center justify-between mb-1">'
-                            + '<div class="text-sm font-medium text-gray-800 truncate">' + item.name
-                            + '<span class="text-[10px] text-gray-400 ml-1.5">今年' + item.thisYearCount + '次·去年' + item.lastYearCount + '次</span>'
-                            + '</div>'
-                            + '<div class="flex items-center gap-1 flex-shrink-0 ml-2">'
-                            + '<i class="fa fa-arrow-down text-[10px] text-[#00a05c]"></i>'
-                            + '<span class="text-sm font-bold text-[#00a05c]">' + item.diffPct.toFixed(1) + '%</span>'
-                            + '</div>'
-                            + '</div>'
-                            + '<div class="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">'
-                            + '<span>今年每股 <span class="text-accent font-medium">' + item.thisYearPer.toFixed(3) + '</span></span>'
-                            + '<span>去年每股 ' + item.lastYearPer.toFixed(3) + '</span>'
-                            + '<span class="text-[#00a05c]">' + item.diff.toFixed(3) + '/股</span>'
-                            + '</div>'
-                            + '<div class="text-[10px] text-gray-500 leading-relaxed">'
-                            + '<span class="text-gray-400">今年：</span>' + renderDetails(item.thisYearDetails, 'text-accent')
-                            + (item.changeNote ? '<div class="mt-1 text-[#00a05c]"><i class="fa fa-info-circle mr-1"></i>' + item.changeNote + '</div>' : '')
-                            + '</div>'
-                            + '</div>';
-                    });
-                    }
-                }
-                compareList.innerHTML = html;
-                // 分红升降对比数据同样来自每日刷新的分红缓存
-                markStatsRefresh('compare', '#statsDivCompareRefreshTime', '每日更新');
-                // 绑定子部分折叠点击事件
-                compareList.querySelectorAll('.stats-sub-collapse').forEach(function(header){
-                    header.addEventListener('click', function(){
-                        const section = this.getAttribute('data-section');
-                        statsSubCollapse[section] = !statsSubCollapse[section];
-                        try{ localStorage.setItem('statsSubCollapse', JSON.stringify(statsSubCollapse)); }catch(e){}
-                        renderStatsPage();
-                    });
-                });
+                return per;
             }
+            // 指定年份、指定报告期类型（mid=年中 / end=年终）的每股分红（元/股）
+            // 报告期类型按 REPORT_DATE：06-30/09-30 → 年中，12-31 → 年终
+            // impl=true 只算已实施（到账口径，用于去年）；impl=false 算已发布（含预案，用于今年预测）
+            function getYearPerByType(code, yStr, type, impl){
+                const cache = divCacheMap[code];
+                if(!cache || !cache.records) return 0;
+                const seenA = {}, seenB = {};
+                let per = 0;
+                cache.records.forEach(function(r){
+                    const p = Number(r.PRETAX_BONUS_RMB);
+                    if(r.PRETAX_BONUS_RMB == null || isNaN(p) || p <= 0) return;
+                    if(impl){
+                        const progress = String(r.ASSIGN_PROGRESS || '');
+                        if(!progress.includes('实施')) return;
+                    }
+                    const rd = String(r.REPORT_DATE || '').substring(0, 10);
+                    const t = (/-(06|09)-30$/.test(rd) ? 'mid' : (/12-31$/.test(rd) ? 'end' : ''));
+                    if(t !== type) return;
+                    const eqDateY = String(r.EQUITY_RECORD_DATE || '').substring(0,10);
+                    const exDateY = String(r.EX_DIVIDEND_DATE || '').substring(0,10);
+                    const divDate = eqDateY || exDateY;
+                    if(divDate.length < 10) return;
+                    if(divDate.substring(0,4) !== yStr) return;
+                    const dkA = (eqDateY || divDate) + '|' + p;
+                    const dkB = (exDateY || divDate) + '|' + p;
+                    if(seenA[dkA] || seenB[dkB]) return;
+                    seenA[dkA] = true; seenB[dkB] = true;
+                    per += p / 10;
+                });
+                return per;
+            }
+            // 指定年份该股票实际到账分红（divPaidRecords 按到账日期年份汇总，含港股手动到账）
+            function getDivReceivedInYear(records, yStr){
+                let total = 0;
+                (records || []).forEach(function(r){
+                    const d = String(r.exDate || r.date || '');
+                    if(d.substring(0, 4) !== yStr) return;
+                    const amt = Number(r.amount);
+                    if(!isNaN(amt) && amt > 0) total += amt;
+                });
+                return total;
+            }
+            const compareItems = [];
+            const seenCode = {};
+            function pushCompareItem(name, code, marketType, count, perForecast, lastRec, marketVal, hasPos){
+                if(!code || seenCode[code]) return;
+                seenCode[code] = true;
+                const forecast = hasPos ? (Number(count) || 0) * perForecast : null;
+                compareItems.push({ name: name, code: code, marketType: marketType, hasPos: hasPos, count: Number(count) || 0, forecast: forecast, lastReceived: lastRec, marketVal: marketVal, diff: hasPos ? (forecast - lastRec) : null });
+            }
+            // 1) 当前持仓（含今年买入；去年无到账、今年仓位≤1% 的稍后筛除）
+            holdDataList.forEach(function(it){
+                const count = Number(it.count) || 0;
+                let perForecast = 0;
+                if(it.marketType === 'A'){
+                    perForecast = getYearDivPerShareForecast(it.code, curYearStr);
+                } else {
+                    perForecast = Number(it.divPerShare) || 0;
+                }
+                let lastRec = getDivReceivedInYear(it.divPaidRecords, lastYearStr);
+                // 旧数据无到账记录：按去年实际发放每股 × 当前股数估算（与年末分红总额口径一致）
+                if(lastRec <= 0 && it.marketType === 'A'){
+                    lastRec = getDivPerShareInYear(it, lastYearNum) * count;
+                }
+                pushCompareItem(it.name, it.code, it.marketType, count, perForecast, lastRec, getMarketValue(it), true);
+            });
+            // 2) 今年清仓的股票（清仓后无持仓：按清仓时股数计算预测，显示"无持仓"）
+            (historyData.closedStocks || []).forEach(function(c){
+                if(!c.closeDate || String(c.closeDate).substring(0, 4) !== curYearStr) return;
+                const count = Number(c.count) || 0;
+                let perForecast = 0;
+                if(c.marketType === 'A'){
+                    perForecast = getYearDivPerShareForecast(c.code, curYearStr);
+                } else {
+                    perForecast = Number(c.divPerShare) || 0;
+                }
+                const lastRec = getDivReceivedInYear(c.divPaidRecords, lastYearStr);
+                const closedMV = (Number(c.closePrice) || 0) * count * (c.marketType === 'HK' ? hkFxRate : 1);
+                pushCompareItem(c.name, c.code, c.marketType, count, perForecast, lastRec, closedMV, false);
+            });
+            // 清单：去年实际收到分红>0 的 + 今年持仓仓位>1% 的；以市值倒序排列
+            const totalMVNow = holdDataList.reduce(function(s, it){ return s + getMarketValue(it); }, 0);
+            const filtered = compareItems.filter(function(it){
+                return it.lastReceived > 0 || (it.hasPos && totalMVNow > 0 && (it.marketVal / totalMVNow * 100) > 1);
+            });
+            filtered.sort(function(a, b){ return (b.marketVal || 0) - (a.marketVal || 0); });
+            if(!filtered.length){
+                compareList.innerHTML = '<div class="px-4 py-10 text-center text-gray-400 text-sm">暂无对比数据</div>';
+                if(compareTotalEl) compareTotalEl.classList.add('hidden');
+            } else {
+                const rowsHtml = filtered.map(function(it){
+                    // 今年分红预测列：今年无持仓 → 无持仓（浅灰）；有持仓但无分红 → 0.00
+                    let forecastCell, forecastCls;
+                    if(it.hasPos){
+                        forecastCell = fmtMoney(it.forecast);
+                        forecastCls = 'text-gray-800';
+                    } else {
+                        forecastCell = '无持仓';
+                        forecastCls = 'text-gray-400';
+                    }
+                    // 对比结果列：无持仓 → --；有持仓 → 差值（涨红跌绿 + 同色箭头，平盘灰色无箭头）
+                    let diffHtml;
+                    if(it.hasPos){
+                        const d = it.diff;
+                        if(Math.abs(d) < 0.005){
+                            diffHtml = '<span class="text-[14px] font-semibold tabular-nums text-gray-800">0.00</span>';
+                        } else {
+                            const diffCls = d > 0 ? 'text-[#e03131]' : 'text-[#00a05c]';
+                            const arrow = d > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                            diffHtml = '<i class="fa ' + arrow + ' text-[10px] ' + diffCls + '"></i>'
+                                + '<span class="text-[14px] font-semibold tabular-nums ' + diffCls + '">' + (d > 0 ? '+' : '-') + fmtMoney(Math.abs(d)) + '</span>';
+                        }
+                    } else {
+                        diffHtml = '<span class="text-[14px] font-medium tabular-nums text-gray-300">--</span>';
+                    }
+                    // 分红升降原因（行下注释行：前缀 + 有变化显示各项，无变化显示"无"）
+                    let reasonHtml = '';
+                    let parts = [];
+                    if(it.marketType === 'A'){
+                        const curMid = getYearPerByType(it.code, curYearStr, 'mid', false);
+                        const curEnd = getYearPerByType(it.code, curYearStr, 'end', false);
+                        const lastMid = getYearPerByType(it.code, lastYearStr, 'mid', true);
+                        const lastEnd = getYearPerByType(it.code, lastYearStr, 'end', true);
+                        const lastPerTotal = lastMid + lastEnd;
+                        let lastCount = null;
+                        if(it.lastReceived > 0 && lastPerTotal > 0.005){
+                            const ratio = it.lastReceived / lastPerTotal;
+                            const rounded = Math.round(ratio);
+                            if(Math.abs(ratio - rounded) < 0.35) lastCount = rounded;
+                        }
+                        if(Math.abs(curMid - lastMid) >= 0.005) parts.push({ label: '年中分红', delta: curMid - lastMid, unit: ' 元/股' });
+                        if(Math.abs(curEnd - lastEnd) >= 0.005) parts.push({ label: '年终分红', delta: curEnd - lastEnd, unit: ' 元/股' });
+                        if(lastCount != null && (it.count - lastCount) !== 0) parts.push({ label: '持股数', delta: it.count - lastCount, unit: ' 股' });
+                    }
+                    // 统一显示：前缀"分红变动原因："；有变化展示各项（圆点分隔），无变化显示"无"
+                    reasonHtml = '<div class="mt-1 pl-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px] leading-tight">'
+                        + '<span class="text-gray-400">分红变动原因：</span>'
+                        + (parts.length
+                            ? parts.map(function(p){
+                                const up = p.delta > 0;
+                                const cls = up ? 'text-[#e03131]' : 'text-[#00a05c]';
+                                const word = p.unit === ' 股' ? (up ? '增' : '减') : (up ? '升' : '降');
+                                const valText = p.unit === ' 股' ? String(Math.round(Math.abs(p.delta))) : Math.abs(p.delta).toFixed(2);
+                                return '<span class="text-gray-400">' + p.label + '</span>'
+                                    + '<span class="font-medium tabular-nums ' + cls + '">' + word + ' ' + valText + '</span>'
+                                    + '<span class="text-gray-400">' + p.unit.trim() + '</span>';
+                            }).join('<span class="text-gray-300 mx-0.5">·</span>')
+                            : '<span class="text-gray-400">无</span>')
+                        + '</div>';
+                    return '<div class="px-3 py-2.5 active:bg-gray-50">'
+                        + '<div class="grid grid-cols-[1.3fr_1fr_1fr_1fr] items-center">'
+                        + '<div class="pl-1 min-w-0">'
+                        + '<div class="text-[15px] font-semibold text-gray-800 truncate max-w-full">' + it.name + '</div>'
+                        + '<div class="text-[11px] text-gray-400 tabular-nums mt-0.5">' + it.code + '</div>'
+                        + '</div>'
+                        + '<div class="pr-1 text-right text-[14px] font-medium tabular-nums ' + forecastCls + '">' + forecastCell + '</div>'
+                        + '<div class="pr-1 text-right text-[14px] font-medium tabular-nums text-gray-800">' + fmtMoney(it.lastReceived) + '</div>'
+                        + '<div class="pr-1 text-right flex items-center justify-end gap-1">' + diffHtml + '</div>'
+                        + '</div>'
+                        + reasonHtml
+                        + '</div>';
+                }).join('');
+                compareList.innerHTML = rowsHtml;
+                // 汇总行：今年分红预测只计今年有持仓的；去年收入全额计
+                let tForecast = 0, tLast = 0;
+                filtered.forEach(function(it){
+                    if(it.hasPos) tForecast += it.forecast;
+                    tLast += it.lastReceived;
+                });
+                const tDiff = tForecast - tLast;
+                let tDiffHtml;
+                if(Math.abs(tDiff) < 0.005){
+                    tDiffHtml = '<span class="text-[17px] font-bold tabular-nums text-gray-800">0.00</span>';
+                } else {
+                    const tDiffCls = tDiff > 0 ? 'text-[#e03131]' : 'text-[#00a05c]';
+                    const tArrow = tDiff > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                    tDiffHtml = '<i class="fa ' + tArrow + ' text-[12px] ' + tDiffCls + '"></i>'
+                        + '<span class="text-[17px] font-bold tabular-nums ' + tDiffCls + '">' + (tDiff > 0 ? '+' : '-') + fmtMoney(Math.abs(tDiff)) + '</span>';
+                }
+                compareTotalEl.innerHTML = ''
+                    + '<div class="pl-1 text-[12px] font-semibold text-gray-800">合计 <span class="text-[10px] text-gray-400 font-normal ml-0.5">' + filtered.length + ' 只</span></div>'
+                    + '<div class="pr-1 text-right text-[12px] font-semibold tabular-nums text-gray-500">' + fmtMoney(tForecast) + '</div>'
+                    + '<div class="pr-1 text-right text-[12px] font-semibold tabular-nums text-gray-500">' + fmtMoney(tLast) + '</div>'
+                    + '<div class="pr-1 text-right flex items-center justify-end gap-1">' + tDiffHtml + '</div>';
+                compareTotalEl.classList.remove('hidden');
+            }
+            markStatsRefresh('compare', '#statsDivCompareRefreshTime', '每日更新');
+            // 调仓分析对比：全持仓每股分红预测 map（与上方预测同口径）
+            window.__adjPerMap = {};
+            holdDataList.forEach(function(it){
+                let per = 0;
+                if(it.marketType === 'A') per = getYearDivPerShareForecast(it.code, curYearStr);
+                else per = Number(it.divPerShare) || 0;
+                window.__adjPerMap[it.code] = per;
+            });
+            renderAdj();
             refreshStatsCardSummaries();
+        }
+        // ===== 调仓分析对比（临时测算，不持久化；每次进入详情页重置 adjRows） =====
+        let adjRows = [];
+        function adjPerMap(){ return window.__adjPerMap || {}; }
+        function adjBeforeTotal(){
+            const pm = adjPerMap();
+            let t = 0;
+            holdDataList.forEach(function(it){ t += (Number(it.count) || 0) * (pm[it.code] || 0); });
+            return t;
+        }
+        function adjAfterTotal(){
+            const pm = adjPerMap();
+            const newCnt = {};
+            adjRows.forEach(function(r){
+                if(r.code && r.newCount != null && !isNaN(r.newCount)) newCnt[r.code] = Number(r.newCount) || 0;
+            });
+            let t = 0;
+            holdDataList.forEach(function(it){
+                const per = pm[it.code] || 0;
+                if(newCnt[it.code] != null) t += newCnt[it.code] * per;
+                else t += (Number(it.count) || 0) * per;
+            });
+            return t;
+        }
+        function adjPriceMap(){
+            const pm = {};
+            holdDataList.forEach(function(it){ pm[it.code] = Number(it.nowPrice) || 0; });
+            return pm;
+        }
+        function adjAvailable(){
+            const pm = adjPriceMap();
+            let avail = 0;
+            adjRows.forEach(function(r){
+                if(!r.code || r.newCount == null || isNaN(r.newCount)) return;
+                avail -= (Number(r.newCount) - Number(r.curCount)) * (pm[r.code] || 0);
+            });
+            return avail;
+        }
+        // 某行允许的最大调仓后股数：基于"不含该行自身"的可用额（加仓需资金，减仓释放资金）
+        function adjMaxNewCount(i){
+            const r = adjRows[i];
+            if(!r || !r.code) return null;
+            const pm = adjPriceMap();
+            let avail = 0;
+            adjRows.forEach(function(x, k){
+                if(k === i) return;
+                if(!x.code || x.newCount == null || isNaN(x.newCount)) return;
+                avail -= (Number(x.newCount) - Number(x.curCount)) * (pm[x.code] || 0);
+            });
+            const price = pm[r.code] || 0;
+            if(price <= 0) return null;
+            return Number(r.curCount) + Math.floor(avail / price);
+        }
+        function renderAdjSummary(){
+            const beforeEl = document.querySelector('#adjBeforeDiv');
+            if(!beforeEl) return;
+            const before = adjBeforeTotal();
+            const after = adjAfterTotal();
+            document.querySelector('#adjBeforeDiv').innerText = fmtMoney(before);
+            document.querySelector('#adjAfterDiv').innerText = fmtMoney(after);
+            const diff = after - before;
+            const diffEl = document.querySelector('#adjDiffDiv');
+            if(Math.abs(diff) < 0.005){
+                diffEl.innerHTML = '<span class="text-[15px] font-bold tabular-nums text-gray-800">0.00</span>';
+            } else {
+                const cls = diff > 0 ? 'text-[#e03131]' : 'text-[#00a05c]';
+                const arrow = diff > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                diffEl.innerHTML = '<i class="fa ' + arrow + ' text-[10px] ' + cls + '"></i>'
+                    + '<span class="text-[15px] font-bold tabular-nums ' + cls + '">' + (diff > 0 ? '+' : '-') + fmtMoney(Math.abs(diff)) + '</span>';
+            }
+            const avail = adjAvailable();
+            const availEl = document.querySelector('#adjAvailDiv');
+            if(availEl){
+                availEl.innerText = (avail >= 0 ? '' : '-') + fmtMoney(Math.abs(avail));
+                availEl.className = 'text-[14px] font-bold tabular-nums ' + (avail >= 0 ? 'text-accent' : 'text-[#e03131]');
+            }
+            // 各行上限小字（不重建列表，实时更新）
+            adjRows.forEach(function(r, i){
+                if(!r.code) return;
+                const maxEl = document.getElementById('adjMax_' + i);
+                if(!maxEl) return;
+                const maxN = adjMaxNewCount(i);
+                if(maxN == null){
+                    maxEl.innerText = '';
+                    maxEl.className = 'text-[9px] text-gray-400 tabular-nums leading-none';
+                } else if(maxN > r.curCount){
+                    maxEl.innerText = '最多 ' + maxN + ' 股';
+                    maxEl.className = 'text-[9px] text-accent tabular-nums leading-none';
+                } else {
+                    maxEl.innerText = '可用额不足 · 仅可减仓';
+                    maxEl.className = 'text-[9px] text-gray-400 tabular-nums leading-none';
+                }
+            });
+        }
+        function renderAdj(){
+            const listEl = document.querySelector('#statsDivAdjList');
+            if(!listEl) return;
+            if(!adjRows.length){
+                listEl.innerHTML = '<div class="mx-3 my-3 rounded-xl border-2 border-dashed border-[#e2d3b0] bg-[#fdfbf5] flex flex-col items-center justify-center py-7 gap-1.5">'
+                    + '<div class="w-8 h-8 rounded-full bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center"><i class="fa fa-plus text-[13px] text-accent"></i></div>'
+                    + '<div class="text-[12px] text-gray-400">点击下方按钮添加调仓股票</div>'
+                    + '</div>';
+                renderAdjSummary();
+                return;
+            }
+            let html = '';
+            adjRows.forEach(function(r, i){
+                if(r.code){
+                    html += '<div class="grid grid-cols-[1.2fr_1fr_1fr] px-3 py-2 items-center">'
+                        + '<div class="pl-1 min-w-0">'
+                        + '<div class="text-[14px] font-medium text-gray-800 truncate max-w-full">' + r.name + '</div>'
+                        + '<div class="text-[10px] text-gray-400 tabular-nums mt-0.5">' + r.code + '</div>'
+                        + '</div>'
+                        + '<div class="pr-1 text-right text-[14px] font-medium tabular-nums text-gray-800">' + r.curCount + '</div>'
+                        + '<div class="pr-1 flex flex-col items-end justify-center gap-0.5">'
+                        + '<div class="flex items-center justify-end gap-1">'
+                        + '<input type="number" inputmode="decimal" id="adjCnt_' + i + '" value="' + (r.newCount != null ? r.newCount : '') + '" placeholder="股数" oninput="adjCntInput(' + i + ', this.value)" autocomplete="off" autocorrect="off" spellcheck="false" class="no-spinner w-full text-right text-[13px] font-medium tabular-nums text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-1.5 outline-none focus:border-accent" />'
+                        + '<button onclick="adjRemove(' + i + ')" class="w-6 h-6 rounded-md bg-gray-50 text-gray-400 flex items-center justify-center active:scale-90"><i class="fa fa-trash-o text-[10px]"></i></button>'
+                        + '</div>'
+                        + '<div id="adjMax_' + i + '" class="text-[9px] text-gray-400 tabular-nums leading-none"></div>'
+                        + '</div>'
+                        + '</div>';
+                } else {
+                    html += '<div class="grid grid-cols-[1.2fr_1fr_1fr] px-3 py-2.5 items-center">'
+                        + '<div class="pl-1 min-w-0">'
+                        + '<input id="adjKw_' + i + '" placeholder="输入持仓代码" onblur="adjKwResolve(' + i + ')" class="w-full text-[13px] font-medium text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-accent" />'
+                        + '</div>'
+                        + '<div class="pr-1 text-right text-[14px] font-medium tabular-nums text-gray-300">--</div>'
+                        + '<div class="pr-1 text-right text-[14px] font-medium tabular-nums text-gray-300">--</div>'
+                        + '</div>';
+                }
+            });
+            listEl.innerHTML = html;
+            renderAdjSummary();
+        }
+        function adjCntInput(i, v){
+            if(!adjRows[i]) return;
+            const r = adjRows[i];
+            let val = (v === '' || v == null ? null : parseFloat(v) || 0);
+            if(val != null && r.code){
+                const maxN = adjMaxNewCount(i);
+                if(maxN != null && val > maxN){
+                    val = Math.max(maxN, 0);
+                    const el = document.getElementById('adjCnt_' + i);
+                    if(el && el.value !== String(val)) el.value = val;
+                    showToast('可用调仓额不足：最多可调至 ' + val + ' 股');
+                }
+            }
+            adjRows[i].newCount = val;
+            renderAdjSummary();
+        }
+        // 手动输入股票代码，失焦时解析为持仓股票（无联想）
+        function adjKwResolve(i){
+            const r = adjRows[i];
+            if(!r || r.code) return;
+            const el = document.getElementById('adjKw_' + i);
+            const raw = (el ? el.value : (r.kw || '')).trim();
+            if(!raw) return;
+            const norm = function(c){ return String(c == null ? '' : c).trim().toLowerCase().replace(/^sh|^sz|^bj|^hk/, '').replace(/^0+/, ''); };
+            let hit = null;
+            for(let k = 0; k < holdDataList.length; k++){
+                const it = holdDataList[k];
+                if(it.code === raw || norm(it.code) === norm(raw)){ hit = it; break; }
+            }
+            if(hit){
+                adjPick(i, hit.code, hit.name, Number(hit.count) || 0);
+            } else {
+                if(el){
+                    el.value = '';
+                    el.placeholder = '未找到该代码的持仓';
+                }
+                showToast('未找到持仓中代码为 ' + raw + ' 的股票');
+                setTimeout(function(){
+                    const el2 = document.getElementById('adjKw_' + i);
+                    if(el2) el2.placeholder = '输入持仓代码';
+                }, 2000);
+            }
+        }
+        function adjPick(i, code, name, curCount){
+            if(!adjRows[i]) return;
+            adjRows[i].code = code;
+            adjRows[i].name = name;
+            adjRows[i].curCount = curCount;
+            adjRows[i].kw = '';
+            adjRows[i].newCount = curCount;
+            renderAdj();
+        }
+        function adjRemove(i){
+            adjRows.splice(i, 1);
+            renderAdj();
+        }
+        function adjAddRow(){
+            adjRows.push({ code: null, name: null, curCount: 0, newCount: null, kw: '' });
+            renderAdj();
         }
         function renderAnalysisCharts(){
             if(typeof echarts === 'undefined'){
@@ -17835,7 +18045,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 { transform: 'scale(1)', opacity: 1 }
             ], { duration: 380, easing: 'cubic-bezier(.16,.8,.3,1)', fill: 'none' });
             anim.onfinish = function(){
-                st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = '';
+                // 保持 animation:'none'：grow 已提供入场，恢复 CSS 动画会让 appSlideIn 重播（页面闪一下）
+                st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = ''; st.animation = 'none';
                 pageEl.__growLock = false;
             };
         } catch(err){
@@ -17878,7 +18089,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(pid){
                         var el = document.getElementById(pid);
                         // 与页面显示同一帧执行生长动画：首帧即动画起点（35%），避免"完整页闪现后缩回"造成标题栏两次感/跳动
-                        if(el) growPageFrom(el, r);
+                        // 分红对比统计详情页（含可编辑输入框）：跳过 grow（WAAPI transform/willChange 合成层会让 iOS input 无法聚焦），改用 appSlideIn 淡入
+                        if(el && pid !== 'pageStatsCompare') growPageFrom(el, r);
                     }
                 }
                 return res;

@@ -10923,14 +10923,66 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 });
                 return per;
             };
-            let tYcntG = 0, lYcntG = 0;
-            holdDataList.forEach(function(it){
-                if(it.marketType !== 'A') return;
-                if(perOfYear(it.code, curY) != null) tYcntG++;
-                if(perOfYear(it.code, curY - 1) != null) lYcntG++;
-            });
-            set('statsCardSummaryCompare', holdDataList.length ? ('今年 ' + tYcntG + ' 只') : '暂无持仓');
-            sub('statsCardSubCompare', '去年 ' + lYcntG + ' 只 · 港股不纳入');
+            // （卡片版）今年已发布分红方案的每股金额（A股，与详情页 getYearDivPerShareForecast 同口径）
+            const getYearDivPerShareForecastCard = function(code, yStr){
+                const cache = divCacheMap[code];
+                if(!cache || !cache.records) return 0;
+                const seen = {}, implemented = {};
+                let per = 0;
+                cache.records.forEach(function(r){
+                    const p = Number(r.PRETAX_BONUS_RMB);
+                    if(r.PRETAX_BONUS_RMB == null || isNaN(p) || p <= 0) return;
+                    const noticeDate = String(r.NOTICE_DATE || '').substring(0, 10);
+                    const exDate = String(r.EX_DIVIDEND_DATE || '').substring(0, 10);
+                    const year = exDate ? exDate.substring(0, 4) : (noticeDate ? noticeDate.substring(0, 4) : '');
+                    if(year !== yStr) return;
+                    if(exDate.length === 10){
+                        const dk = 'E' + exDate + '|' + p;
+                        if(seen[dk]) return;
+                        seen[dk] = true;
+                        (implemented[year] = implemented[year] || {})[p] = 1;
+                    } else {
+                        if(implemented[year] && implemented[year][p]) return;
+                        const dk = 'N' + noticeDate + '|' + p;
+                        if(seen[dk]) return;
+                        seen[dk] = true;
+                    }
+                    per += p / 10;
+                });
+                return per;
+            };
+            // （卡片版）指定年份实际到账分红（与详情页 getDivReceivedInYear 同口径）
+            const getDivReceivedInYearCard = function(records, yStr){
+                let total = 0;
+                (records || []).forEach(function(r){
+                    const d = String(r.exDate || r.date || '');
+                    if(d.substring(0, 4) !== yStr) return;
+                    const amt = Number(r.amount);
+                    if(!isNaN(amt) && amt > 0) total += amt;
+                });
+                return total;
+            };
+            // 今年分红预测总额：有持仓，且（去年实际到账>0 或 今年仓位>1%）的持仓股 forecast 之和 —— 与详情页汇总行一致
+            let tForecastG = 0;
+            if(holdDataList.length){
+                const totalMVG2 = holdDataList.reduce(function(s, it){ return s + getMarketValue(it); }, 0);
+                holdDataList.forEach(function(it){
+                    const countG = Number(it.count) || 0;
+                    let perG = 0;
+                    if(it.marketType === 'A'){
+                        perG = getYearDivPerShareForecastCard(it.code, curY);
+                    } else {
+                        perG = Number(it.divPerShare) || 0;
+                    }
+                    const lastRecG = getDivReceivedInYearCard(it.divPaidRecords, String(curY - 1));
+                    const mvG = getMarketValue(it);
+                    if(lastRecG > 0 || (totalMVG2 > 0 && (mvG / totalMVG2 * 100) > 1)){
+                        tForecastG += countG * perG;
+                    }
+                });
+            }
+            set('statsCardSummaryCompare', holdDataList.length ? fmtMoney(tForecastG) : '暂无持仓');
+            sub('statsCardSubCompare', '今年分红预测总额');
             // 行业资产分布 / 资金流水 / 交易明细：本地实时摘要
             const indCntC = {};
             holdDataList.forEach(function(it){ indCntC[getStockIndustry(it)] = 1; });
@@ -13471,11 +13523,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 } else {
                     perForecast = Number(it.divPerShare) || 0;
                 }
-                let lastRec = getDivReceivedInYear(it.divPaidRecords, lastYearStr);
-                // 旧数据无到账记录：按去年实际发放每股 × 当前股数估算（与年末分红总额口径一致）
-                if(lastRec <= 0 && it.marketType === 'A'){
-                    lastRec = getDivPerShareInYear(it, lastYearNum) * count;
-                }
+                // 去年分红收入 = 系统实际到账记录（divPaidRecords，按到账年份过滤）；系统无该年记录则为 0，不做任何历史估算
+                const lastRec = getDivReceivedInYear(it.divPaidRecords, lastYearStr);
                 pushCompareItem(it.name, it.code, it.marketType, count, perForecast, lastRec, getMarketValue(it), true);
             });
             // 2) 今年清仓的股票（清仓后无持仓：按清仓时股数计算预测，显示"无持仓"）

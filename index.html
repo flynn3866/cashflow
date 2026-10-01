@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261001.130';</script>
+    <script>window.APP_VERSION = '20261001.131';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -9282,7 +9282,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
         function applyWatchOrder(){
-            // 读管理页 DOM 顺序 → 应用到自选列表 → 刷新主页面 → 返回
+            // 读管理页 DOM 顺序 → 应用到自选列表 → 先返回主页（主页可见后再渲染：
+            // display:none 期间 scrollWidth=0，会把横滑 maxX 算成 0，导致主页左右滑动失灵）
             const mgr = document.querySelector('#watchMgrList');
             const rows = mgr ? mgr.querySelectorAll('.watch-mgr-row') : [];
             const order = [];
@@ -9294,14 +9295,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             order.forEach(function(code){ if(map[code] && next.indexOf(map[code]) < 0) next.push(map[code]); });
             cur.forEach(function(w){ if(next.indexOf(w) < 0) next.push(w); });
             saveWatchList(next);
-            renderWatchSelPage();
             exitDetailPage(document.querySelector('#pageWatchManage'), function(){
                 document.querySelector('#pageWatchSel').classList.remove('hidden');
                 // 返回自选页：恢复自选页内部滚动模式（外层滚动禁用）
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
-                // 重置横向平移手势状态（主页已无拖拽，确保横滑状态干净）
-                if(window.__watchRebind) window.__watchRebind();
+                // 主页可见后再渲染（maxX 按真实行宽重算）+ 横滑范围/位置/手势状态刷新
+                renderWatchSelPage();
+                requestAnimationFrame(function(){
+                    if(window.__watchCalcMax) window.__watchCalcMax();
+                    if(window.__watchSync) window.__watchSync();
+                    if(window.__watchRebind) window.__watchRebind();
+                });
                 showToast('自选顺序已保存');
             });
         }

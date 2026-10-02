@@ -9650,11 +9650,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 未命中：并行拉取，全部到齐后写入缓存（10 天有效）
             const baseUrl = 'https://datacenter-web.eastmoney.com/api/data/v1/get?columns=ALL&source=HSF10&client=PC';
             const entry = sdCacheMap[cacheKey] = { t: 0 };
+            // 写入缓存：若 localStorage 溢出（多股票累计超 5MB），按写入时间清理最旧的一半后重试
+            const writeSdCache = function(){
+                try {
+                    localStorage.setItem('sdF10Cache', JSON.stringify(sdCacheMap));
+                    return true;
+                } catch(e){
+                    const keys = Object.keys(sdCacheMap).sort(function(a, b){ return (sdCacheMap[a].t || 0) - (sdCacheMap[b].t || 0); });
+                    const rm = Math.ceil(keys.length / 2);
+                    for(let i = 0; i < rm && keys.length > 1; i++) delete sdCacheMap[keys[i]];
+                    try { localStorage.setItem('sdF10Cache', JSON.stringify(sdCacheMap)); } catch(e2){ /* 仍失败则放弃，下次进入重拉 */ }
+                }
+            };
             const maybeFinish = function(){
                 if(entry.org !== undefined && entry.fin !== undefined && entry.cash !== undefined
                     && entry.bal !== undefined && entry.holder !== undefined && entry.rankDone){
                     entry.t = Date.now();
-                    try { localStorage.setItem('sdF10Cache', JSON.stringify(sdCacheMap)); } catch(e){ /* 容量超限静默，下次重拉 */ }
+                    // 瘦身缓存：只保留渲染所需（fin 仅年报、rank 仅 3 个字段），单股票从约 200KB 压到约 40KB，避免多股票撑爆 localStorage
+                    sdCacheMap[cacheKey] = {
+                        t: entry.t,
+                        org: entry.org,
+                        fin: (entry.fin || []).filter(function(r){ return /12-3\d/.test(String(r.REPORT_DATE || '')); }).slice(0, 6),
+                        cash: (entry.cash || []).slice(0, 6),
+                        bal: (entry.bal || []).slice(0, 6),
+                        holder: entry.holder,
+                        rankDone: entry.rankDone,
+                        indName: entry.indName || '',
+                        rankRows: (entry.rankRows || []).map(function(r){ return { SECURITY_CODE: r.SECURITY_CODE, TOTAL_OPERATE_INCOME: r.TOTAL_OPERATE_INCOME, PARENT_NETPROFIT: r.PARENT_NETPROFIT }; })
+                    };
+                    writeSdCache();
                 }
             };
             // 财务（主要指标 / 现金流量表 / 资产负债表）三路到齐后再渲染（利润现金含量、自由现金流、有息负债需跨接口数据）

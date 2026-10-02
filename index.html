@@ -1310,7 +1310,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-line-chart text-[12px] text-accent"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">财务数据 <span class="text-[10px] font-normal text-gray-400 ml-0.5">最近5年 · 年报口径</span></div>
             </div>
-            <div id="sdFinBody" class="overflow-x-auto"></div>
+            <div id="sdFinBody" class="overflow-auto max-h-[60vh] overscroll-contain"></div>
         </div>
         <!-- 行业排名 -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
@@ -1329,8 +1329,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
             <div id="sdHolderBody" class="px-4 py-3"></div>
         </div>
-        <!-- 数据来源说明 -->
-        <div class="px-4 py-3 text-center text-[10px] text-gray-300 leading-relaxed">行情来源：腾讯财经 · 基本面来源：东方财富 · 点击进入时加载</div>
     </div>
 
 
@@ -6859,7 +6857,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             activeTab = tab;
             // 导航切换时不恢复滚动位置（详情页直接导航切换等效返回，清空记忆栈防错位）
             if(__scrollStack) __scrollStack.length = 0;
-            // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心），等效于点击左上角返回
+            // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心/股票详情），等效于点击左上角返回
+            document.querySelector('#pageStockDetail').classList.add('hidden');
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageStockScores').classList.add('hidden');
             document.querySelector('#pageTradeLog').classList.add('hidden');
@@ -9612,8 +9611,52 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 document.querySelector('#sdHolderBody').innerHTML = sdEmpty('港股股东数据暂缺');
                 return;
             }
-            // A 股：并行拉取 F10（公司概况 / 财务 / 现金流量表 / 行业排名 / 股东增减持）
+            // A 股：F10 历史数据（概况/财务/现金流/资产负债表/排名/股东）基本固定不变，缓存 10 天；
+            // 命中缓存直接渲染（行情卡为实时价，每次进入单独拉取，不缓存），未命中才并行拉取并写入缓存
+            const SD_TTL = 10 * 24 * 3600 * 1000;
+            const sdLoadCache = function(){
+                let m = null;
+                try { m = JSON.parse(localStorage.getItem('sdF10Cache') || '{}'); } catch(e){ m = {}; }
+                if(!m || typeof m !== 'object') m = {};
+                return m;
+            };
+            const sdCacheMap = sdLoadCache();
+            const cacheKey = market + '_' + code;
+            const cached = sdCacheMap[cacheKey];
+            if(cached && cached.t && (Date.now() - cached.t) < SD_TTL
+                && cached.org !== undefined && cached.fin !== undefined && cached.cash !== undefined
+                && cached.bal !== undefined && cached.holder !== undefined && cached.rankDone){
+                document.querySelector('#sdBasicBody').innerHTML = cached.org ? sdRenderBasic(cached.org, sdHolderTop(cached.holder)) : sdEmpty('公司概况加载失败，请稍后重试');
+                document.querySelector('#sdFinBody').innerHTML = (cached.fin && cached.fin.length) ? sdRenderFin(cached.fin, code, cached.cash, cached.bal) : sdEmpty('财务数据加载失败，请稍后重试');
+                if(cached.fin && cached.fin.length && price != null){
+                    const r0 = cached.fin[0];
+                    const ts = Number(r0.TOTAL_SHARE) || 0;
+                    const fs = Number(r0.A_FREE_SHARE) || 0;
+                    if(ts > 0){
+                        const mvEl = document.querySelector('#sdMv');
+                        if(mvEl) mvEl.innerText = sdYi(price * ts);
+                    }
+                    if(fs > 0){
+                        const fvEl = document.querySelector('#sdFv');
+                        if(fvEl) fvEl.innerText = sdYi(price * fs);
+                    }
+                }
+                document.querySelector('#sdRankTag').innerText = cached.indName || '--';
+                document.querySelector('#sdRankBody').innerHTML = (cached.rankRows && cached.rankRows.length) ? sdRenderRank(cached.rankRows, code, cached.indName) : sdEmpty('行业排名加载失败');
+                document.querySelector('#sdHolderBody').innerHTML = sdRenderHolder(cached.holder);
+                document.querySelector('#sdTime').innerText = hm + ' 已加载（缓存）';
+                return;
+            }
+            // 未命中：并行拉取，全部到齐后写入缓存（10 天有效）
             const baseUrl = 'https://datacenter-web.eastmoney.com/api/data/v1/get?columns=ALL&source=HSF10&client=PC';
+            const entry = sdCacheMap[cacheKey] = { t: 0 };
+            const maybeFinish = function(){
+                if(entry.org !== undefined && entry.fin !== undefined && entry.cash !== undefined
+                    && entry.bal !== undefined && entry.holder !== undefined && entry.rankDone){
+                    entry.t = Date.now();
+                    try { localStorage.setItem('sdF10Cache', JSON.stringify(sdCacheMap)); } catch(e){ /* 容量超限静默，下次重拉 */ }
+                }
+            };
             // 财务（主要指标 / 现金流量表 / 资产负债表）三路到齐后再渲染（利润现金含量、自由现金流、有息负债需跨接口数据）
             let finRows = null, cashRows = null, balRows = null;
             const tryRenderFin2 = function(){
@@ -9631,12 +9674,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdJsonp(baseUrl + '&reportName=RPT_F10_BASIC_ORGINFO&filter=' + encodeURIComponent('(SECUCODE="' + secu + '")') + '&pageSize=1', 'sdCbOrg', function(d){
                 if(my !== _sdToken) return;
                 orgRow = d && d.result && d.result.data && d.result.data[0] ? d.result.data[0] : null;
+                entry.org = orgRow;
+                maybeFinish();
                 tryRenderBasic2();
             });
             // 2) 财务数据（最近30期，取年报）——含总股本，用于市值
             sdJsonp(baseUrl + '&reportName=RPT_F10_FINANCE_MAINFINADATA&filter=' + encodeURIComponent('(SECUCODE="' + secu + '")') + '&pageNumber=1&pageSize=30&sortTypes=-1&sortColumns=REPORT_DATE', 'sdCbFin', function(d){
                 if(my !== _sdToken) return;
                 finRows = d && d.result && d.result.data ? d.result.data : [];
+                entry.fin = finRows;
+                maybeFinish();
                 tryRenderFin2();
                 // 市值：现价 × 总股本 / 流通A股
                 if(finRows.length && price != null){
@@ -9660,14 +9707,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cashFilter = '(SECUCODE="' + secu + '")(REPORT_DATE in (' + cashYears.map(function(y){ return '\'' + y + '\''; }).join(',') + '))';
             fetch('https://datacenter.eastmoney.com/securities/api/data/get?type=RPT_F10_FINANCE_GCASHFLOW&sty=APP_F10_GCASHFLOW&filter=' + encodeURIComponent(cashFilter) + '&p=1&ps=6')
                 .then(function(r){ return r.json(); })
-                .then(function(d){ cashRows = (d && d.result && d.result.data) ? d.result.data : []; tryRenderFin2(); })
-                .catch(function(){ cashRows = []; tryRenderFin2(); });
+                .then(function(d){ cashRows = (d && d.result && d.result.data) ? d.result.data : []; entry.cash = cashRows; maybeFinish(); tryRenderFin2(); })
+                .catch(function(){ cashRows = []; entry.cash = cashRows; maybeFinish(); tryRenderFin2(); });
             // 2c) 资产负债表（货币资金 / 短期借款 / 一年内到期非流动负债 / 长期借款 / 应付债券 / 应收账款，东财 GBALANCE）
             const balFilter = '(SECUCODE="' + secu + '")(REPORT_TYPE="\u5e74\u62a5")';
             fetch('https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_FINANCE_GBALANCE&columns=ALL&filter=' + encodeURIComponent(balFilter) + '&pageNumber=1&pageSize=8&sortTypes=-1&sortColumns=REPORT_DATE&source=HSF10&client=PC')
                 .then(function(r){ return r.json(); })
-                .then(function(d){ balRows = (d && d.result && d.result.data) ? d.result.data : []; tryRenderFin2(); })
-                .catch(function(){ balRows = []; tryRenderFin2(); });
+                .then(function(d){ balRows = (d && d.result && d.result.data) ? d.result.data : []; entry.bal = balRows; maybeFinish(); tryRenderFin2(); })
+                .catch(function(){ balRows = []; entry.bal = balRows; maybeFinish(); tryRenderFin2(); });
             // 3) 行业排名（先取行业名，再拉同行业业绩排名）
             sdJsonp(baseUrl + '&reportName=RPT_F10_BASIC_ORGINFO&filter=' + encodeURIComponent('(SECUCODE="' + secu + '")') + '&pageSize=1', 'sdCbRank1', function(d){
                 if(my !== _sdToken) return;
@@ -9675,10 +9722,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const em = row ? (row.EM2016 || '') : '';
                 const indName = em ? (String(em).split('-')[1] || String(em).split('-')[0] || '') : '';
                 document.querySelector('#sdRankTag').innerText = indName || '--';
-                if(!indName){ document.querySelector('#sdRankBody').innerHTML = sdEmpty('行业信息暂缺'); return; }
+                if(!indName){
+                    entry.indName = '';
+                    entry.rankRows = [];
+                    entry.rankDone = true;
+                    maybeFinish();
+                    document.querySelector('#sdRankBody').innerHTML = sdEmpty('行业信息暂缺');
+                    return;
+                }
                 sdJsonp('https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_LICO_FN_CPD&columns=ALL&filter=' + encodeURIComponent('(PUBLISHNAME="' + indName + '")') + '&pageNumber=1&pageSize=300&sortTypes=-1&sortColumns=REPORTDATE&source=WEB&client=WEB', 'sdCbRank2', function(d2){
                     if(my !== _sdToken) return;
                     const rows = d2 && d2.result && d2.result.data ? d2.result.data : [];
+                    entry.indName = indName;
+                    entry.rankRows = rows;
+                    entry.rankDone = true;
+                    maybeFinish();
                     document.querySelector('#sdRankBody').innerHTML = rows.length ? sdRenderRank(rows, code, indName) : sdEmpty('行业排名加载失败');
                 });
             });
@@ -9686,6 +9744,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdJsonp(baseUrl + '&reportName=RPT_F10_SHAREHOLDER_CHANGE&filter=' + encodeURIComponent('(SECUCODE="' + secu + '")') + '&pageNumber=1&pageSize=60&sortTypes=-1&sortColumns=END_DATE', 'sdCbHolder', function(d){
                 if(my !== _sdToken) return;
                 holderRows = d && d.result && d.result.data ? d.result.data : [];
+                entry.holder = holderRows;
+                maybeFinish();
                 tryRenderBasic2();
                 document.querySelector('#sdHolderBody').innerHTML = sdRenderHolder(holderRows);
             });
@@ -9718,6 +9778,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="py-2"><div class="text-[11px] text-gray-400 mb-1">主营业务</div><div class="text-[11.5px] text-gray-600 leading-relaxed">' + (row.MAIN_BUSINESS || '--') + '</div></div>';
         }
         function sdRenderFin(rows, code, cashRows, balRows){
+            // 银行类股票：仅展示银行专项指标（净资产收益率/总资产收益率/拨备覆盖率/不良贷款率/活期存款占比/核心一级资本充足率/分红率）
+            if(rows.length && rows[0].NONPERLOAN != null) return sdRenderBank(rows, code);
             // 最近5个年报（主要财务指标）
             const yearly = [];
             rows.forEach(function(r){
@@ -9808,7 +9870,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             ];
             const noteIcon = '<i class="fa fa-info-circle text-[9px] text-gray-300"></i>';
             let html = '<div class="min-w-[660px]">'
-                + '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0]">'
+                + '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0] sticky top-0 z-10">'
                 + '<div class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \ 年份</div>';
             yrs.forEach(function(r){
                 html += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
@@ -9848,6 +9910,70 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="font-semibold text-[#8a5a1e] mb-1">利润现金含量解读</div>'
                 + '＞1（＞100%）：利润现金含量充足，每 1 元账面净利润，收到超过 1 元经营现金，是好现象；＝1（100%）：账面利润基本都收回现金；＜1（＜100%）：利润现金不足，一部分利润只是账面数字，现金没收回来；负数：净利润为正但经营现金流负，利润基本没有现金支撑，风险高。'
                 + '<div class="mt-1.5 text-gray-400">数据来源：现金流量表（东财 GCASHFLOW）· 资产负债表（东财 GBALANCE）· 主要财务指标（东财 F10 年报）· 分红融资（东财 SHAREBONUS_DET）；购建资产现金即『购建固定资产、无形资产和其他长期资产支付的现金』；有息负债 = 短期借款 + 一年内到期的非流动负债 + 长期借款 + 应付债券；分红按分红年度归属（本年利润、下年发放）；分红率（股利支付率）= 年度每股分红 ÷ 年度基本每股收益，与东方财富 F10 分红融资『股利支付率』口径一致。</div></div>';
+            html += '</div>';
+            return html;
+        }
+        function sdRenderBank(rows, code){
+            // 银行专项：净资产收益率 / 总资产收益率 / 拨备覆盖率 / 不良贷款率 / 活期存款占比 / 核心一级资本充足率 / 分红率
+            const yearly = [];
+            rows.forEach(function(r){
+                const d = String(r.REPORT_DATE || '');
+                if(/12-3\d/.test(d) && d.length >= 10) yearly.push(r);
+            });
+            yearly.sort(function(a, b){ return String(b.REPORT_DATE).localeCompare(String(a.REPORT_DATE)); });
+            const yrs = yearly.slice(0, 5);
+            if(!yrs.length) return sdEmpty('暂无财务数据');
+            // 分红率（股利支付率）按分红年度归属（与普通股票口径一致：本年利润、下年发放）
+            const divYear = {};
+            const cache = divCacheMap[code];
+            if(cache && cache.records){
+                const seenY = {};
+                cache.records.forEach(function(r){
+                    if(/取消|终止|停止/.test(String(r.ASSIGN_PROGRESS || ''))) return;
+                    const p = Number(r.PRETAX_BONUS_RMB);
+                    if(!(p > 0)) return;
+                    const rd = String(r.REPORT_DATE || '').substring(0, 10);
+                    if(rd.length !== 10) return;
+                    const y = rd.substring(0, 4);
+                    const dk = rd + '|' + p;
+                    if(seenY[dk]) return;
+                    seenY[dk] = true;
+                    const cur = divYear[y] || { per: 0, eps: 0 };
+                    cur.per += p / 10;
+                    const eps = Number(r.BASIC_EPS) || 0;
+                    if(rd.substring(5, 10) === '12-31' && eps > 0) cur.eps = eps;
+                    divYear[y] = cur;
+                });
+            }
+            const pct1 = function(v){ return v != null ? Number(v).toFixed(1) + '%' : '--'; };
+            const pct2 = function(v){ return v != null ? Number(v).toFixed(2) + '%' : '--'; };
+            const rowsDef = [
+                { label: '净资产收益率', fn: function(r){ return pct1(r.ROEJQ); } },
+                { label: '总资产收益率', fn: function(r){ return pct1(r.ZZCJLL); } },
+                { label: '拨备覆盖率', fn: function(r){ return pct1(r.BLDKBBL); }, note: '拨备覆盖率 = 贷款减值准备 ÷ 不良贷款余额，监管要求不低于 150%' },
+                { label: '不良贷款率', fn: function(r){ return pct2(r.NONPERLOAN); } },
+                { label: '活期存款占比', fn: function(){ return '--'; }, note: '活期存款占比东方财富接口未提供细分数据，宁缺勿错暂不显示' },
+                { label: '核心一级资本充足率', fn: function(r){ return pct1(r.HXYJBCZL); }, note: '核心一级资本充足率 = 核心一级资本净额 ÷ 风险加权资产，监管要求不低于 5%（并表）' },
+                { label: '分红率', fn: function(r, y){ const d = divYear[y]; return d && d.eps > 0 && d.per > 0 ? (d.per / d.eps * 100).toFixed(1) + '%' : '--'; }, note: '股利支付率 = 年度每股分红 ÷ 年度基本每股收益，与东方财富 F10 分红融资口径一致' }
+            ];
+            let html = '<div class="min-w-[660px]">'
+                + '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0] sticky top-0 z-10">'
+                + '<div class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \\ 年份</div>';
+            yrs.forEach(function(r){
+                html += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
+            });
+            html += '</div>';
+            rowsDef.forEach(function(rd, idx){
+                html += '<div class="grid grid-cols-[150px_repeat(5,1fr)] ' + (idx % 2 ? 'bg-white' : 'bg-[#fdfbf5]') + ' border-b border-gray-50">'
+                    + '<div class="px-3 py-2.5 text-[12px] text-gray-700 flex items-center gap-1">' + rd.label
+                    + (rd.note ? '<i class="fa fa-info-circle text-[9px] text-gray-300" title="' + rd.note + '"></i>' : '')
+                    + '</div>';
+                yrs.forEach(function(r){
+                    const y = String(r.REPORT_DATE).substring(0, 4);
+                    html += '<div class="px-2 py-2.5 text-right text-[13px] text-gray-700 tabular-nums truncate">' + rd.fn(r, y) + '</div>';
+                });
+                html += '</div>';
+            });
             html += '</div>';
             return html;
         }

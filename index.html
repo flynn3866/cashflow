@@ -9566,10 +9566,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
                 var maxSL = el.scrollWidth - el.clientWidth;
                 var maxST = el.scrollHeight - el.clientHeight;
-                var atLeft = maxSL > 0 && startSL <= 0 && dx > 0;
-                var atRight = maxSL > 0 && startSL >= maxSL && dx < 0;
-                var atTop = startST <= 0 && dy > 0;
-                var atBottom = maxST > 0 && startST >= maxST && dy < 0;
+                // 用实时 scrollLeft/scrollTop 判断是否已到边界（而非手势开始值）：
+                // 从中间位置先滑到一侧边界再继续外拖时，同样能拦住橡皮筋回弹
+                var curSL = el.scrollLeft, curST = el.scrollTop;
+                var atLeft = maxSL > 0 && curSL <= 0 && dx > 0;
+                var atRight = maxSL > 0 && curSL >= maxSL - 1 && dx < 0;
+                var atTop = curST <= 0 && dy > 0;
+                var atBottom = maxST > 0 && curST >= maxST - 1 && dy < 0;
                 if(Math.abs(dx) > Math.abs(dy)){
                     if(atLeft || atRight) e.preventDefault();
                 } else {

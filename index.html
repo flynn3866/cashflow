@@ -1277,7 +1277,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- ===== 股票详情页（自选股点击进入；点击即加载，无后台自动刷新） ===== -->
-    <div id="pageStockDetail" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-24">
+    <div id="pageStockDetail" class="hidden detail-page fixed inset-0 z-30 overflow-y-auto overscroll-none max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-24" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <!-- 标题栏 -->
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
@@ -9520,9 +9520,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function openStockDetail(code, market, name){
             rememberScroll();
-            // 自选页为内部滚动模式（body/html overflow hidden），详情页是整页滚动，必须恢复外层滚动
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
+            // 详情页为 fixed 容器内部滚动（与自选页同款防橡皮筋方案）：锁死 body，滚动全部发生在容器内
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
             document.querySelector('#pageWatchSel').classList.add('hidden');
             const page = document.querySelector('#pageStockDetail');
             page.classList.remove('hidden');
@@ -9536,7 +9536,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#sdHolderBody').innerHTML = sdSkeletonLight();
             document.querySelector('#sdBasicTag').innerText = '--';
             document.querySelector('#sdRankTag').innerText = '--';
-            window.scrollTo(0, 0);
+            page.scrollTop = 0;
             loadStockDetailData(code, market, name);
         }
         function closeStockDetail(){

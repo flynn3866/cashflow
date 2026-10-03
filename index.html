@@ -1295,22 +1295,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-[0.08] pointer-events-none" style="background:radial-gradient(circle,#f0c987,transparent 70%)"></div>
             <div id="sdQuoteBody" class="relative z-10"></div>
         </div>
-        <!-- 公司概况 -->
-        <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-building text-[12px] text-accent"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">公司概况</div>
-                <span class="ml-auto text-[10px] text-gray-400" id="sdBasicTag">--</span>
-            </div>
-            <div id="sdBasicBody" class="px-4 py-3"></div>
-        </div>
         <!-- 财务数据 · 最近5年 -->
-        <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
+        <div class="bg-white rounded-2xl card-shadow mb-4">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
                 <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-line-chart text-[12px] text-accent"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">财务数据 <span class="text-[10px] font-normal text-gray-400 ml-0.5">最近5年 · 年报口径</span></div>
             </div>
-            <div id="sdFinBody" class="overflow-auto max-h-[60vh] overscroll-none" style="-webkit-overflow-scrolling:touch;overscroll-behavior:none;"></div>
+            <!-- 表头吸顶（sticky 相对详情页容器；横向随数据区 JS 镜像平移） -->
+            <div id="sdFinHeadWrap" class="sticky z-20 bg-white overflow-hidden will-change-transform">
+                <div id="sdFinHead" class="min-w-[660px]"></div>
+            </div>
+            <!-- 数据区：非滚动容器（overflow visible），纵向随详情页容器滚动，横向 JS transform 平移（照抄自选页防橡皮筋方案） -->
+            <div id="sdFinBody" style="overflow:visible;"></div>
         </div>
         <!-- 行业排名 -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
@@ -9526,15 +9522,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageWatchSel').classList.add('hidden');
             const page = document.querySelector('#pageStockDetail');
             page.classList.remove('hidden');
+            // 表头吸顶位置 = 标题栏高度（详情页隐藏时 offsetHeight 为 0，必须在显示后设置）
+            const finHeadEl = document.querySelector('#sdFinHeadWrap');
+            if(finHeadEl && page.firstElementChild) finHeadEl.style.top = page.firstElementChild.offsetHeight + 'px';
             document.querySelector('#sdTitle').innerText = name || code;
             document.querySelector('#sdCode').innerText = code + (market === 'HK' ? '.HK' : '.SH');
             document.querySelector('#sdTime').innerText = '加载中…';
             document.querySelector('#sdQuoteBody').innerHTML = sdSkeletonDark();
-            document.querySelector('#sdBasicBody').innerHTML = sdSkeletonLight();
             document.querySelector('#sdFinBody').innerHTML = sdSkeletonLight();
             document.querySelector('#sdRankBody').innerHTML = sdSkeletonLight();
             document.querySelector('#sdHolderBody').innerHTML = sdSkeletonLight();
-            document.querySelector('#sdBasicTag').innerText = '--';
             document.querySelector('#sdRankTag').innerText = '--';
             page.scrollTop = 0;
             loadStockDetailData(code, market, name);
@@ -9549,34 +9546,54 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 renderWatchSelPage();
             });
         }
-        // 财务表滚动容器防橡皮筋回弹（iOS 兜底）：触摸滑动到滚动边界时阻止浏览器默认的橡皮筋/滚动链穿透，
-        // 避免"滑开露出列表后面的背景板又弹回"；仅触摸设备生效，桌面鼠标滚动不受影响
+        // 表头吸顶位置 = 详情页标题栏高度（sticky 相对详情页容器 content box，吸在标题栏正下方，避免与标题栏/预警条重叠盖住首行）
         (function(){
-            var el = document.getElementById('sdFinBody');
-            if(!el || !('ontouchstart' in window)) return;
-            var startX = 0, startY = 0, startSL = 0, startST = 0;
-            el.addEventListener('touchstart', function(e){
+            var hw = document.getElementById('sdFinHeadWrap');
+            var tb = document.querySelector('#pageStockDetail > div');
+            if(hw && tb) hw.style.top = tb.offsetHeight + 'px';
+        })();
+        // 财务表横向平移（照抄自选页防橡皮筋方案）：#sdFinBody 不是滚动容器（overflow visible），
+        // 纵向随详情页容器原生滚动（单层滚动、无嵌套容器 → 无橡皮筋）；
+        // 横向由 JS transform 驱动（无原生横向滚动容器 → 无横向橡皮筋），表头镜像同步、首列固定
+        (function(){
+            var wrap = document.getElementById('sdFinBody');
+            var head = document.getElementById('sdFinHeadWrap');
+            if(!wrap || !head || !('ontouchstart' in window)) return;
+            var X = 0, startX = 0, startY = 0, mode = null;
+            var maxX = function(){ return Math.max(0, wrap.scrollWidth - wrap.clientWidth); };
+            var sync = function(){
+                var rows = wrap.querySelectorAll('[data-finrow]');
+                for(var i = 0; i < rows.length; i++){
+                    rows[i].style.transform = 'translateX(' + (-X) + 'px)';
+                    var f = rows[i].querySelector('[data-fixcol]');
+                    if(f) f.style.transform = 'translateX(' + X + 'px)';
+                }
+                head.style.transform = 'translateX(' + (-X) + 'px)';
+                var hf = document.getElementById('sdFinHeadFirst');
+                if(hf) hf.style.transform = 'translateX(' + X + 'px)';
+            };
+            wrap.addEventListener('touchstart', function(e){
                 var t = e.touches[0];
                 startX = t.clientX; startY = t.clientY;
-                startSL = el.scrollLeft; startST = el.scrollTop;
+                mode = null;
             }, { passive: true });
-            el.addEventListener('touchmove', function(e){
+            wrap.addEventListener('touchmove', function(e){
+                if(mode === 'v') return;
                 var t = e.touches[0];
                 var dx = t.clientX - startX, dy = t.clientY - startY;
-                if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-                var maxSL = el.scrollWidth - el.clientWidth;
-                var maxST = el.scrollHeight - el.clientHeight;
-                // 用实时 scrollLeft/scrollTop 判断是否已到边界（而非手势开始值）：
-                // 从中间位置先滑到一侧边界再继续外拖时，同样能拦住橡皮筋回弹
-                var curSL = el.scrollLeft, curST = el.scrollTop;
-                var atLeft = maxSL > 0 && curSL <= 0 && dx > 0;
-                var atRight = maxSL > 0 && curSL >= maxSL - 1 && dx < 0;
-                var atTop = curST <= 0 && dy > 0;
-                var atBottom = maxST > 0 && curST >= maxST - 1 && dy < 0;
-                if(Math.abs(dx) > Math.abs(dy)){
-                    if(atLeft || atRight) e.preventDefault();
-                } else {
-                    if(atTop || atBottom) e.preventDefault();
+                if(mode === null){
+                    if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+                    mode = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+                    if(mode === 'h'){
+                        e.preventDefault();
+                        if(maxX() <= 0){ mode = 'v'; return; }
+                    }
+                }
+                if(mode === 'h'){
+                    e.preventDefault();
+                    X = Math.min(maxX(), Math.max(0, X - dx));
+                    startX = t.clientX;
+                    sync();
                 }
             }, { passive: false });
         })();
@@ -9635,8 +9652,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(market === 'HK'){
                 if(my !== _sdToken) return;
                 document.querySelector('#sdTime').innerText = hm + ' 已加载';
-                document.querySelector('#sdBasicTag').innerText = '港股';
-                document.querySelector('#sdBasicBody').innerHTML = sdEmpty('港股基本面数据暂缺（东财 F10 仅覆盖 A 股），当前仅展示行情信息');
                 document.querySelector('#sdFinBody').innerHTML = sdEmpty('港股财务数据暂缺');
                 document.querySelector('#sdRankBody').innerHTML = sdEmpty('港股行业排名暂缺');
                 document.querySelector('#sdHolderBody').innerHTML = sdEmpty('港股股东数据暂缺');
@@ -9655,9 +9670,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cacheKey = market + '_' + code;
             const cached = sdCacheMap[cacheKey];
             if(cached && cached.t && (Date.now() - cached.t) < SD_TTL
-                && cached.org !== undefined && cached.fin !== undefined && cached.cash !== undefined
+                && cached.fin !== undefined && cached.cash !== undefined
                 && cached.bal !== undefined && cached.holder !== undefined && cached.rankDone){
-                document.querySelector('#sdBasicBody').innerHTML = cached.org ? sdRenderBasic(cached.org, sdHolderTop(cached.holder)) : sdEmpty('公司概况加载失败，请稍后重试');
                 document.querySelector('#sdFinBody').innerHTML = (cached.fin && cached.fin.length) ? sdRenderFin(cached.fin, code, cached.cash, cached.bal) : sdEmpty('财务数据加载失败，请稍后重试');
                 if(cached.fin && cached.fin.length && price != null){
                     const r0 = cached.fin[0];
@@ -9719,20 +9733,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     document.querySelector('#sdFinBody').innerHTML = finRows.length ? sdRenderFin(finRows, code, cashRows, balRows) : sdEmpty('财务数据加载失败，请稍后重试');
                 }
             };
-            let orgRow = null, holderRows = null;
-            const tryRenderBasic2 = function(){
-                if(orgRow !== null && holderRows !== null && my === _sdToken){
-                    document.querySelector('#sdBasicBody').innerHTML = orgRow ? sdRenderBasic(orgRow, sdHolderTop(holderRows)) : sdEmpty('公司概况加载失败，请稍后重试');
-                }
-            };
-            // 1) 公司概况
-            sdJsonp(baseUrl + '&reportName=RPT_F10_BASIC_ORGINFO&filter=' + encodeURIComponent('(SECUCODE="' + secu + '")') + '&pageSize=1', 'sdCbOrg', function(d){
-                if(my !== _sdToken) return;
-                orgRow = d && d.result && d.result.data && d.result.data[0] ? d.result.data[0] : null;
-                entry.org = orgRow;
-                maybeFinish();
-                tryRenderBasic2();
-            });
+            let holderRows = null;
+            // 公司概况已移除（ORGINFO 概况数据不再拉取；行业名由行业排名段独立获取）
             // 2) 财务数据（最近30期，取年报）——含总股本，用于市值
             sdJsonp(baseUrl + '&reportName=RPT_F10_FINANCE_MAINFINADATA&filter=' + encodeURIComponent('(SECUCODE="' + secu + '")') + '&pageNumber=1&pageSize=30&sortTypes=-1&sortColumns=REPORT_DATE', 'sdCbFin', function(d){
                 if(my !== _sdToken) return;
@@ -9924,22 +9926,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 ]}
             ];
             const noteIcon = '<i class="fa fa-info-circle text-[9px] text-gray-300"></i>';
-            let html = '<div class="min-w-[660px]">'
-                + '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0] sticky top-0 z-10">'
-                + '<div class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \ 年份</div>';
+            let html = '<div class="min-w-[660px]">';
+            // 表头写入吸顶区（#sdFinHead，sticky 相对详情页容器；横向 JS 平移时镜像同步）
+            let headHtml = '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0]">'
+                + '<div id="sdFinHeadFirst" class="relative bg-[#faf7ef] z-10 px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \ 年份</div>';
             yrs.forEach(function(r){
-                html += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
+                headHtml += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
             });
-            html += '</div>';
+            headHtml += '</div>';
+            const sdFinHeadEl = document.querySelector('#sdFinHead');
+            if(sdFinHeadEl) sdFinHeadEl.innerHTML = headHtml;
             sections.forEach(function(sec){
                 // 分区标题条
-                html += '<div class="flex items-center gap-1.5 px-3 py-1.5 bg-[#f5ecda] border-b border-[#eedfc0]">'
+                html += '<div data-finrow class="flex items-center gap-1.5 px-3 py-1.5 bg-[#f5ecda] border-b border-[#eedfc0]">'
                     + '<div class="w-[3px] h-[11px] rounded-full bg-accent"></div>'
                     + '<div class="text-[11px] font-semibold text-[#8a5a1e]">' + sec.title + '</div></div>';
                 sec.rows.forEach(function(rd, idx){
                     if(rd.gold){
-                        html += '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-gradient-to-r from-[#f7ecd2] to-[#fdf8ec] border-b border-[#eedfc0]">'
-                            + '<div class="px-3 py-2.5 text-[12px] font-semibold text-[#8a5a1e] flex items-center gap-1">' + rd.label
+                        html += '<div data-finrow class="grid grid-cols-[150px_repeat(5,1fr)] bg-gradient-to-r from-[#f7ecd2] to-[#fdf8ec] border-b border-[#eedfc0]">'
+                            + '<div data-fixcol class="px-3 py-2.5 text-[12px] font-semibold text-[#8a5a1e] flex items-center gap-1">' + rd.label
                             + (rd.note ? '<i class="fa fa-info-circle text-[9px] text-[#c9a35a]" title="利润现金含量 = 经营现金流净额 ÷ 归母净利润；自由现金流 = 经营现金流 − 购建资产现金（巴菲特口径：经营现金流 − 资本支出）"></i>' : '')
                             + '</div>';
                         yrs.forEach(function(r){
@@ -9948,8 +9953,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         });
                         html += '</div>';
                     } else {
-                        html += '<div class="grid grid-cols-[150px_repeat(5,1fr)] ' + (idx % 2 ? 'bg-white' : 'bg-[#fdfbf5]') + ' border-b border-gray-50">'
-                            + '<div class="px-3 py-2.5 text-[11.5px] text-gray-500 flex items-center gap-1">' + rd.label
+                        html += '<div data-finrow class="grid grid-cols-[150px_repeat(5,1fr)] ' + (idx % 2 ? 'bg-white' : 'bg-[#fdfbf5]') + ' border-b border-gray-50">'
+                            + '<div data-fixcol class="px-3 py-2.5 text-[11.5px] text-gray-500 flex items-center gap-1">' + rd.label
                             + (rd.note ? noteIcon : '')
                             + '</div>';
                         yrs.forEach(function(r){
@@ -9961,10 +9966,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 });
             });
             // 利润现金含量解读（替换原口径说明）
-            html += '<div class="px-4 py-2.5 text-[10.5px] leading-relaxed bg-[#fdf9f0] border-t border-[#eedfc0] text-gray-500">'
+            html += '<div data-finrow class="px-4 py-2.5 text-[10.5px] leading-relaxed bg-[#fdf9f0] border-t border-[#eedfc0] text-gray-500">'
                 + '<div class="font-semibold text-[#8a5a1e] mb-1">利润现金含量解读</div>'
                 + '＞1（＞100%）：利润现金含量充足，每 1 元账面净利润，收到超过 1 元经营现金，是好现象；＝1（100%）：账面利润基本都收回现金；＜1（＜100%）：利润现金不足，一部分利润只是账面数字，现金没收回来；负数：净利润为正但经营现金流负，利润基本没有现金支撑，风险高。'
-                + '<div class="mt-1.5 text-gray-400">数据来源：现金流量表（东财 GCASHFLOW）· 资产负债表（东财 GBALANCE）· 主要财务指标（东财 F10 年报）· 分红融资（东财 SHAREBONUS_DET）；购建资产现金即『购建固定资产、无形资产和其他长期资产支付的现金』；有息负债 = 短期借款 + 一年内到期的非流动负债 + 长期借款 + 应付债券；分红按分红年度归属（本年利润、下年发放）；分红率（股利支付率）= 年度每股分红 ÷ 年度基本每股收益，与东方财富 F10 分红融资『股利支付率』口径一致。</div></div>';
+                + '</div>';
             html += '</div>';
             return html;
         }
@@ -10011,16 +10016,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 { label: '核心一级资本充足率', fn: function(r){ return pct1(r.HXYJBCZL); }, note: '核心一级资本充足率 = 核心一级资本净额 ÷ 风险加权资产，监管要求不低于 5%（并表）' },
                 { label: '分红率', fn: function(r, y){ const d = divYear[y]; return d && d.eps > 0 && d.per > 0 ? (d.per / d.eps * 100).toFixed(1) + '%' : '--'; }, note: '股利支付率 = 年度每股分红 ÷ 年度基本每股收益，与东方财富 F10 分红融资口径一致' }
             ];
-            let html = '<div class="min-w-[660px]">'
-                + '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0] sticky top-0 z-10">'
-                + '<div class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \\ 年份</div>';
+            let html = '<div class="min-w-[660px]">';
+            // 表头写入吸顶区（与普通股票财务表一致）
+            let headHtml = '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0]">'
+                + '<div id="sdFinHeadFirst" class="relative bg-[#faf7ef] z-10 px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \\ 年份</div>';
             yrs.forEach(function(r){
-                html += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
+                headHtml += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
             });
-            html += '</div>';
+            headHtml += '</div>';
+            const sdFinHeadEl2 = document.querySelector('#sdFinHead');
+            if(sdFinHeadEl2) sdFinHeadEl2.innerHTML = headHtml;
             rowsDef.forEach(function(rd, idx){
-                html += '<div class="grid grid-cols-[150px_repeat(5,1fr)] ' + (idx % 2 ? 'bg-white' : 'bg-[#fdfbf5]') + ' border-b border-gray-50">'
-                    + '<div class="px-3 py-2.5 text-[12px] text-gray-700 flex items-center gap-1">' + rd.label
+                html += '<div data-finrow class="grid grid-cols-[150px_repeat(5,1fr)] ' + (idx % 2 ? 'bg-white' : 'bg-[#fdfbf5]') + ' border-b border-gray-50">'
+                    + '<div data-fixcol class="px-3 py-2.5 text-[12px] text-gray-700 flex items-center gap-1">' + rd.label
                     + (rd.note ? '<i class="fa fa-info-circle text-[9px] text-gray-300" title="' + rd.note + '"></i>' : '')
                     + '</div>';
                 yrs.forEach(function(r){

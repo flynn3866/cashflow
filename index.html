@@ -9538,36 +9538,51 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 renderWatchSelPage();
             });
         }
-        // 财务表滚动容器防橡皮筋回弹（iOS 兜底）：触摸滑动到滚动边界时阻止浏览器默认的橡皮筋/滚动链穿透，
-        // 避免"滑开露出列表后面的背景板又弹回"；仅触摸设备生效，桌面鼠标滚动不受影响
+        // 财务表横向手势自接管 + 纵向放行原生滚动（iOS 防橡皮筋，与自选页方向分流手势同款）：
+        // 横滑自己控制 scrollLeft、到边界即停（无橡皮筋回弹）；纵滑不阻止默认、保留原生惯性丝滑
         (function(){
             var el = document.getElementById('sdFinBody');
             if(!el || !('ontouchstart' in window)) return;
-            var startX = 0, startY = 0, startSL = 0, startST = 0;
+            var _mode = null, _sX = 0, _sY = 0, _lastT = 0, _vel = 0, _anim = null;
             el.addEventListener('touchstart', function(e){
+                if(_anim){ cancelAnimationFrame(_anim); _anim = null; }
                 var t = e.touches[0];
-                startX = t.clientX; startY = t.clientY;
-                startSL = el.scrollLeft; startST = el.scrollTop;
+                _sX = t.clientX; _sY = t.clientY; _mode = null; _vel = 0; _lastT = Date.now();
             }, { passive: true });
             el.addEventListener('touchmove', function(e){
                 var t = e.touches[0];
-                var dx = t.clientX - startX, dy = t.clientY - startY;
-                if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-                var maxSL = el.scrollWidth - el.clientWidth;
-                var maxST = el.scrollHeight - el.clientHeight;
-                // 用实时 scrollLeft/scrollTop 判断是否已到边界（而非手势开始值）：
-                // 从中间位置先滑到一侧边界再继续外拖时，同样能拦住橡皮筋回弹
-                var curSL = el.scrollLeft, curST = el.scrollTop;
-                var atLeft = maxSL > 0 && curSL <= 0 && dx > 0;
-                var atRight = maxSL > 0 && curSL >= maxSL - 1 && dx < 0;
-                var atTop = curST <= 0 && dy > 0;
-                var atBottom = maxST > 0 && curST >= maxST - 1 && dy < 0;
-                if(Math.abs(dx) > Math.abs(dy)){
-                    if(atLeft || atRight) e.preventDefault();
-                } else {
-                    if(atTop || atBottom) e.preventDefault();
+                var dx = t.clientX - _sX, dy = t.clientY - _sY;
+                if(_mode === null){
+                    if(Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) _mode = 'h';
+                    else if(Math.abs(dy) > 6) _mode = 'v';
+                } else if(_mode === 'v' && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5){
+                    // 横滑迹象明确时从纵向切回横向（手指初始微小纵向位移不应永久锁死方向）
+                    _mode = 'h';
                 }
+                if(_mode === 'h'){
+                    e.preventDefault();
+                    var dt = Date.now() - _lastT;
+                    if(dt > 0) _vel = -dx / (dt / 16.7);
+                    var maxSL = el.scrollWidth - el.clientWidth;
+                    el.scrollLeft = Math.max(0, Math.min(maxSL, el.scrollLeft - dx));
+                    _sX = t.clientX; _sY = t.clientY; _lastT = Date.now();
+                }
+                // v 模式：不阻止默认，交给原生纵向滚动
             }, { passive: false });
+            el.addEventListener('touchend', function(){
+                if(_mode === 'h' && Math.abs(_vel) > 0.3){
+                    var step = function(){
+                        el.scrollLeft += _vel; _vel *= 0.92;
+                        var maxSL = el.scrollWidth - el.clientWidth;
+                        if(el.scrollLeft <= 0){ el.scrollLeft = 0; _vel = 0; }
+                        if(el.scrollLeft >= maxSL){ el.scrollLeft = maxSL; _vel = 0; }
+                        if(Math.abs(_vel) > 0.1) _anim = requestAnimationFrame(step);
+                        else _anim = null;
+                    };
+                    _anim = requestAnimationFrame(step);
+                }
+                _mode = null;
+            }, { passive: true });
         })();
         // 元 → 亿/万 显示
         function sdYi(v){

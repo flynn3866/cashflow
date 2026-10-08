@@ -618,13 +618,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span class="text-[11px] text-[#cfc0a6]">下一笔分红还有 <span id="nextDivDays" class="text-[12px] font-bold text-[#d9bc74] tabular-nums">--</span> 天</span>
                         <span class="text-[11px] text-[#cfc0a6]">预计 <span id="nextDivAmt" class="text-[12px] font-bold text-[#d9bc74] tabular-nums">--</span></span>
                     </div>
-                    <!-- 回本里程碑（账户级成就信息，纯文字单行；仅存在已回本股票时显示） -->
-                    <div id="recoverMilestone" class="hidden col-span-3 mb-0.5 mx-4 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden whitespace-nowrap">
-                        <span class="text-[11px] text-[#cfc0a6]">已回本 <span id="recoverCount" class="text-[12px] font-semibold text-[#d9bc74] tabular-nums">0</span> 只</span>
-                        <span class="text-[11px] text-[#cfc0a6]">超额回收 <span id="recoverExtra" class="text-[12px] font-semibold text-[#d9bc74] tabular-nums">0.00</span></span>
-                        <span class="text-[11px] text-[#cfc0a6]">占持仓 <span id="recoverSub" class="text-[12px] font-semibold text-[#d9bc74] tabular-nums">0%</span></span>
-                    </div>
-                    <!-- 成本回收率迷你进度条：累计分红 ÷ 总投入成本（账户级回本进度） -->
+                    <!-- 成本回收率迷你进度条：累计分红 ÷ 总投入成本（账户级回本进度）；副文字动态显示已回本只数/超额 -->
                     <div id="costRecoveryMini" class="hidden col-span-3 mb-0.5 mx-4 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden">
                         <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#d9bc74,#a9642a)"></span>
                         <i class="fa fa-pie-chart text-[11px] text-[#d9bc74] flex-shrink-0"></i>
@@ -3385,7 +3379,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 持仓体检页面（组合级护城河打分 + 红黄绿榜，与"股票评分"并存） -->
-    <div id="pageHealthCheck" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageHealthCheck" class="hidden detail-page fixed inset-0 z-30 overflow-y-auto overscroll-none max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
@@ -15717,7 +15711,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 分红统计使用的清仓记录：跳过"已迁移到重新买入持仓"的记录（避免双计），
         // 盈亏排行/交易明细/年度报告清仓列表等非分红统计仍使用完整清仓记录
         function closedForDivStat(){
-            return (historyData.closedStocks || []).filter(function(c){ return !c.divMigrated; });
+            return (historyData.closedStocks || []).filter(function(c){
+                if(!c.divMigrated) return true;   // 未迁移：分红仍在记录里，正常计入
+                // 已迁移（曾合并进过持仓）：仅当当前持仓仍有同代码时才过滤（分红已在持仓中，避免重复统计）；
+                // 若当前无该持仓（删除后未重买），分红只存在于本记录中，必须保留计入，不能随删除丢失
+                const hasHold = holdDataList.some(function(h){ return h.marketType === c.marketType && h.code === c.code; });
+                return !hasHold;
+            });
         }
 
         // 今年已收分红（与设置页"每年分红收入"当年值一致）
@@ -15955,23 +15955,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             void el.offsetWidth;
             el.classList.add(isUp ? 'flash-up' : 'flash-down');
         }
-        // ============ 回本里程碑（成本为负的股票汇总统计：紫色璀璨横幅） ============
+        // ============ 回本里程碑（成本为负的股票汇总统计：并入成本回收进度条副文字） ============
         function renderRecoverMilestone(){
-            const wrap = document.querySelector('#recoverMilestone');
-            if(!wrap) return;
+            const sub = document.querySelector('#costRecoveryMiniSub');
             const list = holdDataList.filter(function(it){ return Number(it.costPrice) < 0; });
-            if(!list.length){ wrap.classList.add('hidden'); return; }
             let extra = 0;
             list.forEach(function(it){
                 const fx = it.marketType === 'HK' ? hkFxRate : 1;
                 extra += Math.abs(Number(it.costPrice) || 0) * (Number(it.count) || 0) * fx;
             });
             const totalMarket = Number(calcSummary().totalMarket) || 0;
-            wrap.classList.remove('hidden');
-            // 统计条标签文案由 HTML 静态提供，这里只写数值（避免重复）
-            document.querySelector('#recoverCount').innerText = list.length;
-            document.querySelector('#recoverExtra').innerText = fmtMoney(extra);
-            document.querySelector('#recoverSub').innerText = (totalMarket > 0 ? (extra / totalMarket * 100).toFixed(1) : 0) + '%';
+            window.__recoverInfo = { count: list.length, extra: extra, totalMarket: totalMarket };
+            if(sub && list.length){
+                sub.innerText = '已回本 ' + list.length + ' 只 · 超额 ' + fmtMoney(extra);
+            }
             // 股票名不再在统计条展示（手机上过长易错乱，持仓列表内已有"已回本"标识）
         }
 
@@ -16111,7 +16108,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const stNumEl = document.querySelector('#stockNum');
             if(stNumEl) stNumEl.innerText = sum.holdLen;
             updateSummaryCard(sum);
-            // 回本里程碑（成本为负的股票汇总统计）
+            // 回本里程碑（成本为负的股票汇总统计，并入成本回收进度条副文字）
             renderRecoverMilestone();
 
             // 渲染持仓列表：按当前筛选类型过滤，再按最新总市值降序排序
@@ -16777,7 +16774,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const crMiniBar = document.querySelector('#costRecoveryMiniBar');
                     if(crMiniBar) crMiniBar.style.width = Math.min(100, recovVal).toFixed(1) + '%';
                     const crMiniSub = document.querySelector('#costRecoveryMiniSub');
-                    if(crMiniSub) crMiniSub.innerText = recovVal >= 100 ? '超额回收' : '分红÷投入';
+                    if(crMiniSub){
+                        const ri = window.__recoverInfo || { count: 0 };
+                        if(ri.count > 0){
+                            crMiniSub.innerText = '已回本 ' + ri.count + ' 只 · 超额 ' + fmtMoney(ri.extra);
+                        } else {
+                            crMiniSub.innerText = recovVal >= 100 ? '超额回收' : '分红÷投入';
+                        }
+                    }
                 } else {
                     crMiniEl.classList.add('hidden');
                 }

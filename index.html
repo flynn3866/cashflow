@@ -597,19 +597,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 <div class="text-[13px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                             </div>
                         </div>
-                        <!-- 成本回收率：累计分红 ÷ 总投入成本（巴菲特式回本进度） -->
-                        <div class="px-1 py-2 mx-3" style="border-top:1px solid rgba(255,255,255,0.08);">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <div class="text-[#cfc0a6] text-[10px] flex items-center gap-1">
-                                    <i class="fa fa-undo text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span>成本回收率</span>
-                                </div>
-                                <span class="text-[12px] font-bold tabular-nums text-[#f7cf8f]" id="costRecovery">0.00%</span>
-                            </div>
-                            <div class="h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.14);">
-                                <div id="costRecoveryBar" class="h-full rounded-full transition-all duration-700" style="width:0%;background:linear-gradient(90deg,#a9642a,#e8a33d,#f7cf8f);"></div>
-                            </div>
-                        </div>
                     </div>
                     <!-- 资产新高 与网格之间的凹凸分隔线 -->
                     <div class="col-span-3 mt-0 mb-2.5" style="height:1px;background:rgba(230,210,163,0.14);transform:scaleY(0.6);"></div>
@@ -618,7 +605,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span class="text-[11px] text-[#cfc0a6]">下一笔分红还有 <span id="nextDivDays" class="text-[12px] font-bold text-[#d9bc74] tabular-nums">--</span> 天</span>
                         <span class="text-[11px] text-[#cfc0a6]">预计 <span id="nextDivAmt" class="text-[12px] font-bold text-[#d9bc74] tabular-nums">--</span></span>
                     </div>
-                    <!-- 成本回收率迷你进度条：累计分红 ÷ 总投入成本（账户级回本进度）；副文字动态显示已回本只数/超额 -->
+                    <!-- 成本回收率迷你进度条：累计分红 ÷ 总投入成本（账户级回本进度） -->
                     <div id="costRecoveryMini" class="hidden col-span-3 mb-0.5 mx-4 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden">
                         <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#d9bc74,#a9642a)"></span>
                         <i class="fa fa-pie-chart text-[11px] text-[#d9bc74] flex-shrink-0"></i>
@@ -626,7 +613,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div class="flex-1 h-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.14);">
                             <div id="costRecoveryMiniBar" class="h-full rounded-full transition-all duration-700" style="width:0%;background:linear-gradient(90deg,#a9642a,#e8a33d,#f7cf8f);"></div>
                         </div>
-                        <span class="text-[10px] text-[#cfc0a6]/70 whitespace-nowrap" id="costRecoveryMiniSub">分红÷投入</span>
                     </div>
                 </div>
             </div>
@@ -15955,22 +15941,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             void el.offsetWidth;
             el.classList.add(isUp ? 'flash-up' : 'flash-down');
         }
-        // ============ 回本里程碑（成本为负的股票汇总统计：并入成本回收进度条副文字） ============
-        function renderRecoverMilestone(){
-            const sub = document.querySelector('#costRecoveryMiniSub');
-            const list = holdDataList.filter(function(it){ return Number(it.costPrice) < 0; });
-            let extra = 0;
-            list.forEach(function(it){
-                const fx = it.marketType === 'HK' ? hkFxRate : 1;
-                extra += Math.abs(Number(it.costPrice) || 0) * (Number(it.count) || 0) * fx;
-            });
-            const totalMarket = Number(calcSummary().totalMarket) || 0;
-            window.__recoverInfo = { count: list.length, extra: extra, totalMarket: totalMarket };
-            if(sub && list.length){
-                sub.innerText = '已回本 ' + list.length + ' 只 · 超额 ' + fmtMoney(extra);
-            }
-            // 股票名不再在统计条展示（手机上过长易错乱，持仓列表内已有"已回本"标识）
-        }
+        // ============ 回本里程碑（已并入成本回收进度条，本函数保留空转兼容旧调用） ============
+        function renderRecoverMilestone(){}
 
         // ============ 个股仓位预警：个股市值占比 > 30% 时全局吸顶提示 ============
         const POSITION_WARN_LIMIT = 30;   // 个股仓位上限（%）
@@ -16761,10 +16733,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 成本回收率 = 累计分红总额 ÷ 总投入成本（巴菲特式回本进度；迷你条仅在分红>0且投入>0时显示）
             const invTotalNow = getTotalInvested();
             const recovVal = invTotalNow > 0 ? (Number(sum.totalDivReceived) / invTotalNow * 100) : 0;
-            const crTxtEl = document.querySelector('#costRecovery');
-            if(crTxtEl) crTxtEl.innerText = recovVal.toFixed(2) + '%';
-            const crBarEl = document.querySelector('#costRecoveryBar');
-            if(crBarEl) crBarEl.style.width = Math.min(100, recovVal).toFixed(1) + '%';
             const crMiniEl = document.querySelector('#costRecoveryMini');
             if(crMiniEl){
                 if(invTotalNow > 0 && Number(sum.totalDivReceived) > 0){
@@ -16773,15 +16741,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(crMiniTxt) crMiniTxt.innerText = recovVal.toFixed(1) + '%';
                     const crMiniBar = document.querySelector('#costRecoveryMiniBar');
                     if(crMiniBar) crMiniBar.style.width = Math.min(100, recovVal).toFixed(1) + '%';
-                    const crMiniSub = document.querySelector('#costRecoveryMiniSub');
-                    if(crMiniSub){
-                        const ri = window.__recoverInfo || { count: 0 };
-                        if(ri.count > 0){
-                            crMiniSub.innerText = '已回本 ' + ri.count + ' 只 · 超额 ' + fmtMoney(ri.extra);
-                        } else {
-                            crMiniSub.innerText = recovVal >= 100 ? '超额回收' : '分红÷投入';
-                        }
-                    }
                 } else {
                     crMiniEl.classList.add('hidden');
                 }
@@ -18166,7 +18125,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(d.cls === 'red') return '<span class="inline-block w-1.5 h-1.5 rounded-full bg-red-500"></span>';
                     return '<span class="inline-block w-1.5 h-1.5 rounded-full bg-gray-200"></span>';
                 };
-                rowsHtml += '<div class="bg-white rounded-2xl card-shadow px-3.5 py-3 flex items-center gap-3">'
+                rowsHtml += '<div class="bg-white rounded-2xl card-shadow px-3.5 py-3">'
+                    + '<div class="flex items-center gap-3">'
                     + '<div class="min-w-0 flex-1">'
                     + '<div class="flex items-center gap-1.5"><span class="text-[13px] font-semibold text-gray-800 truncate">' + nm + '</span>'
                     + '<span class="text-[9.5px] text-gray-300 tabular-nums whitespace-nowrap">' + cd + '</span></div>'
@@ -18178,6 +18138,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         ? '<div class="text-right flex-shrink-0"><div class="text-[19px] font-bold tabular-nums ' + (cls === 'green' ? 'text-green-600' : (cls === 'yellow' ? 'text-amber-500' : 'text-red-500')) + '">' + m.score + '</div>'
                         + '<div class="text-[9.5px] font-semibold ' + (cls === 'green' ? 'text-green-500' : (cls === 'yellow' ? 'text-amber-500' : 'text-red-400')) + '">' + m.verdict + '</div></div>'
                         : '<div class="text-[9.5px] text-gray-300 flex-shrink-0 whitespace-nowrap">待补全</div>')
+                    + '</div>'
+                    + '<div class="mt-1.5 pt-1 border-t border-[#f3ecdf] flex items-center justify-between">'
+                    + '<span class="text-[9px] text-gray-300">卖出纪律检查</span>'
+                    + '<button onclick="toggleSellCheck(this,\'' + key + '\')" class="sellcheck-btn text-[10px] font-medium text-[#a9642a] flex items-center gap-1 active:opacity-60"><i class="fa fa-shield text-[9px]"></i>检查</button>'
+                    + '</div>'
+                    + '<div class="sellcheck-panel hidden mt-1.5" data-key="' + key + '"></div>'
                     + '</div>';
             });
             const avgEl = document.querySelector('#hcAvg');
@@ -18262,6 +18228,239 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             } else if(tiEl) tiEl.innerText = '--';
             list.innerHTML = rowsHtml || '<div class="bg-white rounded-2xl card-shadow px-4 py-10 text-center text-[12px] text-gray-300">暂无持仓</div>';
+        }
+        // ============ 卖出纪律检查（巴菲特式：不因涨跌卖，只因逻辑变坏 / 贵到离谱 / 有更好机会） ============
+        // A 类（基本面恶化 → 清仓级）：A1 护城河评分 / A2 ROE 趋势 / A3 利润现金含量 / A4 分红可持续 / A5 负债恶化 / A6 管理层行为（手动）
+        // B 类（估值高估 → 减仓级）：B1 现价 vs 内在价值 / B2 股息率历史分位（数据不足） / B3 股息率绝对值
+        // C 类（更好机会 → 调仓级）：C1 替代标的（手动） / C2 组合集中度 / C3 调仓测算提示（信息项）
+        function toggleSellCheck(btn, key){
+            const row = btn.closest('.bg-white');
+            const panel = row ? row.querySelector('.sellcheck-panel') : null;
+            if(!panel) return;
+            if(panel.classList.contains('hidden')){
+                panel.classList.remove('hidden');
+                if(!panel.dataset.built){
+                    panel.innerHTML = buildSellCheckHtml(key);
+                    panel.dataset.built = '1';
+                }
+                btn.innerHTML = '<i class="fa fa-chevron-up text-[9px]"></i>收起检查';
+            } else {
+                panel.classList.add('hidden');
+                btn.innerHTML = '<i class="fa fa-shield text-[9px]"></i>检查';
+            }
+        }
+        function scRowHtml(id, label, sub, cls, val, manualHtml){
+            const map = {
+                red:    ['bg-[#fdf0ef]', 'text-[#c92a2a]', '红灯'],
+                yellow: ['bg-[#fdf7e9]', 'text-[#b7791f]', '黄灯'],
+                green:  ['bg-[#f0f7f0]', 'text-[#2f9e44]', '正常'],
+                gray:   ['bg-gray-100', 'text-gray-400', '数据不足']
+            };
+            const m = map[cls] || map.gray;
+            return '<div class="sc-row flex items-center justify-between gap-2 py-1 border-b border-[#f0e8da]/70 last:border-b-0" data-id="' + id + '">'
+                + '<div class="min-w-0 flex-1">'
+                + '<div class="text-[10.5px] text-gray-700 truncate">' + label + '</div>'
+                + (sub ? '<div class="text-[9px] text-gray-400 truncate">' + sub + '</div>' : '')
+                + '</div>'
+                + (manualHtml || '<span class="sc-badge flex-shrink-0 text-[9.5px] px-1.5 py-0.5 rounded-full ' + m[0] + ' ' + m[1] + '">' + (cls === 'gray' ? '数据不足' : (val || m[2])) + '</span>')
+                + '</div>';
+        }
+        function scVerdict(items){
+            const redA = items.filter(function(i){ return i.group === 'A' && i.cls === 'red'; }).length;
+            const redB = items.filter(function(i){ return i.group === 'B' && i.cls === 'red'; }).length;
+            const redC = items.filter(function(i){ return i.group === 'C' && i.cls === 'red'; }).length;
+            const reds = items.filter(function(i){ return i.cls === 'red'; }).length;
+            const yellows = items.filter(function(i){ return i.cls === 'yellow'; }).length;
+            let v = 'green', advise = '继续持有';
+            if(redA > 0){ v = 'red'; advise = '建议清仓：生意逻辑已变（A 类红灯）'; }
+            else if(redB > 0){ v = (redB >= 2 || reds >= 2) ? 'red' : 'yellow'; advise = (redB >= 2 || reds >= 2) ? '建议分批减仓：估值贵到离谱' : '关注估值：考虑分批减仓'; }
+            else if(redC > 0){ v = 'yellow'; advise = '建议调仓：存在更优替代或过度集中'; }
+            else if(yellows >= 3){ v = 'yellow'; advise = '多项黄灯，建议下次分红后复查'; }
+            return { v: v, advise: advise, reds: reds, yellows: yellows, redA: redA, redB: redB, redC: redC };
+        }
+        function scVerdictHtml(vd, key, items){
+            const badge = {
+                green:  ['text-[#2f9e44]', '继续持有'],
+                yellow: ['text-[#b7791f]', '关注'],
+                red:    ['text-[#c92a2a]', '考虑卖出']
+            }[vd.v];
+            return '<div class="mt-2 pt-2 border-t border-[#eedfc0] flex items-center justify-between gap-2">'
+                + '<span class="text-[11px] font-bold ' + badge[0] + '">' + badge[1] + '</span>'
+                + '<span class="text-[9.5px] text-gray-500 text-right">' + vd.advise + '</span></div>';
+        }
+        function buildSellCheckHtml(key){
+            const it = holdDataList.find(function(x){ return ((x.marketType === 'HK' ? 'HK_' : 'A_') + x.code) === key; });
+            if(!it) return '<div class="text-[11px] text-gray-400">股票不存在</div>';
+            const cacheMap = (function(){ try { return JSON.parse(localStorage.getItem('sdF10Cache') || '{}'); } catch(e){ return {}; } })();
+            const c = cacheMap[key];
+            const q = watchQuotes[it.code] || {};
+            const m = (c && c.fin && c.fin.length) ? calcMoatScoreFromCache(c.fin, c.cash, c.bal, it.code, q) : null;
+            const wq = watchQuotes[it.code];
+            const price = (wq && wq.price != null && Number(wq.price) > 0) ? Number(wq.price) : (Number(it.nowPrice) || 0);
+            const per = Number(it.divPerShare) || 0;
+            const cnt = Number(it.count) || 0;
+            // ---- 年报/现金流/资产负债表年份映射 ----
+            const finY = (c && c.fin ? c.fin : []).filter(function(r){ return /12-3\d/.test(String(r.REPORT_DATE || '')) && String(r.REPORT_DATE).length >= 10; })
+                .sort(function(a, b){ return String(b.REPORT_DATE).localeCompare(String(a.REPORT_DATE)); });
+            const cashByY = {}, balByY = {};
+            (c && c.cash ? c.cash : []).forEach(function(r){ const d = String(r.REPORT_DATE || ''); if(/12-3\d/.test(d) && d.length >= 10 && !cashByY[d.substring(0, 4)]) cashByY[d.substring(0, 4)] = r; });
+            (c && c.bal ? c.bal : []).forEach(function(r){ const d = String(r.REPORT_DATE || ''); if(/12-3\d/.test(d) && d.length >= 10 && !balByY[d.substring(0, 4)]) balByY[d.substring(0, 4)] = r; });
+            const items = [];
+            // ---- A1 护城河评分 ----
+            if(m && m.ready){
+                const cls = m.score < 60 ? 'red' : (m.score < 70 ? 'yellow' : 'green');
+                items.push({ id: 'A1', group: 'A', label: 'A1 · 护城河评分', sub: '护城河体检 ' + m.score + ' 分（<60 恶化）', cls: cls, val: m.score + ' 分' });
+            } else {
+                items.push({ id: 'A1', group: 'A', label: 'A1 · 护城河评分', sub: '需进入股票详情页缓存财务数据', cls: 'gray' });
+            }
+            // ---- A2 ROE 趋势（近3年 vs 前3年，需 6 年年报） ----
+            const roes = [];
+            finY.forEach(function(r){ const v = r.ROEJQ != null ? Number(r.ROEJQ) : null; if(v != null) roes.push(v); });
+            if(roes.length >= 5){
+                const recent = (roes[0] + roes[1] + roes[2]) / 3;
+                const prev = (roes[3] + roes[4] + (roes[5] != null ? roes[5] : roes[4])) / (roes[5] != null ? 3 : 2);
+                const cls = (prev > 0 && recent < prev * 0.7) ? 'red' : (prev > 0 && recent < prev * 0.9) ? 'yellow' : 'green';
+                items.push({ id: 'A2', group: 'A', label: 'A2 · ROE 趋势', sub: '近3年均 ' + recent.toFixed(1) + '% vs 前3年均 ' + prev.toFixed(1) + '%', cls: cls, val: cls === 'red' ? '明显退步' : (cls === 'yellow' ? '有所下滑' : '稳定') });
+            } else {
+                items.push({ id: 'A2', group: 'A', label: 'A2 · ROE 趋势', sub: '需近 6 年年报（当前 ' + roes.length + ' 年）', cls: 'gray' });
+            }
+            // ---- A3 利润现金含量（最近一年 经营现金流 ÷ 归母净利润） ----
+            if(finY.length && c && c.cash){
+                let ratio = null, year0 = null;
+                for(let i = 0; i < finY.length && ratio == null; i++){
+                    const y = String(finY[i].REPORT_DATE).substring(0, 4);
+                    const cashR = cashByY[y];
+                    const np = Number(finY[i].PARENTNETPROFIT) || 0;
+                    if(cashR && np > 0){ const o = Number(cashR.NETCASH_OPERATE); if(isFinite(o)){ ratio = o / np; year0 = y; } }
+                }
+                if(ratio != null){
+                    const cls = ratio < 0.8 ? 'red' : (ratio < 1 ? 'yellow' : 'green');
+                    items.push({ id: 'A3', group: 'A', label: 'A3 · 利润现金含量', sub: year0 + ' 经营现金流 ÷ 归母净利润 = ' + (ratio * 100).toFixed(1) + '%', cls: cls, val: (ratio * 100).toFixed(1) + '%' });
+                } else {
+                    items.push({ id: 'A3', group: 'A', label: 'A3 · 利润现金含量', sub: '缺经营现金流或归母净利润数据', cls: 'gray' });
+                }
+            } else {
+                items.push({ id: 'A3', group: 'A', label: 'A3 · 利润现金含量', sub: '需缓存现金流量表', cls: 'gray' });
+            }
+            // ---- A4 分红可持续（股利支付率，复用护城河 dv 维度） ----
+            if(m && m.ready && m.dv.cls !== 'gray'){
+                items.push({ id: 'A4', group: 'A', label: 'A4 · 分红可持续', sub: '股利支付率维度：' + m.dv.val, cls: m.dv.cls, val: m.dv.cls === 'red' ? '超分配' : (m.dv.cls === 'yellow' ? '偏高' : '健康') });
+            } else {
+                items.push({ id: 'A4', group: 'A', label: 'A4 · 分红可持续', sub: '需缓存财务数据后判定', cls: 'gray' });
+            }
+            // ---- A5 负债恶化（有息负债上升 + 货币资金下降） ----
+            const balYs = Object.keys(balByY).sort().slice(-2);
+            if(balYs.length >= 2){
+                const debt = function(r){ const s = Number(r.SHORT_LOAN) || 0, n = Number(r.NONCURRENT_LIAB_1YEAR) || 0, l = Number(r.LONG_LOAN) || 0, b = Number(r.BOND_PAYABLE) || 0; return s + n + l + b; };
+                const d0 = debt(balByY[balYs[0]]), d1 = debt(balByY[balYs[1]]);
+                const cash0 = Number(balByY[balYs[0]].MONETARYFUNDS) || 0, cash1 = Number(balByY[balYs[1]].MONETARYFUNDS) || 0;
+                const debtUp = d1 > d0, cashDown = cash1 < cash0;
+                const cls = (debtUp && cashDown) ? 'red' : (debtUp || cashDown) ? 'yellow' : 'green';
+                items.push({ id: 'A5', group: 'A', label: 'A5 · 负债恶化', sub: balYs[1] + ' 有息负债 ' + sdYi(d1) + ' / 货币资金 ' + sdYi(cash1), cls: cls, val: cls === 'red' ? '双恶化' : (cls === 'yellow' ? '单边变化' : '稳健') });
+            } else {
+                items.push({ id: 'A5', group: 'A', label: 'A5 · 负债恶化', sub: '需资产负债表两年数据', cls: 'gray' });
+            }
+            // ---- B1 现价 vs 内在价值（Gordon：每股分红 ÷ (要求回报 − 永续增长)，1.5%/2.5% 取中值） ----
+            if(per > 0 && price > 0){
+                const iv = (per / (0.08 - 0.025) + per / (0.08 - 0.015)) / 2;
+                const ratio = price / iv;
+                const cls = ratio > 1.5 ? 'red' : (ratio > 1.2 ? 'yellow' : 'green');
+                items.push({ id: 'B1', group: 'B', label: 'B1 · 价格 vs 内在价值', sub: '现价 ' + fmtPrice(price, it.code, it.marketType === 'HK') + ' · 内在价值 ' + fmtPrice(iv, it.code, it.marketType === 'HK') + ' · 现价/内在价值 ' + ratio.toFixed(2) + '×', cls: cls, val: ratio.toFixed(2) + '×' });
+            } else {
+                items.push({ id: 'B1', group: 'B', label: 'B1 · 价格 vs 内在价值', sub: '无每股分红或现价数据', cls: 'gray' });
+            }
+            // ---- B2 股息率历史分位（暂无历史数据 → 诚实标注数据不足） ----
+            items.push({ id: 'B2', group: 'B', label: 'B2 · 股息率历史分位', sub: '相对自身 10 年区间的分位（待补历史行情数据）', cls: 'gray' });
+            // ---- B3 股息率绝对值 ----
+            if(per > 0 && price > 0){
+                const dy = per / price * 100;
+                const cls = dy < 1.5 ? 'red' : (dy < 3 ? 'yellow' : 'green');
+                items.push({ id: 'B3', group: 'B', label: 'B3 · 股息率绝对值', sub: '每股分红 ' + per + ' 元 ÷ 现价 → ' + dy.toFixed(2) + '%', cls: cls, val: dy.toFixed(2) + '%' });
+            } else {
+                items.push({ id: 'B3', group: 'B', label: 'B3 · 股息率绝对值', sub: '无分红或现价数据', cls: 'gray' });
+            }
+            // ---- C2 组合集中度 ----
+            let totalMv = 0, selfMv = 0;
+            holdDataList.forEach(function(x){
+                const wqx = watchQuotes[x.code];
+                const px = (wqx && wqx.price != null && Number(wqx.price) > 0) ? Number(wqx.price) : (Number(x.nowPrice) || 0);
+                const mv = px * (Number(x.count) || 0);
+                totalMv += mv;
+                if(x === it) selfMv = mv;
+            });
+            if(totalMv > 0){
+                const pct = selfMv / totalMv * 100;
+                const cls = pct > 40 ? 'red' : (pct > 25 ? 'yellow' : 'green');
+                items.push({ id: 'C2', group: 'C', label: 'C2 · 组合集中度', sub: '本股市值占比 ' + pct.toFixed(1) + '%（>40% 过度集中）', cls: cls, val: pct.toFixed(1) + '%' });
+            } else {
+                items.push({ id: 'C2', group: 'C', label: 'C2 · 组合集中度', sub: '无市值数据', cls: 'gray' });
+            }
+            // ---- 手动项：A6 管理层行为 / C1 替代标的 ----
+            const cbA6 = '<label class="flex-shrink-0 flex items-center gap-1 text-[9px] text-gray-400"><input type="checkbox" id="scA6_' + key + '" onchange="scRefresh(\'' + key + '\')" class="accent-[#c92a2a] w-3 h-3"> 已减持/质押超标</label>';
+            const cbC1 = '<label class="flex-shrink-0 flex items-center gap-1 text-[9px] text-gray-400"><input type="checkbox" id="scC1_' + key + '" onchange="scRefresh(\'' + key + '\')" class="accent-[#b7791f] w-3 h-3"> 已找到更优替代</label>';
+            items.push({ id: 'A6', group: 'A', label: 'A6 · 管理层行为', sub: '大股东持续减持 / 质押比例 >50%（人工确认）', cls: 'gray', manual: true });
+            items.push({ id: 'C1', group: 'C', label: 'C1 · 替代标的', sub: '已有明确更好的替代标的（人工确认）', cls: 'gray', manual: true });
+            // ---- 判定与存档 ----
+            const vd = scVerdict(items);
+            try {
+                const log = JSON.parse(localStorage.getItem('hcSellCheckLog') || '{}');
+                log[key] = { date: todayStr(), verdict: vd.v, advise: vd.advise };
+                localStorage.setItem('hcSellCheckLog', JSON.stringify(log));
+            } catch(e){}
+            let html = '<div class="bg-[#fbf7ec] rounded-xl px-3 py-2.5 border border-[#eedfc0]">'
+                + '<div class="flex items-center justify-between mb-1"><span class="text-[11px] font-semibold text-gray-700">卖出纪律检查</span>'
+                + '<span class="text-[9px] text-gray-400">' + todayStr() + '</span></div>'
+                + '<div class="text-[9.5px] font-semibold text-[#a9642a] mt-0.5 mb-0.5">A · 基本面恶化（清仓级）</div>';
+            items.filter(function(i){ return i.group === 'A' && !i.manual; }).forEach(function(i){
+                html += scRowHtml(i.id, i.label, i.sub, i.cls, i.val);
+            });
+            html += scRowHtml('A6', 'A6 · 管理层行为', '大股东持续减持 / 质押比例 >50%（人工确认）', 'gray', '', cbA6);
+            html += '<div class="text-[9.5px] font-semibold text-[#a9642a] mt-1.5 mb-0.5">B · 估值高估（减仓级）</div>';
+            items.filter(function(i){ return i.group === 'B'; }).forEach(function(i){
+                html += scRowHtml(i.id, i.label, i.sub, i.cls, i.val);
+            });
+            html += '<div class="text-[9.5px] font-semibold text-[#a9642a] mt-1.5 mb-0.5">C · 更好机会（调仓级）</div>';
+            items.filter(function(i){ return i.group === 'C' && !i.manual; }).forEach(function(i){
+                html += scRowHtml(i.id, i.label, i.sub, i.cls, i.val);
+            });
+            html += scRowHtml('C1', 'C1 · 替代标的', '已有明确更好的替代标的（人工确认）', 'gray', '', cbC1);
+            html += '<div class="text-[9px] text-gray-400 mt-1.5">提示：调仓测算可在「统计 → 分红对比」详情页完成</div>';
+            html += '<div class="sc-verdict" data-key="' + key + '">' + scVerdictHtml(vd, key, items) + '</div>';
+            html += '</div>';
+            return html;
+        }
+        function scRefresh(key){
+            const panel = document.querySelector('.sellcheck-panel[data-key="' + key + '"]');
+            if(!panel) return;
+            const items = [];
+            // 从 DOM 重读各自动项（A1-A5/B1/B3/C2 状态已渲染在徽章上，直接按 id 提取）
+            panel.querySelectorAll('.sc-verdict').forEach(function(){});
+            // 重新按行徽章状态重建 items
+            const rows = panel.querySelectorAll('.sc-row');
+            rows.forEach(function(row){
+                const id = row.getAttribute('data-id');
+                const badge = row.querySelector('.sc-badge');
+                if(!id || !badge) return;
+                let cls = 'gray';
+                if(badge.className.indexOf('bg-[#fdf0ef]') >= 0) cls = 'red';
+                else if(badge.className.indexOf('bg-[#fdf7e9]') >= 0) cls = 'yellow';
+                else if(badge.className.indexOf('bg-[#f0f7f0]') >= 0) cls = 'green';
+                const group = id.charAt(0);
+                items.push({ id: id, group: group, cls: cls });
+            });
+            // 手动项状态
+            const cbA6 = panel.querySelector('#scA6_' + key);
+            const cbC1 = panel.querySelector('#scC1_' + key);
+            if(cbA6) items.push({ id: 'A6', group: 'A', cls: cbA6.checked ? 'red' : 'gray' });
+            if(cbC1) items.push({ id: 'C1', group: 'C', cls: cbC1.checked ? 'red' : 'gray' });
+            const vd = scVerdict(items);
+            const zone = panel.querySelector('.sc-verdict');
+            if(zone) zone.innerHTML = scVerdictHtml(vd, key, items);
+            try {
+                const log = JSON.parse(localStorage.getItem('hcSellCheckLog') || '{}');
+                log[key] = { date: todayStr(), verdict: vd.v, advise: vd.advise };
+                localStorage.setItem('hcSellCheckLog', JSON.stringify(log));
+            } catch(e){}
         }
         function openStockScores(){
             rememberScroll();

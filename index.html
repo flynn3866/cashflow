@@ -1791,8 +1791,9 @@ body.show-trial .stage,body.show-tower .stage{max-width:460px;display:flex;flex-
 .tower-bar #ct-cp{color:#7BF1C4;}
 /* 塔内商店：固定宽高（对齐系统商店观感），背景与商品卡片同色 */
 #tower-shop-over .autosell-card{width:min(440px,94vw);height:540px;display:flex;flex-direction:column;background:linear-gradient(180deg,#1a1511,#130e0b);border:2px solid #C9A24B;border-radius:16px;box-shadow:0 0 34px rgba(201,162,75,.22),inset 0 0 20px rgba(201,162,75,.08);}
-#tower-shop-over .autosell-title{font-size:16px;font-weight:800;text-align:center;color:#E8CB74;letter-spacing:3px;margin-bottom:4px;flex:none;}
-#tower-shop-over .autosell-sub{font-size:11px;color:#b9afa0;text-align:center;line-height:1.6;margin-bottom:10px;flex:none;}
+#tower-shop-over .autosell-title{font-size:17px;font-weight:800;text-align:center;color:#E8CB74;letter-spacing:3px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(201,162,75,.28);text-shadow:0 0 12px rgba(232,203,116,.45),0 1px 2px rgba(0,0,0,.6);flex:none;}
+#tower-shop-over .autosell-sub{font-size:12px;color:#d9cfc0;text-align:center;line-height:1.5;margin-bottom:10px;padding:6px 10px;background:linear-gradient(180deg,rgba(201,162,75,.12),rgba(201,162,75,.03));border:1px solid rgba(201,162,75,.28);border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);flex:none;}
+#tower-shop-over .autosell-sub b{font-size:14px;color:#F2A93B;text-shadow:0 0 10px rgba(242,169,59,.5);}
 #tower-shop-over .autosell-list{flex:1;max-height:none;display:flex;flex-direction:column;overflow-y:auto;}
 #tower-shop-over .ts-row{background:#171310;border:1px solid #4a443c;border-radius:8px;margin-bottom:6px;flex:none;}
 #tower-shop-over .ts-row .shop-ico{background:#201c18;}
@@ -1800,10 +1801,13 @@ body.show-trial .stage,body.show-tower .stage{max-width:460px;display:flex;flex-
 #tower-shop-over .ts-row .shop-sub{font-size:10px;color:#8a8375;}
 #tower-shop-over .ts-row .shop-price{font-size:12px;color:#F2A93B;}
 #tower-shop-over .ts-row .shop-buy.btn{height:28px;padding:0 14px;font-size:11px;}
-#tower-shop-over .ts-prev,#tower-shop-over .ts-next{flex:0 0 auto;width:36px;height:30px;padding:0;font-size:13px;background:linear-gradient(180deg,#3a2c12,#241b08);border-color:#C9A24B;color:#D6C07A;border-radius:6px;cursor:pointer;}
+#tower-shop-over .ts-prev,#tower-shop-over .ts-next{flex:0 0 auto;width:26px;height:22px;padding:0;font-size:11px;background:linear-gradient(180deg,#3a2c12,#241b08);border-color:#C9A24B;color:#D6C07A;border-radius:6px;cursor:pointer;}
 #tower-shop-over .ts-prev:disabled,#tower-shop-over .ts-next:disabled{opacity:.4;}
-#tower-shop-over .ts-pg{font-size:12px;color:#E8CB74;letter-spacing:1px;min-width:44px;text-align:center;}
+#tower-shop-over .ts-pg{font-size:11px;color:#E8CB74;letter-spacing:1px;min-width:40px;text-align:center;}
 #tower-shop-over .autosell-actions{flex:none;display:flex;gap:10px;justify-content:center;align-items:center;margin-top:12px;}
+#tower-shop-over .ts-pager{flex:none;display:flex;gap:8px;justify-content:center;align-items:center;margin:6px 0 4px;}
+#tower-shop-over .ts-close-row{flex:none;display:flex;justify-content:center;margin-top:10px;}
+#tower-shop-over .ts-close-row .cbtn{flex:1;max-width:120px;height:32px;font-size:13px;letter-spacing:2px;}
 /* ===== 统一页头小标题条（样例：三色体系） ===== */
 .page-head{display:flex;align-items:center;gap:8px;padding:8px 11px;margin:0 2px 8px;border-left:3px solid #52C6DA;background:linear-gradient(90deg,rgba(82,198,218,.10),rgba(82,198,218,0));border-radius:4px;}
 .page-head .ph-ico{color:#52C6DA;width:16px;height:16px;flex:none;}
@@ -5752,16 +5756,16 @@ function ctShopPanel(){
   var star=function(col){ return '<svg viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.6 5.6 6 .7-4.4 4.2 1.2 6-5.4-2.9-5.4 2.9 1.2-6L3.4 8.8l6-.7z"/></svg>'; };
   var items=[
     {n:'全属性 +1万',ic:star('#E8CB74'),sub:'永久全属性提升',c:50,do:function(){ addPerm(10000,0); }},
+    {n:'完整属性卷轴 ×1',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#D6C07A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>',sub:'洗炼材料',c:60,do:function(){ var g=mkLoot(ITEM_BLUEPRINTS.refineScrollFull); g.count=1; addStackable(g); }},
+    {n:'7级镶嵌锤 ×1',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#F0CF8A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5l6 6-10.5 10.5a3 3 0 0 1-4.2 0L3 18a3 3 0 0 1 0-4.2z"/><path d="M12 8l4 4M5.5 19l3-1"/></svg>',sub:'镶嵌工具',c:120,do:function(){ var g=mkLoot(ITEM_BLUEPRINTS.hammers[0]); g.count=1; addStackable(g); }},
+    {n:'混沌神石 ×1',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#B39DDB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4.5v6.5L12 21l-7-7V7.5z"/><path d="M12 3v18M5 7.5l7 4.5 7-4.5"/></svg>',sub:'强化材料',c:200,do:function(){ var g=mkLoot(ITEM_BLUEPRINTS.godCrystal); g.count=1; addStackable(g); }},
     {n:'全属性 +10万',ic:star('#FFD700'),sub:'永久全属性提升',c:400,do:function(){ addPerm(100000,0); }},
     {n:'全属性 +100万',ic:star('#FFC24B'),sub:'永久全属性提升',c:5000,do:function(){ addPerm(1000000,0); }},
     {n:'全属性 +1000万',ic:star('#FFB020'),sub:'永久全属性提升',c:30000,do:function(){ addPerm(10000000,0); }},
     {n:'全属性 +1亿',ic:star('#FF9A3B'),sub:'永久全属性提升',c:150000,do:function(){ addPerm(100000000,0); }},
     {n:'全属性 +5亿',ic:star('#FF7A3B'),sub:'永久全属性提升',c:600000,do:function(){ addPerm(500000000,0); }},
     {n:'全属性 +10亿',ic:star('#FF5AD8'),sub:'永久全属性提升',c:1200000,do:function(){ addPerm(1000000000,0); }},
-    {n:'全属性 +100亿',ic:star('#C86BFF'),sub:'永久全属性提升',c:6000000,do:function(){ addPerm(10000000000,0); }},
-    {n:'混沌神石 ×1',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#B39DDB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4.5v6.5L12 21l-7-7V7.5z"/><path d="M12 3v18M5 7.5l7 4.5 7-4.5"/></svg>',sub:'强化材料',c:200,do:function(){ var g=mkLoot(ITEM_BLUEPRINTS.godCrystal); g.count=1; addStackable(g); }},
-    {n:'完整属性卷轴 ×1',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#D6C07A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>',sub:'洗炼材料',c:60,do:function(){ var g=mkLoot(ITEM_BLUEPRINTS.refineScrollFull); g.count=1; addStackable(g); }},
-    {n:'7级镶嵌锤 ×1',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="#F0CF8A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5l6 6-10.5 10.5a3 3 0 0 1-4.2 0L3 18a3 3 0 0 1 0-4.2z"/><path d="M12 8l4 4M5.5 19l3-1"/></svg>',sub:'镶嵌工具',c:120,do:function(){ var g=mkLoot(ITEM_BLUEPRINTS.hammers[0]); g.count=1; addStackable(g); }}
+    {n:'全属性 +100亿',ic:star('#C86BFF'),sub:'永久全属性提升',c:6000000,do:function(){ addPerm(10000000000,0); }}
   ];
   var per=6, page=1, pages=Math.ceil(items.length/per);
   function render(){
@@ -5783,7 +5787,7 @@ function ctShopPanel(){
     if(prev) prev.disabled = page<=1;
     if(next) next.disabled = page>=pages;
   }
-  var h='<div class="autosell-card"><div class="autosell-title">塔内商店</div><div class="autosell-sub">持有塔币 <b style="color:#F2A93B">'+CT.coins.toLocaleString()+'</b> · 点击兑换</div><div class="autosell-list"></div><div class="autosell-actions"><button class="btn cbtn ts-prev">◀</button><span class="ts-pg">1 / '+pages+'</span><button class="btn cbtn ts-next">▶</button><button class="btn cbtn c-no">关闭</button></div></div>';
+  var h='<div class="autosell-card"><div class="autosell-title">塔内商店</div><div class="autosell-sub">持有塔币 <b style="color:#F2A93B">'+CT.coins.toLocaleString()+'</b> · 点击兑换</div><div class="ts-pager"><button class="btn cbtn ts-prev">◀</button><span class="ts-pg">1 / '+pages+'</span><button class="btn cbtn ts-next">▶</button></div><div class="autosell-list"></div><div class="ts-close-row"><button class="btn cbtn c-no">关闭</button></div></div>';
   over.innerHTML=h; document.body.appendChild(over);
   render();
   over.querySelector('.ts-prev').addEventListener('click',function(){ if(page>1){ page--; render(); } });

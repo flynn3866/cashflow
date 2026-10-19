@@ -3481,6 +3481,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         };
 
         const STORAGE_KEY = "dividendHoldData";
+        // ===== 存储适配器状态（提前声明：脚本早期即有 lsGet/lsSet 调用，避免 TDZ）=====
+        const _kvMemo = {};        // 内存镜像：key -> payload 字符串（业务层无感知）
+        const _dirtyMain = {};     // 待写 IndexedDB main 桶：key -> 信封字符串 或 'REMOVE'
+        const _dirtyKv = {};       // 待写 IndexedDB kv 桶：key -> 信封字符串 或 'REMOVE'
+        let _flushTimer = null, _flushing = false, _flushAgain = false, _flushRetry = 0;
+        // 可重建缓存类 key：仅写内存 + IndexedDB，不占 localStorage 灾备副本（避免副本被缓存撑到 5M 上限；
+        // 读取仍兼容 localStorage 旧值，首次打开自动迁入 IndexedDB 后清理释放空间）
+        const NO_LS_BACKUP = {};
+        ['sdF10Cache','dividendDivCache','dividendPositionSnapshot','dividendYtdBase','highFxPending',
+         'dividendStockLogos','dividendLogoFailed','dividendBalanceSheet','dividendNetTrend',
+         'dividendFinCache','dividendStockScores','dividendStatsDaily','dividendHs300Yearly',
+         'dividendWatchQuotes'].forEach(function(k){ NO_LS_BACKUP[k] = true; });
+        // 本 App 非缓存用户数据白名单（导出/导入范围；排除主数据、版本号、可重建缓存类与无关第三方 key）
+        const EXPORT_KEYS = ['holdViewMode','dividendHkFx','dividendWatchList','dividendNotifFired',
+            'dividendNotifications','hcSellCheckLog','dividendIndustryMapping','dividendHkIndustryMap',
+            'settingsCollapseState','statsCollapseState','statsSubCollapse','dividendMilestones'];
         let holdDataList = [];
 
         // dom元素
@@ -3516,7 +3532,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let editingId = null;       // 当前编辑中的持仓id，null 表示新增模式
         let hkDivDraft = [];        // 港股分红到账记录草稿（编辑时从 item.divPaidRecords 加载，保存时写入）
         let activeFilter = 'all';   // 列表筛选：all / A / HK
-        let holdViewMode = localStorage.getItem('holdViewMode') || 'card';  // 持仓展示模式：card / list
+        let holdViewMode = lsGet('holdViewMode') || 'card';  // 持仓展示模式：card / list
         let divTaxRate = 0.2;       // 港股当前税率（小数）
         let divTaxCustom = false;   // 港股是否自定义税率
         let hkFxRate = 0.85;        // 港币→人民币汇率（实时刷新，1港币=X人民币）
@@ -4154,7 +4170,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const DIV_CACHE_KEY = 'dividendDivCache'; // 分红缓存持久化：当天其余时间直接读存储，不重复请求
         function loadDivCache(){
             try{
-                const raw = localStorage.getItem(DIV_CACHE_KEY);
+                const raw = lsGet(DIV_CACHE_KEY);
                 if(raw){
                     const parsed = JSON.parse(raw);
                     Object.keys(parsed).forEach(function(k){ divCacheMap[k] = parsed[k]; });
@@ -4162,7 +4178,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }catch(e){}
         }
         function saveDivCache(){
-            try{ localStorage.setItem(DIV_CACHE_KEY, JSON.stringify(divCacheMap)); }catch(e){}
+            try{ lsSet(DIV_CACHE_KEY, JSON.stringify(divCacheMap)); }catch(e){}
         }
         let lastFxAt = 0;           // 最近一次拉取港币汇率时间
         let refreshing = false;     // 防止并发
@@ -4175,7 +4191,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 读取仓位快照
         function loadPositionSnapshot(){
             try{
-                const raw = localStorage.getItem(POSITION_SNAPSHOT_KEY);
+                const raw = lsGet(POSITION_SNAPSHOT_KEY);
                 if(raw) positionSnapshot = JSON.parse(raw);
             }catch(e){ positionSnapshot = null; }
         }
@@ -4183,7 +4199,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 保存仓位快照
         function savePositionSnapshot(){
             try{
-                localStorage.setItem(POSITION_SNAPSHOT_KEY, JSON.stringify(positionSnapshot));
+                lsSet(POSITION_SNAPSHOT_KEY, JSON.stringify(positionSnapshot));
             }catch(e){}
         }
 
@@ -4195,13 +4211,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function loadYtdBase(){
             try{
-                const raw = localStorage.getItem(YTD_BASE_KEY);
+                const raw = lsGet(YTD_BASE_KEY);
                 if(raw) ytdBaseMap = JSON.parse(raw);
             }catch(e){ ytdBaseMap = null; }
         }
         function saveYtdBase(){
             try{
-                localStorage.setItem(YTD_BASE_KEY, JSON.stringify(ytdBaseMap));
+                lsSet(YTD_BASE_KEY, JSON.stringify(ytdBaseMap));
             }catch(e){}
         }
 
@@ -4396,7 +4412,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         hkFxRate = rate;
                         lastFxAt = Date.now();
                         fxUpdated = true;
-                        try{ localStorage.setItem('dividendHkFx', String(rate)); }catch(e){}
+                        try{ lsSet('dividendHkFx', String(rate)); }catch(e){}
                     }
                 }
                 // 2) 批量拉取所有持仓 + 关注股票最新价格
@@ -4695,12 +4711,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         // 页面初始化
-        function init() {
+        async function init() {
+            // 存储引导：打开 IndexedDB 并载入数据到内存（IndexedDB 优先、localStorage 兜底/迁移，双源取新）
+            await appDbBootstrap();
             // 版本号检测：如果版本号变化，强制刷新页面确保加载最新版本
-            const savedVersion = localStorage.getItem('appVersion');
+            const savedVersion = lsGet('appVersion');
             const currentVersion = window.APP_VERSION || '1.0';
             if(savedVersion && savedVersion !== currentVersion){
-                localStorage.setItem('appVersion', currentVersion);
+                lsSet('appVersion', currentVersion);
                 // 清除可能的缓存后刷新
                 if('caches' in window){
                     caches.keys().then(function(names){
@@ -4711,11 +4729,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return;
             }
             if(!savedVersion){
-                localStorage.setItem('appVersion', currentVersion);
+                lsSet('appVersion', currentVersion);
             }
             const appVerLine = document.getElementById('appVersionLine');
             if(appVerLine) appVerLine.innerText = '版本 ' + currentVersion;
-            const localStr = localStorage.getItem(STORAGE_KEY);
+            const localStr = lsGet(STORAGE_KEY);
             if(localStr) {
                 holdDataList = JSON.parse(localStr);
                 // 兼容旧数据：旧字段为年度分红总额 yearDivMoney，换算为每股分红
@@ -4767,7 +4785,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 saveLocal();
             }
             // 读取上次保存的港币汇率
-            const fx = localStorage.getItem('dividendHkFx');
+            const fx = lsGet('dividendHkFx');
             if(fx){
                 const n = Number(fx);
                 if(n && n > 0.5 && n < 1.5) hkFxRate = n;
@@ -4846,15 +4864,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // 保存到本地存储
         function saveLocal() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(holdDataList));
+            lsSet(STORAGE_KEY, JSON.stringify(holdDataList));
             // 持仓数据变更：立即失效按天快照，下次读取自动重建为最新（6:00/20:00 定时刷新机制不变）
             invalidateStatsSnaps();
         }
         // 用户直接操作数据（持仓增删改/买卖/关注/设置保存/导入等）后立即失效按天快照，
         // 供其他地方读取的快照在操作后实时重建，避免等定时刷新点才更新
         function invalidateStatsSnaps(){
-            try{ localStorage.removeItem('dividendStatsDaily'); }catch(e){}
-            try{ localStorage.removeItem('dividendStockScores'); }catch(e){}
+            try{ lsRemove('dividendStatsDaily'); }catch(e){}
+            try{ lsRemove('dividendStockScores'); }catch(e){}
         }
 
         // ==================== 资产分析历史数据 ====================
@@ -4864,9 +4882,257 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
+        // ==================== 存储适配器：IndexedDB 主存储 + localStorage 灾备副本 ====================
+        // 架构：内存(最新) → IndexedDB(持久化主体，无5MB限制) → localStorage(同步灾备副本)
+        // 一致性：所有写以"信封 {s: payload字符串, t: 时间戳}" 落盘；启动时比较双源时间戳取更新者，
+        //         页面隐藏/关闭强制 flush，写失败自动重试(最多3次)；IndexedDB 不可用时自动降级 localStorage。
+        // 恢复：内存是会话内唯一权威；IndexedDB/localStorage 均为持久化副本，绝不反向覆盖内存（加载仅发生于启动时内存为空）。
+        const AppDB = {
+            ok: false, db: null,
+            open: function(){
+                return new Promise(function(res, rej){
+                    try{
+                        const req = indexedDB.open('dividendAppDB', 1);
+                        req.onupgradeneeded = function(e){
+                            const d = req.result;
+                            if(!d.objectStoreNames.contains('main')) d.createObjectStore('main');
+                            if(!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
+                        };
+                        req.onsuccess = function(){ AppDB.db = req.result; res(); };
+                        req.onerror = function(){ rej(req.error); };
+                    }catch(e){ rej(e); }
+                });
+            },
+            get: function(store, key){
+                return new Promise(function(res, rej){
+                    try{
+                        const rq = AppDB.db.transaction(store).objectStore(store).get(key);
+                        rq.onsuccess = function(){ res(rq.result != null ? rq.result : null); };
+                        rq.onerror = function(){ rej(rq.error); };
+                    }catch(e){ rej(e); }
+                });
+            },
+            getAll: function(store){
+                return new Promise(function(res, rej){
+                    try{
+                        const out = {};
+                        const rq = AppDB.db.transaction(store).objectStore(store).openCursor();
+                        rq.onsuccess = function(){
+                            const c = rq.result;
+                            if(c){ out[c.key] = c.value; c.continue(); }
+                            else res(out);
+                        };
+                        rq.onerror = function(){ rej(rq.error); };
+                    }catch(e){ rej(e); }
+                });
+            },
+            put: function(store, key, val){
+                return new Promise(function(res, rej){
+                    try{
+                        const rq = AppDB.db.transaction(store, 'readwrite').objectStore(store).put(val, key);
+                        rq.onsuccess = function(){ res(); };
+                        rq.onerror = function(){ rej(rq.error); };
+                    }catch(e){ rej(e); }
+                });
+            },
+            writeAll: function(mainKeys, kvKeys){
+                if(!AppDB.ok){ return Promise.resolve({ main: mainKeys.slice(), kv: kvKeys.slice() }); }
+                return new Promise(function(resolve){
+                    let settled = false;
+                    const done = function(ok){
+                        if(settled) return; settled = true;
+                        resolve(ok ? { main: mainKeys.slice(), kv: kvKeys.slice() } : { main: [], kv: [] });
+                    };
+                    try{
+                        const tx = AppDB.db.transaction(['main','kv'], 'readwrite');
+                        tx.oncomplete = function(){ done(true); };
+                        tx.onerror = function(){ done(false); };
+                        tx.onabort = function(){ done(false); };
+                        mainKeys.forEach(function(k){
+                            if(_dirtyMain[k] === 'REMOVE') tx.objectStore('main').delete(k);
+                            else tx.objectStore('main').put(_dirtyMain[k] || '', k);
+                        });
+                        kvKeys.forEach(function(k){
+                            if(_dirtyKv[k] === 'REMOVE') tx.objectStore('kv').delete(k);
+                            else tx.objectStore('kv').put(_dirtyKv[k] || '', k);
+                        });
+                    }catch(e){ done(false); }
+                });
+            }
+        };
+        function mainEnv(payload){
+            return JSON.stringify({ s: payload, t: Date.now() });
+        }
+        function parseEnv(str){
+            try{
+                const o = JSON.parse(str);
+                if(o && typeof o === 'object' && typeof o.s === 'string' && typeof o.t === 'number') return o;
+            }catch(e){}
+            return null;
+        }
+        // 启动引导：打开库 + 载入 main 双键与全部 kv 到内存（双源取时间戳新者，并补齐落后源，保证双副本一致）
+        async function appDbBootstrap(){
+            try{
+                if(!('indexedDB' in window)) throw new Error('indexedDB unavailable');
+                await AppDB.open();
+                AppDB.ok = true;
+            }catch(e){ AppDB.ok = false; }
+            const pickMain = async function(key){
+                let lsEnv = null;
+                try{ lsEnv = parseEnv(localStorage.getItem(key)); }catch(e){}
+                let idbEnv = null;
+                if(AppDB.ok){
+                    try{ idbEnv = parseEnv(await AppDB.get('main', key)); }catch(e){}
+                }
+                let chosen = null;
+                if(idbEnv && lsEnv) chosen = (idbEnv.t >= lsEnv.t) ? idbEnv : lsEnv;
+                else chosen = idbEnv || lsEnv;
+                if(chosen){
+                    _kvMemo[key] = chosen.s;
+                    if(!lsEnv || chosen.t > lsEnv.t){
+                        try{ localStorage.setItem(key, JSON.stringify({ s: chosen.s, t: chosen.t })); }catch(e){}
+                    }
+                    if(AppDB.ok && (!idbEnv || chosen.t > idbEnv.t)){
+                        try{ await AppDB.put('main', key, JSON.stringify({ s: chosen.s, t: chosen.t })); }catch(e){}
+                    }
+                }
+            };
+            await pickMain(HISTORY_KEY);
+            await pickMain(STORAGE_KEY);
+            // 预载 kv 全部（IndexedDB 优先；localStorage 中未在 IndexedDB 的 key 一并载入完成首次迁移）
+            let kvAll = {};
+            if(AppDB.ok){
+                try{ kvAll = await AppDB.getAll('kv'); }catch(e){}
+            }
+            const lsMigrateKeys = [];
+            for(let i = 0; i < localStorage.length; i++){
+                const k = localStorage.key(i);
+                if(k && k !== HISTORY_KEY && k !== STORAGE_KEY && !(k in kvAll)){
+                    try{
+                        const env = parseEnv(localStorage.getItem(k));
+                        if(env) kvAll[k] = JSON.stringify({ s: env.s, t: env.t });
+                        else kvAll[k] = localStorage.getItem(k);
+                        lsMigrateKeys.push(k);
+                    }catch(e){}
+                }
+            }
+            Object.keys(kvAll).forEach(function(k){
+                const env = parseEnv(kvAll[k]);
+                _kvMemo[k] = env ? env.s : kvAll[k];
+            });
+            // 兜底清理：localStorage 中残留的缓存类旧值（IndexedDB 已有且不旧于它）删除释放空间
+            if(AppDB.ok){
+                for(let i = 0; i < localStorage.length; i++){
+                    const k = localStorage.key(i);
+                    if(k && NO_LS_BACKUP[k] && (k in kvAll)){
+                        try{
+                            const lsEnv = parseEnv(localStorage.getItem(k));
+                            const idbEnv = parseEnv(kvAll[k]);
+                            if(!lsEnv || !idbEnv || idbEnv.t >= lsEnv.t){
+                                localStorage.removeItem(k);
+                            }
+                        }catch(e){}
+                    }
+                }
+            }
+            // 首次迁移：把 localStorage 独有 kv 立即回写 IndexedDB，保证双副本完整（失败无碍，下次写入再补）；
+            // 回写成功后，清理 localStorage 中可重建缓存类旧值（数据已在 IndexedDB + 内存，释放 5M 配额空间）
+            if(AppDB.ok && lsMigrateKeys.length){
+                try{
+                    await new Promise(function(res){
+                        const tx = AppDB.db.transaction('kv', 'readwrite');
+                        lsMigrateKeys.forEach(function(k){
+                            tx.objectStore('kv').put(kvAll[k] || '', k);
+                        });
+                        tx.oncomplete = function(){
+                            lsMigrateKeys.forEach(function(k){
+                                if(NO_LS_BACKUP[k]){
+                                    try{ localStorage.removeItem(k); }catch(e){}
+                                }
+                            });
+                            res();
+                        };
+                        tx.onerror = function(){ res(); };
+                        tx.onabort = function(){ res(); };
+                    });
+                }catch(e){}
+            }
+        }
+        function lsGet(key){
+            if(key in _kvMemo) return _kvMemo[key];
+            // 可重建缓存类：内存无即视为无（localStorage 旧值仅在启动迁移时处理一次，避免"失效"后被旧值回填）
+            if(NO_LS_BACKUP[key]) return null;
+            try{
+                const raw = localStorage.getItem(key);
+                if(raw == null) return null;
+                const env = parseEnv(raw);
+                return env ? env.s : raw;
+            }catch(e){ return null; }
+        }
+        function lsSet(key, val){
+            _kvMemo[key] = val;
+            const env = mainEnv(val);
+            if(!NO_LS_BACKUP[key]){
+                try{ localStorage.setItem(key, env); }catch(e){}
+            }
+            if(key === HISTORY_KEY || key === STORAGE_KEY) _dirtyMain[key] = env;
+            else _dirtyKv[key] = env;
+            scheduleFlush();
+            return val;
+        }
+        function lsRemove(key){
+            delete _kvMemo[key];
+            if(!NO_LS_BACKUP[key]){
+                try{ localStorage.removeItem(key); }catch(e){}
+            }
+            if(key === HISTORY_KEY || key === STORAGE_KEY) _dirtyMain[key] = 'REMOVE';
+            else _dirtyKv[key] = 'REMOVE';
+            scheduleFlush();
+        }
+        function scheduleFlush(){
+            if(_flushTimer) return;
+            _flushTimer = setTimeout(function(){ _flushTimer = null; flushAll(); }, 400);
+        }
+        function flushAll(){
+            if(_flushing){ _flushAgain = true; return; }
+            const mainKeys = Object.keys(_dirtyMain);
+            const kvKeys = Object.keys(_dirtyKv);
+            if(!mainKeys.length && !kvKeys.length) return;
+            _flushing = true;
+            AppDB.writeAll(mainKeys, kvKeys).then(function(ok){
+                ok.main.forEach(function(k){ delete _dirtyMain[k]; });
+                ok.kv.forEach(function(k){ delete _dirtyKv[k]; });
+                const failMain = mainKeys.filter(function(k){ return ok.main.indexOf(k) < 0; });
+                const failKv = kvKeys.filter(function(k){ return ok.kv.indexOf(k) < 0; });
+                _flushing = false;
+                if((failMain.length || failKv.length) && !_flushAgain){
+                    if(_flushRetry < 3){
+                        _flushRetry++;
+                        setTimeout(function(){ flushAll(); }, 1500);
+                    } else {
+                        _flushRetry = 0;
+                        // IndexedDB 持续失败：数据已安全保留在内存与 localStorage 副本，放弃本次落库，下次保存再试
+                    }
+                } else if(_flushAgain){
+                    _flushAgain = false;
+                    setTimeout(function(){ flushAll(); }, 300);
+                } else {
+                    _flushRetry = 0;
+                }
+            });
+        }
+        function flushAllNow(){
+            if(_flushTimer){ clearTimeout(_flushTimer); _flushTimer = null; }
+            flushAll();
+        }
+        document.addEventListener('visibilitychange', function(){
+            if(document.visibilityState === 'hidden') flushAllNow();
+        });
+        window.addEventListener('pagehide', function(){ flushAllNow(); });
+
         function loadHistory(){
             try{
-                const s = localStorage.getItem(HISTORY_KEY);
+                const s = lsGet(HISTORY_KEY);
                 if(s){
                     const parsed = JSON.parse(s);
                     historyData.dailyAssets = parsed.dailyAssets || {};
@@ -4913,7 +5179,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }catch(e){}
         }
         function saveHistory(){
-            try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(historyData)); }catch(e){}
+            try{ lsSet(HISTORY_KEY, JSON.stringify(historyData)); }catch(e){}
         }
         // 净值份额指纹校验：份额体系基于每笔资金投入（初始投入+流水），
         // 初始投入/流水变更后历史净值归档作废，按新份额重新计算
@@ -5096,7 +5362,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var highFxTimer = null, highFxRaf = null;
         var HIGH_FX_PENDING = 'highFxPending';
         function triggerHighFx(){
-            try{ localStorage.setItem(HIGH_FX_PENDING, String(Date.now())); }catch(e){}
+            try{ lsSet(HIGH_FX_PENDING, String(Date.now())); }catch(e){}
             playHighFx();
         }
         function playHighFx(){
@@ -5194,9 +5460,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 页面打开时：有待播新高特效（页面未打开期间破新高）→ 补播一次
         function initHighFx(){
             var pending = null;
-            try{ pending = localStorage.getItem(HIGH_FX_PENDING); }catch(e){}
+            try{ pending = lsGet(HIGH_FX_PENDING); }catch(e){}
             if(pending){
-                try{ localStorage.removeItem(HIGH_FX_PENDING); }catch(e){}
+                try{ lsRemove(HIGH_FX_PENDING); }catch(e){}
                 setTimeout(playHighFx, 600);
             }
         }
@@ -5900,10 +6166,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         };
         let stockLogoCache = {};
         let logoFailed = {};
-        try{ stockLogoCache = JSON.parse(localStorage.getItem(STOCK_LOGO_KEY) || '{}') || {}; }catch(e){}
-        try{ logoFailed = JSON.parse(localStorage.getItem(LOGO_FAIL_KEY) || '{}') || {}; }catch(e){}
-        function saveStockLogoCache(){ try{ localStorage.setItem(STOCK_LOGO_KEY, JSON.stringify(stockLogoCache)); }catch(e){} }
-        function saveLogoFailed(){ try{ localStorage.setItem(LOGO_FAIL_KEY, JSON.stringify(logoFailed)); }catch(e){} }
+        try{ stockLogoCache = JSON.parse(lsGet(STOCK_LOGO_KEY) || '{}') || {}; }catch(e){}
+        try{ logoFailed = JSON.parse(lsGet(LOGO_FAIL_KEY) || '{}') || {}; }catch(e){}
+        function saveStockLogoCache(){ try{ lsSet(STOCK_LOGO_KEY, JSON.stringify(stockLogoCache)); }catch(e){} }
+        function saveLogoFailed(){ try{ lsSet(LOGO_FAIL_KEY, JSON.stringify(logoFailed)); }catch(e){} }
         // 取 logo 关联的 A 股代码：A股返回原码；港股查映射；其他（ETF等）返回 null
         function getLogoAKey(item){
             const market = (item.marketType || item.market || 'A');
@@ -7979,7 +8245,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function loadBalanceSheet(){
             try{
-                const raw = JSON.parse(localStorage.getItem(BS_KEY) || 'null');
+                const raw = JSON.parse(lsGet(BS_KEY) || 'null');
                 if(raw && typeof raw === 'object' && raw.assets && raw.liabilities){
                     // 迁移旧版扁平结构 → 新版流动性分组
                     const d = newBsData();
@@ -8001,7 +8267,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function saveBalanceSheet(){
             bsData.updatedAt = new Date().toISOString();   // 保存即记录当时统计时间
-            try{ localStorage.setItem(BS_KEY, JSON.stringify(bsData)); }catch(e){}
+            try{ lsSet(BS_KEY, JSON.stringify(bsData)); }catch(e){}
         }
         function bsCatItems(side, group, cat){
             if(side === 'assets'){
@@ -8420,7 +8686,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ---- 净资产历年趋势 ----
         function upsertNetTrend(net){
             let data = null;
-            try{ data = JSON.parse(localStorage.getItem(BS_TREND_KEY) || 'null'); }catch(e){}
+            try{ data = JSON.parse(lsGet(BS_TREND_KEY) || 'null'); }catch(e){}
             if(!Array.isArray(data)) data = [];
             const year = new Date().getFullYear();
             let found = null;
@@ -8429,14 +8695,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(found){ if(found.v !== v) found.v = v; }
             else data.push({ y: year, v: v });
             data.sort(function(a, b){ return a.y - b.y; });
-            try{ localStorage.setItem(BS_TREND_KEY, JSON.stringify(data)); }catch(e){}
+            try{ lsSet(BS_TREND_KEY, JSON.stringify(data)); }catch(e){}
             return data;
         }
         function renderNetTrendChart(){
             const el = document.querySelector('#bsNetTrendChart');
             if(!el) return;
             let data = null;
-            try{ data = JSON.parse(localStorage.getItem(BS_TREND_KEY) || 'null'); }catch(e){}
+            try{ data = JSON.parse(lsGet(BS_TREND_KEY) || 'null'); }catch(e){}
             if(!Array.isArray(data)) data = [];
             const years = data.map(function(d){ return d.y; });
             const vals = data.map(function(d){ return d.v; });
@@ -8492,32 +8758,32 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const notifYieldLevels = [4, 5, 6];
         // ---- 关注列表（我的页 - 关注） ----
         function loadWatchList(){
-            try{ const w = JSON.parse(localStorage.getItem('dividendWatchList') || '[]'); return Array.isArray(w) ? w : []; }catch(e){ return []; }
+            try{ const w = JSON.parse(lsGet('dividendWatchList') || '[]'); return Array.isArray(w) ? w : []; }catch(e){ return []; }
         }
         function saveWatchList(list){
-            try{ localStorage.setItem('dividendWatchList', JSON.stringify(list)); }catch(e){}
+            try{ lsSet('dividendWatchList', JSON.stringify(list)); }catch(e){}
             invalidateStatsSnaps();
         }
         // 关注股票最新行情缓存（内存 + 本地持久，跨会话显示上次数据）
         let watchQuotes = {};
-        try{ watchQuotes = JSON.parse(localStorage.getItem('dividendWatchQuotes') || '{}') || {}; }catch(e){ watchQuotes = {}; }
+        try{ watchQuotes = JSON.parse(lsGet('dividendWatchQuotes') || '{}') || {}; }catch(e){ watchQuotes = {}; }
         function saveWatchQuotes(){
-            try{ localStorage.setItem('dividendWatchQuotes', JSON.stringify(watchQuotes)); }catch(e){}
+            try{ lsSet('dividendWatchQuotes', JSON.stringify(watchQuotes)); }catch(e){}
         }
         // 股息率阶梯已提醒记录（跨会话永久：每个阶梯只提醒一次）
         function loadNotifFired(){
-            try{ return JSON.parse(localStorage.getItem('dividendNotifFired') || '{}') || {}; }catch(e){ return {}; }
+            try{ return JSON.parse(lsGet('dividendNotifFired') || '{}') || {}; }catch(e){ return {}; }
         }
         function saveNotifFired(f){
-            try{ localStorage.setItem('dividendNotifFired', JSON.stringify(f)); }catch(e){}
+            try{ lsSet('dividendNotifFired', JSON.stringify(f)); }catch(e){}
         }
         // 消息存储：{ date: 'YYYY-MM-DD', items: [{type:'exdiv'|'yield', code, market, name, ...}], readAt: 时间戳 }
         function getNotifStore(){
-            try{ return JSON.parse(localStorage.getItem('dividendNotifications') || '{"date":"","items":[]}'); }catch(e){}
+            try{ return JSON.parse(lsGet('dividendNotifications') || '{"date":"","items":[]}'); }catch(e){}
             return { date: '', items: [] };
         }
         function saveNotifStore(s){
-            try{ localStorage.setItem('dividendNotifications', JSON.stringify(s)); }catch(e){}
+            try{ lsSet('dividendNotifications', JSON.stringify(s)); }catch(e){}
         }
         function notifNowTime(){
             const d = new Date();
@@ -9951,7 +10217,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const SD_TTL = 10 * 24 * 3600 * 1000;
             const sdLoadCache = function(){
                 let m = null;
-                try { m = JSON.parse(localStorage.getItem('sdF10Cache') || '{}'); } catch(e){ m = {}; }
+                try { m = JSON.parse(lsGet('sdF10Cache') || '{}'); } catch(e){ m = {}; }
                 if(!m || typeof m !== 'object') m = {};
                 return m;
             };
@@ -9985,16 +10251,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 未命中：并行拉取，全部到齐后写入缓存（10 天有效）
             const baseUrl = 'https://datacenter-web.eastmoney.com/api/data/v1/get?columns=ALL&source=HSF10&client=PC';
             const entry = sdCacheMap[cacheKey] = { t: 0 };
-            // 写入缓存：若 localStorage 溢出（多股票累计超 5MB），按写入时间清理最旧的一半后重试
+            // 写入缓存：IndexedDB 无 5MB 限制，但防止长期换股查询累积过多缓存键，
+            // 超过 100 条时按写入时间清理最旧的一半（数据可重建，删除无副作用）
             const writeSdCache = function(){
+                const _keys = Object.keys(sdCacheMap);
+                if(_keys.length > 100){
+                    _keys.sort(function(a, b){ return (sdCacheMap[a].t || 0) - (sdCacheMap[b].t || 0); });
+                    const rm = Math.ceil(_keys.length / 2);
+                    for(let i = 0; i < rm && _keys.length > 1; i++) delete sdCacheMap[_keys[i]];
+                }
                 try {
-                    localStorage.setItem('sdF10Cache', JSON.stringify(sdCacheMap));
+                    lsSet('sdF10Cache', JSON.stringify(sdCacheMap));
                     return true;
                 } catch(e){
-                    const keys = Object.keys(sdCacheMap).sort(function(a, b){ return (sdCacheMap[a].t || 0) - (sdCacheMap[b].t || 0); });
-                    const rm = Math.ceil(keys.length / 2);
-                    for(let i = 0; i < rm && keys.length > 1; i++) delete sdCacheMap[keys[i]];
-                    try { localStorage.setItem('sdF10Cache', JSON.stringify(sdCacheMap)); } catch(e2){ /* 仍失败则放弃，下次进入重拉 */ }
+                    return false;
                 }
             };
             const maybeFinish = function(){
@@ -11766,7 +12036,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let statsDivLoadTriggered = false;
         let statsDivLoadStartTime = 0;
         // 统计页子部分折叠状态（即将派发/已派发/分红提升/分红下降）
-        const statsSubCollapse = JSON.parse(localStorage.getItem('statsSubCollapse') || '{}');
+        const statsSubCollapse = JSON.parse(lsGet('statsSubCollapse') || '{}');
         // 仓位分布渲染状态：严格控制刷新频率
         // 第一次渲染一次，之后只有收盘后且今天没渲染过才刷新，其他时间一律不刷新
         let positionRendered = false;
@@ -11833,10 +12103,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 每天构建一次（首次打开/切到统计页时，用当时最新数据）并持久化，当天其余时间直接读存储渲染；
         // time = 数据真实构建/拉取的时间，板块右侧显示的就是这个存储时间，不会随点击导航变化。
         function loadStatsDaily(){
-            try{ return JSON.parse(localStorage.getItem('dividendStatsDaily') || '{}'); }catch(e){ return {}; }
+            try{ return JSON.parse(lsGet('dividendStatsDaily') || '{}'); }catch(e){ return {}; }
         }
         function saveStatsDaily(s){
-            try{ localStorage.setItem('dividendStatsDaily', JSON.stringify(s)); }catch(e){}
+            try{ lsSet('dividendStatsDaily', JSON.stringify(s)); }catch(e){}
         }
         function markStatsRefresh(key, elId, mechanism){
             // 显示存储快照中的真实更新时间（数据构建时写入）；time 缺失时回退当前构建时间，避免显示 "--"
@@ -12434,7 +12704,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function loadIndustryMapCfg(){
             if(industryMapCfg) return industryMapCfg;
             try{
-                const raw = localStorage.getItem('dividendIndustryMapping');
+                const raw = lsGet('dividendIndustryMapping');
                 if(raw) industryMapCfg = JSON.parse(raw);
             }catch(e){}
             if(!industryMapCfg || !Array.isArray(industryMapCfg.rules)){
@@ -12444,7 +12714,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return industryMapCfg;
         }
         function saveIndustryMapCfg(){
-            try{ localStorage.setItem('dividendIndustryMapping', JSON.stringify(industryMapCfg)); }catch(e){}
+            try{ lsSet('dividendIndustryMapping', JSON.stringify(industryMapCfg)); }catch(e){}
         }
         // 原始行业 -> 统计大类（未匹配规则归入【其他】）
         function getIndustryStat(src){
@@ -12596,8 +12866,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(activeTab === 'hold' && holdViewMode === 'list') renderPage();
             // 统计-仓位分布详情页：映射变化影响行业分组，立即失效当天快照，下次打开重建
             try{
-                const sd = JSON.parse(localStorage.getItem('dividendStatsDaily') || '{}');
-                if(sd && sd.position){ delete sd.position; localStorage.setItem('dividendStatsDaily', JSON.stringify(sd)); }
+                const sd = JSON.parse(lsGet('dividendStatsDaily') || '{}');
+                if(sd && sd.position){ delete sd.position; lsSet('dividendStatsDaily', JSON.stringify(sd)); }
             }catch(e){}
             const posPage = document.querySelector('#pageStatsPosition');
             if(posPage && !posPage.classList.contains('hidden')) renderStatsPage();
@@ -12617,14 +12887,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function loadHkIndustryMapCfg(){
             if(hkIndustryMapCfg) return hkIndustryMapCfg;
             try{
-                const raw = localStorage.getItem(HK_INDUSTRY_MAP_KEY);
+                const raw = lsGet(HK_INDUSTRY_MAP_KEY);
                 hkIndustryMapCfg = raw ? JSON.parse(raw) : { rules: [] };
                 if(!hkIndustryMapCfg || !Array.isArray(hkIndustryMapCfg.rules)) hkIndustryMapCfg = { rules: [] };
             }catch(e){ hkIndustryMapCfg = { rules: [] }; }
             return hkIndustryMapCfg;
         }
         function saveHkIndustryMapCfg(){
-            try{ localStorage.setItem(HK_INDUSTRY_MAP_KEY, JSON.stringify(hkIndustryMapCfg)); }catch(e){}
+            try{ lsSet(HK_INDUSTRY_MAP_KEY, JSON.stringify(hkIndustryMapCfg)); }catch(e){}
         }
         // 读取某港股代码配置的行业名（未配置返回 null）
         function getHkIndustry(code){
@@ -14599,7 +14869,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     header.addEventListener('click', function(){
                         const section = this.getAttribute('data-section');
                         statsSubCollapse[section] = !statsSubCollapse[section];
-                        try{ localStorage.setItem('statsSubCollapse', JSON.stringify(statsSubCollapse)); }catch(e){}
+                        try{ lsSet('statsSubCollapse', JSON.stringify(statsSubCollapse)); }catch(e){}
                         renderStatsPage();
                     });
                 });
@@ -15413,7 +15683,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 沪深300每年收益率对比线（异步拉取东财日线，缓存当天；失败则静默不显示）
             const hs300Today = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
             let hs300Cache = null;
-            try { hs300Cache = JSON.parse(localStorage.getItem('dividendHs300Yearly') || 'null'); } catch(e){ hs300Cache = null; }
+            try { hs300Cache = JSON.parse(lsGet('dividendHs300Yearly') || 'null'); } catch(e){ hs300Cache = null; }
             const buildHs300Series = function(hs300Map){
                 if(!hs300Map) return;
                 const hs300Values = retYears.map(function(y){ return (hs300Map[y] != null && isFinite(hs300Map[y])) ? Number(hs300Map[y].toFixed(2)) : null; });
@@ -15452,7 +15722,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             const lastClose = lastByYear[curY] || Number(String(klines[klines.length-1]).split(',')[1]);
                             rates[curY] = (lastClose / lastByYear[prevY] - 1) * 100;
                         }
-                        try { localStorage.setItem('dividendHs300Yearly', JSON.stringify({ data: rates, fetchedDate: hs300Today })); } catch(e){}
+                        try { lsSet('dividendHs300Yearly', JSON.stringify({ data: rates, fetchedDate: hs300Today })); } catch(e){}
                         buildHs300Series(rates);
                     } catch(e){
                         buildHs300Series(null);
@@ -16112,7 +16382,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 读取里程碑节点（单位：元），默认 5万/10万/15万/20万
         function getMilestones(){
             try{
-                const arr = JSON.parse(localStorage.getItem(MILESTONE_KEY) || '[]');
+                const arr = JSON.parse(lsGet(MILESTONE_KEY) || '[]');
                 if(Array.isArray(arr) && arr.length){
                     const vals = arr.map(Number).filter(function(v){ return v > 0; }).sort(function(a, b){ return a - b; });
                     if(vals.length) return vals;
@@ -16121,7 +16391,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return [50000, 100000, 150000, 200000];
         }
         function saveMilestones(vals){
-            localStorage.setItem(MILESTONE_KEY, JSON.stringify(vals));
+            lsSet(MILESTONE_KEY, JSON.stringify(vals));
         }
         // 里程碑金额显示：整万显示"5万"，非整万显示"5.50万"
         function fmtMileVal(v){
@@ -17318,8 +17588,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 字段：ROEJQ 加权ROE / XSMLL 毛利率 / XSJLL 净利率 / MGJYXJJE 每股经营现金流 /
         //       ZCFZL 资产负债率 / FCFF_BACK 自由现金流 / ROIC 投入资本回报 / NETCASH_OPERATE_PK 经营现金流
         const FIN_CACHE_KEY = 'dividendFinCache';
-        function loadFinCache(){ try{ return JSON.parse(localStorage.getItem(FIN_CACHE_KEY) || '{}'); }catch(e){ return {}; } }
-        function saveFinCache(c){ try{ localStorage.setItem(FIN_CACHE_KEY, JSON.stringify(c)); }catch(e){} }
+        function loadFinCache(){ try{ return JSON.parse(lsGet(FIN_CACHE_KEY) || '{}'); }catch(e){ return {}; } }
+        function saveFinCache(c){ try{ lsSet(FIN_CACHE_KEY, JSON.stringify(c)); }catch(e){} }
         function getFinInfo(code){
             const c = loadFinCache();
             const it = c[String(code)];
@@ -17435,10 +17705,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 港股持仓用手动录入的 divPerShare；关注且无分红数据的股票按中性给分并提示。
         const STOCK_SCORE_KEY = 'dividendStockScores';
         function loadStockScores(){
-            try{ return JSON.parse(localStorage.getItem(STOCK_SCORE_KEY) || 'null'); }catch(e){ return null; }
+            try{ return JSON.parse(lsGet(STOCK_SCORE_KEY) || 'null'); }catch(e){ return null; }
         }
-        function saveStockScores(s){ try{ localStorage.setItem(STOCK_SCORE_KEY, JSON.stringify(s)); }catch(e){} }
-        function invalidateStockScores(){ try{ localStorage.removeItem(STOCK_SCORE_KEY); }catch(e){} }
+        function saveStockScores(s){ try{ lsSet(STOCK_SCORE_KEY, JSON.stringify(s)); }catch(e){} }
+        function invalidateStockScores(){ try{ lsRemove(STOCK_SCORE_KEY); }catch(e){} }
         // 防御/垄断行业（中国环境）——匹配"映射统计大类 + 公司名"拼接串：
         // 既要覆盖映射后的大类名（公用事业→公用、能源、非银金融→非银等），
         // 也要覆盖公司名特征词（华能水电→水电、中国海油→海油等），否则映射大类后护城河会误判
@@ -18099,7 +18369,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let loaded = 0, total = 0, sumScore = 0, greenN = 0, warnN = 0;
             let rowsHtml = '';
             const cacheMap = (function(){
-                try { return JSON.parse(localStorage.getItem('sdF10Cache') || '{}'); } catch(e){ return {}; }
+                try { return JSON.parse(lsGet('sdF10Cache') || '{}'); } catch(e){ return {}; }
             })();
             holdDataList.forEach(function(it){
                 total++;
@@ -18291,7 +18561,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function buildSellCheckHtml(key){
             const it = holdDataList.find(function(x){ return ((x.marketType === 'HK' ? 'HK_' : 'A_') + x.code) === key; });
             if(!it) return '<div class="text-[11px] text-gray-400">股票不存在</div>';
-            const cacheMap = (function(){ try { return JSON.parse(localStorage.getItem('sdF10Cache') || '{}'); } catch(e){ return {}; } })();
+            const cacheMap = (function(){ try { return JSON.parse(lsGet('sdF10Cache') || '{}'); } catch(e){ return {}; } })();
             const c = cacheMap[key];
             const q = watchQuotes[it.code] || {};
             const m = (c && c.fin && c.fin.length) ? calcMoatScoreFromCache(c.fin, c.cash, c.bal, it.code, q) : null;
@@ -18403,9 +18673,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // ---- 判定与存档 ----
             const vd = scVerdict(items);
             try {
-                const log = JSON.parse(localStorage.getItem('hcSellCheckLog') || '{}');
+                const log = JSON.parse(lsGet('hcSellCheckLog') || '{}');
                 log[key] = { date: todayStr(), verdict: vd.v, advise: vd.advise };
-                localStorage.setItem('hcSellCheckLog', JSON.stringify(log));
+                lsSet('hcSellCheckLog', JSON.stringify(log));
             } catch(e){}
             let html = '<div class="bg-[#fbf7ec] rounded-xl px-3 py-2.5 border border-[#eedfc0]">'
                 + '<div class="flex items-center justify-between mb-1"><span class="text-[11px] font-semibold text-gray-700">卖出纪律检查</span>'
@@ -18457,9 +18727,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const zone = panel.querySelector('.sc-verdict');
             if(zone) zone.innerHTML = scVerdictHtml(vd, key, items);
             try {
-                const log = JSON.parse(localStorage.getItem('hcSellCheckLog') || '{}');
+                const log = JSON.parse(lsGet('hcSellCheckLog') || '{}');
                 log[key] = { date: todayStr(), verdict: vd.v, advise: vd.advise };
-                localStorage.setItem('hcSellCheckLog', JSON.stringify(log));
+                lsSet('hcSellCheckLog', JSON.stringify(log));
             } catch(e){}
         }
         function openStockScores(){
@@ -19015,7 +19285,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 从localStorage读取折叠状态
             let collapseState = {};
             try{
-                collapseState = JSON.parse(localStorage.getItem('settingsCollapseState') || '{}');
+                collapseState = JSON.parse(lsGet('settingsCollapseState') || '{}');
             }catch(e){}
             // 应用折叠状态
             applyCollapseState('yearAsset', collapseState.yearAsset);
@@ -19042,10 +19312,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function toggleSettingsCollapse(key){
             let collapseState = {};
             try{
-                collapseState = JSON.parse(localStorage.getItem('settingsCollapseState') || '{}');
+                collapseState = JSON.parse(lsGet('settingsCollapseState') || '{}');
             }catch(e){}
             collapseState[key] = !collapseState[key];
-            localStorage.setItem('settingsCollapseState', JSON.stringify(collapseState));
+            lsSet('settingsCollapseState', JSON.stringify(collapseState));
             applyCollapseState(key, collapseState[key]);
         }
 
@@ -19208,13 +19478,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         document.querySelector('#cardModeBtn').addEventListener('click', function(){
             holdViewMode = 'card';
-            localStorage.setItem('holdViewMode', 'card');
+            lsSet('holdViewMode', 'card');
             updateModeButtons();
             renderPage();
         });
         document.querySelector('#listModeBtn').addEventListener('click', function(){
             holdViewMode = 'list';
-            localStorage.setItem('holdViewMode', 'list');
+            lsSet('holdViewMode', 'list');
             updateModeButtons();
             renderPage();
         });
@@ -19228,7 +19498,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         });
 
         // 统计页折叠功能
-        const statsCollapseState = JSON.parse(localStorage.getItem('statsCollapseState') || '{}');
+        const statsCollapseState = JSON.parse(lsGet('statsCollapseState') || '{}');
         document.querySelectorAll('.stats-collapse-header').forEach(function(header){
             const targetId = header.getAttribute('data-target');
             const content = document.querySelector('#' + targetId);
@@ -19250,7 +19520,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     icon.classList.add('fa-chevron-up');
                     delete statsCollapseState[targetId];
                 }
-                localStorage.setItem('statsCollapseState', JSON.stringify(statsCollapseState));
+                lsSet('statsCollapseState', JSON.stringify(statsCollapseState));
             });
         });
 
@@ -19587,22 +19857,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const entrySub = document.querySelector('#arEntrySub');
             if(entrySub) entrySub.innerText = new Date().getFullYear() + '年度 · 收益率 / 归因 / 分红 / 持仓';
         })();
-        // 我的页面：导出数据
+        // 我的页面：导出数据（主数据 + 全部非缓存用户数据；可重建缓存类不导出）
         document.querySelector('#exportDataBtn').addEventListener('click', function(){
-            // 导出所有重要数据：持仓数据 + 历史数据 + 港币汇率
-            const holdData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            const historyData = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
-            const hkFxRate = localStorage.getItem('dividendHkFx') || null;
+            // 主数据：持仓 + 历史（独立顶层字段，兼容旧版导入）
+            const holdData = JSON.parse(lsGet(STORAGE_KEY) || '[]');
+            const historyData = JSON.parse(lsGet(HISTORY_KEY) || '{}');
+            // 其余非缓存用户数据：仅导出本 App 白名单 key（排除主数据/版本号/可重建缓存/无关第三方 key）
+            // （覆盖：关注列表、提醒记录、消息、卖出检查日志、汇率、行业映射、里程碑、折叠状态等）
+            const kvOut = {};
+            EXPORT_KEYS.forEach(function(k){
+                if(k in _kvMemo && _kvMemo[k] != null) kvOut[k] = _kvMemo[k];
+            });
             const exportObj = {
-                version: '1.1',
+                version: '2.0',
                 exportTime: new Date().toISOString(),
                 app: '细水长流-股息持仓记录',
                 holdData: holdData,
                 historyData: historyData,
-                hkFxRate: hkFxRate,
-                milestones: getMilestones(),
-                industryMapping: localStorage.getItem('dividendIndustryMapping') || null,
-                hkIndustryMapping: localStorage.getItem('dividendHkIndustryMap') || null
+                kv: kvOut
             };
             const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
@@ -19611,7 +19883,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             a.download = '细水长流_完整数据_' + new Date().toISOString().substring(0,10) + '.json';
             a.click();
             URL.revokeObjectURL(url);
-            showToast('数据已导出（含持仓+历史+汇率）');
+            const nKv = Object.keys(kvOut).length;
+            showToast('数据已导出（持仓+历史+' + nKv + '项设置/记录）');
         });
 
         // 我的页面：导入持仓数据
@@ -19686,23 +19959,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(parsed && parsed.hkIndustryMapping){
                         confirmMsg += '\n含港股行业映射：' + (JSON.parse(parsed.hkIndustryMapping).rules || []).length + '条';
                     }
+                    // 2.0 格式：其他非缓存用户数据（关注/提醒/日志/设置等）
+                    if(parsed && parsed.kv && typeof parsed.kv === 'object'){
+                        const nKv = Object.keys(parsed.kv).filter(function(k){ return EXPORT_KEYS.indexOf(k) >= 0; }).length;
+                        if(nKv) confirmMsg += '\n含其他用户数据：' + nKv + '项';
+                        if(parsed.kv['dividendWatchList']){
+                            try{
+                                const wl = JSON.parse(parsed.kv['dividendWatchList']);
+                                if(Array.isArray(wl) && wl.length) confirmMsg += '\n含关注列表：' + wl.length + '只';
+                            }catch(e){}
+                        }
+                    }
                     confirmMsg += '\n导入后将覆盖现有数据！';
 
                     // 确认导入
                     showConfirm(confirmMsg, function(){
                         // 保存持仓数据
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(holdData));
+                        lsSet(STORAGE_KEY, JSON.stringify(holdData));
                         holdDataList = holdData;
                         // 保存历史数据（如果有）
                         if(historyData){
-                            localStorage.setItem(HISTORY_KEY, JSON.stringify(historyData));
+                            lsSet(HISTORY_KEY, JSON.stringify(historyData));
                             historyData = historyData;
                             // 重新加载历史数据到内存
                             loadHistory();
                         }
                         // 保存港币汇率（如果有）
                         if(hkFxRate){
-                            localStorage.setItem('dividendHkFx', String(hkFxRate));
+                            lsSet('dividendHkFx', String(hkFxRate));
                             hkFxRate = Number(hkFxRate);
                         }
                         // 保存里程碑节点（如果有）
@@ -19711,13 +19995,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         }
                         // 保存行业映射配置（如果有）
                         if(parsed && parsed.industryMapping){
-                            try{ localStorage.setItem('dividendIndustryMapping', parsed.industryMapping); }catch(e){}
+                            try{ lsSet('dividendIndustryMapping', parsed.industryMapping); }catch(e){}
                             industryMapCfg = null;
                         }
-                        // 保存港股行业映射（如果有）
+                        // 保存港股行业映射（兼容旧格式）
                         if(parsed && parsed.hkIndustryMapping){
-                            try{ localStorage.setItem('dividendHkIndustryMap', parsed.hkIndustryMapping); }catch(e){}
+                            try{ lsSet('dividendHkIndustryMap', parsed.hkIndustryMapping); }catch(e){}
                             hkIndustryMapCfg = null;
+                        }
+                        // 通用恢复：2.0 格式的本 App 非缓存用户数据（仅白名单 key，防止无关/第三方数据混入）
+                        if(parsed && parsed.kv && typeof parsed.kv === 'object'){
+                            Object.keys(parsed.kv).forEach(function(k){
+                                if(EXPORT_KEYS.indexOf(k) < 0) return;
+                                try{ lsSet(k, String(parsed.kv[k])); }catch(e){}
+                            });
+                            // 行业映射可能含于 kv，失效对应内存缓存
+                            if(parsed.kv['dividendIndustryMapping']) industryMapCfg = null;
+                            if(parsed.kv['dividendHkIndustryMap']) hkIndustryMapCfg = null;
                         }
                         // 重置分红缓存，重新拉取
                         Object.keys(divCacheMap).forEach(function(k){ delete divCacheMap[k]; });
@@ -19748,8 +20042,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 我的页面：清空数据
         document.querySelector('#clearDataBtn').addEventListener('click', function(){
             if(confirm('确定要清空所有持仓数据吗？此操作不可恢复！')){
-                localStorage.removeItem(STORAGE_KEY);
-                localStorage.removeItem('dividendHistory');
+                lsRemove(STORAGE_KEY);
+                lsRemove('dividendHistory');
                 invalidateMilestoneChart();
                 holdDataList = [];
                 renderPage();

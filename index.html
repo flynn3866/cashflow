@@ -289,7 +289,7 @@
         [id^="pageStats"]:not(#pageStats), #pageStockEdit, #pageTrade, #pageTradeLog, #pageAssetHigh,
         #pageYearSnapshot, #pageNotifCenter, #pageDivDetail, #pageCostDetail, #pageNavDetail, #pageWatchList,
         #pageBalanceSheet, #pageAnnualReport, #pageFundTransfer, #pageFundTransferAdd, #pageSettings,
-        #pageIndustryMap, #pageStockScores, #pageDivEntry{
+        #pageIndustryMap, #pageStockScores, #pageDivEntry, #pageCashFlowAdd{
             animation: appSlideIn .35s cubic-bezier(.22,1,.36,1) backwards;
         }
         @keyframes appFadeUp{
@@ -309,8 +309,8 @@
             40%{ transform:scale(1.25); }
             100%{ transform:scale(1); }
         }
-        #confirmModal, #milestoneModal{ animation: modalFade .2s ease backwards; }
-        #confirmModal > div, #milestoneModal > div{ animation: modalPop .28s cubic-bezier(.34,1.56,.64,1) backwards; }
+        #confirmModal, #milestoneModal, #cashEditModal{ animation: modalFade .2s ease backwards; }
+        #confirmModal > div, #milestoneModal > div, #cashEditModal > div{ animation: modalPop .28s cubic-bezier(.34,1.56,.64,1) backwards; }
         /* 分红里程碑设置：隐藏数字输入框上下调整箭头，更接近顶级 App 的简洁输入 */
         input.ms-milestone-input::-webkit-inner-spin-button, input.ms-milestone-input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
         input.ms-milestone-input{ -moz-appearance:textfield; appearance:textfield; }
@@ -514,15 +514,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 </div>
                                 <div class="text-[18px] font-semibold tabular-nums num-transition" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-[#ffffff]">0.00</span></div>
                             </div>
-                            <!-- 总资产 -->
-                            <div class="py-2 text-center">
+                            <!-- 总资产（重点区：卡中卡面板，浅金渐变+高光+投影，突出层次与立体感） -->
+                            <div class="py-1.5 text-center">
                                 <div class="text-[#cfc0a6] text-[10.5px] mb-1 flex items-center justify-center gap-1.5">
                                     <button type="button" onclick="openAssetHighModal()" title="查看资产新高记录" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform">
                                         <i class="fa fa-bank text-[11px]" style="color:rgba(246,196,83,.8)"></i>
                                         <span>总资产</span><i class="fa fa-chevron-right text-[9px]"></i>
                                     </button>
                                 </div>
-                                <div class="text-[18px] font-semibold tabular-nums num-transition text-[#ffffff]" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
+                                <div class="mx-1.5 rounded-xl px-2 py-2.5 text-center" style="background:linear-gradient(180deg,rgba(255,255,255,0.17),rgba(255,255,255,0.06));box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 3px 10px rgba(0,0,0,0.20);border:1px solid rgba(230,210,163,0.16);">
+                                    <div class="text-[20px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
+                                    <!-- 总资产分解：总市值 · 现金（券商口径，现金为账户可用资金） -->
+                                    <div class="flex items-center justify-center gap-1.5 mt-2 leading-none whitespace-nowrap" id="assetBreakdown">
+                                        <span class="ab-mkt inline-block px-2 py-[3px] rounded-full bg-black/15 text-[#f0e2bd] text-[10px] tabular-nums tracking-wide">市值 <span class="ab-mkt-v text-white font-medium">0</span></span>
+                                        <span class="ab-cash inline-block px-2 py-[3px] rounded-full bg-black/15 text-[#f0e2bd] text-[10px] tabular-nums tracking-wide cursor-pointer active:scale-95 transition-transform" onclick="openCashEdit()" title="点击修改现金">现金 <span class="ab-cash-v text-white font-medium">0</span></span>
+                                    </div>
+                                </div>
                             </div>
                             <!-- 今日盈亏 -->
                             <div class="py-2 text-center">
@@ -1465,6 +1472,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="statsCardSummaryTrade" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubTrade" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
+            <button onclick="openStatsSection('cashflow')" class="card-rise col-span-3 bg-white rounded-2xl card-shadow px-4 py-3.5 text-left active:scale-95 transition-transform">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-300 to-amber-600 flex items-center justify-center flex-shrink-0">
+                        <i class="fa fa-credit-card text-[16px] text-white"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[15px] font-semibold text-gray-800">收支统计</div>
+                        <div id="statsCardSummaryCashFlow" class="text-[12px] text-gray-500 mt-1.5 truncate">--</div>
+                    </div>
+                    <div class="flex flex-col items-end gap-0.5 flex-shrink-0 mr-1">
+                        <span id="statsCardCashFlowBal" class="text-[14px] font-bold tabular-nums text-gray-800">--</span>
+                        <span id="statsCardCashFlowSub" class="text-[10px] tabular-nums text-gray-400">--</span>
+                    </div>
+                    <i class="fa fa-chevron-right text-[12px] text-gray-300 flex-shrink-0"></i>
+                </div>
+            </button>
         </div>
 
         <div class="text-[11px] text-gray-400 mt-4 leading-relaxed">
@@ -1991,6 +2014,169 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
+    <!-- 统计详情：收支统计（手动录入当月收入/支出，与持仓无关；月/年维度走势与汇总） -->
+    <div id="pageStatsCashBook" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-28">
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">收支统计</span>
+                <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
+                    <i class="fa fa-credit-card text-[10px]"></i>
+                    <span id="cfPageMonthTag">--</span>
+                </span>
+            </div>
+        </div>
+        <!-- 累计汇总卡：深棕金渐变 -->
+        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa fa-calendar-check-o text-[12px] text-amber-100/60"></i>
+                        <span id="cfYearTitle" class="text-[11px] text-amber-100/60 tracking-wide">全部年份累计</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-4">
+                    <div class="text-center px-1">
+                        <div class="text-[11px] text-amber-100/60 mb-1.5">总收入</div>
+                        <div id="cfYearIn" class="text-[17px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    </div>
+                    <div class="text-center px-1 border-l border-white/10">
+                        <div class="text-[11px] text-amber-100/60 mb-1.5">总支出</div>
+                        <div id="cfYearOut" class="text-[17px] font-bold tabular-nums" style="color:#ffb3a7">--</div>
+                    </div>
+                    <div class="text-center px-1 border-l border-white/10">
+                        <div class="text-[11px] text-amber-100/60 mb-1.5">结余</div>
+                        <div id="cfYearBal" class="text-[17px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    </div>
+                    <div class="text-center px-1 border-l border-white/10">
+                        <div class="text-[11px] text-amber-100/60 mb-1.5">总浮盈</div>
+                        <div id="cfYearGain" class="text-[17px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    </div>
+                </div>
+                <div id="cfYearVsDetail" class="mt-3 pt-2.5 border-t border-white/10 text-[10px] text-amber-100/60 text-center leading-relaxed" style="display:none">--</div>
+            </div>
+        </div>
+        <!-- 年度总和卡：年份切换 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-4 pt-3 pb-2 flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <span class="text-[13px] font-semibold text-gray-700">年度总和</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="cfShiftYear(-1)" class="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 active:scale-95 transition-transform"><i class="fa fa-chevron-left text-[10px]"></i></button>
+                    <span id="cfPickYear" class="text-[14px] font-bold text-gray-800 tabular-nums min-w-[52px] text-center">--</span>
+                    <button onclick="cfShiftYear(1)" class="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 active:scale-95 transition-transform"><i class="fa fa-chevron-right text-[10px]"></i></button>
+                </div>
+            </div>
+            <div class="border-t border-gray-100"></div>
+            <div class="px-4 py-3 grid grid-cols-4 gap-1 text-center">
+                <div>
+                    <div class="text-[10px] text-gray-400 mb-1">年收入</div>
+                    <div id="cfYrIn" class="text-[14px] font-bold tabular-nums text-gray-800">--</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-400 mb-1">年支出</div>
+                    <div id="cfYrOut" class="text-[14px] font-bold tabular-nums text-gray-800">--</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-400 mb-1">年结余</div>
+                    <div id="cfYrBal" class="text-[14px] font-bold tabular-nums">--</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-400 mb-1">年度浮盈</div>
+                    <div id="cfYrCnt" class="text-[14px] font-bold tabular-nums text-gray-800">--</div>
+                </div>
+            </div>
+            <div id="cfYrVs" class="px-4 pb-3 text-[10px] text-gray-400 text-center tabular-nums">--</div>
+        </div>
+        <!-- 月度走势图 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-4 pt-3 pb-2 flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <span class="text-[13px] font-semibold text-gray-700">月度收支走势</span>
+                </div>
+                <div class="flex items-center gap-3 text-[10px] text-gray-400">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:#a9642a"></span>收入</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:#c0392b"></span>支出</span>
+                </div>
+            </div>
+            <div id="cfMonthChart" style="width:100%;height:220px"></div>
+        </div>
+        <!-- 年度总结余走势 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-4 pt-3 pb-2 flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <span class="text-[13px] font-semibold text-gray-700">年度总结余走势</span>
+                </div>
+                <div class="flex items-center gap-3 text-[10px] text-gray-400">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:#a9642a"></span>结余为正</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:#c0392b"></span>超支为负</span>
+                </div>
+            </div>
+            <div id="cfYearChart" style="width:100%;height:210px"></div>
+        </div>
+        <!-- 底部悬浮：记一笔（与首页浮动加号一致：右下角圆形） -->
+        <button onclick="openCfAdd()" id="cfAddFab" class="fixed bottom-[7.5rem] right-5 w-12 h-12 bg-gradient-to-br from-accent to-orange-700 text-white rounded-full flex items-center justify-center text-xl shadow-lg shadow-orange-500/30 active:scale-95 transition-transform z-30" style="margin-bottom: env(safe-area-inset-bottom);">
+            <i class="fa fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- 记一笔弹层（收支统计）：底部滑出 -->
+    <div id="pageCashFlowAdd" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航 -->
+        <div class="flex items-center gap-3 mb-4">
+            <button onclick="closeCfAdd()" class="w-9 h-9 rounded-full bg-white card-shadow flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                记一笔收支
+            </h3>
+        </div>
+        <div class="bg-white rounded-2xl card-shadow p-5">
+            <div class="grid grid-cols-2 gap-2.5 mb-4">
+                <button type="button" id="cfTypeIn" onclick="cfSetType('in')" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent shadow-md shadow-orange-500/15"><i class="fa fa-arrow-down text-[12px]"></i>收入</button>
+                <button type="button" id="cfTypeOut" onclick="cfSetType('out')" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200"><i class="fa fa-arrow-up text-[12px]"></i>支出</button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-[12px] font-medium text-gray-500 mb-1.5">金额</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-base font-semibold">¥</span>
+                    <input type="number" step="0.01" min="0" id="cfAmount" class="no-spinner w-full border-2 border-gray-100 rounded-xl pl-9 pr-4 py-3 focus:border-accent focus:outline-none transition-colors text-xl font-bold tabular-nums" placeholder="0.00">
+                </div>
+            </div>
+            <div id="cfGainWrap" class="mb-4 hidden">
+                <label class="block text-[12px] font-medium text-gray-500 mb-1.5">浮盈 <span class="text-[10px] text-gray-300 font-normal">（仅累计统计，可不填）</span></label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-base font-semibold">¥</span>
+                    <input type="number" step="0.01" id="cfGain" class="no-spinner w-full border-2 border-gray-100 rounded-xl pl-9 pr-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base tabular-nums" placeholder="0.00">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-[12px] font-medium text-gray-500 mb-1.5">日期</label>
+                <div class="relative">
+                    <input type="date" id="cfDate" class="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base tabular-nums">
+                    <i class="fa fa-calendar-o absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 text-sm pointer-events-none"></i>
+                </div>
+            </div>
+            <div class="mb-5">
+                <label class="block text-[12px] font-medium text-gray-500 mb-1.5">备注 <span class="text-[10px] text-gray-300 font-normal">（可选）</span></label>
+                <input type="text" id="cfNote" maxlength="30" class="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="例如：工资 / 房租 / 买菜">
+            </div>
+            <button onclick="cfSave()" class="w-full py-3.5 bg-gradient-to-r from-accent to-[#a9642a] text-white rounded-2xl font-semibold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform text-[15px] tracking-wide">保存</button>
+        </div>
+    </div>
+
     <!-- 统计详情：交易明细（每笔买入/卖出 + 修改持仓事件，本地实时） -->
     <div id="pageStatsTrade" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
@@ -2084,7 +2270,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="grid grid-cols-2 gap-0 px-2 py-1">
                     <div class="py-2.5 px-3 text-center">
                         <div class="text-[10.5px] text-[#cfc0a6]">总资产</div>
-                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineTotalAsset">0</div>
+                        <!-- 重点区：卡中卡面板（与首页总资产格同款，浅金渐变+高光+投影） -->
+                        <div class="mt-1.5 rounded-xl px-2 py-2 text-center" style="background:linear-gradient(180deg,rgba(255,255,255,0.17),rgba(255,255,255,0.06));box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 3px 10px rgba(0,0,0,0.20);border:1px solid rgba(230,210,163,0.16);">
+                            <div class="text-[19px] font-semibold text-[#ffffff] whitespace-nowrap tabular-nums num-transition leading-none" id="mineTotalAsset">0</div>
+                            <!-- 总资产分解：总市值 · 现金（与首页顶部卡同款） -->
+                            <div class="flex items-center justify-center gap-1.5 mt-2 leading-none whitespace-nowrap" id="mineAssetBreakdown">
+                                <span class="ab-mkt inline-block px-2 py-[3px] rounded-full bg-black/15 text-[#f0e2bd] text-[10px] tabular-nums tracking-wide">市值 <span class="ab-mkt-v text-white font-medium">0</span></span>
+                                <span class="ab-cash inline-block px-2 py-[3px] rounded-full bg-black/15 text-[#f0e2bd] text-[10px] tabular-nums tracking-wide cursor-pointer active:scale-95 transition-transform" onclick="openCashEdit()" title="点击修改现金">现金 <span class="ab-cash-v text-white font-medium">0</span></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="py-2.5 px-3 text-center">
                         <div class="text-[10.5px] text-[#cfc0a6]">累计盈亏</div>
@@ -3458,6 +3652,30 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
+    <!-- 修改现金弹窗（点击首页/我的页「现金」标签触发；手动修正账户现金） -->
+    <div id="cashEditModal" class="fixed inset-0 bg-black/50 z-[95] hidden justify-center items-center px-4">
+        <div class="relative bg-white rounded-2xl p-4 w-full max-w-sm shadow-2xl overflow-hidden">
+            <!-- 顶部金色渐变线（与详情页标题栏同款） -->
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f59e0b,#a9642a,transparent)"></div>
+            <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-money text-[13px] text-accent"></i></div>
+                    <h3 class="text-[17px] font-bold text-gray-800">修改现金</h3>
+                </div>
+                <button id="ceClose" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="text-[11px] text-gray-400 mb-3 leading-relaxed">现金 = 账户未买入股票的资金。卖出自动回款、买入自动扣减；如需修正为实际金额可在此手动修改（可输入负数）。</div>
+            <div class="flex items-center rounded-xl bg-[#faf5e9] ring-1 ring-[#eedfc0] px-3 mb-4">
+                <span class="text-gray-400 text-sm mr-2 flex-shrink-0">¥</span>
+                <input id="ceInput" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" class="w-full py-3 text-[18px] font-semibold tabular-nums text-gray-800 bg-transparent outline-none placeholder:text-gray-300">
+            </div>
+            <div class="flex gap-3">
+                <button id="ceCancel" class="flex-1 py-2 border-2 border-gray-200 rounded-xl text-gray-600 font-medium active:bg-gray-50 transition-colors">取消</button>
+                <button id="ceSave" class="flex-1 py-2 bg-gradient-to-r from-accent to-[#a9642a] text-white rounded-xl font-semibold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform">保存</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 统一空态组件：金叶幼苗线性插画（品牌金铜系）
         window.emptyTipHTML = function(opts){
@@ -3496,7 +3714,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 本 App 非缓存用户数据白名单（导出/导入范围；排除主数据、版本号、可重建缓存类与无关第三方 key）
         const EXPORT_KEYS = ['holdViewMode','dividendHkFx','dividendWatchList','dividendNotifFired',
             'dividendNotifications','hcSellCheckLog','dividendIndustryMapping','dividendHkIndustryMap',
-            'settingsCollapseState','statsCollapseState','statsSubCollapse','dividendMilestones'];
+            'settingsCollapseState','statsCollapseState','statsSubCollapse','dividendMilestones',
+            'divCashFlow'];
         let holdDataList = [];
 
         // dom元素
@@ -4660,7 +4879,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const monthlyAfter = Object.keys(historyData.monthlyAssets).length;
                         // 更新顶部关键指标（文本实时更新）
                         const sumA = calcSummary();
-                        numTween(document.querySelector('#analysisTotalAsset'), sumA.totalMarket, fmtMoney);
+                        numTween(document.querySelector('#analysisTotalAsset'), sumA.totalAsset, fmtMoney);
                         numTween(document.querySelector('#analysisYearDiv'), sumA.totalYearDiv, fmtMoney);
                         renderMaxDrawdown();
                         // 年化收益率 = 复利年化 XIRR（与我的页"持仓概览"同一口径）
@@ -4817,7 +5036,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     tc += it.count * it.costPrice * fx;
                     tm += getMarketValue(it);
                 });
-                historyData.yearStart = { year: curY, cost: tc, market: tm };
+                historyData.yearStart = { year: curY, cost: tc, market: tm, cash: Number(historyData.cashBalance) || 0 };
                 saveHistory();
             }
             // 港股税率口径迁移完成后：重算当年分红收入（覆盖历史百分数税率造成的负数脏值）
@@ -4878,7 +5097,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, initialCost: 0, initialCostDate: '2020-01-01', fundInflows: [], navAlgoVer: 0, yearlyNav: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], closedStocks: [], portfolioStartYear: null, cashFlowLog: [] };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, initialCost: 0, initialCostDate: '2020-01-01', fundInflows: [], navAlgoVer: 0, yearlyNav: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], closedStocks: [], portfolioStartYear: null, cashFlowLog: [], cashBalance: 0 };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
@@ -5149,6 +5368,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     historyData.assetHighs = parsed.assetHighs || [];
                     historyData.closedStocks = parsed.closedStocks || [];
                     historyData.cashFlowLog = parsed.cashFlowLog || [];
+                    historyData.cashBalance = Number(parsed.cashBalance) || 0;
                     if(parsed.portfolioStartYear) historyData.portfolioStartYear = parsed.portfolioStartYear;
                     historyData.initialCost = Number(parsed.initialCost) || 0;
                     historyData.initialCostDate = parsed.initialCostDate || '2020-01-01';
@@ -5220,21 +5440,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const d = new Date();
             return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
         }
-        // 记录今日总资产（每次加载覆盖当天，确保月底归档用最新值）
+        // 记录今日总资产（每次加载覆盖当天，确保月底归档用最新值；总资产 = 市值 + 现金）
         function recordDailyAssets(){
-            if(!holdDataList.length) return;
+            if(!holdDataList.length && !(Number(historyData.cashBalance) > 0)) return;
             const ts = todayStr();
             let total = 0;
             holdDataList.forEach(function(it){ total += getMarketValue(it); });
+            total += Number(historyData.cashBalance) || 0;
             historyData.dailyAssets[ts] = Number(total.toFixed(2));
             saveHistory();
         }
 
         // ==================== 总资产新高（金色皇冠 · 里程碑轨迹） ====================
-        // 当前总资产
+        // 当前总资产（券商口径：市值 + 现金）
         function totalAssetNow(){
             let total = 0;
             holdDataList.forEach(function(it){ total += getMarketValue(it); });
+            total += Number(historyData.cashBalance) || 0;
             return total;
         }
         // 从历史资产快照（每日 + 每月归档 + 已记录新高）推导每次破新高的轨迹（升序）
@@ -5636,7 +5858,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 当前年份收益率计算：优先用yearStart（年初市值快照），如果没有则用monthlyAssets
                 let startVal = 0;
                 if(historyData.yearStart && historyData.yearStart.market > 0){
-                    startVal = historyData.yearStart.market;
+                    // 年初基准 = 年初市值 + 年初现金（老数据无 cash 字段按 0，即现金从 0 开始）
+                    startVal = Number(historyData.yearStart.market) + (Number(historyData.yearStart.cash) || 0);
                 } else {
                     const curYearMonths = months.filter(function(m){ return m.substring(0,4) === curY; }).sort();
                     if(curYearMonths.length){
@@ -5644,8 +5867,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                 }
                 if(startVal > 0){
-                    let endVal = 0;
-                    holdDataList.forEach(function(it){ endVal += getMarketValue(it); });
+                    // 年末总资产 = 市值 + 现金（与首页"今年收益率"同口径）
+                    let endVal = Number(calcSummary().totalAsset) || 0;
                     const yearDiv = historyData.yearlyDiv[curY] || 0;
                     if(endVal > 0){
                         // 跳过手动编辑的年份，不覆盖用户输入
@@ -5674,8 +5897,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const startVal = historyData.monthlyAssets[ms[0]];
                 let endVal;
                 if(y === curY){
-                    endVal = 0;
-                    holdDataList.forEach(function(it){ endVal += getMarketValue(it); });
+                    // 当年年末 = 当前总资产（市值 + 现金）
+                    endVal = Number(calcSummary().totalAsset) || 0;
                 } else {
                     endVal = historyData.monthlyAssets[ms[ms.length-1]];
                 }
@@ -5724,6 +5947,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 打开新增持仓页面（隐藏持仓页，页面顶部返回）
             editingId = null;
             stockForm.reset();
+            // 还原股数输入框（编辑模式会置只读，reset 不还原 readonly，需显式复位）
+            stockCountEl.readOnly = false;
+            stockCountEl.className = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base';
             setModalMode(false);
             resetFetchUI();
             document.querySelector('#pageHold').classList.add('hidden');
@@ -5752,7 +5978,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             stockCodeEl.value = item.code;
             stockNameEl.value = item.name;
+            // 编辑模式：股数不可修改（只能对齐成本；编辑属数据修正，不增减现金、不记买卖流水）
             stockCountEl.value = item.count;
+            stockCountEl.readOnly = true;
+            stockCountEl.className = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed';
             costPriceEl.value = item.costPrice;
             nowPriceEl.value = item.nowPrice != null ? item.nowPrice : '';
             divPerShareEl.value = item.divPerShare != null ? item.divPerShare : '';
@@ -6288,6 +6517,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(item.marketType === 'HK') pnl = pnl * hkFxRate;
             return pnl;
         }
+        // 账户现金调整（券商口径）：买入/建仓扣减现金，卖出/清仓/删除回款增加现金；
+        // 金额已按港股汇率折算人民币；现金余额实时落盘（historyData.cashBalance）
+        function adjustCash(delta){
+            if(!isFinite(delta) || delta === 0) return;
+            historyData.cashBalance = Math.round(((Number(historyData.cashBalance) || 0) + delta) * 100) / 100;
+            saveHistory();
+        }
         // 记录清仓/删除的股票盈亏快照（永久保留：曾经持仓过、有过盈亏记录就一直保留在盈亏排行中）
         // tradePrice：清仓卖出时的实际成交价（按真实交易计算盈亏）；删除时传空，按最新市场价计算
         function recordClosedStock(item, tradePrice){
@@ -6564,7 +6800,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const oldCntEdit = item.count, oldCostEdit = item.costPrice;
                     // 编辑是数据修正：不清空已处理分红标识——已除权过的分红（含当天18:00已到账）
                     // 后续任何操作（编辑/覆盖/删除重加）都不得重复除权、重复入账
-                    item.count = Number(stockCountEl.value);
+                    // 股数锁定：编辑只对齐成本（readonly 仅防键盘输入，此处强制保持原股数做双重保障；
+                    // 股数变更请走买入/卖出交易，会自动增减现金）
+                    item.count = oldCntEdit;
                     item.costPrice = newCost;
                     item.divPerShare = Number(divPerShareEl.value || 0);
                     // 港股行业优先取最新映射表，无配置时保留手动选择
@@ -6592,7 +6830,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                     // 记录持仓修改事件（统计页 · 交易明细可见）
                     if(!historyData.stockEditLog) historyData.stockEditLog = [];
-                    historyData.stockEditLog.push({ t: Date.now(), code: item.code, name: item.name, market: item.marketType, detail: '数量 ' + oldCntEdit + '→' + Number(stockCountEl.value) + ' 股 · 成本 ' + oldCostEdit + '→' + newCost });
+                    historyData.stockEditLog.push({ t: Date.now(), code: item.code, name: item.name, market: item.marketType, detail: '数量 ' + oldCntEdit + ' 股 · 成本 ' + oldCostEdit + '→' + newCost });
                     saveLocal();
                 }
                 closeModal();
@@ -6724,6 +6962,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 computeYearlyDiv();
             }
             holdDataList.push(newItem);
+            // 买入建仓：账户现金扣减买入金额（股数 × 成本价，港股按汇率折算人民币）
+            adjustCash(-count * costPrice * (marketType === 'HK' ? hkFxRate : 1));
             saveLocal();
             closeModal();
             renderPage();
@@ -6985,6 +7225,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             showConfirm('确定要删除「' + name + '」吗？删除后无法恢复。', function(){
                 // 删除前记录盈亏快照（曾经持仓过的盈亏记录永久保留在盈亏排行中）
                 if(item) recordClosedStock(item);
+                // 删除持仓：按当前市值回款到账户现金（港股按汇率折算人民币）
+                if(item){
+                    const dFx = item.marketType === 'HK' ? hkFxRate : 1;
+                    adjustCash((Number(item.count) || 0) * (Number(item.nowPrice) || 0) * dFx);
+                }
                 holdDataList = holdDataList.filter(item=>item.id !== id);
                 saveLocal();
                 renderPage();
@@ -7110,6 +7355,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 item.costPrice = newCost;
                 if(!item.transactions) item.transactions = [];
                 item.transactions.push({ t: Date.now(), delta: qty, price: price });
+                // 买入：账户现金扣减成交金额（港股按汇率折算人民币）
+                adjustCash(-qty * price * (item.marketType === 'HK' ? hkFxRate : 1));
                 saveLocal();
                 renderPage();
                 closeTradeModal();
@@ -7127,12 +7374,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const newCount = oldCount - qty;
                 if(!item.transactions) item.transactions = [];
                 item.transactions.push({ t: Date.now(), delta: -qty, price: price });
+                // 卖出：成交金额回款到账户现金（港股按汇率折算人民币），部分卖出与清仓均适用
+                const sellFx = item.marketType === 'HK' ? hkFxRate : 1;
+                const sellProceeds = qty * price * sellFx;
                 const name = item.name;
                 if(newCount <= 0){
                     // 清仓：确认后移除持仓
                     showConfirm('卖出后将清仓「' + name + '」，确定卖出全部 ' + oldCount + ' 股吗？', function(){
                         // 清仓前记录盈亏快照：按实际卖出价计算盈亏（曾经持仓过的盈亏记录永久保留在盈亏排行中）
                         recordClosedStock(item, price);
+                        adjustCash(sellProceeds);
                         holdDataList = holdDataList.filter(it => it.id !== tradeItemId);
                         saveLocal();
                         renderPage();
@@ -7146,6 +7397,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const newCost = (oldCostTotal - qty * price) / newCount;
                 item.count = newCount;
                 item.costPrice = newCost;
+                adjustCash(sellProceeds);
                 saveLocal();
                 renderPage();
                 closeTradeModal();
@@ -7434,6 +7686,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageFundTransferAdd').classList.add('hidden');
             document.querySelector('#pageDivEntry').classList.add('hidden');
             document.querySelector('#pageWatchManage').classList.add('hidden');
+            document.querySelector('#pageCashFlowAdd').classList.add('hidden');
+            document.querySelector('#cfAddFab').classList.remove('hidden');
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageWatchSel').classList.toggle('hidden', tab !== 'watch');
@@ -7661,7 +7915,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ============ 复利年化 CAGR = XIRR（资金投入每笔记录日期，精确到天） ============
         function calcMineCagr(){
             const flows = getFundFlows();
-            const totalAsset = Number(calcSummary().totalMarket) || 0;
+            const totalAsset = Number(calcSummary().totalAsset) || 0;
             if(!flows.length || totalAsset <= 0) return null;
             const xirrCash = flows.map(function(f){ return { date: f.date, amount: -Number(f.amount) }; });
             xirrCash.push({ date: todayStr(), amount: totalAsset });
@@ -7756,7 +8010,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 历史年净值 = 该年年终总资产 ÷ 该年末总份额（年总资产有记录时）；当年 = 当前总资产 ÷ 总份额，每日刷新
             const flows = getFundFlows();
             const curY = new Date().getFullYear();
-            const curAsset = Number(calcSummary().totalMarket) || 0;
+            const curAsset = Number(calcSummary().totalAsset) || 0;
             if(!flows.length) return [];
             const baseDate = flows[0].date;
             // 按年份分组资金流水
@@ -7876,9 +8130,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function saveYearSnapshot(){
             const curY = String(new Date().getFullYear());
             const sum = calcSummary();
-            const totalAsset = Number(sum.totalMarket) || 0;
-            if(!holdDataList.length){
-                showToast('暂无持仓数据，无法保存快照');
+            const totalAsset = Number(sum.totalAsset) || 0;
+            if(!holdDataList.length && !(Number(historyData.cashBalance) > 0)){
+                showToast('暂无持仓且无现金，无法保存快照');
                 return;
             }
             // 1) 净值与份额：当年最新净值 = 当前总资产 ÷ 当前总份额（与净值趋势图同一算法）
@@ -7920,6 +8174,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 year: curY,
                 savedAt: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-'),
                 totalAsset: Number(totalAsset.toFixed(2)),
+                totalMarket: Number((Number(sum.totalMarket) || 0).toFixed(2)),
+                cash: Number(((Number(historyData.cashBalance) || 0)).toFixed(2)),
                 nav: nav,
                 shares: shares,
                 xirr: xirrV,
@@ -7977,7 +8233,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '</div>'
                     + '<div class="px-4 py-3">'
                     + '<div class="grid grid-cols-4 gap-y-3 text-center">'
-                    + snapCell('总资产', fmtMoney(sp.totalAsset))
+                    // 三字段构成（券商口径）：新快照含 totalMarket/cash；旧快照（改造前）无此字段，
+                    // 其 totalAsset 即旧口径市值，兼容显示为市值、现金补 '--'
+                    + snapCell('总资产', fmtMoney(sp.totalMarket != null ? sp.totalAsset : sp.totalAsset))
+                    + snapCell('总市值', fmtMoney(sp.totalMarket != null ? sp.totalMarket : sp.totalAsset))
+                    + snapCell('现金', sp.totalMarket != null ? fmtMoney(sp.cash) : '--')
                     + snapCell('净值', navText)
                     + snapCell('XIRR', xirrText)
                     + snapCell('总投入', fmtMoney(sp.totalInvested))
@@ -8115,7 +8375,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 saveStatsDaily(snapM);
             }
             const mS = loadStatsDaily().mine || {};
-            numTween(document.querySelector('#mineTotalAsset'), sum.totalMarket, fmtMoney); // 总资产实时（平滑滚动）
+            numTween(document.querySelector('#mineTotalAsset'), sum.totalAsset, fmtMoney); // 总资产实时（平滑滚动）
+            const mBrkEl = document.querySelector('#mineAssetBreakdown');
+            if(mBrkEl){
+                const mmv = mBrkEl.querySelector('.ab-mkt-v');
+                const mcv = mBrkEl.querySelector('.ab-cash-v');
+                if(mmv) mmv.innerText = fmtMoney(sum.totalMarket);
+                if(mcv) mcv.innerText = fmtMoney(sum.cash);
+            }
             numTween(document.querySelector('#mineYearDiv'), mS.yearDiv != null ? mS.yearDiv : sum.totalYearDiv, fmtMoney);
             numTween(document.querySelector('#mineTotalDiv'), mS.totalDiv != null ? mS.totalDiv : sum.totalDivReceived, fmtMoney);
             // 关注数量：本地实时数据（增删即时变化），不依赖每日快照
@@ -8154,17 +8421,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#mineUpdateTime').innerText = (mS.time || '--');
             // 投入成本 = 初始投入 + 每笔资金流水（含取出为负），实时计算（公共函数，与持仓页成本息率同源）
             const investTotalV = getTotalInvested();
-            // 顶部卡片：累计盈亏 = 总资产 - 投入成本（只显示金额，涨红跌绿）
-            const cumPnl = Number(sum.totalMarket) - investTotalV;
+            // 顶部卡片：累计盈亏 = 总资产 - 投入成本（只显示金额，涨红跌绿；总资产含现金）
+            const cumPnl = Number(sum.totalAsset) - investTotalV;
             const pnlEl = document.querySelector('#mineTotalPnl');
             if(pnlEl){
                 numTween(pnlEl, cumPnl, fmtPnlNum);
                 pnlEl.className = 'text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 num-transition ' + (cumPnl >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
             }
-            // 持仓概览：复利年化 CAGR（交易日 6:00/20:00 快照，其余时间读存储；缺失回退实时）
+            // 持仓概览：复利年化 CAGR（实时计算优先——随总资产/现金实时联动；快照仅在实时缺失时兜底）
             const cagrEl = document.querySelector('#mineCagr');
             if(cagrEl){
-                const cagr = mS.cagr != null ? mS.cagr : calcMineCagr();
+                const cagrLive = calcMineCagr();
+                const cagr = cagrLive != null ? cagrLive : (mS.cagr != null ? mS.cagr : null);
                 if(cagr == null){
                     cagrEl.innerText = '--';
                     cagrEl.className = 'text-lg font-semibold text-gray-400 tabular-nums';
@@ -8173,18 +8441,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     cagrEl.className = 'text-lg font-semibold tabular-nums ' + (cagr >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
                 }
             }
-            // 持仓概览：最新净值 + 年度增长率（快照优先，缺失回退实时）
+            // 持仓概览：最新净值 + 年度增长率（实时计算优先，快照兜底）
             const navSeries = calcNavSeries();
             const lastNav = navSeries.length ? navSeries[navSeries.length - 1] : null;
             const navEl = document.querySelector('#mineNav');
             if(navEl){
-                const navV = mS.nav != null ? mS.nav : (lastNav ? lastNav.nav : 1);
+                const navV = lastNav ? lastNav.nav : (mS.nav != null ? mS.nav : 1);
                 navEl.innerText = navV.toFixed(2);
                 navEl.className = 'text-lg font-semibold text-accent tabular-nums';
             }
             const navGrowthEl = document.querySelector('#mineNavGrowth');
             if(navGrowthEl){
-                const g = mS.navGrowth != null ? mS.navGrowth : (lastNav ? lastNav.growth * 100 : 0);
+                const g = (lastNav && lastNav.growth != null) ? lastNav.growth * 100 : (mS.navGrowth != null ? mS.navGrowth : 0);
                 navGrowthEl.innerText = (g >= 0 ? '+' : '') + g.toFixed(2) + '%';
                 navGrowthEl.className = 'text-[11px] mt-0.5 ' + (g >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
             }
@@ -11048,9 +11316,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const nextBtn = document.querySelector('#arNextYearBtn');
             if(prevBtn) prevBtn.disabled = reportY <= minY;
             if(nextBtn) nextBtn.disabled = reportY >= curY;
-            // 数据基线：当年用实时汇总，历史年份用归档快照
+            // 数据基线：当年用实时汇总，历史年份用归档快照（年末总资产 = 市值 + 现金）
             const sum = calcSummary();
-            const totalMarketNow = Number(sum.totalMarket) || 0;
+            const totalMarketNow = Number(sum.totalAsset) || 0;
             const yearEndMarket = getYearEndMarket(reportYStr, isCurYear, totalMarketNow);
             const yearStartMarket = getYearStartMarket(reportYStr);
             const periodNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[reportYStr]) || 0;
@@ -11077,7 +11345,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 业绩摘要：收益率（当年实时券商口径；历史年份用归档的每年收益率）
             let yr = null;
             if(isCurYear){
-                yr = Number(sum.yearReturnRate);
+                yr = (sum.yearReturnRate != null) ? Number(sum.yearReturnRate) : null;
             } else {
                 const yv = Number(historyData.yearlyReturn && historyData.yearlyReturn[reportYStr]);
                 if(isFinite(yv) && yv !== 0) yr = yv;
@@ -12134,7 +12402,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         // ============ 统计页：卡片宫格 → 独立详情页（点击进入，返回/切导航同步收起） ============
-        var STATS_SECTION_PAGES = { today:'pageStatsToday', analysis:'pageAnalysis', position:'pageStatsPosition', pnl:'pageStatsPnl', divrank:'pageStatsDivRank', schedule:'pageStatsSchedule', compare:'pageStatsCompare', industry:'pageStatsIndustry', cash:'pageStatsCashFlow', trade:'pageStatsTrade' };
+        var STATS_SECTION_PAGES = { today:'pageStatsToday', analysis:'pageAnalysis', position:'pageStatsPosition', pnl:'pageStatsPnl', divrank:'pageStatsDivRank', schedule:'pageStatsSchedule', compare:'pageStatsCompare', industry:'pageStatsIndustry', cash:'pageStatsCashFlow', trade:'pageStatsTrade', cashflow:'pageStatsCashBook' };
         var activeStatsSection = null;
         // 隐藏所有图表 tooltip（页面收起/切换/重开前清理，避免残留挂到其他页面）
         function hideAllChartTips(){
@@ -12165,6 +12433,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(key === 'industry'){ renderIndustryMulti(); }
             if(key === 'cash'){ renderStatsCashFlow(); }
             if(key === 'trade'){ renderStatsTrade(); }
+            if(key === 'cashflow'){ renderCashBookPage(); }
             // 仓位分布详情页：内容已在 switchTab(stats) 时随 renderStatsPage 渲染就绪，此处只 resize 饼图，
             // 不再整页重复渲染（重复渲染会造成"像打开两次"的闪烁）
             if(key === 'position'){
@@ -12197,7 +12466,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     historyYearlyComputed = true;
                 }
                 const sumA = calcSummary();
-                numTween(document.querySelector('#analysisTotalAsset'), sumA.totalMarket, fmtMoney);
+                numTween(document.querySelector('#analysisTotalAsset'), sumA.totalAsset, fmtMoney);
                 numTween(document.querySelector('#analysisYearDiv'), sumA.totalYearDiv, fmtMoney);
                 renderMaxDrawdown();
                 const yrA = calcMineCagr();
@@ -12211,18 +12480,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 // 复利模拟：打开即按当前口径渲染一次（本地数据轻量，无网络）
                 setTimeout(renderReinvestSim, 150);
-                // 图表首次渲染一次；已渲染则每次打开 resize（详情页打开时适配视口）
-                if(!analysisChartsRendered){
-                    setTimeout(renderAnalysisCharts, 120);
-                    analysisChartsRendered = true;
-                } else {
-                    requestAnimationFrame(function(){
-                        ['#chartMonthly','#chartYearlyDiv','#chartYearlyNav','#chartYearlyAvgDiv','#chartYearlyReturn'].forEach(function(sel){
-                            const cEl = document.querySelector(sel);
-                            if(cEl && cEl._chart) cEl._chart.resize();
-                        });
-                    });
-                }
+                // 图表每次打开都重新渲染：现金/持仓等数据变化后需显示最新值（内部 dispose 重建，无泄漏）
+                // 首次渲染延迟 120ms 让生长动画开始即就绪；此后每次打开同样重建，确保趋势图为最新数据
+                analysisChartsRendered = true;
+                setTimeout(renderAnalysisCharts, 120);
                 // 标题栏时间标签
                 const nowAn = new Date();
                 const upAn = nowAn.getHours().toString().padStart(2, '0') + ':' + nowAn.getMinutes().toString().padStart(2, '0') + ' 更新';
@@ -12299,8 +12560,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const curY = String(new Date().getFullYear());
             let totalMvG = 0;
             holdDataList.forEach(function(it){ totalMvG += getMarketValue(it); });
-            // 资产分析图表：当前总资产（与详情页顶部指标同源，本地数据实时计算）
-            set('statsCardSummaryAnalysis', holdDataList.length ? fmtMoney(totalMvG) : '暂无持仓');
+            // 资产分析图表：当前总资产（与详情页顶部指标同源，含现金，实时计算）
+            set('statsCardSummaryAnalysis', holdDataList.length ? fmtMoney(calcSummary().totalAsset) : '暂无持仓');
             sub('statsCardSubAnalysis', '资产与分红趋势');
             // 仓位分布：最大单一仓位
             let maxPctG = 0;
@@ -12441,6 +12702,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             (historyData.fundInflows || []).forEach(function(f){ const ac = Number(f.amount) || 0; if(ac >= 0) cInC += ac; else cOutC += Math.abs(ac); });
             set('statsCardSummaryCash', (cInC + cOutC > 0) ? ('净流入 ' + fmtMoney(cInC - cOutC)) : '暂无资金记录');
             sub('statsCardSubCash', '转入转出净额');
+            // 收支统计：今年结余 + 已记笔数（与详情页今年汇总卡同源）
+            const cfAggC = cfAggByYear();
+            const cfYC = cfAggC[String(new Date().getFullYear())] || { in:0, out:0, count:0 };
+            const cfBalC = cfYC.in - cfYC.out;
+            set('statsCardSummaryCashFlow', cfYC.count ? ('已记 ' + cfYC.count + ' 笔 · 收 ' + cfFmt(cfYC.in) + ' · 支 ' + cfFmt(cfYC.out)) : '暂无记录，点击记一笔');
+            const cfBalElC = document.querySelector('#statsCardCashFlowBal');
+            if(cfBalElC){
+                cfBalElC.innerText = cfYC.count ? cfFmt(cfBalC) : '--';
+                cfBalElC.className = 'text-[14px] font-bold tabular-nums ' + (cfBalC >= 0 ? 'text-[#a9642a]' : 'text-[#c0392b]');
+            }
+            const cfSubElC = document.querySelector('#statsCardCashFlowSub');
+            if(cfSubElC) cfSubElC.innerText = cfYC.count ? (cfBalC >= 0 ? '结余' : '超支') : '今年收支';
             let tradeCnt = 0;
             holdDataList.forEach(function(it){ tradeCnt += (it.transactions || []).length; });
             tradeCnt += (historyData.stockEditLog || []).length;
@@ -12521,7 +12794,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 if(ev.type === 'buy') allBuy += amt; else allSell += amt;
             });
-            const curMarket = Number(calcSummary().totalMarket) || 0;
+            const curMarket = Number(calcSummary().totalAsset) || 0;
             // 年初市值：与首页"今年收益率"同源（去年年终资产）
             let yearStart = 0;
             const lastYear = String(new Date().getFullYear() - 1);
@@ -13682,6 +13955,322 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 historyData.cashFlowUpdatedAt = todayStr() + ' ' + statsRefreshNow();
             }
         }
+        // ==================== 收支统计（手动录入，与持仓无关；月/年维度走势与汇总） ====================
+        const CF_KEY = 'divCashFlow';
+        let cfRecords = [];
+        let cfYear = new Date().getFullYear();
+        let cfType = 'in';
+        let cfChartInst = null;
+        let cfYearChartInst = null;
+        const CF_MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+        function loadCashBook(){
+            try{
+                const raw = lsGet(CF_KEY);
+                const obj = raw ? JSON.parse(raw) : null;
+                cfRecords = (obj && Array.isArray(obj.records)) ? obj.records : [];
+            }catch(e){ cfRecords = []; }
+            const now = new Date();
+            cfYear = now.getFullYear();
+        }
+        function saveCashBook(){
+            lsSet(CF_KEY, JSON.stringify({ records: cfRecords }));
+            flushAllNow();
+        }
+        // 按年聚合：{ y: { in, out, gain, count, months:{'01':{in,out,count}} } }
+        function cfAggByYear(){
+            const years = {};
+            cfRecords.forEach(function(r){
+                const d = String(r.date || '');
+                if(d.length < 7) return;
+                const y = d.substring(0, 4);
+                const m = d.substring(5, 7);
+                const amt = Number(r.amount) || 0;
+                const gain = Number(r.gain) || 0;
+                if(!years[y]) years[y] = { in:0, out:0, gain:0, count:0, months:{} };
+                const Y = years[y];
+                Y.count++;
+                Y.gain += gain;
+                if(r.type === 'in') Y.in += amt; else Y.out += amt;
+                if(!Y.months[m]) Y.months[m] = { in:0, out:0, count:0 };
+                const M = Y.months[m];
+                M.count++;
+                if(r.type === 'in') M.in += amt; else M.out += amt;
+            });
+            return years;
+        }
+        function cfFmt(v){
+            return '¥' + (Math.abs(v) >= 10000 ? ((v / 10000).toFixed(2) + '万') : v.toFixed(2));
+        }
+        function cfPctDiff(cur, last){
+            if(last == null || isNaN(last) || Math.abs(last) < 0.005) return null;
+            return ((cur - last) / last) * 100;
+        }
+        function cfPctTxt(p){
+            if(p == null) return '—';
+            return (p > 0 ? '+' : '') + p.toFixed(1) + '%';
+        }
+        function renderCashBookPage(){
+            const years = cfAggByYear();
+            // 全部年份累计口径（顶部汇总卡）
+            let sumIn = 0, sumOut = 0, sumGain = 0, lastDate = '';
+            Object.keys(years).forEach(function(y){
+                const Y = years[y];
+                sumIn += Y.in; sumOut += Y.out; sumGain += Y.gain;
+            });
+            cfRecords.forEach(function(r){ if(String(r.date || '') > lastDate) lastDate = String(r.date); });
+            sumIn = Number(sumIn.toFixed(2)); sumOut = Number(sumOut.toFixed(2));
+            const bal = Number((sumIn - sumOut).toFixed(2));
+            const setTxt = function(id, txt){ const el = document.querySelector('#' + id); if(el) el.innerText = txt; };
+            // 标题栏标签：已去掉笔数，置空
+            setTxt('cfPageMonthTag', '');
+            // 顶部累计汇总卡
+            setTxt('cfYearTitle', '全部年份累计');
+            setTxt('cfYearIn', cfFmt(sumIn));
+            setTxt('cfYearOut', cfFmt(sumOut));
+            const balEl = document.querySelector('#cfYearBal');
+            if(balEl){ balEl.innerText = cfFmt(bal); balEl.style.color = bal >= 0 ? '#f7cf8f' : '#ffb3a7'; }
+            const gainEl = document.querySelector('#cfYearGain');
+            if(gainEl){ gainEl.innerText = cfFmt(sumGain); gainEl.style.color = sumGain >= 0 ? '#f7cf8f' : '#ffb3a7'; }
+            const vsEl = document.querySelector('#cfYearVsDetail');
+            if(vsEl) vsEl.style.display = 'none';
+            // 年度总和卡
+            renderCashBookYearCard(years);
+            // 月度走势图
+            renderCashBookChart(years);
+            // 年度走势图
+            renderCashBookYearChart(years);
+        }
+        function renderCashBookYearCard(years){
+            const Y = years[String(cfYear)] || { in:0, out:0, gain:0, count:0, months:{} };
+            const setTxt = function(id, txt){ const el = document.querySelector('#' + id); if(el) el.innerText = txt; };
+            setTxt('cfPickYear', cfYear + ' 年');
+            setTxt('cfYrIn', cfFmt(Y.in));
+            setTxt('cfYrOut', cfFmt(Y.out));
+            const balEl = document.querySelector('#cfYrBal');
+            if(balEl){
+                balEl.innerText = cfFmt(Y.in - Y.out);
+                balEl.className = 'text-[14px] font-bold tabular-nums ' + (Y.in - Y.out >= 0 ? 'text-[#a9642a]' : 'text-[#c0392b]');
+            }
+            const cntEl = document.querySelector('#cfYrCnt');
+            if(cntEl){
+                cntEl.innerText = cfFmt(Y.gain);
+                cntEl.className = 'text-[14px] font-bold tabular-nums ' + (Y.gain >= 0 ? 'text-[#a9642a]' : 'text-[#c0392b]');
+            }
+            const ly = years[String(cfYear - 1)];
+            const vsEl = document.querySelector('#cfYrVs');
+            if(vsEl){
+                if(ly && ly.count){
+                    const pi = cfPctDiff(Y.in, ly.in), po = cfPctDiff(Y.out, ly.out);
+                    vsEl.innerHTML = '较 <span class="tabular-nums">' + (cfYear - 1) + '</span> 年：收入 ' + cfPctTxt(pi) + ' · 支出 ' + cfPctTxt(po);
+                } else {
+                    vsEl.innerText = (cfYear - 1) + ' 年暂无记录';
+                }
+            }
+        }
+        function renderCashBookChart(years){
+            const el = document.querySelector('#cfMonthChart');
+            if(!el) return;
+            const Y = years[String(cfYear)] || { months:{} };
+            const inData = [], outData = [];
+            for(let m = 1; m <= 12; m++){
+                const M = Y.months[String(m).padStart(2, '0')] || { in:0, out:0 };
+                inData.push(Number(M.in.toFixed(2)));
+                outData.push(Number(M.out.toFixed(2)));
+            }
+            const opt = {
+                textStyle: { fontFamily: '"Space Grotesk","Noto Sans SC",system-ui,sans-serif' },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(255,255,255,0.97)',
+                    borderColor: '#e5d5b8',
+                    borderWidth: 1,
+                    textStyle: { color: '#3d3528', fontSize: 12, fontFamily: '"Space Grotesk","Noto Sans SC",system-ui,sans-serif' },
+                    padding: [8, 12],
+                    extraCssText: 'box-shadow:0 6px 18px rgba(90,70,40,.12);border-radius:10px;',
+                    formatter: function(ps){
+                        if(!ps || !ps.length) return '';
+                        let html = ps[0].name + '<br/>';
+                        ps.forEach(function(p){
+                            html += '<span style="color:' + (p.seriesName === '收入' ? '#a9642a' : '#c0392b') + '">●</span> ' + p.seriesName + '：' + cfFmt(p.value) + '<br/>';
+                        });
+                        return html;
+                    }
+                },
+                grid: { left: 8, right: 8, top: 24, bottom: 4, containLabel: true },
+                xAxis: {
+                    type: 'category', data: CF_MONTHS,
+                    axisLabel: { fontSize: 10, color: '#a08d6e' },
+                    axisLine: { lineStyle: { color: '#e6d9c0' } },
+                    axisTick: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: { fontSize: 10, color: '#a08d6e', formatter: function(v){ return v >= 10000 ? ((v / 10000).toFixed(0) + '万') : v; } },
+                    splitLine: { lineStyle: { color: '#f2ead9', width: 1 } }
+                },
+                series: [
+                    {
+                        name: '收入', type: 'bar', data: inData, barWidth: '30%',
+                        itemStyle: { borderRadius: [4, 4, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#c08a4a' }, { offset: 1, color: '#a9642a' }] } },
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(169,100,42,0.45)' } }
+                    },
+                    {
+                        name: '支出', type: 'bar', data: outData, barWidth: '30%',
+                        itemStyle: { borderRadius: [4, 4, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#d05a4a' }, { offset: 1, color: '#c0392b' }] } },
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(192,57,43,0.45)' } }
+                    }
+                ]
+            };
+            if(!cfChartInst){
+                cfChartInst = echarts.init(el);
+                el._chart = cfChartInst;
+            }
+            cfChartInst.setOption(opt, true);
+        }
+        // 年度总结余走势：每年收入-支出（正=深金，负=暖红）
+        function renderCashBookYearChart(years){
+            const el = document.querySelector('#cfYearChart');
+            if(!el) return;
+            const yList = Object.keys(years).sort();
+            // 正负分段：正值深金段、负值暖红段（各自连线+面积）
+            const posData = yList.map(function(y){
+                const bal = years[y].in - years[y].out;
+                return bal >= 0 ? Number(bal.toFixed(2)) : null;
+            });
+            const negData = yList.map(function(y){
+                const bal = years[y].in - years[y].out;
+                return bal < 0 ? Number(bal.toFixed(2)) : null;
+            });
+            if(!yList.length) yList.push(String(new Date().getFullYear()));
+            // X 轴标签间隔：年份多时抽稀
+            let yInterval = 0;
+            if(yList.length > 12) yInterval = Math.ceil(yList.length / 12);
+            const opt = {
+                textStyle: { fontFamily: '"Space Grotesk","Noto Sans SC",system-ui,sans-serif' },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(255,255,255,0.97)',
+                    borderColor: '#e5d5b8',
+                    borderWidth: 1,
+                    textStyle: { color: '#3d3528', fontSize: 12, fontFamily: '"Space Grotesk","Noto Sans SC",system-ui,sans-serif' },
+                    padding: [8, 12],
+                    extraCssText: 'box-shadow:0 6px 18px rgba(90,70,40,.12);border-radius:10px;',
+                    formatter: function(ps){
+                        if(!ps || !ps.length) return '';
+                        const y = ps[0].name;
+                        const Y = years[y] || { in:0, out:0 };
+                        const bal = Number((Y.in - Y.out).toFixed(2));
+                        return y + '年<br/>' +
+                            '<span style="color:#a9642a">●</span> 收入：' + cfFmt(Y.in) + '<br/>' +
+                            '<span style="color:#c0392b">●</span> 支出：' + cfFmt(Y.out) + '<br/>' +
+                            '<span style="color:' + (bal >= 0 ? '#a9642a' : '#c0392b') + '">●</span> 结余：' + cfFmt(bal);
+                    }
+                },
+                grid: { left: 8, right: 8, top: 24, bottom: 4, containLabel: true },
+                xAxis: {
+                    type: 'category', data: yList,
+                    axisLabel: { fontSize: 10, color: '#a08d6e', interval: yInterval },
+                    axisLine: { lineStyle: { color: '#e6d9c0' } },
+                    axisTick: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: { fontSize: 10, color: '#a08d6e', formatter: function(v){ return v >= 10000 ? ((v / 10000).toFixed(0) + '万') : v; } },
+                    splitLine: { lineStyle: { color: '#f2ead9', width: 1 } }
+                },
+                series: [
+                    {
+                        name: '结余（正）', type: 'line', data: posData, smooth: true,
+                        symbol: 'circle', symbolSize: 7, z: 4,
+                        lineStyle: { width: 2.5, color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: '#b97d3c' }, { offset: 1, color: '#a9642a' }] } },
+                        itemStyle: { color: '#a9642a', borderColor: '#fff', borderWidth: 1.5 },
+                        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(169,100,42,0.18)' }, { offset: 1, color: 'rgba(169,100,42,0.02)' }] } },
+                        label: { show: true, position: 'top', fontSize: 10, color: '#a9642a', formatter: function(p){ return Math.abs(p.value) >= 10000 ? ((p.value / 10000).toFixed(1) + '万') : p.value; } },
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(169,100,42,0.45)' } },
+                        markLine: { silent: true, symbol: 'none', lineStyle: { color: '#e3d3b4', type: 'dashed', width: 1 }, data: [{ yAxis: 0 }], label: { show: false } }
+                    },
+                    {
+                        name: '结余（负）', type: 'line', data: negData, smooth: true,
+                        symbol: 'circle', symbolSize: 7, z: 4,
+                        lineStyle: { width: 2.5, color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: '#cf5343' }, { offset: 1, color: '#c0392b' }] } },
+                        itemStyle: { color: '#c0392b', borderColor: '#fff', borderWidth: 1.5 },
+                        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(192,57,43,0.16)' }, { offset: 1, color: 'rgba(192,57,43,0.02)' }] } },
+                        label: { show: true, position: 'top', fontSize: 10, color: '#c0392b', formatter: function(p){ return Math.abs(p.value) >= 10000 ? ((p.value / 10000).toFixed(1) + '万') : p.value; } },
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(192,57,43,0.45)' } }
+                    }
+                ]
+            };
+            if(!cfYearChartInst){
+                cfYearChartInst = echarts.init(el);
+                el._chart = cfYearChartInst;
+            }
+            cfYearChartInst.setOption(opt, true);
+        }
+        function cfShiftYear(d){
+            cfYear += d;
+            if(cfYear > new Date().getFullYear()) cfYear = new Date().getFullYear();
+            if(cfYear < 2000) cfYear = 2000;
+            renderCashBookPage();
+        }
+        function openCfAdd(){
+            cfType = 'in';
+            cfUpdateTypeUI();
+            document.querySelector('#cfAmount').value = '';
+            document.querySelector('#cfGain').value = '';
+            document.querySelector('#cfNote').value = '';
+            document.querySelector('#cfDate').value = todayStr();
+            // 隐藏宿主详情页与悬浮 + 号，二级页覆盖显示（与首页新增股票一致）
+            document.querySelector('#pageStatsCashBook').classList.add('hidden');
+            document.querySelector('#cfAddFab').classList.add('hidden');
+            document.querySelector('#pageCashFlowAdd').classList.remove('hidden');
+            setTimeout(function(){ const a = document.querySelector('#cfAmount'); if(a) a.focus(); }, 80);
+        }
+        function closeCfAdd(){
+            document.querySelector('#pageCashFlowAdd').classList.add('hidden');
+            document.querySelector('#pageStatsCashBook').classList.remove('hidden');
+            document.querySelector('#cfAddFab').classList.remove('hidden');
+        }
+        function cfSetType(t){ cfType = t; cfUpdateTypeUI(); }
+        function cfUpdateTypeUI(){
+            const inBtn = document.querySelector('#cfTypeIn');
+            const outBtn = document.querySelector('#cfTypeOut');
+            if(!inBtn || !outBtn) return;
+            const on = 'flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all bg-accent text-white border-accent shadow-md shadow-orange-500/15';
+            const off = 'flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-medium transition-all bg-white text-gray-500 border-gray-200';
+            inBtn.className = cfType === 'in' ? on : off;
+            outBtn.className = cfType === 'out' ? on : off;
+            // 浮盈输入仅收入 tab 显示
+            const gainWrap = document.querySelector('#cfGainWrap');
+            if(gainWrap) gainWrap.classList.toggle('hidden', cfType !== 'in');
+        }
+        function cfSave(){
+            const amt = parseFloat(document.querySelector('#cfAmount').value);
+            if(!amt || isNaN(amt) || amt <= 0){ showToast('请输入有效金额'); return; }
+            const d = document.querySelector('#cfDate').value || todayStr();
+            const note = (document.querySelector('#cfNote').value || '').trim();
+            let gain = 0;
+            if(cfType === 'in'){
+                const g = parseFloat(document.querySelector('#cfGain').value);
+                if(!isNaN(g)) gain = Math.round(g * 100) / 100;
+            }
+            const id = 'cf' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            cfRecords.push({ id: id, date: d, type: cfType, amount: Math.round(amt * 100) / 100, gain: gain, note: note, createdAt: new Date().toISOString() });
+            saveCashBook();
+            closeCfAdd();
+            cfYear = parseInt(d.substring(0, 4), 10);
+            renderCashBookPage();
+            showToast(cfType === 'in' ? '已记一笔收入' : '已记一笔支出');
+        }
+        function cfDel(id){
+            const row = cfRecords.filter(function(r){ return String(r.id) === String(id); })[0];
+            if(!row) return;
+            showConfirm('确定删除这笔记录？\n' + (row.type === 'in' ? '收入' : '支出') + ' ' + cfFmt(Number(row.amount) || 0) + '（' + row.date + '）', function(){
+                cfRecords = cfRecords.filter(function(r){ return String(r.id) !== String(id); });
+                saveCashBook();
+                renderCashBookPage();
+            });
+        }
+        loadCashBook();
         function renderStatsCashFlow(){
             const tEl = document.querySelector('#statsCashFlowTime');
             if(tEl){
@@ -15377,8 +15966,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 历史年份：优先使用手动编辑的yearlyAssets，否则取年终数据（固定不变）
             // 当前年份：取每天最新总资产（每天更新，直到年底成为最终数据）
             const curYear = new Date().getFullYear();
-            let curTotal = 0;
-            holdDataList.forEach(function(it){ curTotal += getMarketValue(it); });
+            // 当前总资产（市值 + 现金，与顶部卡/我的页同口径）
+            let curTotal = Number(calcSummary().totalAsset) || 0;
             // 收集所有有数据的年份
             const yearSet = {};
             // 1. 优先从手动编辑的yearlyAssets获取（已锁定的数据不会被自动计算覆盖）
@@ -15415,10 +16004,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                 }
             });
-            // 4. 当前年份：取最新总资产（每天更新），不覆盖手动/快照数据
-            if(!yearSet[String(curYear)] || (yearSet[String(curYear)].source !== 'manual' && yearSet[String(curYear)].source !== 'snapshot')){
-                yearSet[String(curYear)] = { year: String(curYear), value: Number(curTotal.toFixed(2)), source: 'current' };
-            }
+            // 4. 当前年份：永远取实时总资产（每天更新；当年未结束，即使存过快照/手动归档也不锁定旧值，
+            //    年底自动进入历史年份后按上方锁定规则取年终权威值）
+            yearSet[String(curYear)] = { year: String(curYear), value: Number(curTotal.toFixed(2)), source: 'current' };
             // 按年份排序
             const assetYears = Object.keys(yearSet).sort();
             const assetValues = assetYears.map(function(y){ return yearSet[y].value; });
@@ -16049,6 +16637,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let totalYearDiv = 0;
             let aShareNum = 0;
             let hkShareNum = 0;
+            // 账户现金（券商口径：卖出回款/未投入资金，买入扣减、卖出增加；初始 0）
+            const cash = Number(historyData.cashBalance) || 0;
             holdDataList.forEach(item=>{
                 const fx = item.marketType === 'HK' ? hkFxRate : 1;
                 totalCost += item.count * item.costPrice * fx;
@@ -16059,6 +16649,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     hkShareNum +=1;
                 }
             })
+            // 总资产 = 总市值 + 现金（券商口径，全站唯一计算点，其余各处均从 calcSummary 读取）
+            const totalAsset = totalMarket + cash;
             // 年度分红收入（预测）= 今年已收（历史，含手动基准与清仓股）+ 剩余未到账预测，
             // 与"今年已收"的历史部分完全一致（一处计算，各处复用）
             totalYearDiv = calcCurYearDiv();
@@ -16082,8 +16674,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 月均分红 = 今年已收 ÷ 12（复用首页今年已收实时口径，与年度预测分红无关）
             const monthDiv = (getCurYearReceived() / 12).toFixed(2);
             const totalPnl = totalMarket - totalCost;
-            // 总收益率 = 总盈亏 / 总成本 × 100%（类似券商开户至今总收益率）
-            const totalReturnRate = totalCost > 0 ? (totalPnl / totalCost * 100) : 0;
+            // 总收益率（账户口径，以总资产为基准，与我的页累计盈亏同源）：
+            // (当前总资产 - 累计投入成本) / 累计投入成本 × 100%
+            const totalReturnRate = investTotal > 0 ? ((totalAsset - investTotal) / investTotal * 100) : 0;
             // 今年收益率（券商标准公式）：
             // 当期收益额 = 当前总市值 - 年初市值 - 期间净流入
             // 年初市值取上一年（2025年）的年终总资产（分析页趋势图已用到该数据）
@@ -16099,14 +16692,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             } else if(historyData.dailyAssets && historyData.dailyAssets[lastYear + '-12-31'] > 0){
                 yearStartMarket = historyData.dailyAssets[lastYear + '-12-31'];
             }
-            // 如果没有上一年年终数据，回退到yearStart快照
+            // 如果没有上一年年终数据，回退到yearStart快照（年初总资产 = 市值 + 现金；老数据无 cash 按 0）
             if(yearStartMarket <= 0 && historyData.yearStart && historyData.yearStart.market > 0){
-                yearStartMarket = historyData.yearStart.market;
+                yearStartMarket = Number(historyData.yearStart.market) + (Number(historyData.yearStart.cash) || 0);
             }
             const periodNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[curYStr]) || 0;
-            const yearTotalGain = totalMarket - yearStartMarket - periodNetInflow;
+            const yearTotalGain = totalAsset - yearStartMarket - periodNetInflow;
             const yearReturnBase = yearStartMarket + periodNetInflow;
-            const yearReturnRate = yearReturnBase > 0 ? (yearTotalGain / yearReturnBase * 100) : 0;
+            // 无年初基准（今年上线/无去年末资产）时无法计算，返回 null（展示层显示 '--'，不误导为 0%）
+            const yearReturnRate = yearReturnBase > 0 ? (yearTotalGain / yearReturnBase * 100) : null;
             // 年化收益率（主流券商"开户至今年化"复利口径）：
             // 累计收益率 = (当前总资产 - 期初总资产 - 累计净流入) / (期初总资产 + 累计净流入)
             // 年化收益率 = (1 + 累计收益率)^(365 / 持有天数) - 1
@@ -16124,7 +16718,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     baseVal = historyData.yearlyAssets[String(Number(curYStr) - 1)];
                     baseDateStr = curYStr + '-01-01';
                 } else if(historyData.yearStart && historyData.yearStart.market > 0){
-                    baseVal = historyData.yearStart.market;
+                    baseVal = Number(historyData.yearStart.market) + (Number(historyData.yearStart.cash) || 0);
                     baseDateStr = curYStr + '-01-01';
                 }
                 if(baseVal > 0 && baseDateStr){
@@ -16133,8 +16727,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         totalNetInflow += Number(historyData.yearlyNetInflow[y]) || 0;
                     });
                     const baseAdj = baseVal + totalNetInflow;
-                    if(baseAdj > 0 && totalMarket > 0){
-                        const totalRet = (totalMarket - baseVal - totalNetInflow) / baseAdj;
+                    if(baseAdj > 0 && totalAsset > 0){
+                        const totalRet = (totalAsset - baseVal - totalNetInflow) / baseAdj;
                         const days = Math.max((new Date() - new Date(baseDateStr)) / 86400000, 1);
                         annualReturnRate = (Math.pow(1 + totalRet, 365 / days) - 1) * 100;
                     }
@@ -16146,6 +16740,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 hkShareNum,
                 totalCost: totalCost.toFixed(2),
                 totalMarket: totalMarket.toFixed(2),
+                cash: cash.toFixed(2),
+                totalAsset: totalAsset.toFixed(2),
                 totalYearDiv: totalYearDiv.toFixed(2),
                 totalReceived: totalReceived.toFixed(2),
                 totalDivReceived: totalDivReceived.toFixed(2),
@@ -16167,7 +16763,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 无任何资金记录或无资产快照可分段时返回 null（调用方回退原口径）
         function calcTwrReturn(curAsset){
             const flows = getFundFlows();
-            const assetV = (curAsset != null) ? Number(curAsset) : (Number(calcSummary().totalMarket) || 0);
+            const assetV = (curAsset != null) ? Number(curAsset) : (Number(calcSummary().totalAsset) || 0);
             if(!flows.length || !(assetV > 0)) return null;
             // 同日资金变动合并（同一天多笔转入/取出共享同一分段点）
             const byDate = {};
@@ -16280,7 +16876,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             });
             // 2) 当前最新总资产作为序列末点（自动重算，无固定截止）
-            const curTotal = Number(calcSummary().totalMarket) || 0;
+            const curTotal = Number(calcSummary().totalAsset) || 0;
             if(curTotal > 0) pts.push({ date: todayStr(), value: curTotal });
             pts.sort(function(a, b){ return a.date.localeCompare(b.date); });
             if(pts.length < 2) return null;
@@ -16884,6 +17480,60 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             modal.classList.remove('flex');
             document.body.style.overflow = '';
         }
+
+        // ===== 修改现金（点击首页/我的页「现金」标签；手动修正账户现金） =====
+        function openCashEdit(){
+            const input = document.querySelector('#ceInput');
+            const cur = Number(historyData.cashBalance) || 0;
+            input.value = cur ? String(cur) : '';
+            document.querySelector('#cashEditModal').classList.remove('hidden');
+            document.querySelector('#cashEditModal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            setTimeout(function(){ input.focus(); }, 80);
+        }
+        function closeCashEdit(){
+            document.querySelector('#cashEditModal').classList.add('hidden');
+            document.querySelector('#cashEditModal').classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+        function saveCashEdit(){
+            const raw = document.querySelector('#ceInput').value.trim();
+            if(raw === ''){
+                showToast('请输入现金金额');
+                return;
+            }
+            const v = Number(raw);
+            if(!isFinite(v)){
+                showToast('请输入有效数字');
+                return;
+            }
+            historyData.cashBalance = Math.round(v * 100) / 100;
+            saveHistory();
+            flushAllNow();
+            closeCashEdit();
+            renderPage();
+            renderMinePage();
+            // 全站联动：若统计页/资产分析详情页可见，同步刷新（修改现金后无需等待交易时段2秒或30分钟轮询）
+            try{
+                if(!document.querySelector('#pageStats').classList.contains('hidden')) refreshStatsCardSummaries();
+                if(!document.querySelector('#pageAnalysis').classList.contains('hidden')){
+                    recordDailyAssets();
+                    finalizePastMonths();
+                    const sumX = calcSummary();
+                    numTween(document.querySelector('#analysisTotalAsset'), sumX.totalAsset, fmtMoney);
+                    numTween(document.querySelector('#analysisYearDiv'), sumX.totalYearDiv, fmtMoney);
+                    renderMaxDrawdown();
+                    renderAnalysisCharts();
+                }
+            }catch(e){}
+            showToast('现金已更新为 ' + fmtMoney(historyData.cashBalance));
+        }
+        document.querySelector('#ceClose').addEventListener('click', closeCashEdit);
+        document.querySelector('#ceCancel').addEventListener('click', closeCashEdit);
+        document.querySelector('#ceSave').addEventListener('click', saveCashEdit);
+        document.querySelector('#ceInput').addEventListener('keydown', function(e){
+            if(e.key === 'Enter') saveCashEdit();
+        });
         function saveMilestoneModal(){
             const inputs = document.querySelectorAll('#msModalList .ms-milestone-input');
             const vals = [];
@@ -16984,19 +17634,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pnlVal = Number(sum.totalPnl);
             numTween(totalPnlEl, pnlVal, fmtPnlNum);
             totalPnlEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
-            numTween(document.querySelector('#totalMarket'), sum.totalMarket, fmtMoney);
+            numTween(document.querySelector('#totalMarket'), sum.totalAsset, fmtMoney);
+            const brkEl = document.querySelector('#assetBreakdown');
+            if(brkEl){
+                const mv = brkEl.querySelector('.ab-mkt-v');
+                const cv = brkEl.querySelector('.ab-cash-v');
+                if(mv) mv.innerText = fmtMoney(sum.totalMarket);
+                if(cv) cv.innerText = fmtMoney(sum.cash);
+            }
             renderNextDivCountdown();
             const trrEl = document.querySelector('#totalReturnRate');
             // 开户至今收益率 = 时间加权收益率 TWR（券商口径），与资金流水/资产快照同源；
             // 数据不足以分段（无资金记录或无资产快照）时回退原"持仓成本收益率"口径
-            const twrV = calcTwrReturn(sum.totalMarket);
+            const twrV = calcTwrReturn(sum.totalAsset);
             const trrVal = (twrV != null && isFinite(twrV)) ? twrV : Number(sum.totalReturnRate);
             numTween(trrEl, trrVal, fmtPctNum);
             trrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(trrVal);
             const yrrEl = document.querySelector('#yearReturnRate');
-            const yrrVal = Number(sum.yearReturnRate);
-            numTween(yrrEl, yrrVal, fmtPctNum);
-            yrrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(yrrVal);
+            if(sum.yearReturnRate == null || !isFinite(Number(sum.yearReturnRate))){
+                yrrEl.innerText = '--';
+                yrrEl.className = 'text-[13px] font-bold tabular-nums num-transition text-gray-400';
+            } else {
+                const yrrVal = Number(sum.yearReturnRate);
+                numTween(yrrEl, yrrVal, fmtPctNum);
+                yrrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(yrrVal);
+            }
             numTween(document.querySelector('#costYield'), sum.costYield, fmtNum2);
             numTween(document.querySelector('#marketYield'), sum.marketYield, fmtNum2);
             numTween(document.querySelector('#monthDiv'), sum.monthDiv, fmtMoney);
@@ -19274,6 +19936,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!historyData.fundInflows) historyData.fundInflows = [];
             // 只记录到日期（无需具体时分秒）
             historyData.fundInflows.push({ date: dateV, amount: amount, remark: remarkV });
+            // 资金转账联动现金（券商口径）：转入入金 → 现金增加；转出取款 → 现金减少；
+            // 总资产 = 市值 + 现金，随之实时变化；存量历史流水迁移时不重放，仅今后新增的转账生效
+            adjustCash(amount);
             afterFundFlowsChanged();
             closeFundTransferAdd();
             showToast(fundTransferType === 'in' ? '已记录资金转入，并累计到 ' + dateV.substring(0, 4) + ' 年汇总' : '已记录资金取出，并累计到 ' + dateV.substring(0, 4) + ' 年汇总');

@@ -4826,13 +4826,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         it.processedDivDates.push(divKey);
                         // 记录除权（分红到账）流水：真实收到分红的金额 = 每股分红 × 登记日当天实际持股数
                         if(!it.exDivRecords) it.exDivRecords = [];
+                        const exAmt = Number((perShare * exCount).toFixed(2));
                         it.exDivRecords.push({
                             date: divDate,
                             perShare: perShare,
                             count: exCount,
-                            amount: Number((perShare * exCount).toFixed(2)),
+                            amount: exAmt,
                             divKey: divKey
                         });
+                        // 分红派现到账 → 现金入账（券商口径：除权派现进入账户现金，总资产 = 市值 + 现金 随之变化）
+                        // 该笔已打 processedDivDates 防重标识，此后编辑/删除重加/手工录入同一笔都不会重复入账
+                        adjustCash(exAmt);
                         // 该次分红已完成，删除完成标识（快照）
                         if(it.divRegSnapshot) delete it.divRegSnapshot[divKey];
                         changed = true;
@@ -7185,6 +7189,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(oldIdx >= 0) oldAmt = Number(it.divPaidRecords[oldIdx].amount) || 0;
             const newRec = { exDate: date, perShare: per, countAtEx: cnt, count: cnt, amount: amt, manual: true };
             if(oldIdx >= 0) it.divPaidRecords[oldIdx] = newRec; else it.divPaidRecords.push(newRec);
+            // 分红手工录入 → 现金入账：历史日期 = 已收到分红，按净额增加现金；未来日期 = 预测分红，不入账。
+            // 增量 = 新金额 − 旧手工金额 − 该登记日已自动除权入账金额（同一天重复录入/自动+手工都不得双计）
+            if(date <= todayStr()){
+                const autoAmt = (it.exDivRecords || []).reduce(function(s, r){
+                    return s + (String(r.date || '') === date && !r.manual ? (Number(r.amount) || 0) : 0);
+                }, 0);
+                adjustCash(Number((amt - oldAmt - autoAmt).toFixed(2)));
+            }
             // 流水同步：港股走日期键同步；A股直接维护 exDivRecords + 登记日防重标识
             if(divEntryMarket === 'HK'){
                 syncHkDivToExDivRecords(it);
@@ -18035,7 +18047,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         </div>
                         <!-- 折叠区底部：低频管理操作（流水 / 编辑）左对齐，与右侧主操作（买入/卖出）分居两侧 -->
                         <div class="flex justify-start items-center gap-4 px-3 py-2 border-t border-[#F0EDE7]">
-                            <button onclick="openTradeLogPage(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>流水</button>
+                            <button onclick="openTradeLogPage(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>明细</button>
                             <button onclick="editItem(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>编辑</button>
                         </div>
                     </div>
@@ -18196,7 +18208,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         ? ';border-bottom:0.6px solid #F0EDE7'
                         : '';
                     htmlStr += `
-                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300" data-hold-code="${item.marketType}|${item.code}" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr${rowDivider}">
+                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300 cursor-pointer" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="grid-template-columns:1.5fr 0.9fr 1.1fr 1.2fr 1.08fr${rowDivider}">
                         <div class="text-left pl-[6px] pr-2">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
@@ -18223,6 +18235,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <div class="text-[13.8px] font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>
                     </div>
+                    <!-- 列表模式点击行展开的操作层：买入/卖出/编辑/明细（与卡片模式功能一致；再点行收起） -->
+                    <div class="hold-row-actions hidden mx-2 mb-[4px] px-1.5 py-1 rounded-lg grid grid-cols-4 gap-1" data-hold-id="${item.id}" style="background:#faf5e9;border:1px solid #eedfc0">
+                        <button type="button" onclick="openTradeModal(${item.id},'buy')" class="py-1 rounded-md text-[#e03131] text-xs font-semibold active:scale-95 transition-transform">买入</button>
+                        <button type="button" onclick="openTradeModal(${item.id},'sell')" class="py-1 rounded-md text-[#00b57a] text-xs font-semibold active:scale-95 transition-transform">卖出</button>
+                        <button type="button" onclick="editItem(${item.id})" class="py-1 rounded-md text-gray-500 text-xs font-medium active:scale-95 transition-transform">编辑</button>
+                        <button type="button" onclick="openTradeLogPage(${item.id})" class="py-1 rounded-md text-gray-500 text-xs font-medium active:scale-95 transition-transform">明细</button>
+                    </div>
                     `
                 });
             });
@@ -18244,6 +18263,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     listPrevValues.dayPnlPct[code] = pct;
                 });
             }, 50);
+        }
+
+        // 列表模式：点击股票行展开/收起操作按钮层（买入/卖出/编辑/明细，券商APP风格）
+        // 同一时刻只展开一行；再点同一行收起；点其他行自动切换
+        function toggleHoldRowActions(rowEl){
+            if(!rowEl) return;
+            const id = rowEl.getAttribute('data-hold-id');
+            const container = rowEl.parentElement;
+            if(!container || !id) return;
+            const actionEl = container.querySelector('.hold-row-actions[data-hold-id="' + id + '"]');
+            const isOpen = actionEl && !actionEl.classList.contains('hidden');
+            // 先收起所有展开层（点任意行都只保留一行展开）
+            container.querySelectorAll('.hold-row-actions').forEach(function(a){ a.classList.add('hidden'); });
+            // 点击的是未展开行 → 展开其操作层
+            if(!isOpen && actionEl) actionEl.classList.remove('hidden');
         }
 
         // ==================== 财务数据（东方财富 F10 主要财务指标，7天缓存） ====================

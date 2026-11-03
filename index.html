@@ -480,14 +480,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.20);"></div>
 
             <div class="relative z-10">
-                <!-- 年度分红收入（整卡深棕金后直接融入卡片，金色标题 + 金色数字与详情页横幅同族） -->
-                <div class="px-3 pt-2.5 pb-2 mb-2.5 text-white">
-                    <div class="text-[11px] text-amber-100/60 flex items-center gap-1.5 mb-0.5">
-                        <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
-                        <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide font-serif">年度分红收入</span><i class="fa fa-chevron-right text-[10px]"></i><span class="absolute rounded-lg" style="inset:-8px;"></span></button>
+                <!-- 顶部：年度分红收入（左） ↔ 回本分析（右，预计回本/复投/缺口，点击进入回本分析页） -->
+                <div class="px-3 pt-2.5 pb-2 mb-2.5 text-white flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="text-[11px] text-amber-100/60 flex items-center gap-1.5 mb-0.5">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
+                            <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide font-serif">年度分红收入</span><i class="fa fa-chevron-right text-[10px]"></i><span class="absolute rounded-lg" style="inset:-8px;"></span></button>
+                        </div>
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="text-[20px] font-semibold tabular-nums tracking-tight num-transition text-[#ffffff]" id="totalYearDiv">0.00</span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline gap-1.5">
-                        <span class="text-[20px] font-semibold tabular-nums tracking-tight num-transition text-[#ffffff]" id="totalYearDiv">0.00</span>
+                    <div class="shrink-0 text-right cursor-pointer select-none active:scale-95 transition-transform" onclick="openBreakEvenPage()" title="查看回本分析（资金流水口径分红回收）">
+                        <div class="text-[11px] text-amber-100/60 flex items-center gap-1.5 mb-0.5 justify-end">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
+                            <span class="tracking-wide font-serif">预计回本</span><i class="fa fa-chevron-right text-[10px]"></i>
+                        </div>
+                        <div class="flex items-end justify-end gap-2.5">
+                            <div class="text-right">
+                                <div class="text-[9.5px] text-amber-100/50 tracking-wide whitespace-nowrap">不复投</div>
+                                <div class="text-[17px] font-semibold tabular-nums tracking-tight text-[#ffffff] leading-tight" id="sumBeNo">--</div>
+                            </div>
+                            <div class="w-px self-stretch mb-1" style="background:rgba(230,210,163,0.18);"></div>
+                            <div class="text-right">
+                                <div class="text-[9.5px] text-amber-100/50 tracking-wide whitespace-nowrap">复投</div>
+                                <div class="text-[13px] font-semibold tabular-nums text-[#e8c88a] leading-tight" id="sumBeRe">--</div>
+                            </div>
+                        </div>
+                        <div class="text-[10px] text-amber-100/60 mt-1 whitespace-nowrap">缺口 <span id="sumBeGap" class="text-amber-200 font-semibold tabular-nums">--</span></div>
                     </div>
                 </div>
 
@@ -1044,6 +1064,83 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div id="tradeLogMoreWrap" class="hidden px-4 pb-3">
                 <button id="tradeLogMoreBtn" class="w-full py-3 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium active:scale-95 transition-transform">加载更多</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 回本分析独立页面：账户汇总 + 回本时间趋势 + 各股明细与操作影响（首页汇总卡/卡片副行可进入） -->
+    <div id="pageBreakEven" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+        <!-- 顶部导航（吸顶白卡圆角，与交易明细等详情页统一） -->
+        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
+            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
+            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+            <div class="flex items-center gap-2.5 relative z-10">
+                <button id="beBackBtn" onclick="closeBreakEvenPage()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
+                        <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                        回本分析
+                    </h2>
+                    <div id="bePageSub" class="text-xs text-gray-400 mt-0.5">资金流水口径 · 分红回收动态成本</div>
+                </div>
+                <span class="text-[10px] px-2 py-1 rounded-full bg-[#faf3e3] text-accent shrink-0">分红回本</span>
+            </div>
+        </div>
+
+        <!-- 账户汇总卡：深棕金渐变（与交易明细/行业资产分布统一） -->
+        <div class="card-rise relative overflow-hidden rounded-2xl p-4 text-white mb-5" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div class="text-[12px] text-amber-100/60">账户预计回本（不复投）</div>
+                    <div class="text-[11px] text-amber-100/60">复投口径 <span id="beSumRe" class="text-white font-bold text-[13px] tabular-nums">--</span></div>
+                </div>
+                <div class="mt-1 text-[32px] font-bold leading-none tabular-nums" id="beSumNo">--</div>
+                <div class="mt-3 grid grid-cols-4 gap-2 border-t border-white/10 pt-3">
+                    <div class="min-w-0">
+                        <div class="text-[10px] text-amber-100/60 mb-1">动态净投入</div>
+                        <div id="beSumNet" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-[10px] text-amber-100/60 mb-1">累计税后分红</div>
+                        <div id="beSumDiv" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-[10px] text-amber-100/60 mb-1">回本缺口</div>
+                        <div id="beSumGap2" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-[10px] text-amber-100/60 mb-1">近3年年均分红</div>
+                        <div id="beSumAvg" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 账户回本时间趋势（每次买卖/分红后回本年限变化） -->
+        <div class="bg-white rounded-2xl card-shadow p-4 mb-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="text-[14px] font-semibold text-gray-800">账户回本时间走势</div>
+                <div class="text-[10px] text-gray-400">买卖/分红事件后重算</div>
+            </div>
+            <div id="chartBeAccount" style="height:250px"></div>
+            <div id="beRecentOps" class="mt-3"></div>
+        </div>
+
+        <!-- 各股回本明细：点击行展开该股趋势 + 操作影响 -->
+        <div class="bg-white rounded-2xl card-shadow p-4 mb-5">
+            <div class="flex items-center justify-between mb-3">
+                <div class="text-[14px] font-semibold text-gray-800">各股回本明细</div>
+                <div class="text-[10px] text-gray-400">点击展开回本趋势与操作影响</div>
+            </div>
+            <div id="beStockList" class="space-y-2"></div>
+        </div>
+
+        <!-- 口径说明 -->
+        <div class="rounded-2xl px-4 py-3 mb-6 text-[10.5px] leading-relaxed text-gray-500 bg-[#faf5e9] border border-[#eedfc0]">
+            口径说明：动态净投入 = 累计买入支出 − 累计卖出回款（按交易流水逐笔计算）；累计税后分红 = 每笔分红到账净额（含已清仓股票留档）；回本缺口 = 动态净投入 − 累计税后分红；回本年限 = 回本缺口 ÷ 近3年年均税后分红。复投口径按「股息再投资、以当前股息率滚动增值」的几何模型估算（分红不再取出，回本更快）。中途加仓会即时增加缺口（回本年限暂被拉长）、减仓会即时降低缺口（回本年限缩短），分红到账逐笔压缩缺口——趋势线按每个事件重算，可直观看到每次操作对回本时间的影响。
         </div>
     </div>
 
@@ -2017,6 +2114,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <span class="text-right">日期</span>
             </div>
             <div id="cashFlowList"></div>
+            <div id="cashFlowMoreWrap" class="hidden px-4 pb-3">
+                <button id="cashFlowMoreBtn" class="w-full py-3 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium active:scale-95 transition-transform">加载更多</button>
+            </div>
         </div>
     </div>
 
@@ -4544,7 +4644,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             tx.forEach(function(t){
                 if(Number(t.t) >= yearStart){
                     netBuyShares += Number(t.delta);
-                    netInflow += Number(t.delta) * Number(t.price);
+                    let tp = Number(t.price) || 0;
+                    if(tp < 0) tp = 0; // 负价迁移股：不虚增今年盈亏
+                    netInflow += Number(t.delta) * tp;
                 }
             });
             // 年初股数 = 当前股数 - 今年净买入股数
@@ -6083,6 +6185,62 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return pct;
         }
 
+        // ==================== 当日盈亏（券商精确分段算法） ====================
+        // 旧算法漏洞：当前总持仓 × 当日涨跌幅全部按"昨收价起算"，当天中途买入的
+        // 股数会被错误地从昨收价计盈亏（实际应从买入成交价起算，例：昨收8.69、盘中
+        // 8.36加仓、收盘8.47，旧算法按全仓从昨收算亏-4397，券商按分段算仅亏-1014左右）。
+        // 正确算法：按持仓份额分段——非今日买入的存量份额以昨收价为基准、今日买入
+        // 份额以买入成交价为基准，今日卖出份额按 FIFO 扣减（已了结部分不计入持仓盈亏），
+        // 逐段计算 (现价 - 基准价) × 股数 后合计。
+        function calcDayPnl(item){
+            const now = Number(item.nowPrice);
+            if(!now || !Number(item.count)) return 0;
+            const fx = item.marketType === 'HK' ? hkFxRate : 1;
+            const pct = getEffectiveChangePct(item.changePct);
+            // 昨收价：由现价与涨跌幅反推（与旧算法同源，不引入额外存储字段）
+            const prevClose = (pct != null && !isNaN(pct)) ? now / (1 + pct / 100) : null;
+            const trs = item.transactions;
+            if(!trs || !trs.length){
+                // 无流水（存量旧数据）：全部份额按昨收价起算
+                if(prevClose == null) return 0;
+                return (now - prevClose) * Number(item.count) * fx;
+            }
+            // 今日 0 点时间戳：用于区分"今日买入"与"历史买入"
+            const dayStart = new Date();
+            dayStart.setHours(0, 0, 0, 0);
+            const dayStartTs = dayStart.getTime();
+            // 份额池 {qty, base}：买入入池，卖出按 FIFO 扣减（仅统计当前仍持有的部分）
+            let shares = [];
+            const sortedTrs = trs.slice().sort(function(a, b){ return (Number(a.t)||0) - (Number(b.t)||0); });
+            sortedTrs.forEach(function(tr){
+                const qty = Number(tr.delta) || 0;
+                const ts = Number(tr.t) || 0;
+                if(!qty || !ts) return;
+                if(qty > 0){
+                    // 买入：今日买入以成交价为当日基准，历史买入以昨收价为基准
+                    const base = ts >= dayStartTs ? (Number(tr.price) || now) : prevClose;
+                    shares.push({ qty: qty, base: base });
+                } else {
+                    // 卖出：从最早份额开始扣减
+                    let remain = -qty;
+                    for(let i = 0; i < shares.length && remain > 0; i++){
+                        const s = shares[i];
+                        const take = Math.min(s.qty, remain);
+                        s.qty -= take;
+                        remain -= take;
+                    }
+                    shares = shares.filter(function(s){ return s.qty > 0; });
+                }
+            });
+            // 剩余份额逐段计算盈亏
+            let pnl = 0;
+            shares.forEach(function(s){
+                if(s.base == null || isNaN(s.base)) return;
+                pnl += s.qty * (now - s.base);
+            });
+            return pnl * fx;
+        }
+
         // 获取有效的涨跌额：逻辑与 getEffectiveChangePct 一致（-- 用 null 表示）
         function getEffectiveChange(change){
             if(isTradingTimeStarted()){
@@ -6525,6 +6683,596 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                 });
             }catch(e){}
+        }
+
+        // ==================== 回本时间（分红回收动态成本，资金流水口径） ====================
+        // 口径与"交易明细"页一致：动态净投入 = 总买入支出 - 总卖出回款（每笔流水 delta×price，
+        // 买入正支出、卖出负回款）；累计税后分红 = exDivRecords 逐笔税后金额之和（含清仓股留档）。
+        // 回本缺口 = 动态净投入 - 累计税后分红（当前仍净放进去的钱，差多少分红现金才能收回）。
+        // 回本年限（不复投）= 缺口 ÷ 近3年平均每年税后分红；复投口径 = 股息再投资几何增长模型：
+        // 累计回收 = D×((1+y)^n-1)/y ≥ 缺口 → n = ln(1+缺口·y/D)/ln(1+y)，y = 年均分红/当前市值。
+        // 趋势回放：把买卖流水+分红到账按时间排序逐事件重算累计值，得到回本年限时间轴（天然呈现
+        // 每次操作前后回本时间的变化，无需额外快照）。
+        function avgDiv3Of(exRecords, atTs, preAgg){
+            // 截至 atTs（默认现在）的近3年（含当年与往前2年）年均税后分红：总额/实际覆盖年数
+            // preAgg 可选：调用方已按年预聚合的 {sum:{年:总额}, cnt:{年:记录数}}，避免长循环内反复 filter+遍历全部记录
+            let rows = null;
+            if(!preAgg){
+                rows = (exRecords || []).filter(function(r){
+                    if(!r || !r.date) return false;
+                    const amt = Number(r.amount);
+                    return !isNaN(amt) && amt > 0;
+                });
+                if(!rows.length) return null;
+            }
+            const atYear = atTs ? new Date(atTs).getFullYear() : new Date().getFullYear();
+            let sum = 0;
+            const years = {};
+            if(preAgg){
+                for(let y = atYear - 2; y <= atYear; y++){
+                    if(preAgg.sum[y] != null){ sum += preAgg.sum[y]; years[y] = true; }
+                }
+            } else {
+                rows.forEach(function(r){
+                    const y = Number(String(r.date).substring(0, 4));
+                    if(y >= atYear - 2 && y <= atYear){
+                        sum += Number(r.amount);
+                        years[y] = true;
+                    }
+                });
+            }
+            const cnt = Object.keys(years).length;
+            return cnt ? sum / cnt : null;
+        }
+        // 单股回本数据（资金流水口径，纯本地流水计算）
+        function calcBreakEvenData(item){
+            const buyTotal = 0, sellTotal = 0, divTotal = 0;
+            const txList = item.transactions || [];
+            let netIn = 0;
+            txList.forEach(function(t){
+                const delta = Number(t.delta) || 0;
+                // 成交价防御：负价/异常值按 0 计（该笔不计入净投入），避免负价买入虚减缺口
+                let pr = Number(t.price) || 0;
+                if(pr < 0) pr = 0;
+                const amt = delta * pr;
+                netIn += amt;
+            });
+            let divTotalV = 0;
+            (item.exDivRecords || []).forEach(function(r){ divTotalV += Number(r.amount) || 0; });
+            const gap = netIn - divTotalV;
+            const avgDiv = avgDiv3Of(item.exDivRecords || []);
+            const mv = getMarketValue(item);
+            const divYield = (avgDiv != null && mv > 0) ? avgDiv / mv : null;
+            const beNo = (gap > 0 && avgDiv != null && avgDiv > 0) ? gap / avgDiv : (gap <= 0 ? 0 : null);
+            let beRe = beNo;
+            if(gap > 0 && avgDiv != null && avgDiv > 0){
+                if(divYield != null && divYield > 0){
+                    const n = Math.log(1 + gap * divYield / avgDiv) / Math.log(1 + divYield);
+                    beRe = n > 0 ? n : beNo;
+                }
+            } else if(gap <= 0){
+                beRe = 0;
+            }
+            return { netIn: netIn, divTotal: divTotalV, gap: gap, avgDiv: avgDiv, beNo: beNo, beRe: beRe, mv: mv };
+        }
+        // 账户级回本数据：全持仓+已清仓股的流水与分红合并（清仓股分红留档一并计入）
+        function allBreakEvenItems(){
+            const list = (holdDataList || []).concat((historyData.closedStocks || []));
+            return list;
+        }
+        function calcAccountBreakEven(){
+            let netIn = 0, divTotalV = 0, mv = 0;
+            const exAll = [];
+            allBreakEvenItems().forEach(function(it){
+                (it.transactions || []).forEach(function(t){
+                    const delta = Number(t.delta) || 0;
+                    let pr = Number(t.price) || 0;
+                    if(pr < 0) pr = 0; // 成交价防御：负价按 0 计
+                    netIn += delta * pr;
+                });
+                (it.exDivRecords || []).forEach(function(r){
+                    divTotalV += Number(r.amount) || 0;
+                    exAll.push(r);
+                });
+                mv += getMarketValue(it);
+            });
+            const gap = netIn - divTotalV;
+            const avgDiv = avgDiv3Of(exAll);
+            const divYield = (avgDiv != null && mv > 0) ? avgDiv / mv : null;
+            const beNo = (gap > 0 && avgDiv != null && avgDiv > 0) ? gap / avgDiv : (gap <= 0 ? 0 : null);
+            let beRe = beNo;
+            if(gap > 0 && avgDiv != null && avgDiv > 0){
+                if(divYield != null && divYield > 0){
+                    const n = Math.log(1 + gap * divYield / avgDiv) / Math.log(1 + divYield);
+                    beRe = n > 0 ? n : beNo;
+                }
+            } else if(gap <= 0){
+                beRe = 0;
+            }
+            return { netIn: netIn, divTotal: divTotalV, gap: gap, avgDiv: avgDiv, beNo: beNo, beRe: beRe, mv: mv, holdCount: (holdDataList || []).length, closedCount: (historyData.closedStocks || []).length };
+        }
+        // 回放趋势：把"买卖流水+分红到账"按时间升序合并，逐事件重算净投入/分红/缺口/回本年限
+        // 返回 [{time, dateStr, type:'buy'|'sell'|'div', desc, netIn, divTotal, gap, avgDiv, beNo, beRe}]
+        // scope=null 表示账户全部；scope=item 表示单股
+        function buildBreakEvenSeries(scope){
+            const items = scope ? [scope] : allBreakEvenItems();
+            const exAll = [];
+            items.forEach(function(it){
+                (it.exDivRecords || []).forEach(function(r){ exAll.push(r); });
+            });
+            const events = [];
+            items.forEach(function(it){
+                (it.transactions || []).forEach(function(t){
+                    const ts = Number(t.t) || 0;
+                    if(!ts) return;
+                    const delta = Number(t.delta) || 0;
+                    let pr = Number(t.price) || 0;
+                    if(pr < 0) pr = 0; // 成交价防御：负价按 0 计
+                    events.push({ time: ts, type: delta > 0 ? 'buy' : 'sell',
+                        desc: (delta > 0 ? '买入 ' : '卖出 ') + Math.abs(delta) + ' 股 @' + fmtPrice(pr, it.code, it.marketType === 'HK'),
+                        amt: delta * pr });
+                });
+                (it.exDivRecords || []).forEach(function(r){
+                    const d = String(r.date || '');
+                    if(!d) return;
+                    const ts = new Date(d.replace(/-/g, '/')).getTime();
+                    if(!ts) return;
+                    const amt = Number(r.amount) || 0;
+                    events.push({ time: ts, type: 'div', desc: '分红到账 ' + fmtMoney(amt), amt: amt });
+                });
+            });
+            events.sort(function(a, b){ return a.time - b.time; });
+            // 分红按年预聚合：逐事件循环内 avgDiv3Of 只查近3年键
+            const preAgg = { sum: {}, cnt: {} };
+            (exAll || []).forEach(function(r){
+                if(!r || !r.date) return;
+                const amt = Number(r.amount);
+                if(isNaN(amt) || amt <= 0) return;
+                const y = Number(String(r.date).substring(0, 4));
+                preAgg.sum[y] = (preAgg.sum[y] || 0) + amt;
+                preAgg.cnt[y] = (preAgg.cnt[y] || 0) + 1;
+            });
+            let netIn = 0, divTotalV = 0;
+            const series = [];
+            events.forEach(function(ev){
+                if(ev.type === 'div') divTotalV += ev.amt;
+                else netIn += ev.amt;
+                const gap = netIn - divTotalV;
+                const avgDiv = avgDiv3Of(exAll, ev.time, preAgg);
+                // 复投股息率：用"当前市值"口径（与当前口径一致的恒定假设，曲线可解释）
+                const curMv = scope ? getMarketValue(scope) : 0;
+                let beNo = null, beRe = null;
+                if(gap <= 0){
+                    beNo = 0; beRe = 0;
+                } else if(avgDiv != null && avgDiv > 0){
+                    beNo = gap / avgDiv;
+                    const y = curMv > 0 ? avgDiv / curMv : 0;
+                    if(y > 0){
+                        const n = Math.log(1 + gap * y / avgDiv) / Math.log(1 + y);
+                        beRe = n > 0 ? n : beNo;
+                    } else {
+                        beRe = beNo;
+                    }
+                }
+                series.push({ time: ev.time,
+                    dateStr: String(new Date(ev.time).getFullYear()) + '-' + String(new Date(ev.time).getMonth()+1).padStart(2,'0') + '-' + String(new Date(ev.time).getDate()).padStart(2,'0'),
+                    type: ev.type, desc: ev.desc, netIn: netIn, divTotal: divTotalV, gap: gap,
+                    avgDiv: avgDiv, beNo: beNo, beRe: beRe });
+            });
+            return series;
+        }
+        // 按自然日聚合版本（账户/个股趋势图用）：同日买卖合并净额与笔数、分红合并总额，
+        // 逐日重算净投入/分红/缺口/回本年限，desc 精简为"买入2笔+8.5万 · 分红1笔+0.9万"，
+        // 避免当日多笔交易时事件点与日期标签过密
+        function buildBreakEvenDaily(scope){
+            const items = scope ? [scope] : allBreakEvenItems();
+            const exAll = [];
+            items.forEach(function(it){
+                (it.exDivRecords || []).forEach(function(r){ exAll.push(r); });
+            });
+            const events = [];
+            items.forEach(function(it){
+                (it.transactions || []).forEach(function(t){
+                    const ts = Number(t.t) || 0;
+                    if(!ts) return;
+                    const delta = Number(t.delta) || 0;
+                    let pr = Number(t.price) || 0;
+                    if(pr < 0) pr = 0; // 成交价防御：负价按 0 计
+                    events.push({ time: ts, kind: 'trade', delta: delta, amt: delta * pr });
+                });
+                (it.exDivRecords || []).forEach(function(r){
+                    const d = String(r.date || '');
+                    if(!d) return;
+                    const ts = new Date(d.replace(/-/g, '/')).getTime();
+                    if(!ts) return;
+                    events.push({ time: ts, kind: 'div', delta: 0, amt: Number(r.amount) || 0 });
+                });
+            });
+            events.sort(function(a, b){ return a.time - b.time; });
+            // 分红按年预聚合：循环内 avgDiv3Of 只需查近3年键，不必每次遍历全部记录
+            const preAgg = { sum: {}, cnt: {} };
+            (exAll || []).forEach(function(r){
+                if(!r || !r.date) return;
+                const amt = Number(r.amount);
+                if(isNaN(amt) || amt <= 0) return;
+                const y = Number(String(r.date).substring(0, 4));
+                preAgg.sum[y] = (preAgg.sum[y] || 0) + amt;
+                preAgg.cnt[y] = (preAgg.cnt[y] || 0) + 1;
+            });
+            const dayMap = {};
+            events.forEach(function(ev){
+                const dd = new Date(ev.time);
+                const key = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
+                if(!dayMap[key]) dayMap[key] = { key: key, time: ev.time, buyCnt: 0, sellCnt: 0, buyAmt: 0, sellAmt: 0, divCnt: 0, divAmt: 0 };
+                const b = dayMap[key];
+                if(ev.kind === 'div'){ b.divCnt++; b.divAmt += ev.amt; }
+                else if(ev.delta > 0){ b.buyCnt++; b.buyAmt += ev.amt; }
+                else { b.sellCnt++; b.sellAmt += ev.amt; }
+            });
+            const days = Object.keys(dayMap).sort().map(function(k){ return dayMap[k]; });
+            let netIn = 0, divTotalV = 0;
+            // 当前市值在整条曲线上是恒定假设，只算一次（原先每天循环都重算，天数×持仓数）
+            let mv = 0;
+            if(scope) mv = getMarketValue(scope);
+            else allBreakEvenItems().forEach(function(it){ mv += getMarketValue(it); });
+            const series = [];
+            days.forEach(function(b){
+                netIn += b.buyAmt + b.sellAmt;
+                divTotalV += b.divAmt;
+                const gap = netIn - divTotalV;
+                const avgDiv = avgDiv3Of(exAll, b.time, preAgg);
+                let beNo = null, beRe = null;
+                if(gap <= 0){
+                    beNo = 0; beRe = 0;
+                } else if(avgDiv != null && avgDiv > 0){
+                    beNo = gap / avgDiv;
+                    const y = mv > 0 ? avgDiv / mv : 0;
+                    if(y > 0){
+                        const n = Math.log(1 + gap * y / avgDiv) / Math.log(1 + y);
+                        beRe = n > 0 ? n : beNo;
+                    } else {
+                        beRe = beNo;
+                    }
+                }
+                const parts = [];
+                if(b.buyCnt) parts.push('买入' + b.buyCnt + '笔 +' + fmtMoney(b.buyAmt));
+                if(b.sellCnt) parts.push('卖出' + b.sellCnt + '笔 -' + fmtMoney(-b.sellAmt));
+                if(b.divCnt) parts.push('分红' + b.divCnt + '笔 +' + fmtMoney(b.divAmt));
+                const ttype = (b.buyCnt && b.sellCnt) ? 'mix' : (b.sellCnt && !b.buyCnt ? 'sell' : (b.buyCnt ? 'buy' : 'div'));
+                series.push({ time: b.time, dateStr: b.key, type: ttype, desc: parts.join(' · '), netIn: netIn, divTotal: divTotalV, gap: gap, avgDiv: avgDiv, beNo: beNo, beRe: beRe });
+            });
+            return series;
+        }
+        // 回本年限展示：null→'--'；≤0→'已回本'
+        function fmtBeYears(y){
+            if(y == null || isNaN(y)) return '--';
+            if(y <= 0.01) return '已回本';
+            if(y < 1) return '<1年';
+            return y.toFixed(1) + '年';
+        }
+
+        // ==================== 回本分析页（展示层：账户汇总 + 趋势图 + 各股明细） ====================
+        function openBreakEvenPage(code){
+            rememberScroll();
+            const holdPg = document.querySelector('#pageHold');
+            const bePg = document.querySelector('#pageBreakEven');
+            if(!holdPg || !bePg) return;
+            hideAllChartTips();
+            holdPg.classList.add('hidden');
+            bePg.classList.remove('hidden');
+            const btn = document.querySelector('#openModalBtn');
+            if(btn) btn.classList.add('hidden');
+            window.scrollTo(0, 0);
+            renderBreakEvenPage(code || null);
+        }
+        function closeBreakEvenPage(){
+            const holdPg = document.querySelector('#pageHold');
+            const bePg = document.querySelector('#pageBreakEven');
+            // 退出回本页：释放账户图实例（下次进入重建），并清理残留的个股面板实例
+            disposeBeChart('chartBeAccount');
+            Object.keys(beChartInsts).forEach(function(k){
+                if(k.indexOf('beStockChart-') === 0) disposeBeChart(k);
+            });
+            if(bePg) bePg.classList.add('hidden');
+            if(holdPg) holdPg.classList.remove('hidden');
+            const btn = document.querySelector('#openModalBtn');
+            if(btn) btn.classList.remove('hidden');
+            restoreScroll();
+        }
+        function renderBreakEvenPage(focusCode){
+            const beA = calcAccountBreakEven();
+            const setTxt = function(id, txt){
+                const el = document.querySelector('#' + id);
+                if(el) el.innerText = txt;
+            };
+            setTxt('beSumNo', fmtBeYears(beA.beNo));
+            setTxt('beSumRe', fmtBeYears(beA.beRe));
+            setTxt('beSumNet', fmtMoney(beA.netIn));
+            setTxt('beSumDiv', fmtMoney(beA.divTotal));
+            setTxt('beSumGap2', fmtMoney(beA.gap));
+            setTxt('beSumAvg', beA.avgDiv != null ? fmtMoney(beA.avgDiv) : '--');
+            const subEl = document.querySelector('#bePageSub');
+            if(subEl) subEl.innerText = '资金流水口径 · ' + (holdDataList || []).length + ' 只持仓 / ' + ((historyData.closedStocks || []).length) + ' 只已清仓';
+            renderBeChart('chartBeAccount', buildBreakEvenDaily(null), null, beA);
+            renderRecentBeOps();
+            renderBeStockList(focusCode);
+        }
+        // 账户趋势图下方"最近操作"摘要（手机端直接阅读，无需点图；默认6条，查看更多每次翻10条，收起回默认）
+        function renderRecentBeOps(){
+            const wrap = document.querySelector('#beRecentOps');
+            if(!wrap) return;
+            const daily = buildBreakEvenDaily(null);
+            const ops = daily.filter(function(s){ return s.desc; });
+            if(!ops.length){ wrap.innerHTML = ''; return; }
+            const total = ops.length;
+            if(wrap._beVisible == null) wrap._beVisible = 6;
+            const visible = Math.min(total, Math.max(6, wrap._beVisible));
+            wrap._beVisible = visible;
+            const list = ops.slice(-visible).reverse();
+            let html = '<div class="text-[10.5px] text-gray-400 mb-1.5">最近操作（按日汇总）</div>';
+            html += buildBeOpsRows(list);
+            const remain = total - visible;
+            let btns = '';
+            if(remain > 0){
+                btns += '<button type="button" onclick="beOpsMore(this)" class="flex-1 py-1.5 rounded-xl text-[11px] font-medium text-accent active:scale-[0.98] transition-transform" style="background:rgba(169,100,42,0.06);border:1px dashed rgba(169,100,42,0.25)">查看更多（还有 ' + remain + ' 条）</button>';
+            }
+            if(visible > 6){
+                btns += '<button type="button" onclick="beOpsCollapse(this)" class="flex-1 py-1.5 rounded-xl text-[11px] font-medium text-gray-500 active:scale-[0.98] transition-transform" style="background:#F4F1EA;border:1px solid #E8E2D6">收起</button>';
+            }
+            if(btns) html += '<div class="pt-1.5 flex gap-2">' + btns + '</div>';
+            wrap.innerHTML = html;
+        }
+        // 操作摘要行渲染（列表为最新在前）
+        function buildBeOpsRows(list){
+            let html = '';
+            list.forEach(function(s, idx){
+                let dHtml = '';
+                const next = list[idx + 1];
+                const gapDiff = next != null ? s.gap - next.gap : null;
+                if(gapDiff != null){
+                    if(gapDiff > 0.5) dHtml = '<span class="text-[#e03131] whitespace-nowrap">缺口+' + fmtMoney(gapDiff) + '</span>';
+                    else if(gapDiff < -0.5) dHtml = '<span class="text-[#00a05c] whitespace-nowrap">缺口' + fmtMoney(gapDiff) + '</span>';
+                }
+                const evCls = s.type === 'buy' ? 'text-[#e03131]' : (s.type === 'sell' ? 'text-[#00a05c]' : (s.type === 'mix' ? 'text-[#b47b3c]' : 'text-accent'));
+                html += '<div class="flex items-center justify-between gap-2 py-1.5 border-b border-dashed border-[#F0EDE7] last:border-0">'
+                    + '<span class="text-gray-400 tabular-nums text-[10.5px] shrink-0">' + s.dateStr + '</span>'
+                    + '<span class="' + evCls + ' text-[10.5px] min-w-0 truncate">' + s.desc + '</span>'
+                    + '<span class="text-gray-500 tabular-nums text-[10.5px] shrink-0">缺口 ' + fmtMoney(s.gap) + '</span>'
+                    + '<span class="font-semibold text-gray-700 tabular-nums text-[10.5px] shrink-0">' + fmtBeYears(s.beNo) + '</span>'
+                    + dHtml + '</div>';
+            });
+            return html;
+        }
+        function beOpsMore(btn){
+            const wrap = document.querySelector('#beRecentOps');
+            if(!wrap) return;
+            const daily = buildBreakEvenDaily(null);
+            const total = daily.filter(function(s){ return s.desc; }).length;
+            wrap._beVisible = Math.min(total, (wrap._beVisible || 6) + 10);
+            renderRecentBeOps();
+        }
+        function beOpsCollapse(btn){
+            const wrap = document.querySelector('#beRecentOps');
+            if(wrap) wrap._beVisible = 6;
+            renderRecentBeOps();
+        }
+        // 回本趋势图：折线（不复投 / 复投）+ 按日聚合事件散点标注；追加"当前"点使曲线延伸到今天。
+        // 手机端无 hover：点击图表任一点即显示该日 tooltip（含操作摘要/缺口/回本年限）；支持手势缩放。
+        // 回本页图表实例统一登记：展开面板收起/页面重建时 dispose，避免隐藏 DOM 上实例累积泄漏
+        const beChartInsts = {};
+        function disposeBeChart(elId){
+            const inst = beChartInsts[elId];
+            if(inst){ try{ inst.dispose(); }catch(e){} }
+            delete beChartInsts[elId];
+        }
+        function renderBeChart(elId, series, item, curBe){
+            const el = document.getElementById(elId);
+            if(!el || typeof echarts === 'undefined') return;
+            const inst = echarts.getInstanceByDom(el) || echarts.init(el);
+            beChartInsts[elId] = inst;
+            el._chart = inst;
+            const pts = series.map(function(s){
+                return { dateStr: s.dateStr, beNo: s.beNo, beRe: s.beRe, type: s.type, desc: s.desc, gap: s.gap };
+            });
+            const now = new Date();
+            const nowStr = String(now.getFullYear()) + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+            const last = pts.length ? pts[pts.length - 1] : null;
+            if(last){
+                pts.push({ dateStr: nowStr, beNo: curBe ? curBe.beNo : (item ? calcBreakEvenData(item).beNo : null), beRe: curBe ? curBe.beRe : (item ? calcBreakEvenData(item).beRe : null), type: 'now', desc: '当前', gap: last.gap });
+            }
+            const cat = pts.map(function(p){ return p.dateStr; });
+            const noData = pts.map(function(p){ return p.beNo == null ? null : Number(Number(p.beNo).toFixed(2)); });
+            const reData = pts.map(function(p){ return p.beRe == null ? null : Number(Number(p.beRe).toFixed(2)); });
+            const evData = pts.filter(function(p){ return p.type && p.type !== 'now'; }).map(function(p){
+                return { value: [p.dateStr, p.beNo == null ? null : Number(Number(p.beNo).toFixed(2))], evType: p.type, desc: p.desc, gap: p.gap };
+            });
+            const evColor = function(t){ return t === 'buy' ? '#e03131' : (t === 'sell' ? '#00a05c' : (t === 'mix' ? '#b47b3c' : '#c9a35c')); };
+            const xLabelFmt = function(v){
+                if(!v) return '';
+                const parts = String(v).split('-');
+                return parts.length === 3 ? parts[1] + '-' + parts[2] : v;
+            };
+            inst.off('click');
+            inst.on('click', function(params){
+                if(params && params.dataIndex != null){
+                    inst.dispatchAction({ type: 'showTip', seriesIndex: params.seriesIndex, dataIndex: params.dataIndex });
+                }
+            });
+            inst.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#3b332a',
+                    borderColor: 'rgba(238,223,192,0.35)',
+                    borderWidth: 1,
+                    textStyle: { color: '#f5efe3', fontSize: 11 },
+                    formatter: function(params){
+                        if(!params || !params.length) return '';
+                        const pi = params[0];
+                        let html = '<div style="font-size:11px;font-weight:600">' + pi.axisValueLabel + '</div>';
+                        params.forEach(function(p){
+                            if(p.seriesType === 'line'){
+                                html += '<div style="display:flex;justify-content:space-between;gap:14px;margin-top:2px"><span>' + p.seriesName + '</span><b>' + (p.value == null ? '--' : fmtBeYears(Number(p.value))) + '</b></div>';
+                            } else if(p.seriesType === 'scatter'){
+                                const raw = p.data;
+                                if(raw.desc) html += '<div style="margin-top:3px;color:' + evColor(raw.evType) + '">● ' + raw.desc + '</div>';
+                                if(raw.gap != null) html += '<div style="display:flex;justify-content:space-between;gap:14px;margin-top:1px"><span>缺口</span><b>' + fmtMoney(raw.gap) + '</b></div>';
+                            }
+                        });
+                        return html;
+                    }
+                },
+                legend: { data: ['回本·不复投', '回本·复投'], top: 0, right: 0, textStyle: { color: '#8a7f6d', fontSize: 10 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' },
+                grid: { left: 8, right: 12, top: 24, bottom: 4, containLabel: true },
+                dataZoom: [{ type: 'inside', throttle: 60 }],
+                xAxis: { type: 'category', data: cat, axisLine: { lineStyle: { color: '#e6dfd2' } }, axisTick: { show: false }, axisLabel: { color: '#a89d8b', fontSize: 10, hideOverlap: true, formatter: xLabelFmt } },
+                yAxis: { type: 'value', name: '年', nameTextStyle: { color: '#b0a693', fontSize: 10 }, splitLine: { lineStyle: { color: '#f0ebe2', type: 'dashed' } }, axisLabel: { color: '#a89d8b', fontSize: 10, formatter: function(v){ return v + '年'; } } },
+                series: [
+                    { name: '回本·不复投', type: 'line', data: noData, smooth: true, symbol: 'circle', symbolSize: 5, lineStyle: { width: 2.5, color: '#9a4f8e' }, itemStyle: { color: '#9a4f8e' }, connectNulls: true, emphasis: { focus: 'series' }, z: 3 },
+                    { name: '回本·复投', type: 'line', data: reData, smooth: true, symbol: 'none', lineStyle: { width: 2.2, color: '#a9642a', type: 'dashed' }, itemStyle: { color: '#a9642a' }, connectNulls: true, emphasis: { focus: 'series' }, z: 2 },
+                    { name: '事件', type: 'scatter', data: evData, symbolSize: 8, itemStyle: { color: function(p){ return evColor(p.data.evType); }, borderColor: '#fff', borderWidth: 1 }, z: 5 }
+                ]
+            }, true);
+            inst.resize();
+        }
+        function renderBeStockList(focusCode){
+            const wrap = document.querySelector('#beStockList');
+            if(!wrap) return;
+            // 列表整体重建前先销毁旧面板上的全部图表实例（否则旧实例随旧 DOM 成孤儿，无法回收）
+            Object.keys(beChartInsts).forEach(function(k){
+                if(k.indexOf('beStockChart-') === 0) disposeBeChart(k);
+            });
+            // 排序比较器不再每次全量重算单股数据：预计算一次缓存再排序（持仓多+流水多时从秒级降到毫秒级）
+            const items = (holdDataList || []).slice().map(function(it){
+                return { it: it, d: calcBreakEvenData(it) };
+            }).sort(function(a, b){ return b.d.gap - a.d.gap; });
+            let html = '';
+            items.forEach(function(e){
+                const it = e.it;
+                const beD = e.d;
+                const beNoText = fmtBeYears(beD.beNo);
+                const beReText = fmtBeYears(beD.beRe);
+                const beNoCls = (beD.beNo != null && beD.beNo <= 0) ? 'text-purple-600' : (beD.beNo == null ? 'text-gray-400' : 'text-gray-800');
+                const beReCls = (beD.beRe != null && beD.beRe <= 0) ? 'text-purple-600' : (beD.beRe == null ? 'text-gray-400' : 'text-gray-700');
+                const subTxt = beD.gap > 0 ? ('缺口 ' + fmtMoney(beD.gap) + ' · 年均分红 ' + (beD.avgDiv != null ? fmtMoney(beD.avgDiv) : '--')) : '已回本 · 累计分红 ' + fmtMoney(beD.divTotal);
+                html += `
+                <div class="rounded-xl border border-[#F0EDE7] overflow-hidden ${focusCode === it.code ? 'ring-2 ring-accent/50' : ''}">
+                    <div class="flex items-center gap-2 px-3 py-2.5 bg-[#F9F8F4] cursor-pointer select-none active:bg-[#f5f2ea] transition-colors" onclick="toggleBeStock('${it.marketType}|${it.code}')">
+                        <div class="flex-1 min-w-0 flex items-center gap-2">
+                            ${stockLogoHtml(it, 16)}
+                            <div class="min-w-0">
+                                <div class="text-[13px] font-semibold text-gray-800 truncate">${it.name}</div>
+                                <div class="text-[10px] text-gray-400 tabular-nums truncate">${it.code} · ${subTxt}</div>
+                            </div>
+                        </div>
+                        <div class="text-right flex items-center gap-3 shrink-0">
+                            <div class="min-w-[52px]">
+                                <div class="text-[10px] text-gray-400">不复投</div>
+                                <div class="text-[13px] font-bold ${beNoCls} tabular-nums be-no-${it.code}">${beNoText}</div>
+                            </div>
+                            <div class="min-w-[52px]">
+                                <div class="text-[10px] text-gray-400">复投</div>
+                                <div class="text-[12px] font-medium ${beReCls} tabular-nums be-re-${it.code}">${beReText}</div>
+                            </div>
+                            <i class="fa fa-chevron-down text-[10px] text-gray-300 be-arrow-${it.code} transition-transform duration-200"></i>
+                        </div>
+                    </div>
+                    <div id="beStockBody-${it.code}" class="hidden border-t border-[#F0EDE7] p-3">
+                        <div id="beStockChart-${it.code}" style="height:210px"></div>
+                        <div class="mt-3 text-[11px] font-medium text-gray-500 mb-1">操作影响（每次买卖/分红后回本年限变化）</div>
+                        <div id="beStockEvents-${it.code}"></div>
+                    </div>
+                </div>`;
+            });
+            if(!items.length) html = '<div class="text-center text-gray-400 text-sm py-8">暂无持仓，买入股票后可查看回本分析</div>';
+            wrap.innerHTML = html;
+            if(focusCode){
+                const body = document.getElementById('beStockBody-' + focusCode);
+                if(body && body.classList.contains('hidden')) toggleBeStock('|' + focusCode);
+                setTimeout(function(){
+                    const t = document.getElementById('beStockBody-' + focusCode);
+                    if(t && t.scrollIntoView) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 80);
+            }
+        }
+        function toggleBeStock(key){
+            const code = key.split('|')[1];
+            const body = document.getElementById('beStockBody-' + code);
+            if(!body) return;
+            const arrow = document.querySelector('.be-arrow-' + code);
+            if(body.classList.contains('hidden')){
+                body.classList.remove('hidden');
+                if(arrow) arrow.classList.add('rotate-180');
+                renderBeStockDetail(code);
+            } else {
+                body.classList.add('hidden');
+                if(arrow) arrow.classList.remove('rotate-180');
+                // 收起即销毁：图表实例 dispose + 操作列表 DOM 清空，避免隐藏面板长期占内存/渲染元素
+                disposeBeChart('beStockChart-' + code);
+                const evEl = document.getElementById('beStockEvents-' + code);
+                if(evEl) evEl.innerHTML = '';
+            }
+        }
+        function renderBeStockDetail(code){
+            const item = (holdDataList || []).find(function(it){ return it.code === code; });
+            if(!item) return;
+            renderBeChart('beStockChart-' + code, buildBreakEvenDaily(item), item, null);
+            const evEl = document.getElementById('beStockEvents-' + code);
+            if(!evEl) return;
+            const series = buildBreakEvenSeries(item);
+            const list = series.slice().reverse(); // 最新在前，与账户列表统一
+            const total = list.length;
+            if(evEl._evVisible == null) evEl._evVisible = 6;
+            const visible = Math.min(total, Math.max(6, evEl._evVisible));
+            evEl._evVisible = visible;
+            const shown = list.slice(0, visible);
+            let html = '';
+            let prevBe = null;
+            shown.forEach(function(s, i){
+                const beNow = s.beNo;
+                let deltaHtml = '';
+                const earlier = shown[i + 1]; // 更早一条（最新在前）
+                const prevBe2 = earlier != null ? earlier.beNo : null;
+                if(prevBe2 != null && beNow != null){
+                    const d = Number(beNow) - Number(prevBe2);
+                    if(d > 0.05) deltaHtml = '<span class="text-[#e03131] whitespace-nowrap">回本+' + d.toFixed(1) + '年</span>';
+                    else if(d < -0.05) deltaHtml = '<span class="text-[#00a05c] whitespace-nowrap">回本' + d.toFixed(1) + '年</span>';
+                    else deltaHtml = '<span class="text-gray-400 whitespace-nowrap">持平</span>';
+                }
+                const evColor = s.type === 'buy' ? 'text-[#e03131]' : (s.type === 'sell' ? 'text-[#00a05c]' : 'text-accent');
+                html += '<div class="py-1.5 border-b border-dashed border-[#F0EDE7] last:border-0">'
+                    + '<div class="flex items-center justify-between gap-2">'
+                    + '<span class="text-gray-400 tabular-nums text-[10.5px] shrink-0">' + s.dateStr + '</span>'
+                    + '<span class="' + evColor + ' text-[10.5px] min-w-0 text-right truncate">' + s.desc + '</span></div>'
+                    + '<div class="flex items-center justify-between gap-2 mt-0.5">'
+                    + '<span class="text-gray-500 tabular-nums text-[10.5px] min-w-0">缺口 ' + fmtMoney(s.gap) + ' · ' + fmtBeYears(beNow) + '</span>'
+                    + deltaHtml + '</div></div>';
+                prevBe = beNow;
+            });
+            if(!total) html = '<div class="text-gray-400 text-[11px] py-2">暂无买卖/分红流水记录</div>';
+            const remain = total - visible;
+            let btns = '';
+            if(remain > 0){
+                btns += '<button type="button" onclick="beStockEvMore(\'' + code + '\')" class="flex-1 py-1.5 rounded-xl text-[11px] font-medium text-accent active:scale-[0.98] transition-transform" style="background:rgba(169,100,42,0.06);border:1px dashed rgba(169,100,42,0.25)">查看更多（还有 ' + remain + ' 条）</button>';
+            }
+            if(visible > 6){
+                btns += '<button type="button" onclick="beStockEvCollapse(\'' + code + '\')" class="flex-1 py-1.5 rounded-xl text-[11px] font-medium text-gray-500 active:scale-[0.98] transition-transform" style="background:#F4F1EA;border:1px solid #E8E2D6">收起</button>';
+            }
+            if(btns) html += '<div class="pt-1.5 flex gap-2">' + btns + '</div>';
+            evEl.innerHTML = html;
+        }
+        function beStockEvMore(code){
+            const el = document.getElementById('beStockEvents-' + code);
+            if(!el) return;
+            const item = (holdDataList || []).find(function(it){ return it.code === code; });
+            if(!item) return;
+            const total = buildBreakEvenSeries(item).length;
+            el._evVisible = Math.min(total, (el._evVisible || 6) + 10);
+            renderBeStockDetail(code);
+        }
+        function beStockEvCollapse(code){
+            const el = document.getElementById('beStockEvents-' + code);
+            if(el) el._evVisible = 6;
+            renderBeStockDetail(code);
         }
 
         // 单只持仓持有盈亏（人民币口径）= (现价 - 成本) × 股数；港股换算成人民币
@@ -7513,7 +8261,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const txList = item.transactions || [];
             txList.forEach(function(t){
                 const delta = Number(t.delta);
-                const amt = delta * Number(t.price);
+                let tp = Number(t.price) || 0;
+                if(tp < 0) tp = 0; // 负价迁移股：不计入买入/卖出合计
+                const amt = delta * tp;
                 if(delta > 0) buyTotal += amt;
                 else sellTotal += Math.abs(amt);
             });
@@ -7528,16 +8278,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 合并流水按时间倒序
             const events = [];
             // 建仓 = 该持仓时间最早的一笔买入（清仓后重新买入的新持仓第一笔买入同样视为建仓）
-            const firstBuyTx = txList.slice().sort(function(a, b){ return Number(a.t) - Number(b.t); })
-                .find(function(t){ return Number(t.delta) > 0; });
+            // 优化：单次遍历取最早买入 O(n)，避免百万条流水时 slice().sort() 全量排序卡顿
+            let firstBuyTx = null;
+            {
+                let minT = Infinity;
+                txList.forEach(function(t){
+                    if(Number(t.delta) > 0 && Number(t.t) < minT){ minT = Number(t.t); firstBuyTx = t; }
+                });
+            }
             txList.forEach(function(t){
                 const isOpen = t === firstBuyTx;
+                let tp = Number(t.price) || 0;
+                if(tp < 0) tp = 0; // 负价迁移股：明细成交价按 0 显示，金额不计入
                 events.push({
                     time: Number(t.t),
                     type: Number(t.delta) > 0 ? 'buy' : 'sell',
                     title: (Number(t.delta) > 0 ? (isOpen ? '建仓 ' : '买入 ') : '卖出 ') + Math.abs(Number(t.delta)) + ' 股',
-                    detail: '成交价 ' + (isHk ? 'HK$' : '') + Number(t.price).toFixed(isEtfCode(item.code) || isHk ? 3 : 2),
-                    amount: Number(t.delta) * Number(t.price),
+                    detail: '成交价 ' + (isHk ? 'HK$' : '') + tp.toFixed(isEtfCode(item.code) || isHk ? 3 : 2),
+                    amount: Number(t.delta) * tp,
                     isOpen: isOpen
                 });
             });
@@ -7558,6 +8316,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             events.sort(function(a, b){ return b.time - a.time; });
             window._tradeLogEvents = events;
+            // 切换股票：重置过滤缓存与历史分红折叠状态，防止复用上一只股票的数据
+            window._tlCache = null;
+            histSectionOpen = false;
+            histSectionPageCount = 50;
             // 显示页面
             document.querySelector('#pageHold').classList.add('hidden');
             document.querySelector('#pageTradeLog').classList.remove('hidden');
@@ -7577,12 +8339,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     }
         // 渲染流水列表（分页：每批50条，倒序）
         let histSectionOpen = false;
+        let histSectionPageCount = 50; // 历史分红折叠区展开分页：默认50条，加载更多每次+50（防止上万条展开全量DOM卡死）
+        // 历史分红懒渲染标记：折叠时零 DOM，展开时一次性填充（避免上万条历史分红常驻 DOM 卡顿）
         function toggleHistSection(){
             histSectionOpen = !histSectionOpen;
             const body = document.querySelector('#histSectionBody');
             if(body) body.classList.toggle('hidden', !histSectionOpen);
             const arr = document.querySelector('#histSectionToggle svg.arrow');
             if(arr) arr.classList.toggle('rotate-180', histSectionOpen);
+            if(histSectionOpen && body && body.childElementCount === 0){
+                renderHistSection();
+            }
+        }
+        // 历史分红折叠区展开：分页渲染（默认50条 + 加载更多每次+50），避免上万条记录一次性生成 DOM 卡死
+        function renderHistSection(){
+            const body = document.querySelector('#histSectionBody');
+            const histEvents = (window._tlCache && window._tlCache.hist) || [];
+            if(!body) return;
+            const slice = histEvents.slice(0, histSectionPageCount);
+            let html = slice.map(function(ev, i){ return renderTradeLogRow(ev, i < slice.length - 1); }).join('');
+            if(histEvents.length > histSectionPageCount){
+                html += '<button id="histMoreBtn" onclick="histSectionPageCount += 50; renderHistSection();" class="w-full py-3 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium active:scale-95 transition-transform">加载更多</button>';
+            }
+            body.innerHTML = html;
         }
         function renderTradeLogRow(ev, divider){
             const badgeCls = ev.type === 'buy'
@@ -7607,14 +8386,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return html;
         }
         function renderTradeLogList(){
-            const events = (window._tradeLogEvents || []).filter(function(ev){
-                return tradeLogFilter === 'all' || ev.type === tradeLogFilter;
-            });
+            // 过滤结果缓存：仅当过滤条件变化时重算全量过滤，避免"加载更多/展开收起"时三次全量遍历
+            const filterKey = tradeLogFilter;
+            if(!window._tlCache || window._tlCache.f !== filterKey){
+                const events = (window._tradeLogEvents || []).filter(function(ev){
+                    return tradeLogFilter === 'all' || ev.type === tradeLogFilter;
+                });
+                window._tlCache = { f: filterKey,
+                    cur: events.filter(function(ev){ return !ev.hist; }),
+                    hist: events.filter(function(ev){ return ev.hist; })
+                };
+            }
+            const curEvents = window._tlCache.cur;
+            const histEvents = window._tlCache.hist;
             const listDom = document.querySelector('#tradeLogList');
             const countEl = document.querySelector('#tradeLogCount');
             const headEl = document.querySelector('#tradeLogHead');
             const moreWrap = document.querySelector('#tradeLogMoreWrap');
-            if(!events.length){
+            if(!curEvents.length && !histEvents.length){
                 countEl.innerText = '共 0 条';
                 if(headEl) headEl.classList.add('hidden');
                 moreWrap.classList.add('hidden');
@@ -7624,12 +8413,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 listDom.innerHTML = emptyTipHTML({ title: emptyTip, sub: '每一笔到账与交易，都会在这里留下记录' });
                 return;
             }
-            countEl.innerText = '共 ' + events.length + ' 条';
+            countEl.innerText = '共 ' + (curEvents.length + histEvents.length) + ' 条';
             if(headEl) headEl.classList.remove('hidden');
             // 本次持仓期间记录：时间倒序正常显示，支持分页
-            const curEvents = events.filter(function(ev){ return !ev.hist; });
-            // 历史分红记录：重新买入前继承的历史分红，默认折叠分区展示（交易流水不继承，故只含分红）
-            const histEvents = events.filter(function(ev){ return ev.hist; });
             const slice = curEvents.slice(0, tradeLogPageCount);
             const showMore = curEvents.length > tradeLogPageCount;
             moreWrap.classList.toggle('hidden', !showMore);
@@ -7644,11 +8430,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 html += '<span class="text-[10px] text-gray-400 bg-white border border-gray-100 rounded-full px-2 py-0.5">' + histEvents.length + ' 条</span>';
                 html += '<svg class="arrow ' + (histSectionOpen ? 'rotate-180 ' : '') + 'transition-transform ml-auto w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
                 html += '</button>';
-                html += '<div id="histSectionBody"' + (histSectionOpen ? '' : ' class="hidden"') + '>';
-                histEvents.forEach(function(ev, i){
-                    html += renderTradeLogRow(ev, i < histEvents.length - 1);
-                });
-                html += '</div>';
+                // 历史分红懒渲染：默认折叠零 DOM，展开时由 toggleHistSection 一次性填充
+                html += '<div id="histSectionBody" class="hidden"></div>';
             }
             listDom.innerHTML = html;
         }
@@ -7712,6 +8495,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageWatchManage').classList.add('hidden');
             document.querySelector('#pageCashFlowAdd').classList.add('hidden');
             document.querySelector('#cfAddFab').classList.remove('hidden');
+            // 回本分析页：导航切换等效左上角返回，隐藏页面并释放图表实例（账户图+各股面板图）
+            document.querySelector('#pageBreakEven').classList.add('hidden');
+            disposeBeChart('chartBeAccount');
+            Object.keys(beChartInsts).forEach(function(k){
+                if(k.indexOf('beStockChart-') === 0) disposeBeChart(k);
+            });
             document.querySelector('#pageMine').classList.remove('hidden');
             document.querySelector('#pageHold').classList.toggle('hidden', tab !== 'hold');
             document.querySelector('#pageWatchSel').classList.toggle('hidden', tab !== 'watch');
@@ -9466,7 +10255,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             });
     }
-        // 渲染投入成本明细：初始投入 + 每笔资金流水（日期倒序，当年带"今年"标识）
+        // 渲染投入成本明细：初始投入 + 每笔资金流水，按年份折叠分组
+        // （交互参考"资金转入转出记录"页：年份行 年份|总转入|总取出|净流入，点击展开当年明细；最新年份默认展开）
         function renderCostDetail(){
             const entries = [];
             if(Number(historyData.initialCost) !== 0){
@@ -9495,34 +10285,75 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const listElC = document.querySelector('#costDetailList');
             document.querySelector('#costDetailTotal').innerText = fmtMoney(sumC);
             document.querySelector('#costDetailCount').innerText = entries.length;
-            const yearSet = {};
-            entries.forEach(function(e){ yearSet[e.y] = 1; });
-            document.querySelector('#costDetailYears').innerText = Object.keys(yearSet).length;
-            if(!entries.length){
+            // 按年聚合（初始投入计入其年份的转入；与资金转入转出记录页一致）
+            const byY = {};
+            entries.forEach(function(e){
+                const y = String(e.date || '').substring(0, 4) || '----';
+                if(!byY[y]) byY[y] = { in: 0, out: 0, net: 0, items: [] };
+                const a = e.amount;
+                byY[y].net += a;
+                if(a >= 0) byY[y].in += a; else byY[y].out += Math.abs(a);
+                byY[y].items.push(e);
+            });
+            const years = Object.keys(byY).sort().reverse();
+            document.querySelector('#costDetailYears').innerText = years.length;
+            if(!years.length){
                 listElC.innerHTML = '<div class="text-center py-12 text-gray-400"><span class="w-12 h-12 rounded-full bg-[#faf3e3] border border-[#eedfc0] flex items-center justify-center mx-auto mb-3"><i class="fa fa-money text-accent text-xl"></i></span><div class="text-[13px]">暂无投入成本记录</div><div class="text-[11px] mt-1 opacity-70">建立持仓后自动记录初始成本</div></div>';
                 return;
             }
-            let htmlC = '';
-            entries.forEach(function(e){
-                const isCur = e.cur;
-                const isInit = e.kind === 'init';
-                const badge = isInit
-                    ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">初始</span>'
-                    : (isCur ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">今年</span>' : '');
-                const amtCls = e.amount >= 0 ? 'text-accent' : 'text-[#00a05c]';
-                const amtSign = e.amount > 0 ? '+' : '';
-                const dateLabel = e.date ? e.date.substring(0, 10) : '';
-                htmlC += '<div class="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 overflow-hidden relative">'
+            // 汇总表头（列宽与年份行一致，参考资金转入转出记录页）
+            let htmlC = '<div class="px-4 py-2 grid grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_12px] gap-1 text-[10px] text-gray-400 items-center bg-gray-50/80 rounded-xl mb-2">'
+                + '<span>年份</span><span class="text-right">总转入</span><span class="text-right">总取出</span><span class="text-right">净流入</span><span></span>'
+                + '</div>';
+            years.forEach(function(y, yi){
+                const d = byY[y];
+                const netCls = d.net >= 0 ? 'text-accent' : 'text-[#00a05c]';
+                const itemsH = d.items.map(function(e){
+                    const isCur = e.cur;
+                    const isInit = e.kind === 'init';
+                    const badge = isInit
+                        ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">初始</span>'
+                        : (isCur ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">今年</span>' : '');
+                    const amtCls = e.amount >= 0 ? 'text-accent' : 'text-[#00a05c]';
+                    const amtSign = e.amount > 0 ? '+' : '';
+                    const dateLabel = e.date ? e.date.substring(0, 10) : '';
+                    return '<div class="bg-white rounded-xl p-3 flex items-center gap-3 overflow-hidden relative border border-gray-50">'
+                        + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg,#f59e0b,#d97706);"></div>'
+                        + '<div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-md"><i class="fa ' + (isInit ? 'fa-home' : 'fa-exchange') + ' text-[12px]"></i></div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5"><span class="text-[13px] font-semibold text-gray-800">' + dateLabel + (isInit ? ' · 初始投入' : ' · 资金流水') + '</span>' + badge + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + e.sub + '</div>'
+                        + '</div>'
+                        + '<div class="text-right flex-shrink-0"><div class="text-[14px] font-bold ' + amtCls + ' tabular-nums">' + amtSign + fmtMoney(Math.abs(e.amount)) + '</div><div class="text-[10px] text-gray-400 mt-0.5">' + (isInit ? '初始投入' : '资金流水') + '</div></div>'
+                        + '</div>';
+                }).join('');
+                // 最新年份默认展开，其余折叠
+                const expandedCls = (yi === 0 ? '' : ' hidden');
+                htmlC += '<div class="bg-white rounded-2xl card-shadow overflow-hidden relative mb-2">'
                     + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg,#f59e0b,#d97706);"></div>'
-                    + '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-md"><i class="fa ' + (isInit ? 'fa-home' : 'fa-exchange') + ' text-[13px]"></i></div>'
-                    + '<div class="flex-1 min-w-0">'
-                    + '<div class="flex items-center gap-1.5"><span class="text-[14px] font-semibold text-gray-800">' + dateLabel + (isInit ? ' · 初始投入' : ' · 资金流水') + '</span>' + badge + '</div>'
-                    + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + e.sub + '</div>'
+                    + '<div class="px-4 py-3 grid grid-cols-[48px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_12px] gap-1 items-center cursor-pointer active:bg-gray-50/80 transition-colors" onclick="toggleCostYearRow(this)">'
+                    + '<div class="text-[13px] font-semibold text-gray-800 tabular-nums">' + y + '</div>'
+                    + '<div class="flex-1 text-right text-[12px] font-semibold tabular-nums text-gray-700">' + fmtMoney(d.in) + '</div>'
+                    + '<div class="flex-1 text-right text-[12px] font-semibold tabular-nums text-gray-700">' + fmtMoney(d.out) + '</div>'
+                    + '<div class="flex-1 text-right text-[12px] font-semibold tabular-nums ' + netCls + '">' + (d.net >= 0 ? '+' : '') + fmtMoney(d.net) + '</div>'
+                    + '<i class="fa fa-chevron-down text-[10px] text-gray-300 transition-transform duration-200"' + (expandedCls === '' ? ' style="transform:rotate(-90deg)"' : '') + '></i>'
                     + '</div>'
-                    + '<div class="text-right flex-shrink-0"><div class="text-[15px] font-bold ' + amtCls + ' tabular-nums">' + amtSign + fmtMoney(Math.abs(e.amount)) + '</div><div class="text-[10px] text-gray-400 mt-0.5">' + (isInit ? '初始投入' : '资金流水') + '</div></div>'
+                    + '<div class="cost-year-detail' + expandedCls + ' px-4 pb-3 pt-2 border-t border-gray-50">'
+                    + '<div class="text-[10px] text-gray-400 pb-2 flex items-center justify-between"><span>共 ' + d.items.length + ' 笔记录</span><span>转入 +' + fmtMoney(d.in) + ' · 转出 -' + fmtMoney(d.out) + '</span></div>'
+                    + '<div class="space-y-2">'
+                    + itemsH
+                    + '</div>'
+                    + '</div>'
                     + '</div>';
             });
             listElC.innerHTML = htmlC;
+        }
+        function toggleCostYearRow(header){
+            const detail = header.nextElementSibling;
+            const chevron = header.querySelector('i.fa-chevron-down');
+            if(!detail) return;
+            const open = detail.classList.toggle('hidden');
+            if(chevron) chevron.style.transform = open ? '' : 'rotate(-90deg)';
         }
 
         // 渲染分红明细：received=今年已收 / year=年度分红收入 / total=累计分红总额（历年）
@@ -12789,35 +13620,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 今年换手率 = min(今年买入,今年卖出) / ((年初市值+当前市值)/2)
         // 开户至今换手率 = min(累计买入,累计卖出) / ((开户期初市值+当前市值)/2)
         // 年均换手率 = 开户至今换手率 / 开户年数（按天数/365）
-        function collectTradeEvents(){
-            const evs = [];
-            holdDataList.forEach(function(it){
-                (it.transactions || []).forEach(function(t){
-                    const delta = Number(t.delta) || 0;
-                    if(delta === 0) return;
-                    evs.push({ time: Number(t.t) || 0, type: delta > 0 ? 'buy' : 'sell', amount: Math.abs(delta) * (Number(t.price) || 0) });
-                });
-            });
-            (historyData.closedStocks || []).forEach(function(c){
-                (c.transactions || []).forEach(function(t){
-                    const delta = Number(t.delta) || 0;
-                    if(delta === 0) return;
-                    evs.push({ time: Number(t.t) || 0, type: delta > 0 ? 'buy' : 'sell', amount: Math.abs(delta) * (Number(t.price) || 0) });
-                });
-            });
-            return evs;
-        }
         function calcTurnoverStats(){
             const curY = String(new Date().getFullYear());
             const y0t = new Date(curY + '-01-01').getTime();
             let yBuy = 0, ySell = 0, allBuy = 0, allSell = 0;
-            collectTradeEvents().forEach(function(ev){
-                const amt = ev.amount;
-                if(ev.time >= y0t){
-                    if(ev.type === 'buy') yBuy += amt; else ySell += amt;
-                }
-                if(ev.type === 'buy') allBuy += amt; else allSell += amt;
-            });
+            // 直接双重循环数值累加：避免构建全量中间对象数组（百万条交易时每次打开都全库构建会卡顿）
+            // 负价迁移股：成交价按 0 处理，不虚减买入/卖出额（与净投入口径一致）
+            const accTx = function(list){
+                (list || []).forEach(function(t){
+                    const delta = Number(t.delta) || 0;
+                    if(delta === 0) return;
+                    let pr = Number(t.price) || 0;
+                    if(pr < 0) pr = 0;
+                    const amt = Math.abs(delta) * pr;
+                    if(Number(t.t) >= y0t){
+                        if(delta > 0) yBuy += amt; else ySell += amt;
+                    }
+                    if(delta > 0) allBuy += amt; else allSell += amt;
+                });
+            };
+            (holdDataList || []).forEach(function(it){ accTx(it.transactions); });
+            (historyData.closedStocks || []).forEach(function(c){ accTx(c.transactions); });
             const curMarket = Number(calcSummary().totalAsset) || 0;
             // 年初市值：与首页"今年收益率"同源（去年年终资产）
             let yearStart = 0;
@@ -12937,13 +13760,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(t3) t3.innerText = (to.annual === '--' ? '--' : to.annual + '%');
             statsTradeFilter = 'all';
             statsTradePageCount = 50;
+            window._statsTradeCache = null;
             updateStatsTradeFilterUI();
             renderStatsTradeList();
         }
         function renderStatsTradeList(){
-            const events = (window._statsTradeEvents || []).filter(function(ev){
-                return statsTradeFilter === 'all' || ev.type === statsTradeFilter;
-            });
+            // 过滤结果缓存：仅过滤条件变化时重算全量遍历，加载更多/重复打开不重复扫描（百万条时每次都全量 filter 会卡）
+            const fk = statsTradeFilter;
+            if(!window._statsTradeCache || window._statsTradeCache.f !== fk){
+                window._statsTradeCache = { f: fk, events: (window._statsTradeEvents || []).filter(function(ev){
+                    return statsTradeFilter === 'all' || ev.type === statsTradeFilter;
+                }) };
+            }
+            const events = window._statsTradeCache.events;
             const listDom = document.querySelector('#statsTradeList');
             const countEl = document.querySelector('#statsTradeCount');
             const headEl = document.querySelector('#statsTradeHead');
@@ -13886,6 +14715,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         // ============ 统计-资金流水：转入/取出/分红入账表格（含当时总资产列） ============
         let cashFlowFilter = 'all';
+        let cashFlowPageCount = 50; // 资金动向分页：默认50条，加载更多每次+50
         function updateCashFlowFilterUI(){
             document.querySelectorAll('.cash-flow-filter').forEach(function(b){
                 const on = b.getAttribute('data-f') === cashFlowFilter;
@@ -13895,31 +14725,44 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function setCashFlowFilter(f){
             if(cashFlowFilter === f) return;
             cashFlowFilter = f;
+            cashFlowPageCount = 50; // 切换过滤重置分页
             updateCashFlowFilterUI();
             renderCashFlowList();
         }
         function renderCashFlowList(){
-            const events = (window._cashFlowEvents || []).filter(function(ev){
-                return cashFlowFilter === 'all' || (cashFlowFilter === 'io' ? (ev.type === 'in' || ev.type === 'out') : ev.type === 'div');
-            });
+            // 过滤结果缓存：仅过滤条件变化时重算，加载更多不重复全量过滤
+            const fk = cashFlowFilter;
+            if(!window._cfCache || window._cfCache.f !== fk){
+                const evs = (window._cashFlowEvents || []).filter(function(ev){
+                    return cashFlowFilter === 'all' || (cashFlowFilter === 'io' ? (ev.type === 'in' || ev.type === 'out') : ev.type === 'div');
+                });
+                window._cfCache = { f: fk, evs: evs };
+            }
+            const events = window._cfCache.evs;
             const listEl = document.querySelector('#cashFlowList');
             const countEl = document.querySelector('#cashFlowCount');
             const headEl = document.querySelector('#cashFlowHead');
+            const moreWrap = document.querySelector('#cashFlowMoreWrap');
             if(!listEl) return;
             if(!events.length){
                 countEl.innerText = '共 0 笔';
                 if(headEl) headEl.classList.add('hidden');
+                if(moreWrap) moreWrap.classList.add('hidden');
                 listEl.innerHTML = emptyTipHTML({ title: '暂无资金记录', sub: '转入或转出资金后，这里会记录每一笔净流入' });
                 return;
             }
             countEl.innerText = '共 ' + events.length + ' 笔';
             if(headEl) headEl.classList.remove('hidden');
+            // 分页渲染：默认50条，加载更多每次+50（对齐交易明细列表交互）
+            const slice = events.slice(0, cashFlowPageCount);
+            const showMore = events.length > cashFlowPageCount;
+            if(moreWrap) moreWrap.classList.toggle('hidden', !showMore);
             let html = '';
-            events.forEach(function(ev, i){
+            slice.forEach(function(ev, i){
                 const badgeCls = ev.type === 'in' ? 'bg-[#fff1f0] text-[#e03131]' : (ev.type === 'out' ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-[#faf3e3] text-accent');
                 const badgeText = ev.type === 'in' ? '转入' : (ev.type === 'out' ? '取出' : '分红');
                 const amtCls = ev.type === 'in' ? 'text-[#e03131]' : (ev.type === 'out' ? 'text-[#00b57a]' : 'text-accent');
-                html += '<div class="grid grid-cols-[minmax(0,1fr)_62px_96px] gap-1 items-center px-4 py-3' + (i < events.length - 1 ? ' border-b border-gray-100' : '') + '">'
+                html += '<div class="grid grid-cols-[minmax(0,1fr)_62px_96px] gap-1 items-center px-4 py-3' + (i < slice.length - 1 ? ' border-b border-gray-100' : '') + '">'
                     + '<div class="flex items-center gap-2 min-w-0">'
                     + '<span class="' + badgeCls + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0">' + badgeText + '</span>'
                     + '<div class="min-w-0">'
@@ -13932,6 +14775,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             listEl.innerHTML = html;
         }
+        // 资金动向「加载更多」：每次+50
+        document.querySelector('#cashFlowMoreBtn').addEventListener('click', function(){
+            cashFlowPageCount += 50;
+            renderCashFlowList();
+        });
         // 资金流水账本：每次资金变动（初始投入/转入转出）或分红入账时自动同步保存，
         // 详情页直接读账本展示（事件驱动自动落库，不依赖每日刷新）。
         // 分红流水保留已清仓股票的历史入账记录（账本只增不减，清仓后记录仍留档）。
@@ -13957,12 +14805,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     log.push({ type: 'div', title: '分红入账 · ' + (it.name || it.code), detail: '每股 ' + Number(r.perShare).toFixed(4) + ' 元 × ' + Math.round(Number(r.count)) + ' 股', amount: Number(r.amount) || 0, dateStr: String(r.date || '').substring(0, 10), closed: !!closedSetFlow[(it.marketType || '') + '|' + (it.code || '')] });
                 });
             });
+            // 查重优化：Set 键代替 log.some 全量扫描（账本越大越明显，几十万条时 some 为 O(n^2) 会卡死）
+            const logKeySet = new Set();
+            log.forEach(function(n){ logKeySet.add(n.type + '|' + n.title + '|' + n.dateStr); });
             (historyData.cashFlowLog || []).forEach(function(o){
                 if(!o || o.type !== 'div') return;
-                const dup = log.some(function(n){
-                    return n.type === 'div' && n.title === o.title && n.dateStr === o.dateStr;
-                });
-                if(!dup){
+                if(logKeySet.has(o.type + '|' + o.title + '|' + o.dateStr)) return;
+                {
                     const o2 = Object.assign({}, o);
                     if(o2.closed == null){
                         const nm = String(o2.title || '').replace(/^分红入账 · /, '');
@@ -13971,11 +14820,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     log.push(o2);
                 }
             });
-            log.sort(function(a, b){ return (b.dateStr || '').localeCompare(a.dateStr || ''); });
+            log.sort(function(a, b){ const x = b.dateStr || '', y = a.dateStr || ''; return x < y ? -1 : x > y ? 1 : 0; });
             // 账本内容实际变化时记录最后变动时间（事件驱动：资金投入/分红入账时更新，行情刷新内容不变不更新）
-            const prevJson = JSON.stringify(historyData.cashFlowLog || []);
+            // 轻量指纹（长度+首尾条目）代替两次全量 JSON 序列化：几十万条账本下避免每次打开页面卡顿
+            const fp = function(arr){
+                let s = (arr || []).length + '|';
+                if(arr && arr.length){
+                    const f = arr[0], l = arr[arr.length - 1];
+                    s += (f.title || '') + '|' + (f.dateStr || '') + '|' + (f.amount || 0)
+                       + '~' + (l.title || '') + '|' + (l.dateStr || '') + '|' + (l.amount || 0);
+                }
+                return s;
+            };
+            const prevFp = fp(historyData.cashFlowLog);
             historyData.cashFlowLog = log;
-            if(JSON.stringify(log) !== prevJson){
+            window._cfLogDirty = (fp(log) !== prevFp);
+            if(window._cfLogDirty){
                 historyData.cashFlowUpdatedAt = todayStr() + ' ' + statsRefreshNow();
             }
         }
@@ -14310,9 +15170,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 每次打开重建账本并落库：转入转出从资金源数据实时生成（日期仅保留到日，兼容早期带时分秒的存量记录），
             // 分红入账保留已清仓股票的历史记录；账本内容无变化时更新时间不变，事件驱动自动落库
             syncCashFlowLog();
-            saveHistory();
+            // 账本未变化时跳过全量落库（几十万条账本每次打开重写会卡顿且逼近存储配额）
+            if(window._cfLogDirty) saveHistory();
             const events = (historyData.cashFlowLog || []).slice();
-            events.sort(function(a, b){ return (b.dateStr || '').localeCompare(a.dateStr || ''); });
+            events.sort(function(a, b){ const x = b.dateStr || '', y = a.dateStr || ''; return x < y ? -1 : x > y ? 1 : 0; });
             window._cashFlowEvents = events;
             let inTotal = 0, outTotal = 0, divTotal = 0;
             events.forEach(function(ev){
@@ -14329,6 +15190,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(e3) e3.innerText = fmtMoney(divTotal);
             if(e4) e4.innerText = fmtMoney(inTotal - outTotal);
             cashFlowFilter = 'all';
+            cashFlowPageCount = 50;
+            window._cfCache = null;
             updateCashFlowFilterUI();
             renderCashFlowList();
         }
@@ -14446,8 +15309,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     let dayPnlText = '--';
                     let dayPnlClass = 'text-gray-400';
                     if(pct != null && !isNaN(pct) && it.nowPrice && it.count){
-                        const fx = it.marketType === 'HK' ? hkFxRate : 1;
-                        dayPnl = it.nowPrice * it.count * fx * pct / (100 + pct);
+                        dayPnl = calcDayPnl(it);
                         if(dayPnl > 0){
                             dayPnlText = '+' + fmtMoney(dayPnl);
                             dayPnlClass = 'text-[#e03131]';
@@ -14554,6 +15416,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(holdDataList.length){
                 let totalDayPnl = 0;
                 let totalMarketValue = 0;
+                let totalPrevMv = 0;
                 let hasValidDayPct = false;
                 holdDataList.forEach(function(it){
                     const effPct = getEffectiveChangePct(it.changePct);
@@ -14561,9 +15424,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         hasValidDayPct = true;
                         const fx = it.marketType === 'HK' ? hkFxRate : 1;
                         const mv = it.nowPrice * it.count * fx;
-                        const dayPnl = mv * effPct / (100 + effPct);
-                        totalDayPnl += dayPnl;
                         totalMarketValue += mv;
+                        totalPrevMv += mv / (1 + effPct / 100); // 昨收市值（分段法下不能再用"市值-盈亏"反推）
+                        totalDayPnl += calcDayPnl(it);
                     }
                 });
                 // 集合竞价前（9:00-9:15）尚无当日数据：显示"--"
@@ -14573,7 +15436,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     dayPnlPctEl.innerText = '--';
                     dayPnlPctEl.className = 'text-[11px] tabular-nums text-gray-400';
                 } else {
-                    const yesterdayMarketValue = totalMarketValue - totalDayPnl;
+                    const yesterdayMarketValue = totalPrevMv;
                     const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
                     const amtText = totalDayPnl > 0.01 ? ('+' + fmtMoney(totalDayPnl)) : (totalDayPnl < -0.01 ? fmtMoney(totalDayPnl) : '0.00');
                     const pctText = (dayPnlPct > 0.005 ? '+' : '') + dayPnlPct.toFixed(2) + '%';
@@ -17659,6 +18522,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             numTween(totalPnlEl, pnlVal, fmtPnlNum);
             totalPnlEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
             numTween(document.querySelector('#totalMarket'), sum.totalAsset, fmtMoney);
+            // 回本分析（顶部右侧，资金流水口径）：预计回本（不复投）/ 复投 / 缺口
+            const beA = calcAccountBreakEven();
+            const setBe = function(id, txt, base, colorCls){
+                const el = document.querySelector('#' + id);
+                if(el){
+                    el.innerText = txt;
+                    el.className = base + ' ' + colorCls;
+                }
+            };
+            setBe('sumBeNo', fmtBeYears(beA.beNo), 'text-[17px] font-semibold tabular-nums tracking-tight', (beA.beNo != null && beA.beNo <= 0) ? 'text-purple-300' : 'text-white');
+            setBe('sumBeRe', fmtBeYears(beA.beRe), 'text-white font-semibold tabular-nums', (beA.beRe != null && beA.beRe <= 0) ? 'text-purple-300' : 'text-white');
+            setBe('sumBeGap', beA.gap != null ? fmtMoney(beA.gap) : '--', 'text-amber-200 font-semibold tabular-nums', '');
             const brkEl = document.querySelector('#assetBreakdown');
             if(brkEl){
                 const mv = brkEl.querySelector('.ab-mkt-v');
@@ -17706,15 +18581,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const todayPnlEl = document.querySelector('#todayPnl');
             const todayPnlPctEl = document.querySelector('#todayPnlPct');
             if(todayPnlEl && todayPnlPctEl){
-                let totalDayPnl = 0, totalMarketValue = 0, hasValidDayPct = false;
+                let totalDayPnl = 0, totalMarketValue = 0, totalPrevMv = 0, hasValidDayPct = false;
                 holdDataList.forEach(function(it){
                     const effPct = getEffectiveChangePct(it.changePct);
                     if(effPct != null && !isNaN(effPct) && it.nowPrice && it.count){
                         hasValidDayPct = true;
                         const fx = it.marketType === 'HK' ? hkFxRate : 1;
                         const mv = it.nowPrice * it.count * fx;
-                        totalDayPnl += mv * effPct / (100 + effPct);
                         totalMarketValue += mv;
+                        totalPrevMv += mv / (1 + effPct / 100); // 昨收市值（分段法下不能再用"市值-盈亏"反推）
+                        totalDayPnl += calcDayPnl(it);
                     }
                 });
                 if(!hasValidDayPct){
@@ -17723,7 +18599,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     todayPnlPctEl.innerText = '--';
                     todayPnlPctEl.className = 'text-[11px] font-medium tabular-nums num-transition text-gray-400';
                 } else {
-                    const yesterdayMarketValue = totalMarketValue - totalDayPnl;
+                    const yesterdayMarketValue = totalPrevMv;
                     const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
                     // 金额主色：涨红跌绿
                     const amtCls = totalDayPnl > 0.005 ? 'text-[#e03131]' : (totalDayPnl < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
@@ -17772,8 +18648,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const dayPct = getEffectiveChangePct(item.changePct);
                 let dayPnlText = '--', dayPnlClass = 'text-gray-400', dayPnlPctText = '--';
                 if(dayPct != null && !isNaN(dayPct) && item.nowPrice && item.count){
-                    const fx = isHk ? hkFxRate : 1;
-                    const dayPnl = item.nowPrice * item.count * fx * dayPct / (100 + dayPct);
+                    const dayPnl = calcDayPnl(item);
                     if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
                     else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
                     else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
@@ -17812,6 +18687,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 setNumText(card.querySelector('.hq-yield'), stockYield + '%', 'text-gray-800');
                 setNumText(card.querySelector('.hq-chg'), dayChangeAmtText, dayChangeClass);
                 setNumText(card.querySelector('.hq-chgpct'), dayChangePctText, dayChangeClass);
+                // 回本时间（分红回收，资金流水口径）：不复投 / 复投
+                const beD = calcBreakEvenData(item);
+                const beNoCls = beD.beNo != null && beD.beNo <= 0 ? 'text-purple-600' : (beD.beNo == null ? 'text-gray-400' : 'text-gray-800');
+                const beReCls = beD.beRe != null && beD.beRe <= 0 ? 'text-purple-600' : (beD.beRe == null ? 'text-gray-400' : 'text-gray-800');
+                setNumText(card.querySelector('.hq-be-no'), fmtBeYears(beD.beNo), beNoCls);
+                setNumText(card.querySelector('.hq-be-re'), fmtBeYears(beD.beRe), beReCls);
             });
         }
 
@@ -17835,8 +18716,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pct = getEffectiveChangePct(item.changePct);
                 let dayPnlText = '--', dayPnlClass = 'text-gray-400', dayPnlPctText = '--';
                 if(pct != null && !isNaN(pct) && item.nowPrice && item.count){
-                    const fx = isHk ? hkFxRate : 1;
-                    const dayPnl = item.nowPrice * item.count * fx * pct / (100 + pct);
+                    const dayPnl = calcDayPnl(item);
                     if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
                     else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
                     else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
@@ -17892,6 +18772,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const itemAnnualDiv = getAnnualDiv(item);
                 const itemTotalReceived = getItemTotalReceived(item);
                 const stockYield = itemMarketTotal>0 ? ((itemAnnualDiv / itemMarketTotal)*100).toFixed(2):0;
+                // 回本时间（分红回收动态成本）：不复投 / 复投
+                const beD = calcBreakEvenData(item);
+                const beNoText = fmtBeYears(beD.beNo);
+                const beReText = fmtBeYears(beD.beRe);
                 const itemPnl = getPnl(item);
                 const itemPnlClass = pnlClass(itemPnl, false);
                 const pnlPct = itemCostTotal !== 0 ? (itemPnl / itemCostTotal * 100) : 0;
@@ -17903,8 +18787,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 let dayPnlClass = 'text-gray-400';
                 let dayPnlPctText = '--';
                 if(dayPct != null && !isNaN(dayPct) && item.nowPrice && item.count){
-                    const fx = isHk ? hkFxRate : 1;
-                    dayPnl = item.nowPrice * item.count * fx * dayPct / (100 + dayPct);
+                    dayPnl = calcDayPnl(item);
                     if(dayPnl > 0){
                         dayPnlText = '+' + fmtMoney(dayPnl);
                         dayPnlClass = 'text-[#e03131]';
@@ -17997,19 +18880,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 <div class="text-[11px] font-medium ${dayPnlClass} tabular-nums mt-0.5 hq-daypnlpct">${dayPnlPctText}</div>
                             </div>
                         </div>
-                        <!-- 副行：市值 / 仓位 / 预测分红 -->
-                        <div class="mt-2.5 pt-2 border-t border-[#F0EDE7] flex items-center gap-5">
-                            <div class="flex items-baseline gap-1.5">
+                        <!-- 副行：市值 / 仓位 / 预测分红 / 回本（不复投） / 回本（复投） -->
+                        <div class="mt-2.5 pt-2 border-t border-[#F0EDE7] grid grid-cols-5 gap-1">
+                            <div class="flex flex-col items-center gap-0.5 min-w-0">
                                 <span class="text-[10px] text-gray-400">市值</span>
-                                <span class="text-[13px] font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'} tabular-nums hq-mv">${fmtMoney(itemMarketTotal)}</span>
+                                <span class="text-[12.5px] font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'} tabular-nums hq-mv">${fmtMoney(itemMarketTotal)}</span>
                             </div>
-                            <div class="flex items-baseline gap-1.5">
+                            <div class="flex flex-col items-center gap-0.5 min-w-0">
                                 <span class="text-[10px] text-gray-400">仓位</span>
                                 <span class="text-[12px] font-medium text-gray-700 tabular-nums hq-pct">${holdPct}%</span>
                             </div>
-                            <div class="flex items-baseline gap-1.5">
+                            <div class="flex flex-col items-center gap-0.5 min-w-0">
                                 <span class="text-[10px] text-gray-400">预测分红</span>
                                 <span class="text-[12px] font-medium text-accent tabular-nums">${fmtMoney(itemAnnualDiv)}</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-0.5 min-w-0 cursor-pointer active:scale-95 transition-transform" onclick="openBreakEvenPage('${item.code}')" title="查看回本趋势">
+                                <span class="text-[10px] text-gray-400">回本·不复</span>
+                                <span class="text-[12px] font-medium ${beNoText==='已回本' ? 'text-purple-600' : (beNoText==='--' ? 'text-gray-400' : 'text-gray-800')} tabular-nums hq-be-no">${beNoText}</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-0.5 min-w-0 cursor-pointer active:scale-95 transition-transform" onclick="openBreakEvenPage('${item.code}')" title="查看回本趋势">
+                                <span class="text-[10px] text-gray-400">回本·复投</span>
+                                <span class="text-[12px] font-medium ${beReText==='已回本' ? 'text-purple-600' : (beReText==='--' ? 'text-gray-400' : 'text-gray-800')} tabular-nums hq-be-re">${beReText}</span>
                             </div>
                         </div>
                     </div>
@@ -18171,8 +19062,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     let dayPnlClass = 'text-gray-400';
                     let dayPnlPctText = '--';
                     if(pct != null && !isNaN(pct) && item.nowPrice && item.count){
-                        const fx = isHk ? hkFxRate : 1;
-                        dayPnl = item.nowPrice * item.count * fx * pct / (100 + pct);
+                        dayPnl = calcDayPnl(item);
                         if(dayPnl > 0){
                             dayPnlText = '+' + fmtMoney(dayPnl);
                             dayPnlClass = 'text-[#e03131]';

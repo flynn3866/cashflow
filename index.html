@@ -6201,11 +6201,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!now) return 0;
             const fx = item.marketType === 'HK' ? hkFxRate : 1;
             const pct = getEffectiveChangePct(item.changePct);
-            // 昨收价：优先用行情接口直供的 item.prevClose 字段（行情刷新时已保存，最准确）；
-            // 字段缺失时才由现价与涨跌幅反推兜底（两者不同步时以直供字段为准，避免算偏）
-            const prevClose = (item.prevClose != null && !isNaN(Number(item.prevClose)) && Number(item.prevClose) > 0)
-                ? Number(item.prevClose)
-                : ((pct != null && !isNaN(pct)) ? now / (1 + pct / 100) : null);
+            // 昨收价三源裁决（防止旧行情快照的 prevClose 字段陈留置错）：
+            // ① 涨跌额直推：now - item.change（现价与涨跌额由同一次行情响应写入，最不易陈旧，优先）
+            // ② prevClose 字段：行情接口直供，与①一致时采用（偏差>0.5% 视为陈旧弃用）
+            // ③ 现价+涨跌幅反推：仅当前两者都不可用时兜底
+            const pvChg = (item.change != null && !isNaN(Number(item.change)) && isFinite(Number(item.change)))
+                ? (now - Number(item.change)) : null;
+            const pvField = (item.prevClose != null && !isNaN(Number(item.prevClose)) && Number(item.prevClose) > 0)
+                ? Number(item.prevClose) : null;
+            const pvCalc = (pct != null && !isNaN(pct)) ? now / (1 + pct / 100) : null;
+            let prevClose = null;
+            if(pvChg != null && pvChg > 0){
+                prevClose = (pvField != null && Math.abs(pvChg - pvField) / pvField < 0.005) ? pvField : pvChg;
+            } else {
+                prevClose = pvField != null ? pvField : pvCalc;
+            }
             const trs = item.transactions;
             if(!trs || !trs.length){
                 // 无流水（存量旧数据）：全部份额按昨收价起算

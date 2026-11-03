@@ -6201,8 +6201,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!now) return 0;
             const fx = item.marketType === 'HK' ? hkFxRate : 1;
             const pct = getEffectiveChangePct(item.changePct);
-            // 昨收价：由现价与涨跌幅反推（与旧算法同源，不引入额外存储字段）
-            const prevClose = (pct != null && !isNaN(pct)) ? now / (1 + pct / 100) : null;
+            // 昨收价：优先用行情接口直供的 item.prevClose 字段（行情刷新时已保存，最准确）；
+            // 字段缺失时才由现价与涨跌幅反推兜底（两者不同步时以直供字段为准，避免算偏）
+            const prevClose = (item.prevClose != null && !isNaN(Number(item.prevClose)) && Number(item.prevClose) > 0)
+                ? Number(item.prevClose)
+                : ((pct != null && !isNaN(pct)) ? now / (1 + pct / 100) : null);
             const trs = item.transactions;
             if(!trs || !trs.length){
                 // 无流水（存量旧数据）：全部份额按昨收价起算

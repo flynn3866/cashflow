@@ -289,7 +289,8 @@
         [id^="pageStats"]:not(#pageStats), #pageStockEdit, #pageTrade, #pageTradeLog, #pageAssetHigh,
         #pageYearSnapshot, #pageNotifCenter, #pageDivDetail, #pageCostDetail, #pageNavDetail, #pageWatchList,
         #pageBalanceSheet, #pageAnnualReport, #pageFundTransfer, #pageFundTransferAdd, #pageSettings,
-        #pageIndustryMap, #pageStockScores, #pageDivEntry, #pageCashFlowAdd{
+        #pageIndustryMap, #pageStockScores, #pageDivEntry, #pageCashFlowAdd,
+        #pageBreakEven, #pageWatchManage, #pageStockDetail, #pageHealthCheck{
             animation: appSlideIn .35s cubic-bezier(.22,1,.36,1) backwards;
         }
         @keyframes appFadeUp{
@@ -492,9 +493,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         </div>
                     </div>
                     <div class="shrink-0 text-right cursor-pointer select-none active:scale-95 transition-transform" onclick="openBreakEvenPage()" title="查看回本分析（资金流水口径分红回收）">
-                        <div class="text-[11px] text-amber-100/60 flex items-center gap-1.5 mb-0.5 justify-end">
-                            <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
-                            <span class="tracking-wide font-serif">预计回本</span><i class="fa fa-chevron-right text-[10px]"></i>
+                        <div class="text-[11px] text-amber-100/60 flex items-center gap-1.5 mb-0.5">
+                            <span class="text-[9.5px] text-amber-100/50 whitespace-nowrap">缺口 <span id="sumBeGap" class="text-amber-200 font-semibold tabular-nums">--</span></span>
+                            <span class="ml-auto flex items-center gap-1.5">
+                                <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
+                                <span class="tracking-wide font-serif">预计回本</span><i class="fa fa-chevron-right text-[10px]"></i>
+                            </span>
                         </div>
                         <div class="flex items-end justify-end gap-2.5">
                             <div class="text-right">
@@ -507,7 +511,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 <div class="text-[13px] font-semibold tabular-nums text-[#e8c88a] leading-tight" id="sumBeRe">--</div>
                             </div>
                         </div>
-                        <div class="text-[10px] text-amber-100/60 mt-1 whitespace-nowrap">缺口 <span id="sumBeGap" class="text-amber-200 font-semibold tabular-nums">--</span></div>
                     </div>
                 </div>
 
@@ -6194,7 +6197,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 逐段计算 (现价 - 基准价) × 股数 后合计。
         function calcDayPnl(item){
             const now = Number(item.nowPrice);
-            if(!now || !Number(item.count)) return 0;
+            // count 可能为 0（当日全清仓）：仍须按当日交易计算实现盈亏，故不在此短路
+            if(!now) return 0;
             const fx = item.marketType === 'HK' ? hkFxRate : 1;
             const pct = getEffectiveChangePct(item.changePct);
             // 昨收价：由现价与涨跌幅反推（与旧算法同源，不引入额外存储字段）
@@ -6209,7 +6213,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const dayStart = new Date();
             dayStart.setHours(0, 0, 0, 0);
             const dayStartTs = dayStart.getTime();
-            // 份额池 {qty, base}：买入入池，卖出按 FIFO 扣减（仅统计当前仍持有的部分）
+            // 券商口径：当日盈亏 = (今日卖出金额 + 收盘剩余市值) − (今日买入金额 + 昨收持仓市值)
+            // 份额池 {qty, base} 实现：买入入池（历史份额以昨收价为基准，今日买入以成交价为基准），
+            // 卖出按 FIFO 扣减并同时累加被卖出份额的当日盈亏（卖价 − 该份额基准），剩余份额按 (收盘价 − 基准) 累加。
+            let pnl = 0;
             let shares = [];
             const sortedTrs = trs.slice().sort(function(a, b){ return (Number(a.t)||0) - (Number(b.t)||0); });
             sortedTrs.forEach(function(tr){
@@ -6221,19 +6228,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const base = ts >= dayStartTs ? (Number(tr.price) || now) : prevClose;
                     shares.push({ qty: qty, base: base });
                 } else {
-                    // 卖出：从最早份额开始扣减
+                    // 卖出：从最早份额开始扣减，被卖出份额的当日盈亏同步计入
+                    const sellPrice = Number(tr.price) || now;
                     let remain = -qty;
                     for(let i = 0; i < shares.length && remain > 0; i++){
                         const s = shares[i];
                         const take = Math.min(s.qty, remain);
+                        if(s.base != null && !isNaN(s.base)){
+                            pnl += take * (sellPrice - s.base);
+                        }
                         s.qty -= take;
                         remain -= take;
                     }
                     shares = shares.filter(function(s){ return s.qty > 0; });
                 }
             });
-            // 剩余份额逐段计算盈亏
-            let pnl = 0;
+            // 剩余份额逐段计算浮动盈亏
             shares.forEach(function(s){
                 if(s.base == null || isNaN(s.base)) return;
                 pnl += s.qty * (now - s.base);
@@ -6760,9 +6770,49 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const list = (holdDataList || []).concat((historyData.closedStocks || []));
             return list;
         }
-        function calcAccountBreakEven(){
-            let netIn = 0, divTotalV = 0, mv = 0;
+        // 账户累计税后分红（与首页"累计分红总额"同源）：
+        // 设置页手动录入的历史年份 + 每年到账自动固化的非当年 + 当年实时已收（含手动当年基准与清仓股）；
+        // 无任何年度记录时退回个股分红流水口径（旧数据兼容）
+        function accountDivTotal(){
+            const curY = String(new Date().getFullYear());
+            const keys = Object.keys(historyData.yearlyDiv || {});
+            if(keys.length){
+                let t = 0;
+                keys.forEach(function(y){
+                    t += (String(y) === curY)
+                        ? getCurYearReceived()
+                        : (Number(historyData.yearlyDiv[y]) || 0);
+                });
+                return t;
+            }
+            let t = 0;
+            allBreakEvenItems().forEach(function(it){
+                (it.exDivRecords || []).forEach(function(r){ t += Number(r.amount) || 0; });
+            });
+            return t;
+        }
+        // 近3年（含当年与往前2年）年均分红：按年度口径（设置手动历史 + 当年实时），有值的年份数取均值；
+        // 无年度数据时退回个股分红流水近3年口径（旧数据兼容）
+        function avgDiv3Years(){
+            const curY = new Date().getFullYear();
+            const yd = historyData.yearlyDiv || {};
+            let sum = 0, cnt = 0;
+            for(let y = curY - 2; y <= curY; y++){
+                const ys = String(y);
+                let v = null;
+                if(ys === String(curY)) v = getCurYearReceived();
+                else if(yd[ys] != null) v = Number(yd[ys]) || 0;
+                if(v != null && v > 0){ sum += v; cnt++; }
+            }
+            if(cnt) return sum / cnt;
             const exAll = [];
+            allBreakEvenItems().forEach(function(it){
+                (it.exDivRecords || []).forEach(function(r){ exAll.push(r); });
+            });
+            return avgDiv3Of(exAll);
+        }
+        function calcAccountBreakEven(){
+            let netIn = 0, mv = 0;
             allBreakEvenItems().forEach(function(it){
                 (it.transactions || []).forEach(function(t){
                     const delta = Number(t.delta) || 0;
@@ -6770,14 +6820,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(pr < 0) pr = 0; // 成交价防御：负价按 0 计
                     netIn += delta * pr;
                 });
-                (it.exDivRecords || []).forEach(function(r){
-                    divTotalV += Number(r.amount) || 0;
-                    exAll.push(r);
-                });
                 mv += getMarketValue(it);
             });
+            const divTotalV = accountDivTotal();
             const gap = netIn - divTotalV;
-            const avgDiv = avgDiv3Of(exAll);
+            const avgDiv = avgDiv3Years();
             const divYield = (avgDiv != null && mv > 0) ? avgDiv / mv : null;
             const beNo = (gap > 0 && avgDiv != null && avgDiv > 0) ? gap / avgDiv : (gap <= 0 ? 0 : null);
             let beRe = beNo;
@@ -6968,16 +7015,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closeBreakEvenPage(){
             const holdPg = document.querySelector('#pageHold');
             const bePg = document.querySelector('#pageBreakEven');
-            // 退出回本页：释放账户图实例（下次进入重建），并清理残留的个股面板实例
-            disposeBeChart('chartBeAccount');
-            Object.keys(beChartInsts).forEach(function(k){
-                if(k.indexOf('beStockChart-') === 0) disposeBeChart(k);
+            // 退场方式与资产负债表详情页一致：右滑淡出后再隐藏（图表实例在动画结束后释放，避免淡出期间图表闪没）
+            exitDetailPage(bePg, function(){
+                disposeBeChart('chartBeAccount');
+                Object.keys(beChartInsts).forEach(function(k){
+                    if(k.indexOf('beStockChart-') === 0) disposeBeChart(k);
+                });
+                if(holdPg) holdPg.classList.remove('hidden');
+                const btn = document.querySelector('#openModalBtn');
+                if(btn) btn.classList.remove('hidden');
+                renderPage();
             });
-            if(bePg) bePg.classList.add('hidden');
-            if(holdPg) holdPg.classList.remove('hidden');
-            const btn = document.querySelector('#openModalBtn');
-            if(btn) btn.classList.remove('hidden');
-            restoreScroll();
         }
         function renderBreakEvenPage(focusCode){
             const beA = calcAccountBreakEven();

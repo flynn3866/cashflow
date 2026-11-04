@@ -1044,6 +1044,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 今日盈亏条（券商总账口径）：今日盈亏 / 日内已兑现（做T） / 持仓浮动 -->
         <div id="tradeLogDayWrap" class="hidden relative overflow-hidden rounded-2xl p-3.5 mb-5" style="background:linear-gradient(135deg,#3a332a,#4a3d2e);box-shadow:0 2px 4px rgba(26,20,12,0.5), inset 0 1px 0 rgba(255,255,255,0.07);">
             <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.5),transparent);"></div>
+            <div class="relative z-10 mb-2 px-0.5">
+                <span id="logTodayLabel" class="text-[10.5px] font-semibold text-amber-100/80">今日</span>
+            </div>
             <div class="relative z-10 grid grid-cols-3">
                 <div class="text-center px-1">
                     <div class="text-[10px] text-amber-100/60 mb-1">今日盈亏</div>
@@ -4536,6 +4539,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         let lastFxAt = 0;           // 最近一次拉取港币汇率时间
         let refreshing = false;     // 防止并发
+        let quoteUpdatedTs = 0;     // 最近一次行情刷新成功时间戳（今日盈亏/做T条"刷新时间"来源）
         let quoteFetchLastOk = false; // 本会话是否至少成功拉取过一次行情（统计页日快照据此决定是否固化）
         // ==================== 仓位分布收盘快照机制 ====================
         // 仓位分布数据不需要每2秒刷新，每天收盘后更新一次，交易时间内使用上一交易日快照
@@ -4783,6 +4787,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const q = quotes[getTencentPrefix(it.marketType, it.code)];
                     if(q && q.price != null && !isNaN(q.price) && q.price > 0){
                         quoteFetchLastOk = true;
+                        quoteUpdatedTs = Date.now();
                         it.nowPrice = q.price;
                         if(q.changePct != null && !isNaN(q.changePct)){
                             it.changePct = q.changePct;
@@ -5067,6 +5072,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 单次刷新失败不影响下一次
             }finally{
                 refreshing = false;
+                // 行情刷新完成钩子：进入明细页时注册的"立即刷新并更新今日条"回调
+                if(typeof window.__quoteRefreshCb === 'function'){
+                    const _cb = window.__quoteRefreshCb;
+                    window.__quoteRefreshCb = null;
+                    try{ _cb(); }catch(e){}
+                }
             }
         }
 
@@ -6248,10 +6259,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(prevClose == null) return { pnl: 0, tProfit: 0, prevMv: 0, hasBase: false, buyQty: 0, sellQty: 0 };
                 return { pnl: (now - prevClose) * holdQty * fx, tProfit: 0, prevMv: prevClose * holdQty * fx, hasBase: true, buyQty: 0, sellQty: 0 };
             }
-            // 今日 0 点时间戳：仅统计今日发生的买卖变动（历史交易不影响当日盈亏）
-            const dayStart = new Date();
-            dayStart.setHours(0, 0, 0, 0);
-            const dayStartTs = dayStart.getTime();
+            // 交易日归属（券商口径，与全站今日盈亏/做T显示统一）：
+            //  交易日 9:00–9:15（集合竞价前）→ 尚无当日数据，返回 hasBase:false（展示层显示 --）
+            //  9 点前 / 周末 / 节假日 → 上一交易日口径（上一交易日的买卖计入当日变动，恒显示上交易日数据）
+            //  交易日 9:15 后 → 当日口径（今日买卖计入当日变动）
+            const nowRef = new Date((typeof item.__refTs === 'number') ? item.__refTs : Date.now());
+            const _dow = nowRef.getDay();
+            const _isTrading = !(_dow === 0 || _dow === 6);              // 周末非交易日；节假日按交易日处理（数据沿用不影响展示）
+            const _minsOfDay = nowRef.getHours() * 60 + nowRef.getMinutes();
+            const _tradingStarted = _isTrading && _minsOfDay >= 9 * 60; // 交易日 9:00 后
+            if(_tradingStarted && _minsOfDay < 9 * 60 + 15){
+                // 9:00–9:15：当日数据尚未生成（券商显示 --）
+                return { pnl: 0, tProfit: 0, prevMv: 0, hasBase: false, buyQty: 0, sellQty: 0 };
+            }
+            const refDay = new Date(nowRef);
+            if(!_tradingStarted){
+                // 9 点前 / 周末 / 节假日 → 上一交易日（周末连续回退到最近交易日）
+                refDay.setDate(refDay.getDate() - 1);
+                while(refDay.getDay() === 0 || refDay.getDay() === 6){
+                    refDay.setDate(refDay.getDate() - 1);
+                }
+            }
+            refDay.setHours(0, 0, 0, 0);
+            const dayStartTs = refDay.getTime();
             let buyQty = 0, buyAmt = 0, sellQty = 0, sellAmt = 0;
             trs.forEach(function(tr){
                 const ts = Number(tr.t) || 0;
@@ -8267,6 +8297,55 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 recordDailyAssets();
                 renderAnalysisCharts();
             }
+            // 交易明细页开着：当日买卖（做T）数据已变化，立即刷新今日条
+            const dayWrapEl = document.querySelector('#tradeLogDayWrap');
+            if(dayWrapEl && !dayWrapEl.classList.contains('hidden')){
+                refreshTradeLogDayBar();
+            }
+        }
+        // 交易明细页"今日条"填充与刷新：
+        // 今日盈亏 = 收盘市值 − 昨日市值 + 卖出总额 − 买入总额（总账口径，含昨日归属）
+        // 日内已兑现（做T）= 当日卖出总额 − 当日买入总额；持仓浮动 = 今日盈亏 − 做T
+        // 无行情数据（昨收不可得）时整体显示 --；刷新时间 = 最近一次行情刷新成功时间
+        function refreshTradeLogDayBar(){
+            const wrap = document.querySelector('#tradeLogDayWrap');
+            if(!wrap) return;
+            const item = holdDataList.find(function(it){ return it.id === tradeLogItemId; });
+            if(!item){
+                wrap.classList.add('hidden');
+                return;
+            }
+            // 标签：9 点前/周末/节假日归属上一交易日 → 显示"昨日"；交易日 9:15 后显示"今日"
+            const nowRef = new Date();
+            const _dowL = nowRef.getDay();
+            const _isTradingL = !(_dowL === 0 || _dowL === 6);
+            const _minsL = nowRef.getHours() * 60 + nowRef.getMinutes();
+            const _startedL = _isTradingL && _minsL >= 9 * 60;
+            const isPrevDay = !_startedL; // 9点前/周末/节假日 → 昨日；交易日9:00起(含9-9:15空窗) → 今日
+            const labelEl = document.querySelector('#logTodayLabel');
+            if(labelEl) labelEl.innerText = isPrevDay ? '昨日' : '今日';
+            const flow = calcDayFlow(item);
+            const pnlEl = document.querySelector('#logTodayPnl');
+            const tEl = document.querySelector('#logTodayT');
+            const fEl = document.querySelector('#logTodayFloat');
+            wrap.classList.remove('hidden');
+            if(!flow.hasBase){
+                pnlEl.style.color = '#ffffff'; pnlEl.innerText = '--';
+                tEl.style.color = '#f7cf8f'; tEl.innerText = '--';
+                fEl.style.color = '#ffffff'; fEl.innerText = '--';
+                return;
+            }
+            const pCls = flow.pnl > 0.005 ? '#e03131' : (flow.pnl < -0.005 ? '#00a05c' : '#ffffff');
+            pnlEl.style.color = pCls;
+            pnlEl.innerText = fmtPnlNum(flow.pnl);
+            const hasT = flow.buyQty > 0 && flow.sellQty > 0;
+            const tCls = hasT ? (flow.tProfit > 0 ? '#ffb3a7' : '#9ef0cf') : '#ffffff';
+            tEl.style.color = tCls;
+            tEl.innerText = hasT ? fmtPnlNum(flow.tProfit) : '--';
+            const floatPnl = flow.pnl - flow.tProfit;
+            const fCls = floatPnl > 0.005 ? '#e03131' : (floatPnl < -0.005 ? '#00a05c' : '#ffffff');
+            fEl.style.color = fCls;
+            fEl.innerText = fmtPnlNum(floatPnl);
         }
         // 交易页面事件绑定
         document.querySelector('#tradeBackBtn').addEventListener('click', closeTradeModal);
@@ -8359,31 +8438,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#logSellTotal').innerText = fmtMoney(sellTotal);
             document.querySelector('#logDivTotal').innerText = fmtMoney(divTotal);
             document.querySelector('#logNetTotal').innerText = fmtMoney(netIn);
-            // 今日盈亏条（券商总账口径）：今日盈亏 = 收盘市值 − 昨日市值 + 卖出总额 − 买入总额；
-            // 日内已兑现（做T）= 当日卖出总额 − 当日买入总额；持仓浮动 = 今日盈亏 − 做T
-            const dayWrapEl = document.querySelector('#tradeLogDayWrap');
-            if(dayWrapEl){
-                const flow = calcDayFlow(item);
-                if(flow.hasBase){
-                    dayWrapEl.classList.remove('hidden');
-                    const pnlEl = document.querySelector('#logTodayPnl');
-                    const tEl = document.querySelector('#logTodayT');
-                    const fEl = document.querySelector('#logTodayFloat');
-                    const pCls = flow.pnl > 0.005 ? '#e03131' : (flow.pnl < -0.005 ? '#00a05c' : '#ffffff');
-                    pnlEl.style.color = pCls;
-                    pnlEl.innerText = fmtPnlNum(flow.pnl);
-                    const hasT = flow.buyQty > 0 && flow.sellQty > 0;
-                    const tCls = hasT ? (flow.tProfit > 0 ? '#ffb3a7' : '#9ef0cf') : '#ffffff';
-                    tEl.style.color = tCls;
-                    tEl.innerText = hasT ? fmtPnlNum(flow.tProfit) : '--';
-                    const floatPnl = flow.pnl - flow.tProfit;
-                    const fCls = floatPnl > 0.005 ? '#e03131' : (floatPnl < -0.005 ? '#00a05c' : '#ffffff');
-                    fEl.style.color = fCls;
-                    fEl.innerText = fmtPnlNum(floatPnl);
-                } else {
-                    dayWrapEl.classList.add('hidden');
-                }
-            }
+            // 今日盈亏条（券商总账口径）填充与刷新
+            refreshTradeLogDayBar();
             // 合并流水按时间倒序
             const events = [];
             // 建仓 = 该持仓时间最早的一笔买入（清仓后重新买入的新持仓第一笔买入同样视为建仓）
@@ -8435,6 +8491,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
             renderTradeLogList();
+            // 进入明细页：立即刷新一次最新行情，行情返回后回调更新今日条；
+            // 不在本页期间不轮询刷新（行情由全站增量更新维护），仅做T操作发生时联动刷新
+            if(holdDataList.length){
+                window.__quoteRefreshCb = refreshTradeLogDayBar;
+                if(!refreshing) setTimeout(function(){ refreshAll(); }, 120);
+            }
         }
         function closeTradeLogPage(){
             exitDetailPage(document.querySelector('#pageTradeLog'), function(){
@@ -18726,7 +18788,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     todayPnlPctEl.innerText = pctText;
                     todayPnlPctEl.className = 'text-[11px] font-medium tabular-nums num-transition ' + pctCls;
                 }
-                // 含做T已兑现合计（有当日买卖操作时显示）
+                // 含做T已兑现合计（归属交易日有当日买卖操作时显示；无做T隐藏）
                 const todayTEl = document.querySelector('#todayPnlT');
                 const todayTValEl = document.querySelector('#todayPnlTVal');
                 if(todayTEl && todayTValEl){
@@ -18775,12 +18837,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1) : 0;
                 const dayPct = getEffectiveChangePct(item.changePct);
                 let dayPnlText = '--', dayPnlClass = 'text-gray-400', dayPnlPctText = '--';
-                if(dayPct != null && !isNaN(dayPct) && item.nowPrice && item.count){
-                    const dayPnl = calcDayPnl(item);
-                    if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
-                    else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
-                    else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
-                    dayPnlPctText = (dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%';
+                if(item.nowPrice && item.count){
+                    const flow = calcDayFlow(item);
+                    if(flow.hasBase){
+                        const dayPnl = flow.pnl;
+                        if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
+                        else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
+                        else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
+                        dayPnlPctText = (dayPct != null && !isNaN(dayPct)) ? ((dayPct > 0 ? '+' : (dayPct < 0 ? '' : '')) + dayPct.toFixed(2) + '%') : '--';
+                    }
                 }
                 const ytdPct = getYtdPct(item);
                 const ytdPnl = getYtdPnl(item);
@@ -18843,12 +18908,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pnlPctText2 = (pnlPct2>0?'+':(pnlPct2<0?'-':'')) + Math.abs(pnlPct2).toFixed(2) + '%';
                 const pct = getEffectiveChangePct(item.changePct);
                 let dayPnlText = '--', dayPnlClass = 'text-gray-400', dayPnlPctText = '--';
-                if(pct != null && !isNaN(pct) && item.nowPrice && item.count){
-                    const dayPnl = calcDayPnl(item);
-                    if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
-                    else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
-                    else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
-                    dayPnlPctText = (pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%';
+                if(item.nowPrice && item.count){
+                    const flow = calcDayFlow(item);
+                    if(flow.hasBase){
+                        const dayPnl = flow.pnl;
+                        if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlClass = 'text-[#e03131]'; }
+                        else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlClass = 'text-[#00a05c]'; }
+                        else { dayPnlText = '0.00'; dayPnlClass = 'text-gray-500'; }
+                        dayPnlPctText = (pct != null && !isNaN(pct)) ? ((pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%') : '--';
+                    }
                 }
                 setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal), isCostRecovered ? 'text-purple-600' : 'text-gray-800');
                 setNumText(row.querySelector('[data-field="holdPct"]'), holdPct + '%', 'text-gray-700');
@@ -18908,25 +18976,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const itemPnlClass = pnlClass(itemPnl, false);
                 const pnlPct = itemCostTotal !== 0 ? (itemPnl / itemCostTotal * 100) : 0;
                 const pnlPctText = (pnlPct>0?'+':(pnlPct<0?'-':'')) + Math.abs(pnlPct).toFixed(2) + '%';
-                // 当日盈亏（券商标准，与列表模式/统计页口径一致：金额+百分比，红涨绿跌）
+                // 当日盈亏（券商总账口径：收盘市值−昨日市值+卖出总额−买入总额，现价随时取最新）
                 const dayPct = getEffectiveChangePct(item.changePct);
                 let dayPnl = 0;
                 let dayPnlText = '--';
                 let dayPnlClass = 'text-gray-400';
                 let dayPnlPctText = '--';
-                if(dayPct != null && !isNaN(dayPct) && item.nowPrice && item.count){
-                    dayPnl = calcDayPnl(item);
-                    if(dayPnl > 0){
-                        dayPnlText = '+' + fmtMoney(dayPnl);
-                        dayPnlClass = 'text-[#e03131]';
-                    } else if(dayPnl < 0){
-                        dayPnlText = fmtMoney(dayPnl);
-                        dayPnlClass = 'text-[#00a05c]';
-                    } else {
-                        dayPnlText = '0.00';
-                        dayPnlClass = 'text-gray-500';
+                let dayTText = '', dayTClass = '';
+                if(item.nowPrice && item.count){
+                    const flow = calcDayFlow(item);
+                    if(flow.hasBase){
+                        dayPnl = flow.pnl;
+                        if(dayPnl > 0){
+                            dayPnlText = '+' + fmtMoney(dayPnl);
+                            dayPnlClass = 'text-[#e03131]';
+                        } else if(dayPnl < 0){
+                            dayPnlText = fmtMoney(dayPnl);
+                            dayPnlClass = 'text-[#00a05c]';
+                        } else {
+                            dayPnlText = '0.00';
+                            dayPnlClass = 'text-gray-500';
+                        }
+                        dayPnlPctText = (dayPct != null && !isNaN(dayPct)) ? ((dayPct > 0 ? '+' : (dayPct < 0 ? '' : '')) + dayPct.toFixed(2) + '%') : '--';
+                        // 日内已兑现（做T利润）：仅归属交易日既有买又有卖时展示
+                        if(flow.buyQty > 0 && flow.sellQty > 0 && Math.abs(flow.tProfit) > 0.005){
+                            dayTText = 'T ' + fmtPnlNum(flow.tProfit);
+                            dayTClass = flow.tProfit > 0 ? 'text-[#e03131]' : 'text-[#00a05c]';
+                        }
                     }
-                    dayPnlPctText = (dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%';
                 }
                 // 持仓占比：当前股票市值 / 总资产
                 const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1):0;
@@ -19005,7 +19082,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <div class="text-right">
                                 <div class="text-[10px] text-gray-400 tracking-wide">当日盈亏</div>
                                 <div class="text-[15px] font-bold ${dayPnlClass} tabular-nums leading-tight mt-0.5 hq-daypnl">${dayPnlText}</div>
-                                <div class="text-[11px] font-medium ${dayPnlClass} tabular-nums mt-0.5 hq-daypnlpct">${dayPnlPctText}</div>
+                                <div class="text-[11px] font-medium ${dayPnlClass} tabular-nums mt-0.5 hq-daypnlpct">${dayPnlPctText}${dayTText ? '<span class="ml-1 text-[9px] font-semibold ' + dayTClass + '">' + dayTText + '</span>' : ''}</div>
                             </div>
                         </div>
                         <!-- 副行：市值 / 仓位 / 预测分红 / 回本（不复投） / 回本（复投） -->

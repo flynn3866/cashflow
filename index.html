@@ -569,6 +569,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                     <span class="text-[20px] font-bold tabular-nums num-transition text-gray-400" id="todayPnl">--</span>
                                     <span class="text-[11px] font-medium tabular-nums num-transition text-gray-400" id="todayPnlPct">--</span>
                                 </div>
+                                <div class="text-[9.5px] text-[#cfc0a6]/75 mt-[2px] hidden" id="todayPnlT">含做T已兑现 <span class="font-semibold text-[#f7cf8f]" id="todayPnlTVal">+0.00</span></div>
                             </div>
                         </div>
                     </div>
@@ -1036,6 +1037,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="text-center px-1 border-l border-white/10">
                     <div class="text-[11px] text-amber-100/60 mb-1.5">净投入</div>
                     <div id="logNetTotal" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 今日盈亏条（券商总账口径）：今日盈亏 / 日内已兑现（做T） / 持仓浮动 -->
+        <div id="tradeLogDayWrap" class="hidden relative overflow-hidden rounded-2xl p-3.5 mb-5" style="background:linear-gradient(135deg,#3a332a,#4a3d2e);box-shadow:0 2px 4px rgba(26,20,12,0.5), inset 0 1px 0 rgba(255,255,255,0.07);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.5),transparent);"></div>
+            <div class="relative z-10 grid grid-cols-3">
+                <div class="text-center px-1">
+                    <div class="text-[10px] text-amber-100/60 mb-1">今日盈亏</div>
+                    <div id="logTodayPnl" class="text-[16px] font-bold tabular-nums" style="color:#fff">--</div>
+                </div>
+                <div class="text-center px-1 border-l border-white/10">
+                    <div class="text-[10px] text-amber-100/60 mb-1">日内已兑现（做T）</div>
+                    <div id="logTodayT" class="text-[16px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                </div>
+                <div class="text-center px-1 border-l border-white/10">
+                    <div class="text-[10px] text-amber-100/60 mb-1">持仓浮动</div>
+                    <div id="logTodayFloat" class="text-[16px] font-bold tabular-nums" style="color:#fff">--</div>
                 </div>
             </div>
         </div>
@@ -6195,10 +6215,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 正确算法：按持仓份额分段——非今日买入的存量份额以昨收价为基准、今日买入
         // 份额以买入成交价为基准，今日卖出份额按 FIFO 扣减（已了结部分不计入持仓盈亏），
         // 逐段计算 (现价 - 基准价) × 股数 后合计。
-        function calcDayPnl(item){
+        // 当日盈亏总账口径（券商标准，全站唯一实现）：
+        // 当日盈亏 = 当日收盘市值 − 昨日收盘市值 + 当日卖出总成交额 − 当日买入总成交额
+        //        = 现价×当前股数 − 昨收×昨日股数 + 卖出总额 − 买入总额
+        // 数学上等价于 FIFO 分段算法，但不依赖份额分配，且昨日持仓股数由当前股数反推今日净变动。
+        // 同时产出：日内已兑现盈亏（做T利润=卖出总额−买入总额）、昨日市值、今日买卖股数（供展示过滤）。
+        function calcDayFlow(item){
             const now = Number(item.nowPrice);
             // count 可能为 0（当日全清仓）：仍须按当日交易计算实现盈亏，故不在此短路
-            if(!now) return 0;
+            if(!now) return { pnl: 0, tProfit: 0, prevMv: 0, hasBase: false, buyQty: 0, sellQty: 0 };
             const fx = item.marketType === 'HK' ? hkFxRate : 1;
             const pct = getEffectiveChangePct(item.changePct);
             // 昨收价三源裁决（防止旧行情快照的 prevClose 字段陈留置错）：
@@ -6216,52 +6241,50 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             } else {
                 prevClose = pvField != null ? pvField : pvCalc;
             }
+            const holdQty = Number(item.count) || 0;
             const trs = item.transactions;
             if(!trs || !trs.length){
-                // 无流水（存量旧数据）：全部份额按昨收价起算
-                if(prevClose == null) return 0;
-                return (now - prevClose) * Number(item.count) * fx;
+                // 无流水（存量旧数据）：全部份额按昨收价起算，无做T
+                if(prevClose == null) return { pnl: 0, tProfit: 0, prevMv: 0, hasBase: false, buyQty: 0, sellQty: 0 };
+                return { pnl: (now - prevClose) * holdQty * fx, tProfit: 0, prevMv: prevClose * holdQty * fx, hasBase: true, buyQty: 0, sellQty: 0 };
             }
-            // 今日 0 点时间戳：用于区分"今日买入"与"历史买入"
+            // 今日 0 点时间戳：仅统计今日发生的买卖变动（历史交易不影响当日盈亏）
             const dayStart = new Date();
             dayStart.setHours(0, 0, 0, 0);
             const dayStartTs = dayStart.getTime();
-            // 券商口径：当日盈亏 = (今日卖出金额 + 收盘剩余市值) − (今日买入金额 + 昨收持仓市值)
-            // 份额池 {qty, base} 实现：买入入池（历史份额以昨收价为基准，今日买入以成交价为基准），
-            // 卖出按 FIFO 扣减并同时累加被卖出份额的当日盈亏（卖价 − 该份额基准），剩余份额按 (收盘价 − 基准) 累加。
-            let pnl = 0;
-            let shares = [];
-            const sortedTrs = trs.slice().sort(function(a, b){ return (Number(a.t)||0) - (Number(b.t)||0); });
-            sortedTrs.forEach(function(tr){
-                const qty = Number(tr.delta) || 0;
+            let buyQty = 0, buyAmt = 0, sellQty = 0, sellAmt = 0;
+            trs.forEach(function(tr){
                 const ts = Number(tr.t) || 0;
-                if(!qty || !ts) return;
+                if(ts < dayStartTs) return;
+                const qty = Number(tr.delta) || 0;
+                if(!qty) return;
                 if(qty > 0){
-                    // 买入：今日买入以成交价为当日基准，历史买入以昨收价为基准
-                    const base = ts >= dayStartTs ? (Number(tr.price) || now) : prevClose;
-                    shares.push({ qty: qty, base: base });
+                    buyQty += qty;
+                    buyAmt += qty * (Number(tr.price) || now);
                 } else {
-                    // 卖出：从最早份额开始扣减，被卖出份额的当日盈亏同步计入
-                    const sellPrice = Number(tr.price) || now;
-                    let remain = -qty;
-                    for(let i = 0; i < shares.length && remain > 0; i++){
-                        const s = shares[i];
-                        const take = Math.min(s.qty, remain);
-                        if(s.base != null && !isNaN(s.base)){
-                            pnl += take * (sellPrice - s.base);
-                        }
-                        s.qty -= take;
-                        remain -= take;
-                    }
-                    shares = shares.filter(function(s){ return s.qty > 0; });
+                    const sq = -qty;
+                    sellQty += sq;
+                    sellAmt += sq * (Number(tr.price) || now);
                 }
             });
-            // 剩余份额逐段计算浮动盈亏
-            shares.forEach(function(s){
-                if(s.base == null || isNaN(s.base)) return;
-                pnl += s.qty * (now - s.base);
-            });
-            return pnl * fx;
+            const prevQty = holdQty - buyQty + sellQty;   // 昨日收盘持仓股数（今日净变动反推）
+            if(prevClose == null || prevQty < 0) return { pnl: 0, tProfit: 0, prevMv: 0, hasBase: false, buyQty: buyQty, sellQty: sellQty };
+            return {
+                pnl: (now * holdQty - prevClose * prevQty + sellAmt - buyAmt) * fx,
+                // 日内已兑现盈亏（做T利润，券商简化口径）：当日卖出总成交额 − 当日买入总成交额
+                tProfit: (sellAmt - buyAmt) * fx,
+                prevMv: prevClose * prevQty * fx,
+                hasBase: true,
+                buyQty: buyQty,
+                sellQty: sellQty
+            };
+        }
+        function calcDayPnl(item){
+            return calcDayFlow(item).pnl;
+        }
+        // 日内已兑现盈亏（做T利润）：当日卖出总成交额 − 当日买入总成交额
+        function calcDayTProfit(item){
+            return calcDayFlow(item).tProfit;
         }
 
         // 获取有效的涨跌额：逻辑与 getEffectiveChangePct 一致（-- 用 null 表示）
@@ -8336,6 +8359,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#logSellTotal').innerText = fmtMoney(sellTotal);
             document.querySelector('#logDivTotal').innerText = fmtMoney(divTotal);
             document.querySelector('#logNetTotal').innerText = fmtMoney(netIn);
+            // 今日盈亏条（券商总账口径）：今日盈亏 = 收盘市值 − 昨日市值 + 卖出总额 − 买入总额；
+            // 日内已兑现（做T）= 当日卖出总额 − 当日买入总额；持仓浮动 = 今日盈亏 − 做T
+            const dayWrapEl = document.querySelector('#tradeLogDayWrap');
+            if(dayWrapEl){
+                const flow = calcDayFlow(item);
+                if(flow.hasBase){
+                    dayWrapEl.classList.remove('hidden');
+                    const pnlEl = document.querySelector('#logTodayPnl');
+                    const tEl = document.querySelector('#logTodayT');
+                    const fEl = document.querySelector('#logTodayFloat');
+                    const pCls = flow.pnl > 0.005 ? '#e03131' : (flow.pnl < -0.005 ? '#00a05c' : '#ffffff');
+                    pnlEl.style.color = pCls;
+                    pnlEl.innerText = fmtPnlNum(flow.pnl);
+                    const hasT = flow.buyQty > 0 && flow.sellQty > 0;
+                    const tCls = hasT ? (flow.tProfit > 0 ? '#ffb3a7' : '#9ef0cf') : '#ffffff';
+                    tEl.style.color = tCls;
+                    tEl.innerText = hasT ? fmtPnlNum(flow.tProfit) : '--';
+                    const floatPnl = flow.pnl - flow.tProfit;
+                    const fCls = floatPnl > 0.005 ? '#e03131' : (floatPnl < -0.005 ? '#00a05c' : '#ffffff');
+                    fEl.style.color = fCls;
+                    fEl.innerText = fmtPnlNum(floatPnl);
+                } else {
+                    dayWrapEl.classList.add('hidden');
+                }
+            }
             // 合并流水按时间倒序
             const events = [];
             // 建仓 = 该持仓时间最早的一笔买入（清仓后重新买入的新持仓第一笔买入同样视为建仓）
@@ -18643,15 +18691,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const todayPnlPctEl = document.querySelector('#todayPnlPct');
             if(todayPnlEl && todayPnlPctEl){
                 let totalDayPnl = 0, totalMarketValue = 0, totalPrevMv = 0, hasValidDayPct = false;
+                let totalDayT = 0, hasDayT = false;
                 holdDataList.forEach(function(it){
-                    const effPct = getEffectiveChangePct(it.changePct);
-                    if(effPct != null && !isNaN(effPct) && it.nowPrice && it.count){
-                        hasValidDayPct = true;
-                        const fx = it.marketType === 'HK' ? hkFxRate : 1;
-                        const mv = it.nowPrice * it.count * fx;
-                        totalMarketValue += mv;
-                        totalPrevMv += mv / (1 + effPct / 100); // 昨收市值（分段法下不能再用"市值-盈亏"反推）
-                        totalDayPnl += calcDayPnl(it);
+                    if(it.nowPrice && it.count){
+                        const flow = calcDayFlow(it);
+                        if(flow.hasBase){
+                            hasValidDayPct = true;
+                            const fx = it.marketType === 'HK' ? hkFxRate : 1;
+                            totalMarketValue += it.nowPrice * it.count * fx;
+                            totalPrevMv += flow.prevMv; // 昨收市值 = 昨收价 × 昨日股数（总账口径）
+                            totalDayPnl += flow.pnl;
+                            if(flow.buyQty > 0 && flow.sellQty > 0){
+                                hasDayT = true;
+                                totalDayT += flow.tProfit;
+                            }
+                        }
                     }
                 });
                 if(!hasValidDayPct){
@@ -18671,6 +18725,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const pctCls = dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
                     todayPnlPctEl.innerText = pctText;
                     todayPnlPctEl.className = 'text-[11px] font-medium tabular-nums num-transition ' + pctCls;
+                }
+                // 含做T已兑现合计（有当日买卖操作时显示）
+                const todayTEl = document.querySelector('#todayPnlT');
+                const todayTValEl = document.querySelector('#todayPnlTVal');
+                if(todayTEl && todayTValEl){
+                    if(hasDayT){
+                        todayTEl.classList.remove('hidden');
+                        const tCls = totalDayT > 0.005 ? 'text-[#e03131]' : (totalDayT < -0.005 ? 'text-[#00a05c]' : 'text-[#f7cf8f]');
+                        todayTValEl.className = 'font-semibold ' + tCls;
+                        todayTValEl.innerText = fmtPnlNum(totalDayT);
+                    } else {
+                        todayTEl.classList.add('hidden');
+                    }
                 }
             }
         }
@@ -19116,25 +19183,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         tagText = "港";
                         tagClass = "bg-tagHk text-blue-700";
                     }
-                    // 当日盈亏（券商标准）
+                    // 当日盈亏（券商总账口径：收盘市值−昨日市值+卖出总额−买入总额）
                     const pct = getEffectiveChangePct(item.changePct);
                     let dayPnl = 0;
                     let dayPnlText = '--';
                     let dayPnlClass = 'text-gray-400';
                     let dayPnlPctText = '--';
-                    if(pct != null && !isNaN(pct) && item.nowPrice && item.count){
-                        dayPnl = calcDayPnl(item);
-                        if(dayPnl > 0){
-                            dayPnlText = '+' + fmtMoney(dayPnl);
-                            dayPnlClass = 'text-[#e03131]';
-                        } else if(dayPnl < 0){
-                            dayPnlText = fmtMoney(dayPnl);
-                            dayPnlClass = 'text-[#00a05c]';
-                        } else {
-                            dayPnlText = '0.00';
-                            dayPnlClass = 'text-gray-500';
+                    let dayTText = '', dayTClass = '';
+                    if(item.nowPrice && item.count){
+                        const flow = calcDayFlow(item);
+                        if(flow.hasBase){
+                            dayPnl = flow.pnl;
+                            if(dayPnl > 0){
+                                dayPnlText = '+' + fmtMoney(dayPnl);
+                                dayPnlClass = 'text-[#e03131]';
+                            } else if(dayPnl < 0){
+                                dayPnlText = fmtMoney(dayPnl);
+                                dayPnlClass = 'text-[#00a05c]';
+                            } else {
+                                dayPnlText = '0.00';
+                                dayPnlClass = 'text-gray-500';
+                            }
+                            dayPnlPctText = (pct != null && !isNaN(pct)) ? ((pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%') : '--';
+                            // 日内已兑现（做T利润）：仅当日既有买入又有卖出时展示
+                            if(flow.buyQty > 0 && flow.sellQty > 0 && Math.abs(flow.tProfit) > 0.005){
+                                dayTText = 'T ' + fmtPnlNum(flow.tProfit);
+                                dayTClass = flow.tProfit > 0 ? 'text-[#e03131]' : 'text-[#00a05c]';
+                            }
                         }
-                        dayPnlPctText = (pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%';
                     }
                     // 累计盈亏（券商标准，与卡片模式口径一致：A股=(现价-成本)×股数，港股×汇率）
                     const itemPnl2 = getPnl(item);
@@ -19195,7 +19271,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         </div>
                         <div class="text-right pl-0.5 pr-[6px]">
                             <div class="text-[13.8px] font-medium ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
-                            <div class="text-[13.8px] font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
+                            <div class="text-[13.8px] font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}${dayTText ? '<span class="ml-1 text-[9.5px] font-semibold ' + dayTClass + '">' + dayTText + '</span>' : ''}</div>
                         </div>
                     </div>
                     <!-- 列表模式点击行展开的操作层：买入/卖出/编辑/明细（与卡片模式功能一致；再点行收起） -->

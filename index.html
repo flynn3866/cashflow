@@ -1041,7 +1041,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 今日盈亏条（券商总账口径）：今日盈亏 / 日内已兑现（做T） / 持仓浮动 -->
+        <!-- 今日盈亏条（券商总账口径）：今日盈亏 / 日内已兑现（做T） / 做T累计总盈利 -->
         <div id="tradeLogDayWrap" class="hidden relative overflow-hidden rounded-2xl p-3.5 mb-5" style="background:linear-gradient(135deg,#3a332a,#4a3d2e);box-shadow:0 2px 4px rgba(26,20,12,0.5), inset 0 1px 0 rgba(255,255,255,0.07);">
             <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.5),transparent);"></div>
             <div class="relative z-10 mb-2 px-0.5">
@@ -1057,8 +1057,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div id="logTodayT" class="text-[16px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
                 <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[10px] text-amber-100/60 mb-1">持仓浮动</div>
-                    <div id="logTodayFloat" class="text-[16px] font-bold tabular-nums" style="color:#fff">--</div>
+                    <div class="text-[10px] text-amber-100/60 mb-1">做T累计总盈利</div>
+                    <div id="logTodayFloat" class="text-[16px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
             </div>
         </div>
@@ -6306,8 +6306,55 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 prevMv: prevClose * prevQty * fx,
                 hasBase: true,
                 buyQty: buyQty,
-                sellQty: sellQty
+                sellQty: sellQty,
+                // 归属交易日键（YYYY-MM-DD）：供做T累计按日存储
+                dayKey: refDay.getFullYear() + '-' + ('0' + (refDay.getMonth() + 1)).slice(-2) + '-' + ('0' + refDay.getDate()).slice(-2)
             };
+        }
+        // 做T累计总盈利（按交易日存储的做T值累加，历史只读存储、不重算交易记录）：
+        // item.dayTByDate = { 'YYYY-MM-DD': 当日做T }；首次访问惰性回填一次（遍历交易按日归总 做T=卖出总额−买入总额），
+        // 之后纯读存储累加；交易记录删除/缺失不影响累计。当日做T实时现算并覆盖归属日键，保证盘中每2秒刷新准确。
+        function ensureDayTMap(item){
+            if(item.dayTByDate) return item.dayTByDate;
+            const map = {};
+            const trs = item.transactions;
+            if(trs && trs.length){
+                for(let i = 0; i < trs.length; i++){
+                    const tr = trs[i];
+                    const ts = Number(tr.t) || 0;
+                    if(!ts) continue;
+                    const qty = Number(tr.delta) || 0;
+                    if(!qty) continue;
+                    const d = new Date(ts);
+                    const key = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+                    // 做T = 卖出总额 − 买入总额：买(qty>0)减成交额、卖(qty<0)减负数成交额
+                    const amt = qty * (Number(tr.price) || 0);
+                    map[key] = (map[key] || 0) - amt;
+                }
+            }
+            item.dayTByDate = map;
+            saveLocal(); // 首次回填后持久化一次，后续读存储不再触发
+            return map;
+        }
+        function getDayTTotal(item){
+            const map = ensureDayTMap(item);
+            // 归属日做T现算：与存储不一致时写回并保存。
+            // 关键：非交易日（周末/节假日）归属上一交易日、以及收盘后才补录的交易，
+            // 若只做显示层覆盖不写回，下次打开又会把同一交易日做T再加一遍（重复累加）。
+            // 写回后存储与显示一致，同一交易日无论打开几次只计入一次。
+            const flow = calcDayFlow(item);
+            let changed = false;
+            if(flow.dayKey && flow.buyQty > 0 && flow.sellQty > 0 && Math.abs(flow.tProfit) > 0.005){
+                const cur = Number(map[flow.dayKey]) || 0;
+                if(Math.abs(cur - flow.tProfit) > 0.005){
+                    map[flow.dayKey] = flow.tProfit;
+                    changed = true;
+                }
+            }
+            if(changed) saveLocal(); // 有做T更新立即落库（交易结束后录入/补录/非交易日打开均触发）
+            let total = 0;
+            for(const k in map) total += Number(map[k]) || 0;
+            return total;
         }
         function calcDayPnl(item){
             return calcDayFlow(item).pnl;
@@ -7048,11 +7095,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                 }
                 const parts = [];
-                if(b.buyCnt) parts.push('买入' + b.buyCnt + '笔 +' + fmtMoney(b.buyAmt));
-                if(b.sellCnt) parts.push('卖出' + b.sellCnt + '笔 -' + fmtMoney(-b.sellAmt));
-                if(b.divCnt) parts.push('分红' + b.divCnt + '笔 +' + fmtMoney(b.divAmt));
+                if(b.buyCnt) parts.push({ type: 'buy', text: '买入' + b.buyCnt + '笔 +' + fmtMoney(b.buyAmt) });
+                if(b.sellCnt) parts.push({ type: 'sell', text: '卖出' + b.sellCnt + '笔 -' + fmtMoney(-b.sellAmt) });
+                if(b.divCnt) parts.push({ type: 'div', text: '分红' + b.divCnt + '笔 +' + fmtMoney(b.divAmt) });
                 const ttype = (b.buyCnt && b.sellCnt) ? 'mix' : (b.sellCnt && !b.buyCnt ? 'sell' : (b.buyCnt ? 'buy' : 'div'));
-                series.push({ time: b.time, dateStr: b.key, type: ttype, desc: parts.join(' · '), netIn: netIn, divTotal: divTotalV, gap: gap, avgDiv: avgDiv, beNo: beNo, beRe: beRe });
+                series.push({ time: b.time, dateStr: b.key, type: ttype, desc: parts.map(function(p){ return p.text; }).join(' · '), parts: parts, dBuyAmt: b.buyAmt, dSellAmt: b.sellAmt, dDivAmt: b.divAmt, netIn: netIn, divTotal: divTotalV, gap: gap, avgDiv: avgDiv, beNo: beNo, beRe: beRe });
             });
             return series;
         }
@@ -7124,6 +7171,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             wrap._beVisible = visible;
             const list = ops.slice(-visible).reverse();
             let html = '<div class="text-[10.5px] text-gray-400 mb-1.5">最近操作（按日汇总）</div>';
+            // 表头：日期 | 缺口 | 回本年数 | 操作（与行同列宽，数字列右对齐）
+            html += '<div style="display:grid;grid-template-columns:58px 88px 76px minmax(0,1fr);align-items:center;column-gap:8px" class="px-0.5 pb-1 text-[9.5px] text-gray-400/90 border-b border-[#F0EDE7]">'
+                + '<span>日期</span><span style="text-align:right">缺口</span><span style="text-align:right">回本年数</span><span style="text-align:right">操作</span></div>';
             html += buildBeOpsRows(list);
             const remain = total - visible;
             let btns = '';
@@ -7136,24 +7186,51 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(btns) html += '<div class="pt-1.5 flex gap-2">' + btns + '</div>';
             wrap.innerHTML = html;
         }
-        // 操作摘要行渲染（列表为最新在前）
+        // 操作列净投入汇总行：当日买卖净额（净投入 ±X，加仓红/减仓绿）；无买卖不显示净投入行，
+        // 买卖净额持平显示"净投入 无变化"；分红到账（金点，若有）
+        function beNetOpRows(s){
+            const buyAmt = s.dBuyAmt || 0, sellAmt = s.dSellAmt || 0;
+            const divAmt = s.dDivAmt || 0;
+            let h = '';
+            if(buyAmt || sellAmt){
+                const netAmt = buyAmt + sellAmt;
+                if(netAmt > 0){
+                    h += '<span class="flex items-center justify-end gap-1"><i class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#e03131"></i><span class="text-gray-600 text-[10.5px] leading-snug" style="min-width:0;word-break:break-word;overflow-wrap:anywhere">净投入 +' + fmtMoney(netAmt) + '</span></span>';
+                } else if(netAmt < 0){
+                    h += '<span class="flex items-center justify-end gap-1"><i class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#00a05c"></i><span class="text-gray-600 text-[10.5px] leading-snug" style="min-width:0;word-break:break-word;overflow-wrap:anywhere">净投入 ' + fmtMoney(netAmt) + '</span></span>';
+                } else {
+                    h += '<span class="flex items-center justify-end gap-1"><i class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#b47b3c"></i><span class="text-gray-500 text-[10.5px] leading-snug" style="min-width:0;word-break:break-word;overflow-wrap:anywhere">净投入 无变化</span></span>';
+                }
+            }
+            if(divAmt) h += '<span class="flex items-center justify-end gap-1"><i class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#c9a35c"></i><span class="text-gray-600 text-[10.5px] leading-snug" style="min-width:0;word-break:break-word;overflow-wrap:anywhere">分红 +' + fmtMoney(divAmt) + '</span></span>';
+            return h;
+        }
+        // 操作摘要行渲染（列表为最新在前）：四列 日期 | 缺口 | 回本年数 | 操作（净投入汇总 + 回本变化）
         function buildBeOpsRows(list){
             let html = '';
-            list.forEach(function(s, idx){
-                let dHtml = '';
-                const next = list[idx + 1];
-                const gapDiff = next != null ? s.gap - next.gap : null;
-                if(gapDiff != null){
-                    if(gapDiff > 0.5) dHtml = '<span class="text-[#e03131] whitespace-nowrap">缺口+' + fmtMoney(gapDiff) + '</span>';
-                    else if(gapDiff < -0.5) dHtml = '<span class="text-[#00a05c] whitespace-nowrap">缺口' + fmtMoney(gapDiff) + '</span>';
+            list.forEach(function(s, i){
+                const gapCls = (s.gap != null && s.gap < -0.005) ? 'text-[#00a05c]' : 'text-gray-700';
+                const beCls = (s.beNo != null && s.beNo <= 0) ? 'text-purple-600' : (s.beNo == null ? 'text-gray-400' : 'text-gray-800');
+                const beText = s.beNo == null ? '--' : (s.beNo <= 0 ? '已回本' : fmtBeYears(s.beNo));
+                // 回本变化：与更早一天对比（列表最新在前）
+                let deltaHtml = '';
+                const earlier = list[i + 1];
+                const prevBe2 = earlier != null ? earlier.beNo : null;
+                if(prevBe2 != null && s.beNo != null){
+                    const d = Number(s.beNo) - Number(prevBe2);
+                    if(d > 0.05) deltaHtml = '<span class="text-[#e03131] whitespace-nowrap">回本+' + d.toFixed(1) + '年</span>';
+                    else if(d < -0.05) deltaHtml = '<span class="text-[#00a05c] whitespace-nowrap">回本' + d.toFixed(1) + '年</span>';
+                    else deltaHtml = '<span class="text-gray-400 whitespace-nowrap">持平</span>';
                 }
-                const evCls = s.type === 'buy' ? 'text-[#e03131]' : (s.type === 'sell' ? 'text-[#00a05c]' : (s.type === 'mix' ? 'text-[#b47b3c]' : 'text-accent'));
-                html += '<div class="flex items-center justify-between gap-2 py-1.5 border-b border-dashed border-[#F0EDE7] last:border-0">'
-                    + '<span class="text-gray-400 tabular-nums text-[10.5px] shrink-0">' + s.dateStr + '</span>'
-                    + '<span class="' + evCls + ' text-[10.5px] min-w-0 truncate">' + s.desc + '</span>'
-                    + '<span class="text-gray-500 tabular-nums text-[10.5px] shrink-0">缺口 ' + fmtMoney(s.gap) + '</span>'
-                    + '<span class="font-semibold text-gray-700 tabular-nums text-[10.5px] shrink-0">' + fmtBeYears(s.beNo) + '</span>'
-                    + dHtml + '</div>';
+                html += '<div style="display:grid;grid-template-columns:58px 88px 76px minmax(0,1fr);align-items:center;column-gap:8px" class="py-1.5 border-b border-dashed border-[#F0EDE7] last:border-0">'
+                    + '<span class="text-gray-400 tabular-nums text-[10.5px] whitespace-nowrap">' + s.dateStr + '</span>'
+                    + '<span class="' + gapCls + ' tabular-nums text-[10.5px] whitespace-nowrap" style="text-align:right">' + (s.gap != null ? fmtMoney(s.gap) : '--') + '</span>'
+                    + '<span class="' + beCls + ' tabular-nums text-[10.5px] whitespace-nowrap" style="text-align:right">' + beText + '</span>'
+                    + '<span class="min-w-0 flex flex-col items-end gap-0.5" style="min-width:0">'
+                    + beNetOpRows(s)
+                    + (deltaHtml ? '<span class="flex items-center justify-end mt-0.5">' + deltaHtml + '</span>' : '')
+                    + '</span>'
+                    + '</div>';
             });
             return html;
         }
@@ -7195,6 +7272,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 pts.push({ dateStr: nowStr, beNo: curBe ? curBe.beNo : (item ? calcBreakEvenData(item).beNo : null), beRe: curBe ? curBe.beRe : (item ? calcBreakEvenData(item).beRe : null), type: 'now', desc: '当前', gap: last.gap });
             }
             const cat = pts.map(function(p){ return p.dateStr; });
+            // 节点回本年数标签：仅最近 6 个自然月每月标该月最后一个节点 + 最后一天必标；
+            // 更早历史不标（回本年限久远无参考意义），标签总数克制不糊
+            const labelIdx = {};
+            if(pts.length){
+                labelIdx[pts.length - 1] = true;
+                const ld = cat[pts.length - 1] || '';
+                const ly = Number(ld.substring(0, 4)), lm = Number(ld.substring(5, 7));
+                const monthLast = {};
+                for(let li = 0; li < pts.length; li++){
+                    const ds = cat[li];
+                    if(!ds) continue;
+                    const yy = Number(ds.substring(0, 4)), mm = Number(ds.substring(5, 7));
+                    const back = (ly - yy) * 12 + (lm - mm);
+                    if(back < 0 || back > 5) continue; // 仅最近 6 个自然月（含最后数据所在月）
+                    const mk = ds.substring(0, 7);
+                    if(monthLast[mk] == null || li > monthLast[mk]) monthLast[mk] = li;
+                }
+                for(const mk in monthLast) labelIdx[monthLast[mk]] = true;
+            }
             const noData = pts.map(function(p){ return p.beNo == null ? null : Number(Number(p.beNo).toFixed(2)); });
             const reData = pts.map(function(p){ return p.beRe == null ? null : Number(Number(p.beRe).toFixed(2)); });
             const evData = pts.filter(function(p){ return p.type && p.type !== 'now'; }).map(function(p){
@@ -7236,12 +7332,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                 },
                 legend: { data: ['回本·不复投', '回本·复投'], top: 0, right: 0, textStyle: { color: '#8a7f6d', fontSize: 10 }, itemWidth: 12, itemHeight: 8, icon: 'roundRect' },
-                grid: { left: 8, right: 12, top: 24, bottom: 4, containLabel: true },
+                grid: { left: 8, right: 12, top: 38, bottom: 4, containLabel: true },
                 dataZoom: [{ type: 'inside', throttle: 60 }],
                 xAxis: { type: 'category', data: cat, axisLine: { lineStyle: { color: '#e6dfd2' } }, axisTick: { show: false }, axisLabel: { color: '#a89d8b', fontSize: 10, hideOverlap: true, formatter: xLabelFmt } },
                 yAxis: { type: 'value', name: '年', nameTextStyle: { color: '#b0a693', fontSize: 10 }, splitLine: { lineStyle: { color: '#f0ebe2', type: 'dashed' } }, axisLabel: { color: '#a89d8b', fontSize: 10, formatter: function(v){ return v + '年'; } } },
                 series: [
-                    { name: '回本·不复投', type: 'line', data: noData, smooth: true, symbol: 'circle', symbolSize: 5, lineStyle: { width: 2.5, color: '#9a4f8e' }, itemStyle: { color: '#9a4f8e' }, connectNulls: true, emphasis: { focus: 'series' }, z: 3 },
+                    { name: '回本·不复投', type: 'line', data: noData, smooth: true, symbol: 'circle', symbolSize: 5, lineStyle: { width: 2.5, color: '#9a4f8e' }, itemStyle: { color: '#9a4f8e' }, connectNulls: true, emphasis: { focus: 'series' }, z: 3, label: { show: true, position: 'top', distance: 4, fontSize: 9, color: '#b8ad9c', formatter: function(p){ if(p.dataIndex == null || !labelIdx[p.dataIndex]) return ''; return p.value == null ? '' : fmtBeYears(Number(p.value)); } } },
                     { name: '回本·复投', type: 'line', data: reData, smooth: true, symbol: 'none', lineStyle: { width: 2.2, color: '#a9642a', type: 'dashed' }, itemStyle: { color: '#a9642a' }, connectNulls: true, emphasis: { focus: 'series' }, z: 2 },
                     { name: '事件', type: 'scatter', data: evData, symbolSize: 8, itemStyle: { color: function(p){ return evColor(p.data.evType); }, borderColor: '#fff', borderWidth: 1 }, z: 5 }
                 ]
@@ -7332,7 +7428,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderBeChart('beStockChart-' + code, buildBreakEvenDaily(item), item, null);
             const evEl = document.getElementById('beStockEvents-' + code);
             if(!evEl) return;
-            const series = buildBreakEvenSeries(item);
+            // 按日汇总：同一天的买卖/分红合并为一行计算净影响（做T/加仓/减仓均按当日净额），与账户"最近操作"一致
+            const series = buildBreakEvenDaily(item).filter(function(s){ return s.desc; });
             const list = series.slice().reverse(); // 最新在前，与账户列表统一
             const total = list.length;
             if(evEl._evVisible == null) evEl._evVisible = 6;
@@ -7340,7 +7437,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             evEl._evVisible = visible;
             const shown = list.slice(0, visible);
             let html = '';
-            let prevBe = null;
+            // 表头：与账户"最近操作（按日汇总）"统一四列
+            html += '<div style="display:grid;grid-template-columns:58px 88px 76px minmax(0,1fr);align-items:center;column-gap:8px" class="px-0.5 pb-1 text-[9.5px] text-gray-400/90 border-b border-[#F0EDE7]">'
+                + '<span>日期</span><span style="text-align:right">缺口</span><span style="text-align:right">回本年数</span><span style="text-align:right">操作</span></div>';
             shown.forEach(function(s, i){
                 const beNow = s.beNo;
                 let deltaHtml = '';
@@ -7352,15 +7451,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     else if(d < -0.05) deltaHtml = '<span class="text-[#00a05c] whitespace-nowrap">回本' + d.toFixed(1) + '年</span>';
                     else deltaHtml = '<span class="text-gray-400 whitespace-nowrap">持平</span>';
                 }
-                const evColor = s.type === 'buy' ? 'text-[#e03131]' : (s.type === 'sell' ? 'text-[#00a05c]' : 'text-accent');
-                html += '<div class="py-1.5 border-b border-dashed border-[#F0EDE7] last:border-0">'
-                    + '<div class="flex items-center justify-between gap-2">'
-                    + '<span class="text-gray-400 tabular-nums text-[10.5px] shrink-0">' + s.dateStr + '</span>'
-                    + '<span class="' + evColor + ' text-[10.5px] min-w-0 text-right truncate">' + s.desc + '</span></div>'
-                    + '<div class="flex items-center justify-between gap-2 mt-0.5">'
-                    + '<span class="text-gray-500 tabular-nums text-[10.5px] min-w-0">缺口 ' + fmtMoney(s.gap) + ' · ' + fmtBeYears(beNow) + '</span>'
-                    + deltaHtml + '</div></div>';
-                prevBe = beNow;
+                const evDot = s.type === 'buy' ? '#e03131' : (s.type === 'sell' ? '#00a05c' : '#c9a35c');
+                const gapCls = (s.gap != null && s.gap < -0.005) ? 'text-[#00a05c]' : 'text-gray-700';
+                const beCls = (beNow != null && beNow <= 0) ? 'text-purple-600' : (beNow == null ? 'text-gray-400' : 'text-gray-800');
+                const beText = beNow == null ? '--' : (beNow <= 0 ? '已回本' : fmtBeYears(beNow));
+                html += '<div style="display:grid;grid-template-columns:58px 88px 76px minmax(0,1fr);align-items:center;column-gap:8px" class="py-1.5 border-b border-dashed border-[#F0EDE7] last:border-0">'
+                    + '<span class="text-gray-400 tabular-nums text-[10.5px] whitespace-nowrap">' + s.dateStr + '</span>'
+                    + '<span class="' + gapCls + ' tabular-nums text-[10.5px] whitespace-nowrap" style="text-align:right">' + (s.gap != null ? fmtMoney(s.gap) : '--') + '</span>'
+                    + '<span class="' + beCls + ' tabular-nums text-[10.5px] whitespace-nowrap" style="text-align:right">' + beText + '</span>'
+                    + '<span class="min-w-0 flex flex-col items-end gap-0.5" style="min-width:0">'
+                    + beNetOpRows(s)
+                    + (deltaHtml ? '<span class="flex items-center justify-end mt-0.5">' + deltaHtml + '</span>' : '')
+                    + '</span></div>';
             });
             if(!total) html = '<div class="text-gray-400 text-[11px] py-2">暂无买卖/分红流水记录</div>';
             const remain = total - visible;
@@ -7379,7 +7481,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!el) return;
             const item = (holdDataList || []).find(function(it){ return it.code === code; });
             if(!item) return;
-            const total = buildBreakEvenSeries(item).length;
+            const total = buildBreakEvenDaily(item).filter(function(s){ return s.desc; }).length;
             el._evVisible = Math.min(total, (el._evVisible || 6) + 10);
             renderBeStockDetail(code);
         }
@@ -8297,6 +8399,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 recordDailyAssets();
                 renderAnalysisCharts();
             }
+            // 做T累计持久化：以归属交易日为键存储当日做T值（增量累计，历史只读存储，交易记录缺失不影响）
+            const tItem = holdDataList.find(function(it){ return it.id === tradeItemId; });
+            if(tItem){
+                const tFlow = calcDayFlow(tItem);
+                if(tFlow.dayKey && tFlow.buyQty > 0 && tFlow.sellQty > 0){
+                    ensureDayTMap(tItem);
+                    tItem.dayTByDate[tFlow.dayKey] = tFlow.tProfit;
+                    saveLocal();
+                }
+            }
             // 交易明细页开着：当日买卖（做T）数据已变化，立即刷新今日条
             const dayWrapEl = document.querySelector('#tradeLogDayWrap');
             if(dayWrapEl && !dayWrapEl.classList.contains('hidden')){
@@ -8305,8 +8417,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         // 交易明细页"今日条"填充与刷新：
         // 今日盈亏 = 收盘市值 − 昨日市值 + 卖出总额 − 买入总额（总账口径，含昨日归属）
-        // 日内已兑现（做T）= 当日卖出总额 − 当日买入总额；持仓浮动 = 今日盈亏 − 做T
-        // 无行情数据（昨收不可得）时整体显示 --；刷新时间 = 最近一次行情刷新成功时间
+        // 日内已兑现（做T）= 当日卖出总额 − 当日买入总额
+        // 做T累计总盈利 = 历史按交易日存储的做T值累加 + 当日现算（无行情/空窗也照常显示，不依赖当日基准）
         function refreshTradeLogDayBar(){
             const wrap = document.querySelector('#tradeLogDayWrap');
             if(!wrap) return;
@@ -8329,10 +8441,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const tEl = document.querySelector('#logTodayT');
             const fEl = document.querySelector('#logTodayFloat');
             wrap.classList.remove('hidden');
+            // 做T累计总盈利：历史按日存储累加 + 当日现算覆盖；无行情/空窗/昨日归属均照常显示
+            const dayTTotal = getDayTTotal(item);
+            fEl.style.color = '#f7cf8f';
+            fEl.innerText = fmtPnlNum(dayTTotal);
             if(!flow.hasBase){
                 pnlEl.style.color = '#ffffff'; pnlEl.innerText = '--';
                 tEl.style.color = '#f7cf8f'; tEl.innerText = '--';
-                fEl.style.color = '#ffffff'; fEl.innerText = '--';
                 return;
             }
             const pCls = flow.pnl > 0.005 ? '#e03131' : (flow.pnl < -0.005 ? '#00a05c' : '#ffffff');
@@ -8342,10 +8457,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const tCls = hasT ? (flow.tProfit > 0 ? '#ffb3a7' : '#9ef0cf') : '#ffffff';
             tEl.style.color = tCls;
             tEl.innerText = hasT ? fmtPnlNum(flow.tProfit) : '--';
-            const floatPnl = flow.pnl - flow.tProfit;
-            const fCls = floatPnl > 0.005 ? '#e03131' : (floatPnl < -0.005 ? '#00a05c' : '#ffffff');
-            fEl.style.color = fCls;
-            fEl.innerText = fmtPnlNum(floatPnl);
         }
         // 交易页面事件绑定
         document.querySelector('#tradeBackBtn').addEventListener('click', closeTradeModal);

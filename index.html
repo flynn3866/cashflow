@@ -554,8 +554,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                             <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">市值<span class="ab-mkt-p text-[#e8c88a] text-[9px] tabular-nums ml-0.5">--</span></span>
                                             <span class="ab-mkt-v text-white text-[13.5px] font-medium tabular-nums">0</span>
                                         </div>
-                                        <div class="flex flex-col items-center gap-[3px] cursor-pointer active:scale-95 transition-transform" onclick="openCashEdit()" title="点击修改现金">
-                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">现金<span class="ab-cash-p text-[#e8c88a] text-[9px] tabular-nums ml-0.5">--</span></span>
+                                        <div class="flex flex-col items-center gap-[3px] cursor-pointer active:scale-95 transition-transform" onclick="openCashFlowFromHold()" title="查看现金变动历史">
+                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">现金<span class="ab-cash-p text-[#e8c88a] text-[9px] tabular-nums ml-0.5">--</span><i class="fa fa-chevron-right text-[9px] ml-0.5"></i></span>
                                             <span class="ab-cash-v text-white text-[13.5px] font-medium tabular-nums">0</span>
                                         </div>
                                     </div>
@@ -2093,23 +2093,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </span>
             </div>
         </div>
-        <!-- 汇总卡：深棕金渐变（与行业资产分布统一） -->
+        <!-- 汇总卡：现金（第一列，点击弹修改现金）+ 总转入/总取出/净流入（深棕金渐变，与行业资产分布统一） -->
         <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
             <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
             <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
             <div class="relative z-10 grid grid-cols-4">
-                <div class="text-center px-1">
+                <div class="text-center px-1 cursor-pointer active:scale-95 transition-transform" onclick="openCashEdit()" title="点击修改现金">
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">现金<i class="fa fa-pencil text-[8px] opacity-70 ml-0.5"></i></div>
+                    <div id="cashNowValue" class="text-base font-bold tabular-nums text-white">--</div>
+                </div>
+                <div class="text-center px-1 border-l border-white/10">
                     <div class="text-[11px] text-amber-100/60 mb-1.5">总转入</div>
                     <div id="cashTotalIn" class="text-base font-bold tabular-nums" style="color:#ffb3a7">--</div>
                 </div>
                 <div class="text-center px-1 border-l border-white/10">
                     <div class="text-[11px] text-amber-100/60 mb-1.5">总取出</div>
                     <div id="cashTotalOut" class="text-base font-bold tabular-nums" style="color:#9ef0cf">--</div>
-                </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">分红入账</div>
-                    <div id="cashTotalDiv" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
                 <div class="text-center px-1 border-l border-white/10">
                     <div class="text-[11px] text-amber-100/60 mb-1.5">净流入</div>
@@ -3815,6 +3815,28 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
+    <!-- 清空所有数据确认弹窗：红色警示主题，与修改现金弹窗同款卡片 -->
+    <div id="clearConfirmModal" class="fixed inset-0 bg-black/50 z-[95] hidden justify-center items-center px-4">
+        <div class="relative bg-white rounded-2xl p-4 w-full max-w-sm shadow-2xl overflow-hidden">
+            <!-- 顶部红色警示渐变线 -->
+            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#c0392b,#ef4444,#c0392b,transparent)"></div>
+            <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-red-50 ring-1 ring-red-100 flex items-center justify-center flex-shrink-0"><i class="fa fa-trash-o text-[13px] text-red-500"></i></div>
+                    <h3 class="text-[17px] font-bold text-gray-800">清空所有数据</h3>
+                </div>
+                <button id="ccClose" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="text-[11px] text-gray-400 mb-1.5 leading-relaxed">将清空本应用的全部数据：</div>
+            <div class="text-[11px] text-gray-600 leading-relaxed bg-red-50/70 rounded-xl px-3 py-2.5 ring-1 ring-red-100/70 mb-2">持仓股票 · 资金流水 · 现金余额 · 分红记录 · 收支统计 · 自选 · 做T累计 · 历史快照 · 缓存数据</div>
+            <div class="flex items-center gap-1.5 text-[11px] text-red-500 font-semibold mb-3"><i class="fa fa-exclamation-triangle text-[10px]"></i>此操作不可恢复，请谨慎操作</div>
+            <div class="flex gap-3">
+                <button id="ccCancel" class="flex-1 py-2 border-2 border-gray-200 rounded-xl text-gray-600 font-medium active:bg-gray-50 transition-colors">取消</button>
+                <button id="ccConfirm" class="flex-1 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold shadow-lg shadow-red-500/20 active:scale-[0.98] transition-transform">确认清空</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 统一空态组件：金叶幼苗线性插画（品牌金铜系）
         window.emptyTipHTML = function(opts){
@@ -4976,11 +4998,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             perShare: perShare,
                             count: exCount,
                             amount: exAmt,
-                            divKey: divKey
+                            divKey: divKey,
+                            ts: Date.now()
                         });
                         // 分红派现到账 → 现金入账（券商口径：除权派现进入账户现金，总资产 = 市值 + 现金 随之变化）
                         // 该笔已打 processedDivDates 防重标识，此后编辑/删除重加/手工录入同一笔都不会重复入账
                         adjustCash(exAmt);
+                        it.exDivRecords[it.exDivRecords.length - 1].cashAfter = historyData.cashBalance;
                         // 该次分红已完成，删除完成标识（快照）
                         if(it.divRegSnapshot) delete it.divRegSnapshot[divKey];
                         changed = true;
@@ -8022,6 +8046,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             newItem.costSnapshots[todayStr()] = Number(newItem.costPrice) || 0;
             // 买入建仓：账户现金扣减买入金额（股数 × 成本价，港股按汇率折算人民币）
             adjustCash(-count * costPrice * (marketType === 'HK' ? hkFxRate : 1));
+            // 建仓成交后把当时现金快照存到建仓流水（事件驱动，此后现金再变不回写）
+            if(newItem.transactions && newItem.transactions.length) newItem.transactions[newItem.transactions.length - 1].cashAfter = historyData.cashBalance;
             saveLocal();
             closeModal();
             renderPage();
@@ -8254,6 +8280,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 流水同步：港股走日期键同步；A股直接维护 exDivRecords + 登记日防重标识
             if(divEntryMarket === 'HK'){
                 syncHkDivToExDivRecords(it);
+                const hkR = (it.exDivRecords || []).filter(function(r){ return String(r.date || '') === date; });
+                if(hkR.length){ hkR[hkR.length - 1].cashAfter = historyData.cashBalance; if(!hkR[hkR.length - 1].ts) hkR[hkR.length - 1].ts = Date.now(); }
             } else {
                 if(!it.exDivRecords) it.exDivRecords = [];
                 const xIdx = it.exDivRecords.findIndex(function(r){ return r.manual && String(r.date || '') === date; });
@@ -8424,6 +8452,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 item.transactions.push({ t: Date.now(), delta: qty, price: price });
                 // 买入：账户现金扣减成交金额（港股按汇率折算人民币）
                 adjustCash(-qty * price * (item.marketType === 'HK' ? hkFxRate : 1));
+                // 成交后把当时现金快照存到该笔交易（事件驱动，此后现金再变不回写）
+                item.transactions[item.transactions.length - 1].cashAfter = historyData.cashBalance;
                 saveLocal();
                 renderPage();
                 closeTradeModal();
@@ -8451,6 +8481,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         // 清仓前记录盈亏快照：按实际卖出价计算盈亏（曾经持仓过的盈亏记录永久保留在盈亏排行中）
                         recordClosedStock(item, price);
                         adjustCash(sellProceeds);
+                        item.transactions[item.transactions.length - 1].cashAfter = historyData.cashBalance;
                         holdDataList = holdDataList.filter(it => it.id !== tradeItemId);
                         saveLocal();
                         renderPage();
@@ -8466,6 +8497,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 item.costPrice = newCost;
                 saveCostSnapshot(item, todayStr());
                 adjustCash(sellProceeds);
+                item.transactions[item.transactions.length - 1].cashAfter = historyData.cashBalance;
                 saveLocal();
                 renderPage();
                 closeTradeModal();
@@ -13716,6 +13748,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageHold').classList.add('hidden');
             openStatsSection('today');
         }
+        // 首页顶卡「现金」：跳转统计-资金流水详情页（现金变动全景），返回回首页
+        function openCashFlowFromHold(){
+            window.__statsFromHold = true;
+            renderStatsPage();
+            document.querySelector('#pageHold').classList.add('hidden');
+            openStatsSection('cash');
+        }
         function closeStatsSection(){
             hideAllChartTips();
             const cur = findVisibleDetailPage();
@@ -15121,18 +15160,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(moreWrap) moreWrap.classList.toggle('hidden', !showMore);
             let html = '';
             slice.forEach(function(ev, i){
-                const badgeCls = ev.type === 'in' ? 'bg-[#fff1f0] text-[#e03131]' : (ev.type === 'out' ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-[#faf3e3] text-accent');
-                const badgeText = ev.type === 'in' ? '转入' : (ev.type === 'out' ? '取出' : '分红');
-                const amtCls = ev.type === 'in' ? 'text-[#e03131]' : (ev.type === 'out' ? 'text-[#00b57a]' : 'text-accent');
+                const badgeCls = (ev.type === 'in' || ev.type === 'buy') ? 'bg-[#fff1f0] text-[#e03131]' : ((ev.type === 'out' || ev.type === 'sell') ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-[#faf3e3] text-accent');
+                const badgeText = (ev.type === 'in' || ev.type === 'out') ? '转账' : (ev.type === 'buy' ? '买入' : (ev.type === 'sell' ? '卖出' : '分红'));
+                const amtCls = (ev.type === 'in' || ev.type === 'buy') ? 'text-[#e03131]' : ((ev.type === 'out' || ev.type === 'sell') ? 'text-[#00b57a]' : 'text-accent');
                 html += '<div class="grid grid-cols-[minmax(0,1fr)_62px_96px] gap-1 items-center px-4 py-3' + (i < slice.length - 1 ? ' border-b border-gray-100' : '') + '">'
                     + '<div class="flex items-center gap-2 min-w-0">'
                     + '<span class="' + badgeCls + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0">' + badgeText + '</span>'
                     + '<div class="min-w-0">'
-                    + '<div class="flex items-center gap-1.5 min-w-0"><div class="text-[13px] font-semibold text-gray-800 truncate">' + ev.title + '</div>' + (ev.closed ? '<span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">已清仓</span>' : '') + '</div>'
+                    + '<div class="flex items-center gap-1.5 min-w-0"><div class="text-[13px] font-semibold text-gray-800 truncate">' + String(ev.title || '').replace(/^(买入 · |卖出 · |分红入账 · )/, '') + '</div>' + (ev.closed ? '<span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">已清仓</span>' : '') + '</div>'
                     + '<div class="text-[10px] text-gray-400 mt-0.5 truncate">' + ev.detail + '</div>'
                     + '</div></div>'
-                    + '<div class="text-right"><div class="text-[13px] font-semibold ' + amtCls + ' tabular-nums whitespace-nowrap">' + (ev.amount >= 0 ? '+' : '-') + fmtMoney(Math.abs(ev.amount)) + '</div></div>'
-                    + '<div class="text-right"><div class="text-[11px] text-gray-500 tabular-nums whitespace-nowrap">' + ev.dateStr + '</div></div>'
+                    + '<div class="text-right"><div class="text-[13px] font-semibold ' + amtCls + ' tabular-nums whitespace-nowrap">' + (ev.amount >= 0 ? '+' : '-') + fmtMoney(Math.abs(ev.amount)) + '</div>'
+                    + (ev.cashAfter != null ? '<div class="text-[10px] text-gray-400 tabular-nums whitespace-nowrap mt-0.5">余额 ' + fmtMoney(ev.cashAfter) + '</div>' : '<div class="text-[10px] text-gray-400 mt-0.5">--</div>')
+                    + '</div>'
+                    + '<div class="text-right"><div class="text-[11px] text-gray-500 tabular-nums whitespace-nowrap">' + ev.dateStr + '</div>'
+                    + (ev.ts ? '<div class="text-[10px] text-gray-400 tabular-nums whitespace-nowrap mt-0.5">' + fmtTs(ev.ts) + '</div>' : '<div class="text-[10px] text-gray-400 mt-0.5">--</div>')
+                    + '</div>'
                     + '</div>';
             });
             listEl.innerHTML = html;
@@ -15147,6 +15190,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 分红流水保留已清仓股票的历史入账记录（账本只增不减，清仓后记录仍留档）。
         function syncCashFlowLog(){
             if(!historyData.cashFlowLog) historyData.cashFlowLog = [];
+            // 源指纹快速通道：转账/交易/分红计数与末条时间戳 + 初始投入——源无变化则账本无需追加，
+            // 直接返回（append-only 下打开详情零合并开销，百万级账本也秒开）
+            const srcFpNow = (function(){
+                const fl = historyData.fundInflows || [];
+                const flLast = fl.length ? (Number((fl[fl.length - 1] || {}).ts) || 0) : 0;
+                let tx = 0, dv = 0, txLast = 0, dvLast = 0;
+                holdDataList.concat(closedForDivStat()).forEach(function(it){
+                    (it.transactions || []).forEach(function(x){ tx++; if(Number(x.t) || 0 > txLast) txLast = Number(x.t) || 0; });
+                    (it.exDivRecords || []).forEach(function(x){ dv++; if(Number(x.ts) || 0 > dvLast) dvLast = Number(x.ts) || 0; });
+                });
+                return (Number(historyData.initialCost) || 0) + '|' + fl.length + '|' + flLast + '|' + tx + '|' + txLast + '|' + dv + '|' + dvLast;
+            })();
+            if(window._cfSrcFp === srcFpNow && historyData.cashFlowLog.length){
+                window._cfLogDirty = false;
+                return;
+            }
+            window._cfSrcFp = srcFpNow;
             const log = [];
             const initCost = Number(historyData.initialCost) || 0;
             if(initCost !== 0){
@@ -15155,7 +15215,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             (historyData.fundInflows || []).forEach(function(f){
                 const amt = Number(f.amount) || 0;
                 if(amt === 0) return;
-                log.push({ type: amt >= 0 ? 'in' : 'out', title: amt >= 0 ? '资金转入' : '资金取出', detail: '资金流水记录', amount: amt, dateStr: String(f.date || '').substring(0, 10) });
+                log.push({ type: amt >= 0 ? 'in' : 'out', title: amt >= 0 ? '资金转入' : '资金取出', detail: '资金流水记录', amount: amt, dateStr: String(f.date || '').substring(0, 10), cashAfter: f.cashAfter, ts: f.ts });
             });
             const closedSetFlow = {};
             closedForDivStat().forEach(function(c){ closedSetFlow[(c.marketType || '') + '|' + (c.code || '')] = true; });
@@ -15164,7 +15224,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 持仓 + 已清仓股票：清仓股的分红入账也生成账本记录（与"今年已收"口径一致，避免新录入的清仓分红丢失）
             holdDataList.concat(closedForDivStat()).forEach(function(it){
                 (it.exDivRecords || []).forEach(function(r){
-                    log.push({ type: 'div', title: '分红入账 · ' + (it.name || it.code), detail: '每股 ' + Number(r.perShare).toFixed(4) + ' 元 × ' + Math.round(Number(r.count)) + ' 股', amount: Number(r.amount) || 0, dateStr: String(r.date || '').substring(0, 10), closed: !!closedSetFlow[(it.marketType || '') + '|' + (it.code || '')] });
+                    log.push({ type: 'div', title: '分红入账 · ' + (it.name || it.code), detail: '每股 ' + Number(r.perShare).toFixed(4) + ' 元 × ' + Math.round(Number(r.count)) + ' 股', amount: Number(r.amount) || 0, dateStr: String(r.date || '').substring(0, 10), closed: !!closedSetFlow[(it.marketType || '') + '|' + (it.code || '')], cashAfter: r.cashAfter, ts: r.ts });
+                });
+                // 买卖成交：买入扣现金、卖出回款，也进入现金变动账本（历史交易无快照显示 --）
+                (it.transactions || []).forEach(function(t){
+                    const d = Number(t.delta) || 0;
+                    if(d === 0) return;
+                    const p = Number(t.price) || 0;
+                    const fx = it.marketType === 'HK' ? hkFxRate : 1;
+                    const amt = d * p * fx;
+                    log.push({ type: d > 0 ? 'buy' : 'sell', title: (d > 0 ? '买入 · ' : '卖出 · ') + (it.name || it.code), detail: Math.abs(d) + ' 股 × ' + p.toFixed(2), amount: -amt, dateStr: tsToDateStr(t.t), cashAfter: t.cashAfter, ts: t.t });
                 });
             });
             // 查重优化：Set 键代替 log.some 全量扫描（账本越大越明显，几十万条时 some 为 O(n^2) 会卡死）
@@ -15182,24 +15251,75 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     log.push(o2);
                 }
             });
-            log.sort(function(a, b){ const x = b.dateStr || '', y = a.dateStr || ''; return x < y ? -1 : x > y ? 1 : 0; });
-            // 账本内容实际变化时记录最后变动时间（事件驱动：资金投入/分红入账时更新，行情刷新内容不变不更新）
-            // 轻量指纹（长度+首尾条目）代替两次全量 JSON 序列化：几十万条账本下避免每次打开页面卡顿
-            const fp = function(arr){
-                let s = (arr || []).length + '|';
-                if(arr && arr.length){
-                    const f = arr[0], l = arr[arr.length - 1];
-                    s += (f.title || '') + '|' + (f.dateStr || '') + '|' + (f.amount || 0)
-                       + '~' + (l.title || '') + '|' + (l.dateStr || '') + '|' + (l.amount || 0);
-                }
-                return s;
+            log.sort(function(a, b){
+                const ta = Number(a.ts) || 0, tb = Number(b.ts) || 0;
+                if(ta && tb) return tb - ta;
+                if(ta) return -1;
+                if(tb) return 1;
+                const x = b.dateStr || '', y = a.dateStr || '';
+                return x < y ? -1 : x > y ? 1 : 0;
+            });
+            // 账本只增不改（append-only）：存储后任何后续操作（买卖/清仓/编辑/删除源记录）都不改动或删除已存历史；
+            // 首次（空账本）全量落库迁移，之后仅把源中新出现的记录追加进去，已存在行原样保留
+            const cfLogArr = historyData.cashFlowLog;
+            const sortLogByTs = function(arr){
+                arr.sort(function(a, b){
+                    const ta = Number(a.ts) || 0, tb = Number(b.ts) || 0;
+                    if(ta && tb) return tb - ta;
+                    if(ta) return -1;
+                    if(tb) return 1;
+                    const x = b.dateStr || '', y = a.dateStr || '';
+                    return x < y ? -1 : x > y ? 1 : 0;
+                });
             };
-            const prevFp = fp(historyData.cashFlowLog);
-            historyData.cashFlowLog = log;
-            window._cfLogDirty = (fp(log) !== prevFp);
+            if(!cfLogArr.length){
+                historyData.cashFlowLog = log;
+                window._cfLogDirty = true;
+            } else {
+                const keyOf = function(n){
+                    return (n.type || '') + '|' + (n.title || '') + '|' + (n.detail || '') + '|' + (n.dateStr || '')
+                        + '|' + (n.amount || 0) + '|' + (n.cashAfter == null ? '' : n.cashAfter) + '|' + (n.ts || '');
+                };
+                const existKeys = new Set();
+                cfLogArr.forEach(function(n){ existKeys.add(keyOf(n)); });
+                const newRows = [];
+                log.forEach(function(n){
+                    const k = keyOf(n);
+                    if(existKeys.has(k)) return;
+                    newRows.push(n);
+                    existKeys.add(k);
+                });
+                if(newRows.length){
+                    // 事件驱动的记录 ts 都是存储时刻（Date.now() 单调递增），ts 倒序下必然排在所有已有记录之前；
+                    // 头部插入代替全量重排，百万级账本新增时也不会卡顿（无 ts 的罕见新行走全量排序兜底）
+                    let allTs = true;
+                    newRows.forEach(function(n){ if(!n.ts) allTs = false; });
+                    if(allTs){
+                        newRows.sort(function(a, b){ return (Number(b.ts) || 0) - (Number(a.ts) || 0); });
+                        cfLogArr.unshift.apply(cfLogArr, newRows);
+                    } else {
+                        cfLogArr.push.apply(cfLogArr, newRows);
+                        sortLogByTs(cfLogArr);
+                    }
+                    window._cfLogDirty = true;
+                } else {
+                    window._cfLogDirty = false;
+                }
+            }
             if(window._cfLogDirty){
                 historyData.cashFlowUpdatedAt = todayStr() + ' ' + statsRefreshNow();
             }
+        }
+        // 存储时间戳格式化：MM-DD HH:mm（资金流水日期列第二行）
+        function fmtTs(t){
+            const d = new Date(Number(t) || 0);
+            if(isNaN(d.getTime())) return '';
+            return String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+        function tsToDateStr(t){
+            const d = new Date(Number(t) || 0);
+            if(isNaN(d.getTime())) return '';
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
         // ==================== 收支统计（手动录入，与持仓无关；月/年维度走势与汇总） ====================
         const CF_KEY = 'divCashFlow';
@@ -15531,11 +15651,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // 每次打开重建账本并落库：转入转出从资金源数据实时生成（日期仅保留到日，兼容早期带时分秒的存量记录），
             // 分红入账保留已清仓股票的历史记录；账本内容无变化时更新时间不变，事件驱动自动落库
+            const cashNowEl = document.querySelector('#cashNowValue');
+            if(cashNowEl) cashNowEl.innerText = fmtMoney(Number(historyData.cashBalance) || 0);
             syncCashFlowLog();
             // 账本未变化时跳过全量落库（几十万条账本每次打开重写会卡顿且逼近存储配额）
             if(window._cfLogDirty) saveHistory();
-            const events = (historyData.cashFlowLog || []).slice();
-            events.sort(function(a, b){ const x = b.dateStr || '', y = a.dateStr || ''; return x < y ? -1 : x > y ? 1 : 0; });
+            const events = historyData.cashFlowLog || [];
+            // 账本已在 syncCashFlowLog 内按存储时间倒序维护（只增不改）：打开时直接复用，不再拷贝/重排，百万条也不卡
             window._cashFlowEvents = events;
             let inTotal = 0, outTotal = 0, divTotal = 0;
             events.forEach(function(ev){
@@ -21277,10 +21399,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const amount = fundTransferType === 'out' ? -amtV : amtV;
             if(!historyData.fundInflows) historyData.fundInflows = [];
             // 只记录到日期（无需具体时分秒）
-            historyData.fundInflows.push({ date: dateV, amount: amount, remark: remarkV });
+            historyData.fundInflows.push({ date: dateV, amount: amount, remark: remarkV, ts: Date.now() });
             // 资金转账联动现金（券商口径）：转入入金 → 现金增加；转出取款 → 现金减少；
+            // 入账后把当时现金快照存到该条流水（此后买卖再变现金，已存快照不回写）
             // 总资产 = 市值 + 现金，随之实时变化；存量历史流水迁移时不重放，仅今后新增的转账生效
             adjustCash(amount);
+            historyData.fundInflows[historyData.fundInflows.length - 1].cashAfter = historyData.cashBalance;
             afterFundFlowsChanged();
             closeFundTransferAdd();
             showToast(fundTransferType === 'in' ? '已记录资金转入，并累计到 ' + dateV.substring(0, 4) + ' 年汇总' : '已记录资金取出，并累计到 ' + dateV.substring(0, 4) + ' 年汇总');
@@ -22046,16 +22170,55 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             reader.readAsText(file);
         });
 
-        // 我的页面：清空数据
-        document.querySelector('#clearDataBtn').addEventListener('click', function(){
-            if(confirm('确定要清空所有持仓数据吗？此操作不可恢复！')){
-                lsRemove(STORAGE_KEY);
-                lsRemove('dividendHistory');
-                invalidateMilestoneChart();
-                holdDataList = [];
-                renderPage();
-                showToast('数据已清空');
+        // 我的页面：清空所有数据（持仓/资金流水/收支/自选/做T累计/成本快照/缓存全部清空，仅保留页面自身，不误删其他本地页面数据）
+        // 自定义确认弹窗：清空按钮 → 打开弹窗；确认 → 执行清空；取消/遮罩/关闭 → 关闭弹窗
+        const clearConfirmModal = document.querySelector('#clearConfirmModal');
+        const openClearConfirm = function(){
+            clearConfirmModal.classList.remove('hidden');
+            clearConfirmModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        };
+        const closeClearConfirm = function(){
+            clearConfirmModal.classList.add('hidden');
+            clearConfirmModal.classList.remove('flex');
+            document.body.style.overflow = '';
+        };
+        document.querySelector('#clearDataBtn').addEventListener('click', openClearConfirm);
+        document.querySelector('#ccClose').addEventListener('click', closeClearConfirm);
+        document.querySelector('#ccCancel').addEventListener('click', closeClearConfirm);
+        clearConfirmModal.addEventListener('click', function(e){ if(e.target === clearConfirmModal) closeClearConfirm(); });
+        document.querySelector('#ccConfirm').addEventListener('click', function(){
+            closeClearConfirm();
+            // 1) 清空 localStorage 业务键（主数据 + 导出白名单 + 可重建缓存 + dividend 前缀兜底；不整库 clear，避免误删同源其他本地页面数据）
+            const clearKeys = [STORAGE_KEY, HISTORY_KEY, 'appVersion'];
+            EXPORT_KEYS.forEach(function(k){ if(clearKeys.indexOf(k) < 0) clearKeys.push(k); });
+            Object.keys(NO_LS_BACKUP).forEach(function(k){ if(clearKeys.indexOf(k) < 0) clearKeys.push(k); });
+            for(let i = 0; i < localStorage.length; i++){
+                const k = localStorage.key(i);
+                if(k && k.indexOf('dividend') === 0 && clearKeys.indexOf(k) < 0) clearKeys.push(k);
             }
+            clearKeys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+            // 2) IndexedDB 只删本应用键（main 主数据 + kv 业务键）；不整桶 clear，避免误删同库其他页面数据
+            const reload = function(){ setTimeout(function(){ location.reload(); }, 300); };
+            const doIdbDelete = function(){
+                try{
+                    const tx = AppDB.db.transaction(['main','kv'], 'readwrite');
+                    [HISTORY_KEY, STORAGE_KEY].forEach(function(k){ tx.objectStore('main').delete(k); });
+                    clearKeys.forEach(function(k){ tx.objectStore('kv').delete(k); });
+                    tx.oncomplete = reload;
+                    tx.onerror = reload;
+                    tx.onabort = reload;
+                }catch(e){ reload(); }
+            };
+            if(AppDB.ok && AppDB.db) doIdbDelete();
+            else reload();
+            // 3) 清空内存脏镜像与主数据引用，防止重载前 pagehide/flush 把旧数据写回
+            Object.keys(_kvMemo).forEach(function(k){ delete _kvMemo[k]; });
+            Object.keys(_dirtyMain).forEach(function(k){ delete _dirtyMain[k]; });
+            Object.keys(_dirtyKv).forEach(function(k){ delete _dirtyKv[k]; });
+            holdDataList = [];
+            invalidateMilestoneChart();
+            showToast('数据已清空');
         });
 
         init();

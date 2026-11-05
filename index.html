@@ -490,6 +490,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         </div>
                         <div class="flex items-baseline gap-1.5">
                             <span class="text-[20px] font-semibold tabular-nums tracking-tight num-transition text-[#ffffff]" id="totalYearDiv">0.00</span>
+                            <span class="text-[10.5px] text-amber-100/50 tabular-nums" id="yearDivYield" title="年度分红收入 ÷ 总资产">--</span>
                         </div>
                     </div>
                     <div class="shrink-0 text-right cursor-pointer select-none active:scale-95 transition-transform" onclick="openBreakEvenPage()" title="查看回本分析（资金流水口径分红回收）">
@@ -550,11 +551,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                     <!-- 总资产分解：总市值 · 现金（券商口径，现金为账户可用资金） -->
                                     <div class="grid grid-cols-2 gap-1.5 mt-2 leading-none whitespace-nowrap" id="assetBreakdown">
                                         <div class="flex flex-col items-center gap-[3px]">
-                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">市值</span>
+                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">市值<span class="ab-mkt-p text-[#e8c88a] text-[9px] tabular-nums ml-0.5">--</span></span>
                                             <span class="ab-mkt-v text-white text-[13.5px] font-medium tabular-nums">0</span>
                                         </div>
                                         <div class="flex flex-col items-center gap-[3px] cursor-pointer active:scale-95 transition-transform" onclick="openCashEdit()" title="点击修改现金">
-                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">现金</span>
+                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">现金<span class="ab-cash-p text-[#e8c88a] text-[9px] tabular-nums ml-0.5">--</span></span>
                                             <span class="ab-cash-v text-white text-[13.5px] font-medium tabular-nums">0</span>
                                         </div>
                                     </div>
@@ -4965,6 +4966,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         // 该笔分红的持股数：登记日当天快照优先（登记日18:00未运行、之后补除权也按登记日当天股数）
                         const exCount = (it.divRegSnapshot && it.divRegSnapshot[divKey] != null) ? it.divRegSnapshot[divKey] : it.count;
                         it.costPrice = Number((it.costPrice - perShare).toFixed(4));
+                        saveCostSnapshot(it, divDate);
                         it.processedDivDates.push(divKey);
                         // 记录除权（分红到账）流水：真实收到分红的金额 = 每股分红 × 登记日当天实际持股数
                         if(!it.exDivRecords) it.exDivRecords = [];
@@ -6231,6 +6233,54 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         //        = 现价×当前股数 − 昨收×昨日股数 + 卖出总额 − 买入总额
         // 数学上等价于 FIFO 分段算法，但不依赖份额分配，且昨日持仓股数由当前股数反推今日净变动。
         // 同时产出：日内已兑现盈亏（做T利润=卖出总额−买入总额）、昨日市值、今日买卖股数（供展示过滤）。
+        // 做T计算器：低价优先配对（用户定义口径，A股T+1需历史底仓才能卖出）
+        // 配对策略：当日买入池按价格升序（低价优先）；卖出优先配当日买入池（反手T：利润=卖价−买价）；
+        //          买入优先配等待买回的卖出（正T：利润=卖价−买价）；只买不卖→待配对池(加仓)不计T；
+        //          只卖不买回→纯减仓不计T。利润不含手续费；配对不掉的部分留在待配对池。
+        function calcDayTProfitPair(trades){
+            const pendingBuyPool = [];
+            const pendingSellPool = [];
+            let totalTProfit = 0;
+            for(let ti = 0; ti < trades.length; ti++){
+                const tr = trades[ti];
+                const isBuy = tr.type === 'buy';
+                const price = Number(tr.price) || 0;
+                let remainVol = Math.abs(Number(tr.volume)) || 0;
+                if(isBuy){
+                    // 买入：优先匹配等待买回的卖出（正T：先卖后买）
+                    let i = 0;
+                    while(remainVol > 0 && i < pendingSellPool.length){
+                        const sellItem = pendingSellPool[i];
+                        const matchVol = Math.min(remainVol, sellItem.volume);
+                        totalTProfit += matchVol * (sellItem.price - price);
+                        sellItem.volume -= matchVol;
+                        remainVol -= matchVol;
+                        if(sellItem.volume <= 0) pendingSellPool.splice(i, 1);
+                        else i++;
+                    }
+                    if(remainVol > 0){
+                        pendingBuyPool.push({ price: price, volume: remainVol });
+                        pendingBuyPool.sort(function(a, b){ return a.price - b.price; }); // 低价优先
+                    }
+                } else {
+                    // 卖出：优先匹配待配对买入池（反手T：先买后卖，配最低价买入）
+                    let i = 0;
+                    while(remainVol > 0 && i < pendingBuyPool.length){
+                        const buyItem = pendingBuyPool[i];
+                        const matchVol = Math.min(remainVol, buyItem.volume);
+                        totalTProfit += matchVol * (price - buyItem.price);
+                        buyItem.volume -= matchVol;
+                        remainVol -= matchVol;
+                        if(buyItem.volume <= 0) pendingBuyPool.splice(i, 1);
+                        else i++;
+                    }
+                    if(remainVol > 0){
+                        pendingSellPool.push({ price: price, volume: remainVol }); // 没接回=纯减仓
+                    }
+                }
+            }
+            return { tProfit: totalTProfit };
+        }
         function calcDayFlow(item){
             const now = Number(item.nowPrice);
             // count 可能为 0（当日全清仓）：仍须按当日交易计算实现盈亏，故不在此短路
@@ -6283,6 +6333,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             refDay.setHours(0, 0, 0, 0);
             const dayStartTs = refDay.getTime();
             let buyQty = 0, buyAmt = 0, sellQty = 0, sellAmt = 0;
+            const dayTrades = []; // 当日交易（按时间序）→ 低价优先配对算闭环做T
             trs.forEach(function(tr){
                 const ts = Number(tr.t) || 0;
                 if(ts < dayStartTs) return;
@@ -6296,13 +6347,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     sellQty += sq;
                     sellAmt += sq * (Number(tr.price) || now);
                 }
+                dayTrades.push({ type: qty > 0 ? 'buy' : 'sell', price: Number(tr.price) || now, volume: Math.abs(qty) });
             });
             const prevQty = holdQty - buyQty + sellQty;   // 昨日收盘持仓股数（今日净变动反推）
             if(prevClose == null || prevQty < 0) return { pnl: 0, tProfit: 0, prevMv: 0, hasBase: false, buyQty: buyQty, sellQty: sellQty };
             return {
                 pnl: (now * holdQty - prevClose * prevQty + sellAmt - buyAmt) * fx,
-                // 日内已兑现盈亏（做T利润，券商简化口径）：当日卖出总成交额 − 当日买入总成交额
-                tProfit: (sellAmt - buyAmt) * fx,
+                // 日内已兑现盈亏（做T利润）：低价优先配对闭环T（加仓/纯减仓不计入）
+                tProfit: calcDayTProfitPair(dayTrades).tProfit * fx,
                 prevMv: prevClose * prevQty * fx,
                 hasBase: true,
                 buyQty: buyQty,
@@ -6319,17 +6371,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const map = {};
             const trs = item.transactions;
             if(trs && trs.length){
+                const dayTrs = {}; // 按自然日分组：'YYYY-MM-DD' -> [{type,price,volume}]，每组低价优先配对闭环
                 for(let i = 0; i < trs.length; i++){
                     const tr = trs[i];
                     const ts = Number(tr.t) || 0;
                     if(!ts) continue;
                     const qty = Number(tr.delta) || 0;
                     if(!qty) continue;
-                    const d = new Date(ts);
-                    const key = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-                    // 做T = 卖出总额 − 买入总额：买(qty>0)减成交额、卖(qty<0)减负数成交额
-                    const amt = qty * (Number(tr.price) || 0);
-                    map[key] = (map[key] || 0) - amt;
+                    const dd = new Date(ts);
+                    const key = dd.getFullYear() + '-' + ('0' + (dd.getMonth() + 1)).slice(-2) + '-' + ('0' + dd.getDate()).slice(-2);
+                    if(!dayTrs[key]) dayTrs[key] = [];
+                    dayTrs[key].push({ type: qty > 0 ? 'buy' : 'sell', price: Number(tr.price) || 0, volume: Math.abs(qty) });
+                }
+                for(const k in dayTrs){
+                    map[k] = calcDayTProfitPair(dayTrs[k]).tProfit;
                 }
             }
             item.dayTByDate = map;
@@ -7024,6 +7079,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 按自然日聚合版本（账户/个股趋势图用）：同日买卖合并净额与笔数、分红合并总额，
         // 逐日重算净投入/分红/缺口/回本年限，desc 精简为"买入2笔+8.5万 · 分红1笔+0.9万"，
         // 避免当日多笔交易时事件点与日期标签过密
+        // 成本快照：每次买卖/分红除权/建仓/编辑后，保存当天最新持仓成本（与首页持仓成本同源），
+        // 回本分析个股操作列表直接读快照展示，历史无快照显示 --，不再用算式回溯
+        function saveCostSnapshot(it, dateStr){
+            if(!it || !dateStr) return;
+            if(!it.costSnapshots) it.costSnapshots = {};
+            it.costSnapshots[dateStr] = Number(it.costPrice) || 0;
+        }
         function buildBreakEvenDaily(scope){
             const items = scope ? [scope] : allBreakEvenItems();
             const exAll = [];
@@ -7045,7 +7107,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(!d) return;
                     const ts = new Date(d.replace(/-/g, '/')).getTime();
                     if(!ts) return;
-                    events.push({ time: ts, kind: 'div', delta: 0, amt: Number(r.amount) || 0 });
+                    events.push({ time: ts, kind: 'div', delta: 0, amt: Number(r.amount) || 0, perShare: Number(r.perShare) || 0 });
                 });
             });
             events.sort(function(a, b){ return a.time - b.time; });
@@ -7060,12 +7122,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 preAgg.cnt[y] = (preAgg.cnt[y] || 0) + 1;
             });
             const dayMap = {};
+            let dayCnt = 0; // 逐日累计股数：当日结束时持仓股数（跨日延续）
             events.forEach(function(ev){
+                if(ev.kind === 'trade') dayCnt += ev.delta;
                 const dd = new Date(ev.time);
                 const key = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
-                if(!dayMap[key]) dayMap[key] = { key: key, time: ev.time, buyCnt: 0, sellCnt: 0, buyAmt: 0, sellAmt: 0, divCnt: 0, divAmt: 0 };
+                if(!dayMap[key]) dayMap[key] = { key: key, time: ev.time, buyCnt: 0, sellCnt: 0, buyAmt: 0, sellAmt: 0, divCnt: 0, divAmt: 0, divPer: 0, cnt: 0 };
                 const b = dayMap[key];
-                if(ev.kind === 'div'){ b.divCnt++; b.divAmt += ev.amt; }
+                b.cnt = dayCnt;
+                if(ev.kind === 'div'){ b.divCnt++; b.divAmt += ev.amt; b.divPer += ev.perShare || 0; }
                 else if(ev.delta > 0){ b.buyCnt++; b.buyAmt += ev.amt; }
                 else { b.sellCnt++; b.sellAmt += ev.amt; }
             });
@@ -7076,7 +7141,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(scope) mv = getMarketValue(scope);
             else allBreakEvenItems().forEach(function(it){ mv += getMarketValue(it); });
             const series = [];
+            // 逐日回溯成本价（个股口径）：当日结束时成本 = 当前除权后 costPrice + 该日之后尚未除权的每股分红，
+            // 最新一天必等于首页持仓列表成本（item.costPrice），与首页口径完全一致
+            const totalPer = days.reduce(function(a, b){ return a + b.divPer; }, 0);
+            let cumDivPer = 0;
             days.forEach(function(b){
+                cumDivPer += b.divPer;
                 netIn += b.buyAmt + b.sellAmt;
                 divTotalV += b.divAmt;
                 const gap = netIn - divTotalV;
@@ -7099,7 +7169,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(b.sellCnt) parts.push({ type: 'sell', text: '卖出' + b.sellCnt + '笔 -' + fmtMoney(-b.sellAmt) });
                 if(b.divCnt) parts.push({ type: 'div', text: '分红' + b.divCnt + '笔 +' + fmtMoney(b.divAmt) });
                 const ttype = (b.buyCnt && b.sellCnt) ? 'mix' : (b.sellCnt && !b.buyCnt ? 'sell' : (b.buyCnt ? 'buy' : 'div'));
-                series.push({ time: b.time, dateStr: b.key, type: ttype, desc: parts.map(function(p){ return p.text; }).join(' · '), parts: parts, dBuyAmt: b.buyAmt, dSellAmt: b.sellAmt, dDivAmt: b.divAmt, netIn: netIn, divTotal: divTotalV, gap: gap, avgDiv: avgDiv, beNo: beNo, beRe: beRe });
+                series.push({ time: b.time, dateStr: b.key, type: ttype, desc: parts.map(function(p){ return p.text; }).join(' · '), parts: parts, dBuyAmt: b.buyAmt, dSellAmt: b.sellAmt, dDivAmt: b.divAmt, netIn: netIn, divTotal: divTotalV, gap: gap, avgDiv: avgDiv, beNo: beNo, beRe: beRe, cnt: b.cnt });
             });
             return series;
         }
@@ -7437,10 +7507,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             evEl._evVisible = visible;
             const shown = list.slice(0, visible);
             let html = '';
-            // 表头：与账户"最近操作（按日汇总）"统一四列
+            // 表头：与账户"最近操作（按日汇总）"统一四列；缺口列标注缺口/成本价
             html += '<div style="display:grid;grid-template-columns:58px 88px 76px minmax(0,1fr);align-items:center;column-gap:8px" class="px-0.5 pb-1 text-[9.5px] text-gray-400/90 border-b border-[#F0EDE7]">'
-                + '<span>日期</span><span style="text-align:right">缺口</span><span style="text-align:right">回本年数</span><span style="text-align:right">操作</span></div>';
+                + '<span>日期</span><span style="text-align:right">缺口/成本价</span><span style="text-align:right">回本年数</span><span style="text-align:right">操作</span></div>';
             shown.forEach(function(s, i){
+                const costSnap = (item.costSnapshots && item.costSnapshots[s.dateStr] != null) ? item.costSnapshots[s.dateStr] : null;
                 const beNow = s.beNo;
                 let deltaHtml = '';
                 const earlier = shown[i + 1]; // 更早一条（最新在前）
@@ -7457,7 +7528,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const beText = beNow == null ? '--' : (beNow <= 0 ? '已回本' : fmtBeYears(beNow));
                 html += '<div style="display:grid;grid-template-columns:58px 88px 76px minmax(0,1fr);align-items:center;column-gap:8px" class="py-1.5 border-b border-dashed border-[#F0EDE7] last:border-0">'
                     + '<span class="text-gray-400 tabular-nums text-[10.5px] whitespace-nowrap">' + s.dateStr + '</span>'
-                    + '<span class="' + gapCls + ' tabular-nums text-[10.5px] whitespace-nowrap" style="text-align:right">' + (s.gap != null ? fmtMoney(s.gap) : '--') + '</span>'
+                    + '<span class="flex flex-col items-end gap-0.5" style="min-width:0">'
+                    + '<span class="' + gapCls + ' tabular-nums text-[10.5px] whitespace-nowrap">' + (s.gap != null ? fmtMoney(s.gap) : '--') + '</span>'
+                    + (costSnap != null ? '<span class="text-gray-400 tabular-nums text-[9.5px] whitespace-nowrap">' + fmtPrice(costSnap, item.code, item.marketType === 'HK') + '</span>' : '<span class="text-gray-300 tabular-nums text-[9.5px] whitespace-nowrap">--</span>')
+                    + '</span>'
                     + '<span class="' + beCls + ' tabular-nums text-[10.5px] whitespace-nowrap" style="text-align:right">' + beText + '</span>'
                     + '<span class="min-w-0 flex flex-col items-end gap-0.5" style="min-width:0">'
                     + beNetOpRows(s)
@@ -7784,6 +7858,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // 股数变更请走买入/卖出交易，会自动增减现金）
                     item.count = oldCntEdit;
                     item.costPrice = newCost;
+                    saveCostSnapshot(item, todayStr());
                     item.divPerShare = Number(divPerShareEl.value || 0);
                     // 港股行业优先取最新映射表，无配置时保留手动选择
                     let editInd = stockIndustryEl.value || '其他';
@@ -7942,6 +8017,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 computeYearlyDiv();
             }
             holdDataList.push(newItem);
+            // 建仓成本快照：建仓日成本 = 录入成本（与首页持仓成本一致）
+            if(!newItem.costSnapshots) newItem.costSnapshots = {};
+            newItem.costSnapshots[todayStr()] = Number(newItem.costPrice) || 0;
             // 买入建仓：账户现金扣减买入金额（股数 × 成本价，港股按汇率折算人民币）
             adjustCash(-count * costPrice * (marketType === 'HK' ? hkFxRate : 1));
             saveLocal();
@@ -8341,6 +8419,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const newCost = (oldCost * oldCount + qty * price) / newCount;
                 item.count = newCount;
                 item.costPrice = newCost;
+                saveCostSnapshot(item, todayStr());
                 if(!item.transactions) item.transactions = [];
                 item.transactions.push({ t: Date.now(), delta: qty, price: price });
                 // 买入：账户现金扣减成交金额（港股按汇率折算人民币）
@@ -8385,6 +8464,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const newCost = (oldCostTotal - qty * price) / newCount;
                 item.count = newCount;
                 item.costPrice = newCost;
+                saveCostSnapshot(item, todayStr());
                 adjustCash(sellProceeds);
                 saveLocal();
                 renderPage();
@@ -18797,6 +18877,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#aCount').innerText = sum.aShareNum;
             document.querySelector('#hkCount').innerText = sum.hkShareNum;
             numTween(document.querySelector('#totalYearDiv'), sum.totalYearDiv, fmtMoney);
+            // 年度分红股息率 = 年度分红收入 ÷ 总资产（总资产为 0 显示 --）
+            const yydEl = document.querySelector('#yearDivYield');
+            if(yydEl){
+                const yyA = Number(sum.totalAsset);
+                const yyD = Number(sum.totalYearDiv);
+                yydEl.innerText = (yyA > 0 && yyD > 0) ? (yyD / yyA * 100).toFixed(1) + '%' : '--';
+            }
             numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
             numTween(document.querySelector('#incomeNow'), sum.totalReceived, fmtMoney);
             const totalPnlEl = document.querySelector('#totalPnl');
@@ -18822,6 +18909,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const cv = brkEl.querySelector('.ab-cash-v');
                 if(mv) mv.innerText = fmtMoney(sum.totalMarket);
                 if(cv) cv.innerText = fmtMoney(sum.cash);
+                // 仓位占比：市值/总资产、现金/总资产（总资产为 0 显示 --）
+                const aaB = Number(sum.totalAsset);
+                const mpEl = brkEl.querySelector('.ab-mkt-p');
+                const cpEl = brkEl.querySelector('.ab-cash-p');
+                if(mpEl) mpEl.innerText = aaB > 0 ? (Number(sum.totalMarket) / aaB * 100).toFixed(1) + '%' : '--';
+                if(cpEl) cpEl.innerText = aaB > 0 ? (Number(sum.cash) / aaB * 100).toFixed(1) + '%' : '--';
             }
             renderNextDivCountdown();
             const trrEl = document.querySelector('#totalReturnRate');

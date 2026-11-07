@@ -487,176 +487,134 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.20);"></div>
 
             <div class="relative z-10">
-                <!-- 顶部：年度分红收入（左） ↔ 回本分析（右，预计回本/复投/缺口，点击进入回本分析页） -->
-                <div class="px-3 pt-2.5 pb-2 mb-2.5 text-white flex items-start justify-between gap-3">
+                <!-- 第一层：年度分红收入（预测）｜预计回本（复投） -->
+                <div class="px-4 pt-3 pb-2.5 flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <div class="text-[11px] text-amber-100/60 flex items-center gap-1.5 mb-0.5">
+                        <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="relative flex items-center gap-1.5 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform">
                             <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
-                            <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide font-serif">年度分红收入</span><i class="fa fa-chevron-right text-[10px]"></i><span class="absolute rounded-lg" style="inset:-8px;"></span></button>
-                        </div>
-                        <div class="flex items-baseline gap-1.5">
-                            <span class="text-[20px] font-semibold tabular-nums tracking-tight num-transition text-[#ffffff]" id="totalYearDiv">0.00</span>
-                            <span class="text-[10.5px] text-[#ffffff] tabular-nums" id="yearDivYield" title="年度分红收入 ÷ 总资产">--</span>
+                            <span class="tracking-wide font-serif">年度分红收入</span>
+                            <i class="fa fa-chevron-right text-[9px]"></i>
+                            <span class="absolute rounded-lg" style="inset:-8px;"></span>
+                        </button>
+                        <div class="flex items-baseline gap-1.5 mt-1.5">
+                            <span class="text-[21px] font-semibold tabular-nums tracking-tight num-transition text-[#ffffff] leading-none" id="totalYearDiv">0.00</span>
+                            <span class="text-[10.5px] text-[#e8c88a] tabular-nums leading-none" id="yearDivYield" title="年度分红收入 ÷ 总资产">--</span>
                         </div>
                     </div>
-                    <div class="shrink-0 text-right cursor-pointer select-none active:scale-95 transition-transform" onclick="openBreakEvenPage()" title="查看回本分析（资金流水口径分红回收）">
-                        <div class="text-[11px] text-amber-100/60 flex items-center gap-1.5 mb-0.5">
-                            <span class="text-[9.5px] text-amber-100/50 whitespace-nowrap">缺口 <span id="sumBeGap" class="text-amber-200 font-semibold tabular-nums">--</span></span>
-                            <span class="ml-auto flex items-center gap-1.5">
-                                <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
-                                <span class="tracking-wide font-serif">预计回本</span><i class="fa fa-chevron-right text-[10px]"></i>
-                            </span>
+                    <button type="button" onclick="openBreakEvenPage()" title="查看回本分析（资金流水口径分红回收）" class="shrink-0 text-right active:scale-95 transition-transform">
+                        <div class="flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6]">
+                            <span class="tracking-wide font-serif">预计回本(复投)</span><i class="fa fa-chevron-right text-[9px]"></i>
                         </div>
-                        <div class="flex items-end justify-end gap-2.5">
-                            <div class="text-right">
-                                <div class="text-[9.5px] text-amber-100/50 tracking-wide whitespace-nowrap">不复投</div>
-                                <div class="text-[17px] font-semibold tabular-nums tracking-tight text-[#ffffff] leading-tight" id="sumBeNo">--</div>
+                        <div class="mt-1.5 text-[16px] font-semibold tabular-nums tracking-tight text-[#ffffff] leading-none" id="sumBeRe">--</div>
+                    </button>
+                </div>
+
+                <div class="mx-4" style="height:1px;background:rgba(230,210,163,0.16);transform:scaleY(0.6);"></div>
+
+                <!-- 第二层：六格矩阵（左列左对齐 / 中列居中 / 右列右对齐） -->
+                <div class="px-4 pt-3 pb-3">
+                    <div class="grid items-start" style="grid-template-columns:1.4fr 1.04fr 1.4fr; row-gap:15px;">
+                        <!-- 第一行：今年已收 / 累计分红 / 现金 -->
+                        <div class="text-left min-w-0 pr-2">
+                            <button type="button" onclick="openDivDetail()" title="查看今年分红明细" class="h-4 flex items-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">今年已收</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="incomeNowWrap"><span id="incomeNow">0.00</span></div>
+                        </div>
+                        <div class="text-center min-w-0 px-0.5">
+                            <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="h-4 mx-auto flex items-center justify-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">累计分红</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition whitespace-nowrap leading-none" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-[#ffffff]">0.00</span></div>
+                        </div>
+                        <div class="text-right min-w-0 pl-2">
+                            <button type="button" onclick="openCashFlowFromHold()" title="查看现金变动历史" class="h-4 ml-auto flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">现金</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="cashVal">0.00</span></div>
+                        </div>
+                        <!-- 第二行：总资产 / 总市值 / 今日盈亏 -->
+                        <div class="text-left min-w-0 pr-2">
+                            <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="h-4 flex items-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">总资产</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-2 text-[27px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
+                        </div>
+                        <div class="text-center min-w-0 px-1">
+                            <div class="h-4 text-[10.5px] text-[#cfc0a6] leading-[16px] tracking-wide">总市值</div>
+                            <div class="mt-2 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="mktVal">0.00</span></div>
+                        </div>
+                        <div class="text-right min-w-0 pl-2">
+                            <button type="button" onclick="openStatsFromHold()" title="查看今日涨跌幅排行" class="h-4 ml-auto flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">今日盈亏</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-2 flex items-baseline justify-end whitespace-nowrap">
+                                <span class="text-[16px] font-bold tabular-nums num-transition text-gray-400 leading-none" id="todayPnl">--</span>
                             </div>
-                            <div class="w-px self-stretch mb-1" style="background:rgba(230,210,163,0.18);"></div>
-                            <div class="text-right">
-                                <div class="text-[9.5px] text-amber-100/50 tracking-wide whitespace-nowrap">复投</div>
-                                <div class="text-[13px] font-semibold tabular-nums text-[#e8c88a] leading-tight" id="sumBeRe">--</div>
-                            </div>
+                            <div class="mt-1 text-[10px] font-medium tabular-nums num-transition text-gray-400 leading-none" id="todayPnlPct">--</div>
+                            <div class="text-[9px] text-[#cfc0a6]/75 mt-1 hidden" id="todayPnlT">含做T已兑现 <span class="font-semibold text-[#f7cf8f]" id="todayPnlTVal">+0.00</span></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 指标区 - 主次分级：核心 4 项放大 + 其余 5 项收纳进"更多指标" -->
-                <div class="grid grid-cols-3 gap-0 -mx-4">
-                    <!-- 顶部渐变分隔线 -->
-                    <div class="col-span-3 mb-0" style="height:1px;background:rgba(230,210,163,0.14);transform:scaleY(0.6);"></div>
-                    <!-- 核心四指标（放大突出，居中）：今年已收 / 累计分红总额 / 总资产 / 今日盈亏 -->
-                    <div class="col-span-3" style="background:rgba(255,255,255,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16);">
-                        <div class="grid grid-cols-2 gap-0 px-2 py-1 mx-3">
-                            <!-- 今年已收 -->
-                            <div class="py-2 text-center">
-                                <div class="text-[#cfc0a6] text-[10.5px] mb-1 flex items-center justify-center gap-1.5">
-                                    <i class="fa fa-money text-[11px]" style="color:rgba(246,196,83,.8)"></i>
-                                    <button type="button" onclick="openDivDetail()" title="查看今年分红明细" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform"><span>今年已收</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                                </div>
-                                <div class="text-[18px] font-semibold tabular-nums num-transition text-[#ffffff]" id="incomeNowWrap"><span id="incomeNow">0.00</span></div>
+                <!-- 下一笔分红倒计时（无数据自动隐藏） -->
+                <div id="nextDivCountdown" class="hidden mx-4 mb-1 flex items-center justify-center gap-2 whitespace-nowrap text-[9.5px] text-[#cfc0a6]/70">
+                    <span>下一笔分红 <span id="nextDivDays" class="text-[10px] font-semibold text-[#e8c88a] tabular-nums">--</span> 天</span>
+                    <span style="color:rgba(230,210,163,0.22)">·</span>
+                    <span>预计 <span id="nextDivAmt" class="text-[10px] font-semibold text-[#e8c88a] tabular-nums">--</span></span>
+                </div>
+
+                <!-- 更多指标：收纳折叠（回本口径也在此处查询） -->
+                <div class="mt-0.5">
+                    <button type="button" id="moreMetricsToggle" onclick="toggleMoreMetrics()" class="w-full flex items-center justify-center gap-1.5 py-1.5 text-[10.5px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-all">
+                        <i class="fa fa-plus-circle text-[11px]" style="color:rgba(246,196,83,.7)" id="moreMetricsIcon"></i>
+                        <span>更多指标</span>
+                        <i class="fa fa-chevron-down text-[10px] transition-transform duration-300" id="moreMetricsChevron"></i>
+                    </button>
+                </div>
+                <div id="moreMetricsPanel" class="hidden mx-3 mb-2.5 rounded-xl" style="background:rgba(255,255,255,0.10);box-shadow:inset 0 1px 0 rgba(255,255,255,0.14);">
+                    <div class="grid grid-cols-3 gap-0 px-2 py-2 mx-1">
+                        <div class="py-1.5 pr-2">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center gap-1">
+                                <i class="fa fa-calendar-o text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>月均分红</span>
                             </div>
-                            <!-- 累计分红总额 -->
-                            <div class="py-2 text-center">
-                                <div class="text-[#cfc0a6] text-[10.5px] mb-1 flex items-center justify-center gap-1.5">
-                                    <i class="fa fa-pie-chart text-[11px]" style="color:rgba(246,196,83,.8)"></i>
-                                    <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform"><span>累计分红总额</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                                </div>
-                                <div class="text-[18px] font-semibold tabular-nums num-transition" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-[#ffffff]">0.00</span></div>
+                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" id="monthDivWrap"><span id="monthDiv">0.00</span></div>
+                        </div>
+                        <div class="py-1.5 px-2 text-center">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
+                                <i class="fa fa-percent text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>成本息率</span>
                             </div>
-                            <!-- 总资产（重点区：卡中卡面板，浅金渐变+高光+投影，突出层次与立体感） -->
-                            <div class="py-1.5 text-center">
-                                <div class="text-[#cfc0a6] text-[10.5px] mb-1 flex items-center justify-center gap-1.5">
-                                    <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform">
-                                        <i class="fa fa-bank text-[11px]" style="color:rgba(246,196,83,.8)"></i>
-                                        <span>总资产</span><i class="fa fa-chevron-right text-[9px]"></i>
-                                    </button>
-                                </div>
-                                <div class="mx-1.5 rounded-xl px-2 py-2.5 text-center" style="background:linear-gradient(180deg,rgba(255,255,255,0.17),rgba(255,255,255,0.06));box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 3px 10px rgba(0,0,0,0.20);border:1px solid rgba(230,210,163,0.16);">
-                                    <div class="text-[20px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
-                                    <!-- 总资产分解：总市值 · 现金（券商口径，现金为账户可用资金） -->
-                                    <div class="grid grid-cols-2 gap-1.5 mt-2 leading-none whitespace-nowrap" id="assetBreakdown">
-                                        <div class="flex flex-col items-center gap-[3px]">
-                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">市值<span class="ab-mkt-p text-[#e8c88a] text-[9px] tabular-nums ml-0.5">--</span></span>
-                                            <span class="ab-mkt-v text-white text-[13.5px] font-medium tabular-nums">0</span>
-                                        </div>
-                                        <div class="flex flex-col items-center gap-[3px] cursor-pointer active:scale-95 transition-transform" onclick="openCashFlowFromHold()" title="查看现金变动历史">
-                                            <span class="text-[#f0e2bd] text-[9.5px] tracking-wide">现金<span class="ab-cash-p text-[#e8c88a] text-[9px] tabular-nums ml-0.5">--</span><i class="fa fa-chevron-right text-[9px] ml-0.5"></i></span>
-                                            <span class="ab-cash-v text-white text-[13.5px] font-medium tabular-nums">0</span>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]"><span id="costYield">0.00</span><span class="text-[#b3a488] text-[10px] font-normal">%</span></div>
+                        </div>
+                        <div class="py-1.5 pl-2 text-right">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
+                                <i class="fa fa-percent text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>市值息率</span>
                             </div>
-                            <!-- 今日盈亏 -->
-                            <div class="py-2 text-center">
-                                <div class="text-[#cfc0a6] text-[10.5px] mb-1 flex items-center justify-center gap-1.5">
-                                    <button type="button" onclick="openStatsFromHold()" title="查看今日涨跌幅排行" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform"><i class="fa fa-clock-o text-[11px]" style="color:rgba(246,196,83,.8)"></i><span>今日盈亏</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                                </div>
-                                <div class="flex items-baseline justify-center gap-[8px]">
-                                    <span class="text-[20px] font-bold tabular-nums num-transition text-gray-400" id="todayPnl">--</span>
-                                    <span class="text-[11px] font-medium tabular-nums num-transition text-gray-400" id="todayPnlPct">--</span>
-                                </div>
-                                <div class="text-[9.5px] text-[#cfc0a6]/75 mt-[2px] hidden" id="todayPnlT">含做T已兑现 <span class="font-semibold text-[#f7cf8f]" id="todayPnlTVal">+0.00</span></div>
+                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]"><span id="marketYield">0.00</span><span class="text-[#b3a488] text-[10px] font-normal">%</span></div>
+                        </div>
+                        <div class="py-1.5 pr-1.5">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center gap-1">
+                                <i class="fa fa-line-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>今年收益</span>
+                            </div>
+                            <div class="flex items-baseline gap-[5px] whitespace-nowrap">
+                                <span class="font-bold tabular-nums num-transition text-[#cfc0a6]" id="yearPnl" style="font-size:13px">--</span>
+                                <span class="text-[10px] font-medium tabular-nums num-transition text-[#cfc0a6]" id="yearReturnRate">--</span>
                             </div>
                         </div>
-                    </div>
-                    <!-- 更多指标：收纳折叠（默认收起，点击展开 5 项次要指标） -->
-                    <div class="col-span-3">
-                        <button type="button" id="moreMetricsToggle" onclick="toggleMoreMetrics()" class="w-full flex items-center justify-center gap-1.5 py-1 text-[10.5px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-all">
-                            <i class="fa fa-plus-circle text-[11px]" style="color:rgba(246,196,83,.7)" id="moreMetricsIcon"></i>
-                            <span>更多指标</span>
-                            <i class="fa fa-chevron-down text-[10px] transition-transform duration-300" id="moreMetricsChevron"></i>
-                        </button>
-                    </div>
-                                                            <div id="moreMetricsPanel" class="hidden col-span-3" style="background:rgba(255,255,255,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16);">
-                        <!-- 面板顶部金色渐变细分隔（抽屉感） -->
-                        <div class="mx-3" style="height:1px;background:linear-gradient(90deg,transparent,rgba(246,196,83,0.4),transparent);transform:scaleY(0.6);"></div>
-                        <div class="grid grid-cols-3 gap-0 px-1 py-2 mx-3">
-                            <!-- 第一行：月均分红 -->
-                            <div class="py-2 pr-2">
-                                <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center gap-1">
-                                    <i class="fa fa-calendar-o text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span>月均分红</span>
-                                </div>
-                                <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" id="monthDivWrap"><span id="monthDiv">0.00</span></div>
+                        <div class="py-1.5 px-2 text-center">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
+                                <i class="fa fa-balance-scale text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>持仓盈亏</span>
                             </div>
-                            <!-- 第一行：成本息率 -->
-                            <div class="py-2 px-2 text-center">
-                                <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
-                                    <i class="fa fa-percent text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span>成本息率</span>
-                                </div>
-                                <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]"><span id="costYield">0.00</span><span class="text-[#b3a488] text-[10px] font-normal">%</span></div>
+                            <div class="text-[13px] font-bold tabular-nums num-transition" id="totalPnl">0.00</div>
+                        </div>
+                        <div class="py-1.5 pl-2 text-right">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
+                                <i class="fa fa-area-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span class="whitespace-nowrap">开户至今收益率</span>
                             </div>
-                            <!-- 第一行：市值息率 -->
-                            <div class="py-2 pl-2 text-right">
-                                <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
-                                    <i class="fa fa-percent text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span>市值息率</span>
-                                </div>
-                                <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]"><span id="marketYield">0.00</span><span class="text-[#b3a488] text-[10px] font-normal">%</span></div>
-                            </div>
-                            <!-- 第二行：今年收益率 -->
-                            <div class="py-2 pr-2">
-                                <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center gap-1">
-                                    <i class="fa fa-line-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span>今年收益率</span>
-                                </div>
-                                <div class="text-[13px] font-bold tabular-nums num-transition" id="yearReturnRate">0.00%</div>
-                            </div>
-                            <!-- 第二行：持仓盈亏 -->
-                            <div class="py-2 px-2 text-center">
-                                <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
-                                    <i class="fa fa-balance-scale text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span>持仓盈亏</span>
-                                </div>
-                                <div class="text-[13px] font-bold tabular-nums num-transition" id="totalPnl">0.00</div>
-                            </div>
-                            <!-- 第二行：开户至今收益率（时间加权 TWR） -->
-                            <div class="py-2 pl-2 text-right">
-                                <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
-                                    <i class="fa fa-area-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                    <span class="whitespace-nowrap">开户至今收益率</span>
-                                </div>
-                                <div class="text-[13px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
-                            </div>
+                            <div class="text-[13px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                         </div>
                     </div>
-                    <!-- 资产新高 与网格之间的凹凸分隔线 -->
-                    <div class="col-span-3 mt-0 mb-2.5" style="height:1px;background:rgba(230,210,163,0.14);transform:scaleY(0.6);"></div>
-                    <!-- 下一笔分红倒计时：最近一笔未到账的 A 股分红方案（登记/除权日在今天之后），预计金额按当前持股估算（税前） -->
-                    <div id="nextDivCountdown" class="hidden col-span-3 mb-0.5 mx-4 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden whitespace-nowrap">
-                        <span class="text-[11px] text-[#cfc0a6]">下一笔分红还有 <span id="nextDivDays" class="text-[12px] font-bold text-[#d9bc74] tabular-nums">--</span> 天</span>
-                        <span class="text-[11px] text-[#cfc0a6]">预计 <span id="nextDivAmt" class="text-[12px] font-bold text-[#d9bc74] tabular-nums">--</span></span>
-                    </div>
-                    <!-- 成本回收率迷你进度条：累计分红 ÷ 总投入成本（账户级回本进度） -->
-                    <div id="costRecoveryMini" class="hidden col-span-3 mb-0.5 mx-4 flex items-center gap-2.5 rounded-full px-1 py-1 overflow-hidden">
-                        <span class="w-1.5 h-4 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#d9bc74,#a9642a)"></span>
-                        <i class="fa fa-pie-chart text-[11px] text-[#d9bc74] flex-shrink-0"></i>
-                        <span class="text-[11px] text-[#cfc0a6] whitespace-nowrap">成本回收 <span id="costRecoveryMiniTxt" class="text-[12px] font-semibold text-[#f7cf8f] tabular-nums">0.00%</span></span>
-                        <div class="flex-1 h-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.14);">
-                            <div id="costRecoveryMiniBar" class="h-full rounded-full transition-all duration-700" style="width:0%;background:linear-gradient(90deg,#a9642a,#e8a33d,#f7cf8f);"></div>
-                        </div>
+                    <!-- 回本口径（不复投 / 缺口）：详情页按自身数据独立计算，此处仅作入口与展示 -->
+                    <div class="mx-3 pb-2 pt-2 flex items-center justify-between gap-2 text-[10px] text-[#cfc0a6]/75" style="border-top:1px solid rgba(230,210,163,0.12);">
+                        <span>不复投 <span id="sumBeNo" class="text-[11px] font-semibold tabular-nums text-white">--</span></span>
+                        <span>缺口 <span id="sumBeGap" class="text-[11px] font-semibold tabular-nums text-amber-200">--</span></span>
+                        <button type="button" onclick="openBreakEvenPage()" class="flex items-center gap-1 text-[#cfc0a6] active:scale-95 transition-transform">回本详情<i class="fa fa-chevron-right text-[8px]"></i></button>
                     </div>
                 </div>
             </div>
@@ -1157,6 +1115,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div id="beSumAvg" class="text-[13px] font-semibold tabular-nums truncate">--</div>
                     </div>
                 </div>
+                <div id="beRecovWrap" class="hidden mt-3 pt-3 border-t border-white/10">
+                    <div class="flex items-baseline justify-between leading-none">
+                        <span class="text-[10px] text-amber-100/60">成本回收进度</span>
+                        <span id="beRecovTxt" class="text-[12px] font-bold tabular-nums" style="color:#f7cf8f">--</span>
+                    </div>
+                    <div class="relative mt-2 h-[8px] rounded-full" style="background:rgba(255,255,255,0.12);box-shadow:inset 0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(230,210,163,0.14);">
+                        <div class="absolute inset-y-0 left-1/4 w-px" style="background:rgba(230,210,163,0.16);"></div>
+                        <div class="absolute inset-y-0 left-1/2 w-px" style="background:rgba(230,210,163,0.16);"></div>
+                        <div class="absolute inset-y-0 left-3/4 w-px" style="background:rgba(230,210,163,0.16);"></div>
+                        <div id="beRecovBar" class="relative z-10 h-full rounded-full transition-all duration-700" style="width:0%;min-width:6px;background:linear-gradient(90deg,#8d5322,#e8a33d,#f7cf8f);box-shadow:0 0 10px rgba(246,196,83,0.55);"></div>
+                    </div>
+                    <div class="mt-1.5 text-[9.5px] text-amber-100/45">累计税后分红 ÷ 动态净投入</div>
+                </div>
             </div>
         </div>
 
@@ -1181,7 +1152,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         <!-- 口径说明 -->
         <div class="rounded-2xl px-4 py-3 mb-6 text-[10.5px] leading-relaxed text-gray-500 bg-[#faf5e9] border border-[#eedfc0]">
-            口径说明：动态净投入 = 累计买入支出 − 累计卖出回款（按交易流水逐笔计算）；累计税后分红 = 每笔分红到账净额（含已清仓股票留档）；回本缺口 = 动态净投入 − 累计税后分红；回本年限 = 回本缺口 ÷ 近3年年均税后分红。复投口径按「股息再投资、以当前股息率滚动增值」的几何模型估算（分红不再取出，回本更快）。中途加仓会即时增加缺口（回本年限暂被拉长）、减仓会即时降低缺口（回本年限缩短），分红到账逐笔压缩缺口——趋势线按每个事件重算，可直观看到每次操作对回本时间的影响。
+            口径说明：动态净投入 = 累计买入支出 − 累计卖出回款（按交易流水逐笔计算）；累计税后分红 = 每笔分红到账净额（含已清仓股票留档）；回本缺口 = 动态净投入 − 累计税后分红；回本年限 = 回本缺口 ÷ 近3年年均税后分红；成本回收进度 = 累计税后分红 ÷ 动态净投入（≥100% 即完成成本回收）。复投口径按「股息再投资、以当前股息率滚动增值」的几何模型估算（分红不再取出，回本更快）。中途加仓会即时增加缺口（回本年限暂被拉长）、减仓会即时降低缺口（回本年限缩短），分红到账逐笔压缩缺口——趋势线按每个事件重算，可直观看到每次操作对回本时间的影响。
         </div>
     </div>
 
@@ -1277,12 +1248,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
                 <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-[14px] font-semibold text-gray-800">年度明细</span>
-                <span class="text-[10px] text-gray-400 ml-auto">年末总资产 / 同比</span>
+                <span class="text-[10px] text-gray-400 ml-auto">历年年末资产 · 收益已固化</span>
             </div>
-            <div class="flex items-center px-5 py-1.5 text-[10px] text-gray-400 bg-[#faf7ef] border-b border-gray-100">
-                <div class="w-20">年度</div>
-                <div class="flex-1 text-right">年末总资产</div>
-                <div class="w-[64px] text-right">同比</div>
+            <div class="grid items-center px-5 py-1.5 text-[10px] text-gray-400 bg-[#faf7ef] border-b border-gray-100" style="grid-template-columns:72px 1fr 98px">
+                <div>年度</div>
+                <div class="text-right whitespace-nowrap">年末总资产 / 同比</div>
+                <div class="text-right whitespace-nowrap">当年收益 / 收益率</div>
             </div>
             <div id="assetTrendYearList"></div>
         </div>
@@ -1383,7 +1354,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <i class="fa fa-percent text-[#e03131] text-sm"></i>
-                        <span class="text-sm font-semibold text-gray-700">总收益率趋势</span>
+                        <span class="text-sm font-semibold text-gray-700">年度收益率趋势</span>
                     </div>
                     <span id="analysisLatestReturn" class="text-[11px] text-gray-400">--</span>
                 </div>
@@ -6005,6 +5976,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     historyData.initialCostDate = parsed.initialCostDate || '2020-01-01';
                     historyData.yearlyNav = parsed.yearlyNav || {};
                     historyData.yearSnapshots = parsed.yearSnapshots || {};
+                    // 年度收益账本：每年收益额/收益率算一次即固化，历史展示直接读取，不再每次重算
+                    historyData.yearlyStats = parsed.yearlyStats || {};
                     historyData.navAlgoVer = Number(parsed.navAlgoVer) || 0;
                     if(Array.isArray(parsed.fundInflows)){
                         historyData.fundInflows = parsed.fundInflows;
@@ -6460,10 +6433,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const amt = (v != null && Number(v) > 0) ? ('¥' + fmtMoney(v)) : '--';
                 const gTxt = (g == null) ? '--' : ((g >= 0 ? '+' : '') + g.toFixed(1) + '%');
                 const gColor = (g == null) ? '#b8ab98' : (g >= 0 ? '#a9642a' : '#00a05c');
-                html += '<div class="flex items-center px-5 py-2.5 border-b border-gray-50">'
-                    + '<div class="w-20 text-[12px] font-semibold text-gray-700 tabular-nums">' + y + ' 年' + (isCur ? '<span class="ml-1 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1 py-0.5 rounded">今年</span>' : '') + '</div>'
-                    + '<div class="flex-1 text-right text-[13px] font-semibold tabular-nums" style="color:#5a3b1e">' + amt + '</div>'
-                    + '<div class="w-[64px] text-right text-[11px] font-semibold tabular-nums" style="color:' + gColor + '">' + gTxt + '</div>'
+                // 当年收益 / 收益率：今年实时算，历史年直接读取已固化账本（快照优先，不重算）
+                const st = getYearStatForDisplay(y, isCur ? (Number(v) || 0) : 0);
+                const pnlTxt = (st.profit != null) ? fmtPnlNum(st.profit) : null;
+                const pnlRateTxt = (st.rate != null && isFinite(st.rate)) ? ((st.rate >= 0 ? '+' : '') + st.rate.toFixed(2) + '%') : null;
+                const pnlColor = (st.profit == null) ? '#b8ab98' : (st.profit === 0 ? '#a8987e' : (st.profit > 0 ? '#a9642a' : '#00a05c'));
+                html += '<div class="grid items-center px-5 py-2.5 border-b" style="border-color:#f2ebdf;grid-template-columns:72px 1fr 98px">'
+                    + '<div class="text-[12px] font-semibold text-gray-700 tabular-nums whitespace-nowrap">' + y
+                    + '<span class="text-[10px] font-normal text-gray-500 ml-0.5">年</span>'
+                    + (isCur ? '<span class="ml-1 align-[1px] text-[8px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1 py-[1px] rounded">今年</span>' : '') + '</div>'
+                    + '<div class="text-right">'
+                    + '<div class="text-[13px] font-semibold tabular-nums leading-none" style="color:#5a3b1e">' + amt + '</div>'
+                    + '<div class="text-[10px] tabular-nums mt-1 leading-none" style="color:' + gColor + ';font-weight:600">' + gTxt + '</div>'
+                    + '</div>'
+                    + '<div class="text-right">'
+                    + '<div class="text-[13px] font-semibold tabular-nums leading-none" style="color:' + pnlColor + '">' + (pnlTxt || '--') + '</div>'
+                    + '<div class="text-[10px] tabular-nums mt-1 leading-none" style="color:' + pnlColor + ';font-weight:600">' + (pnlRateTxt || '--') + '</div>'
+                    + '</div>'
                     + '</div>';
             }
             listEl.innerHTML = html || '<div class="px-5 py-8 text-center text-[12px] text-gray-400">暂无年度数据</div>';
@@ -6729,12 +6715,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(endVal > 0){
                         // 跳过手动编辑的年份，不覆盖用户输入
                         if(!(historyData.manualYearlyReturn && historyData.manualYearlyReturn[curY])){
-                            // 当年总收益率与顶部"今年收益率"同一券商口径：含当年净流入（正数=转入/负数=转出）
-                            const netInflowCur = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[curY]) || 0;
-                            const baseCur = startVal + netInflowCur;
-                            if(baseCur > 0){
-                                historyData.yearlyReturn[curY] = Number(((endVal - startVal - netInflowCur) / baseCur * 100).toFixed(2));
-                            }
+                            // 当年归档值同样取自 calcYearStats（加权平均本金口径），避免两处算法不一致
+                            const stCur = calcYearStats(curY, endVal);
+                            if(stCur.rate != null && isFinite(stCur.rate)) historyData.yearlyReturn[curY] = Number(stCur.rate.toFixed(2));
                         }
                     }
                     saveHistory();
@@ -7953,6 +7936,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             setTxt('beSumDiv', fmtMoney(beA.divTotal));
             setTxt('beSumGap2', fmtMoney(beA.gap));
             setTxt('beSumAvg', beA.avgDiv != null ? fmtMoney(beA.avgDiv) : '--');
+            const beRecPct = (beA.netIn > 0 && beA.divTotal > 0) ? (beA.divTotal / beA.netIn * 100) : null;
+            const beRecWrapEl = document.querySelector('#beRecovWrap');
+            if(beRecWrapEl){
+                if(beRecPct != null){
+                    beRecWrapEl.classList.remove('hidden');
+                    setTxt('beRecovTxt', (beRecPct >= 1000 ? Math.round(beRecPct) : beRecPct.toFixed(1)) + '%');
+                    const beRecBarEl = document.querySelector('#beRecovBar');
+                    if(beRecBarEl) beRecBarEl.style.width = Math.min(100, beRecPct).toFixed(1) + '%';
+                } else {
+                    beRecWrapEl.classList.add('hidden');
+                }
+            }
             const subEl = document.querySelector('#bePageSub');
             if(subEl) subEl.innerText = '资金流水口径 · ' + (holdDataList || []).length + ' 只持仓 / ' + ((historyData.closedStocks || []).length) + ' 只已清仓';
             renderBeChart('chartBeAccount', buildBreakEvenDaily(null), null, beA);
@@ -10186,7 +10181,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 shares: shares,
                 xirr: xirrV,
                 totalInvested: Number(totalInvested.toFixed(2)),
-                yearReturn: Number((Number(sum.yearReturnRate) || 0).toFixed(2)),
+                yearPnl: (sum.yearTotalGain != null && isFinite(Number(sum.yearTotalGain))) ? Number(Number(sum.yearTotalGain).toFixed(2)) : null,
+                yearReturn: (sum.yearReturnRate != null && isFinite(Number(sum.yearReturnRate))) ? Number(Number(sum.yearReturnRate).toFixed(2)) : null,
+                yearBase: (sum.yearReturnBase != null && isFinite(Number(sum.yearReturnBase))) ? Number(Number(sum.yearReturnBase).toFixed(2)) : null,
                 totalReturn: Number((Number(sum.totalReturnRate) || 0).toFixed(2)),
                 annualReturn: (sum.annualReturnRate != null && isFinite(Number(sum.annualReturnRate))) ? Number(Number(sum.annualReturnRate).toFixed(2)) : null,
                 div: Number((Number(sum.totalReceived) || 0).toFixed(2)),
@@ -10200,6 +10197,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             };
             if(!historyData.yearSnapshots) historyData.yearSnapshots = {};
             historyData.yearSnapshots[curY] = snapshot;
+            // 同步固化年度收益账本：后续历史展示直接读取，不再重算
+            try{
+                if(!historyData.yearlyStats) historyData.yearlyStats = {};
+                const stSave = calcYearStats(curY, Number(snapshot.totalAsset) || 0);
+                historyData.yearlyStats[curY] = {
+                    year: curY, startAsset: stSave.startAsset, endAsset: Number((Number(snapshot.totalAsset) || 0).toFixed(2)),
+                    netInflow: stSave.netInflow, profit: snapshot.yearPnl, weightedBase: snapshot.yearBase,
+                    rate: snapshot.yearReturn, days: stSave.days, savedAt: todayStr(), src: 'snapshot'
+                };
+            }catch(e){}
             // 年末最终总资产归档：写入 yearlyAssets（作为下一年年初市值 / 总资产趋势的当年末权威值）
             try{
                 if(!historyData.yearlyAssets) historyData.yearlyAssets = {};
@@ -10249,7 +10256,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + snapCell('总投入', fmtMoney(sp.totalInvested))
                     + snapCell('当年分红', fmtMoney(sp.div), 'accent')
                     + snapCell('累计分红', fmtMoney(sp.cumDiv), 'accent')
-                    + snapCell('今年收益率', (sp.yearReturn >= 0 ? '+' : '') + Number(sp.yearReturn || 0).toFixed(2) + '%', Number(sp.yearReturn || 0) >= 0)
+                    + snapCell('今年收益', (sp.yearPnl != null && isFinite(Number(sp.yearPnl))) ? ((Number(sp.yearPnl) >= 0 ? '+' : '') + fmtMoney(Math.abs(Number(sp.yearPnl)))) : '--', (Number(sp.yearPnl) || 0) >= 0)
+                    + snapCell('今年收益率', (sp.yearReturn != null && isFinite(Number(sp.yearReturn))) ? ((Number(sp.yearReturn) >= 0 ? '+' : '') + Number(sp.yearReturn).toFixed(2) + '%') : '--', (Number(sp.yearReturn) || 0) >= 0)
                     + snapCell('总收益率', (sp.totalReturn >= 0 ? '+' : '') + Number(sp.totalReturn || 0).toFixed(2) + '%', Number(sp.totalReturn || 0) >= 0)
                     + snapCell('持仓盈亏', (sp.pnl >= 0 ? '+' : '') + fmtMoney(sp.pnl), Number(sp.pnl || 0) >= 0)
                     + snapCell('持仓只数', (sp.stockCount || 0) + ' 只')
@@ -14259,6 +14267,92 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             return totalMarketNow;
         }
+        // ===== 年度收益 / 收益率（全站唯一计算点） =====
+        // 收益额 = 年末总资产 − 年初总资产 − 当年净流入（转入正、转出负）
+        // 收益率 = 收益额 ÷ 加权平均本金，加权平均本金 = 年初总资产 + Σ(每笔净流入 × 在场天数 ÷ 区间天数)
+        // 加权把"年中才进来的钱"按实际在场时间计入本金，避免中途大额转入把收益率压低/虚增
+        function daysBetweenDates(aStr, bStr){
+            const a = String(aStr).split('-').map(Number);
+            const b = String(bStr).split('-').map(Number);
+            if(a.length < 3 || b.length < 3) return 0;
+            return Math.round((Date.UTC(a[0], a[1] - 1, a[2]) - Date.UTC(b[0], b[1] - 1, b[2])) / 86400000);
+        }
+        function calcYearStats(yearStr, curTotal){
+            const curY = String(new Date().getFullYear());
+            const y = String(yearStr);
+            const isCur = y === curY;
+            const startDate = y + '-01-01';
+            const endDate = isCur ? todayStr() : (y + '-12-31');
+            const D = daysBetweenDates(endDate, startDate);
+            let startAsset = getYearStartMarket(y);
+            // 当年无上一年末归档时，回退到 yearStart 快照（年初市值 + 年初现金），与旧口径一致
+            if(!(startAsset > 0) && isCur && historyData.yearStart && Number(historyData.yearStart.market) > 0){
+                startAsset = Number(historyData.yearStart.market) + (Number(historyData.yearStart.cash) || 0);
+            }
+            const endAsset = isCur ? (Number(curTotal) || 0) : getYearEndMarket(y, false);
+            // 只取期内流水（年初之后、期末（今天是年末12-31）之前），同一天多笔逐笔加权
+            let netInflow = 0, weightedBase = Number(startAsset) || 0;
+            (historyData.fundInflows || []).forEach(function(f){
+                const d = String(f.date || '');
+                const amt = Number(f.amount) || 0;
+                if(!(d > startDate) || !(d <= endDate) || amt === 0) return;
+                netInflow += amt;
+                if(D > 0) weightedBase += amt * (daysBetweenDates(endDate, d) / D);
+            });
+            const profit = (startAsset > 0 && endAsset > 0) ? Number((endAsset - startAsset - netInflow).toFixed(2)) : null;
+            const rate = (profit != null && weightedBase > 0 && D > 0) ? (profit / weightedBase * 100) : null;
+            return {
+                year: y, startAsset: Number(startAsset.toFixed(2)), endAsset: Number((endAsset || 0).toFixed(2)),
+                netInflow: Number(netInflow.toFixed(2)), profit: profit,
+                weightedBase: Number(weightedBase.toFixed(2)), rate: rate, days: D
+            };
+        }
+        // ===== 年度收益账本读取（历史年不再每次重算） =====
+        // 优先级：当年实时 → 年度快照里保存的 yearPnl/yearReturn → 已固化账本 yearlyStats → 首次算一次并写入账本
+        var __ysSaveTimer = null;
+        function scheduleYearStatsSave(){
+            if(__ysSaveTimer) return;
+            __ysSaveTimer = setTimeout(function(){ __ysSaveTimer = null; saveHistory(); }, 300);
+        }
+        function getYearStatForDisplay(y, curTotal){
+            const curY = String(new Date().getFullYear());
+            if(!historyData.yearlyStats) historyData.yearlyStats = {};
+            const ys = historyData.yearlyStats;
+            const snap = (historyData.yearSnapshots || {})[y];
+            if(String(y) === curY){
+                const stc = calcYearStats(y, curTotal);
+                return { profit: stc.profit, rate: stc.rate, src: 'live' };
+            }
+            let profit = null, rate = null, src = 'archive';
+            if(snap && snap.yearPnl != null && snap.yearReturn != null){
+                // 用户当年保存过快照：以快照为准，永不重算
+                profit = Number(snap.yearPnl); rate = Number(snap.yearReturn); src = 'snapshot';
+            } else if(ys[y] && ys[y].profit != null && ys[y].rate != null){
+                profit = Number(ys[y].profit); rate = Number(ys[y].rate); src = 'archive';
+            } else {
+                // 旧快照/首次遇到：只算这一次，随后固化进账本
+                const st = calcYearStats(y, 0);
+                profit = (snap && snap.yearPnl != null) ? Number(snap.yearPnl) : st.profit;
+                rate = (snap && snap.yearReturn != null) ? Number(snap.yearReturn) : st.rate;
+                if(st.startAsset > 0 && st.endAsset > 0){
+                    ys[y] = { year: String(y), startAsset: st.startAsset, endAsset: st.endAsset, netInflow: st.netInflow,
+                              profit: profit, weightedBase: st.weightedBase, rate: rate, days: st.days,
+                              savedAt: todayStr(), src: (snap ? 'snapshot' : 'auto') };
+                    scheduleYearStatsSave();
+                } else {
+                    src = 'legacy';
+                }
+            }
+            // 设置页手动编辑的年度收益率优先
+            if(historyData.manualYearlyReturn && historyData.manualYearlyReturn[y] != null){
+                const mv = Number(historyData.manualYearlyReturn[y]);
+                if(isFinite(mv)) rate = mv;
+            }
+            if(rate == null && historyData.yearlyReturn && historyData.yearlyReturn[y] != null && isFinite(Number(historyData.yearlyReturn[y]))){
+                rate = Number(historyData.yearlyReturn[y]);
+            }
+            return { profit: profit, rate: rate, src: src };
+        }
         // 年内最大回撤：基于指定年份每日总资产快照计算（当年实时数据，历史年份用已归档快照）
         function calcMaxDrawdown(yrStr){
             const pts = [];
@@ -14319,7 +14413,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const yearEndMarket = getYearEndMarket(reportYStr, isCurYear, totalMarketNow);
             const yearStartMarket = getYearStartMarket(reportYStr);
             const periodNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[reportYStr]) || 0;
-            const yearTotalGain = (yearEndMarket > 0 && yearStartMarket > 0) ? (yearEndMarket - yearStartMarket - periodNetInflow) : 0;
+            // 本年实时算；历史年直接读取年度快照 / 已固化账本，不再每次重算
+            const arStat = isCurYear ? calcYearStats(reportYStr, totalMarketNow) : getYearStatForDisplay(reportYStr, 0);
+            const yearTotalGain = (arStat.profit != null) ? arStat.profit : 0;
             // 封面
             document.querySelector('#arCoverTitle').innerText = reportYStr + '年度投资回顾';
             document.querySelector('#arCoverDate').innerText = isCurYear ? ('报告生成于 ' + todayStr()) : ('报告期间 · ' + reportYStr + ' 年度');
@@ -14340,10 +14436,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const dtEl = document.querySelector('#arDataTag');
             if(dtEl) dtEl.innerText = isCurYear ? '数据实时' : '已归档数据';
             // 业绩摘要：收益率（当年实时券商口径；历史年份用归档的每年收益率）
-            let yr = null;
-            if(isCurYear){
-                yr = (sum.yearReturnRate != null) ? Number(sum.yearReturnRate) : null;
-            } else {
+            let yr = (arStat.rate != null && isFinite(arStat.rate)) ? Number(arStat.rate) : null;
+            if(yr == null){
                 const yv = Number(historyData.yearlyReturn && historyData.yearlyReturn[reportYStr]);
                 if(isFinite(yv) && yv !== 0) yr = yv;
             }
@@ -20384,32 +20478,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             analysisCharts.push(c4);
 
-            // ===== 图3：总收益率趋势 =====
-            // 当前年份始终实时计算最新收益率（每次渲染取最新一天数据，每天覆盖更新），历史年份用存储值（仅手动编辑可改）
+            // ===== 图3：年度收益率趋势 =====
+            // 每年收益率统一由 calcYearStats 计算（与首页"今年收益"同一函数、加权平均本金口径），仅手动编辑的年份优先用手输值
             const retCurY = String(new Date().getFullYear());
             let retCurVal = null;
             // 手动录入的当年值优先（设置页可编辑）
             if(historyData.manualYearlyReturn && historyData.manualYearlyReturn[retCurY] != null){
                 retCurVal = Number(historyData.manualYearlyReturn[retCurY]);
             } else {
-                const retLastYear = String(new Date().getFullYear() - 1);
-                let retStartVal = 0;
-                if(historyData.yearlyAssets && historyData.yearlyAssets[retLastYear] > 0){
-                    retStartVal = historyData.yearlyAssets[retLastYear];
-                } else if(historyData.monthlyAssets && historyData.monthlyAssets[retLastYear + '-12'] > 0){
-                    retStartVal = historyData.monthlyAssets[retLastYear + '-12'];
-                } else if(historyData.dailyAssets && historyData.dailyAssets[retLastYear + '-12-31'] > 0){
-                    retStartVal = historyData.dailyAssets[retLastYear + '-12-31'];
-                }
-                if(retStartVal > 0 && curTotal > 0){
-                    // 实时计算当年收益率（与顶部"今年收益率"同一券商口径：含当年净流入，正数=转入/负数=转出）
-                    const retNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[retCurY]) || 0;
-                    const retGain = curTotal - retStartVal - retNetInflow;
-                    const retBase = retStartVal + retNetInflow;
-                    if(retBase > 0){
-                        retCurVal = Number((retGain / retBase * 100).toFixed(2));
-                    }
-                }
+                const retStat = calcYearStats(retCurY, curTotal);
+                if(retStat.rate != null && isFinite(retStat.rate)) retCurVal = Number(retStat.rate.toFixed(2));
             }
             const snapRetMap = historyData.yearSnapshots || {};
             let retYears = Object.keys(historyData.yearlyReturn).sort();
@@ -20422,13 +20500,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             retYears.sort();
             const retValues = retYears.map(function(y){
-                const sp = snapRetMap[y];
-                const manualRetCur = historyData.manualYearlyReturn && historyData.manualYearlyReturn[y] != null;
-                if(sp && sp.totalReturn != null && isFinite(Number(sp.totalReturn)) && !manualRetCur){
-                    return Number(sp.totalReturn);
-                }
+                // 当年实时；历史年读年度快照/已固化账本，仅缺失时算一次（getYearStatForDisplay 内处理）
+                const d = getYearStatForDisplay(y, y === retCurY ? curTotal : 0);
+                if(d.rate != null && isFinite(d.rate)) return Number(Number(d.rate).toFixed(2));
                 if(y === retCurY && retCurVal != null) return retCurVal;
-                return historyData.yearlyReturn[y];
+                return null;
             });
             // 显示最新收益率
             const latestRet = retValues.length ? retValues[retValues.length - 1] : 0;
@@ -20965,30 +21041,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 总收益率（账户口径，以总资产为基准，与我的页累计盈亏同源）：
             // (当前总资产 - 累计投入成本) / 累计投入成本 × 100%
             const totalReturnRate = investTotal > 0 ? ((totalAsset - investTotal) / investTotal * 100) : 0;
-            // 今年收益率（券商标准公式）：
-            // 当期收益额 = 当前总市值 - 年初市值 - 期间净流入
-            // 年初市值取上一年（2025年）的年终总资产（分析页趋势图已用到该数据）
-            // 期间净流入 = 累计入金 - 累计出金（暂无数据，统一按0算）
-            // 今年收益率 = 当期收益额 / (年初市值 + 期间净流入) × 100%
-            const lastYear = String(new Date().getFullYear() - 1);
-            // 从上一年年终总资产获取年初市值：优先yearlyAssets，其次monthlyAssets的12月，最后dailyAssets的12月31日
-            let yearStartMarket = 0;
-            if(historyData.yearlyAssets && historyData.yearlyAssets[lastYear] > 0){
-                yearStartMarket = historyData.yearlyAssets[lastYear];
-            } else if(historyData.monthlyAssets && historyData.monthlyAssets[lastYear + '-12'] > 0){
-                yearStartMarket = historyData.monthlyAssets[lastYear + '-12'];
-            } else if(historyData.dailyAssets && historyData.dailyAssets[lastYear + '-12-31'] > 0){
-                yearStartMarket = historyData.dailyAssets[lastYear + '-12-31'];
-            }
-            // 如果没有上一年年终数据，回退到yearStart快照（年初总资产 = 市值 + 现金；老数据无 cash 按 0）
-            if(yearStartMarket <= 0 && historyData.yearStart && historyData.yearStart.market > 0){
-                yearStartMarket = Number(historyData.yearStart.market) + (Number(historyData.yearStart.cash) || 0);
-            }
-            const periodNetInflow = (historyData.yearlyNetInflow && historyData.yearlyNetInflow[curYStr]) || 0;
-            const yearTotalGain = totalAsset - yearStartMarket - periodNetInflow;
-            const yearReturnBase = yearStartMarket + periodNetInflow;
-            // 无年初基准（今年上线/无去年末资产）时无法计算，返回 null（展示层显示 '--'，不误导为 0%）
-            const yearReturnRate = yearReturnBase > 0 ? (yearTotalGain / yearReturnBase * 100) : null;
+            // 今年收益 / 收益率：统一走 calcYearStats（收益额口径不变，收益率按加权平均本金计算）
+            // 无年初基准（今年上线/无去年末资产）时收益额与收益率均为 null，展示层显示 '--'
+            const yearStat = calcYearStats(curYStr, totalAsset);
+            const yearTotalGain = yearStat.profit;
+            const yearReturnBase = yearStat.weightedBase;
+            const yearReturnRate = yearStat.rate;
             // 年化收益率（主流券商"开户至今年化"复利口径）：
             // 累计收益率 = (当前总资产 - 期初总资产 - 累计净流入) / (期初总资产 + 累计净流入)
             // 年化收益率 = (1 + 累计收益率)^(365 / 持有天数) - 1
@@ -21039,6 +21097,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 monthDiv,
                 totalReturnRate,
                 yearReturnRate,
+                yearTotalGain,
+                yearReturnBase,
                 annualReturnRate
             }
         }
@@ -21922,7 +21982,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(yydEl){
                 const yyA = Number(sum.totalAsset);
                 const yyD = Number(sum.totalYearDiv);
-                yydEl.innerText = (yyA > 0 && yyD > 0) ? (yyD / yyA * 100).toFixed(1) + '%' : '--';
+                if(yyA > 0 && yyD > 0){
+                    yydEl.innerText = (yyD / yyA * 100).toFixed(1) + '%';
+                    yydEl.classList.remove('hidden');
+                } else {
+                    yydEl.innerText = '--';
+                    yydEl.classList.add('hidden');
+                }
             }
             numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
             numTween(document.querySelector('#incomeNow'), sum.totalReceived, fmtMoney);
@@ -21930,7 +21996,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pnlVal = Number(sum.totalPnl);
             numTween(totalPnlEl, pnlVal, fmtPnlNum);
             totalPnlEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
+            const taWrapEl = document.querySelector('#totalMarketWrap');
+            if(taWrapEl){
+                const taTxt = fmtMoney(sum.totalAsset);
+                taWrapEl.style.fontSize = (taTxt.length >= 9 ? '18px' : (taTxt.length >= 8 ? '20px' : (taTxt.length >= 7 ? '23px' : '27px')));
+            }
             numTween(document.querySelector('#totalMarket'), sum.totalAsset, fmtMoney);
+            const mktValEl = document.querySelector('#mktVal');
+            const cashValEl = document.querySelector('#cashVal');
+            if(mktValEl) mktValEl.innerText = fmtMoney(sum.totalMarket);
+            if(cashValEl) cashValEl.innerText = fmtMoney(sum.cash);
             // 回本分析（顶部右侧，资金流水口径）：预计回本（不复投）/ 复投 / 缺口
             const beA = calcAccountBreakEven();
             const setBe = function(id, txt, base, colorCls){
@@ -21940,22 +22015,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     el.className = base + ' ' + colorCls;
                 }
             };
-            setBe('sumBeNo', fmtBeYears(beA.beNo), 'text-[17px] font-semibold tabular-nums tracking-tight', (beA.beNo != null && beA.beNo <= 0) ? 'text-purple-300' : 'text-white');
-            setBe('sumBeRe', fmtBeYears(beA.beRe), 'text-white font-semibold tabular-nums', (beA.beRe != null && beA.beRe <= 0) ? 'text-purple-300' : 'text-white');
-            setBe('sumBeGap', beA.gap != null ? fmtMoney(beA.gap) : '--', 'text-amber-200 font-semibold tabular-nums', '');
-            const brkEl = document.querySelector('#assetBreakdown');
-            if(brkEl){
-                const mv = brkEl.querySelector('.ab-mkt-v');
-                const cv = brkEl.querySelector('.ab-cash-v');
-                if(mv) mv.innerText = fmtMoney(sum.totalMarket);
-                if(cv) cv.innerText = fmtMoney(sum.cash);
-                // 仓位占比：市值/总资产、现金/总资产（总资产为 0 显示 --）
-                const aaB = Number(sum.totalAsset);
-                const mpEl = brkEl.querySelector('.ab-mkt-p');
-                const cpEl = brkEl.querySelector('.ab-cash-p');
-                if(mpEl) mpEl.innerText = aaB > 0 ? (Number(sum.totalMarket) / aaB * 100).toFixed(1) + '%' : '--';
-                if(cpEl) cpEl.innerText = aaB > 0 ? (Number(sum.cash) / aaB * 100).toFixed(1) + '%' : '--';
-            }
+            setBe('sumBeNo', fmtBeYears(beA.beNo), 'text-[11px] font-semibold tabular-nums', (beA.beNo != null && beA.beNo <= 0) ? 'text-purple-300' : 'text-white');
+            setBe('sumBeRe', fmtBeYears(beA.beRe), 'text-[16px] font-semibold tabular-nums tracking-tight', (beA.beRe != null && beA.beRe <= 0) ? 'text-purple-300' : 'text-white');
+            setBe('sumBeGap', beA.gap != null ? fmtMoney(beA.gap) : '--', 'text-[11px] font-semibold tabular-nums', '');
             renderNextDivCountdown();
             const trrEl = document.querySelector('#totalReturnRate');
             // 开户至今收益率 = 时间加权收益率 TWR（券商口径），与资金流水/资产快照同源；
@@ -21965,32 +22027,30 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             numTween(trrEl, trrVal, fmtPctNum);
             trrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(trrVal);
             const yrrEl = document.querySelector('#yearReturnRate');
+            const ypnlEl = document.querySelector('#yearPnl');
             if(sum.yearReturnRate == null || !isFinite(Number(sum.yearReturnRate))){
+                if(ypnlEl){
+                    ypnlEl.innerText = '--';
+                    ypnlEl.style.fontSize = '13px';
+                    ypnlEl.className = 'font-bold tabular-nums num-transition text-[#cfc0a6]';
+                }
                 yrrEl.innerText = '--';
-                yrrEl.className = 'text-[13px] font-bold tabular-nums num-transition text-gray-400';
+                yrrEl.className = 'text-[10px] font-medium tabular-nums num-transition text-[#cfc0a6]';
             } else {
                 const yrrVal = Number(sum.yearReturnRate);
+                if(ypnlEl){
+                    const gain = Number(sum.yearTotalGain) || 0;
+                    const gainTxt = fmtPnlNum(gain);
+                    ypnlEl.innerText = gainTxt;
+                    ypnlEl.style.fontSize = (gainTxt.length >= 10 ? 10 : (gainTxt.length >= 9 ? 11 : 13)) + 'px';
+                    ypnlEl.className = 'font-bold tabular-nums num-transition ' + pnlLightClass(gain);
+                }
                 numTween(yrrEl, yrrVal, fmtPctNum);
-                yrrEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(yrrVal);
+                yrrEl.className = 'text-[10px] font-medium tabular-nums num-transition ' + pnlLightClass(yrrVal);
             }
             numTween(document.querySelector('#costYield'), sum.costYield, fmtNum2);
             numTween(document.querySelector('#marketYield'), sum.marketYield, fmtNum2);
             numTween(document.querySelector('#monthDiv'), sum.monthDiv, fmtMoney);
-            // 成本回收率 = 累计分红总额 ÷ 总投入成本（巴菲特式回本进度；迷你条仅在分红>0且投入>0时显示）
-            const invTotalNow = getTotalInvested();
-            const recovVal = invTotalNow > 0 ? (Number(sum.totalDivReceived) / invTotalNow * 100) : 0;
-            const crMiniEl = document.querySelector('#costRecoveryMini');
-            if(crMiniEl){
-                if(invTotalNow > 0 && Number(sum.totalDivReceived) > 0){
-                    crMiniEl.classList.remove('hidden');
-                    const crMiniTxt = document.querySelector('#costRecoveryMiniTxt');
-                    if(crMiniTxt) crMiniTxt.innerText = recovVal.toFixed(1) + '%';
-                    const crMiniBar = document.querySelector('#costRecoveryMiniBar');
-                    if(crMiniBar) crMiniBar.style.width = Math.min(100, recovVal).toFixed(1) + '%';
-                } else {
-                    crMiniEl.classList.add('hidden');
-                }
-            }
             // 今日盈亏：金额为主（20px 加粗，涨红跌绿）+ 百分比为副（11px 金色小字，同行基线对齐）；
             // 当日盈亏金额 = Σ 市值 × 涨跌%/（100+涨跌%），百分比 = 当日盈亏 ÷ 昨日总市值（口径与统计详情页一致）
             const todayPnlEl = document.querySelector('#todayPnl');
@@ -22016,21 +22076,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 });
                 if(!hasValidDayPct){
                     todayPnlEl.innerText = '--';
-                    todayPnlEl.className = 'text-[20px] font-bold tabular-nums num-transition text-gray-400';
+                    todayPnlEl.className = 'text-[16px] font-bold tabular-nums num-transition text-gray-400';
                     todayPnlPctEl.innerText = '--';
-                    todayPnlPctEl.className = 'text-[11px] font-medium tabular-nums num-transition text-gray-400';
+                    todayPnlPctEl.className = 'text-[10px] font-medium tabular-nums num-transition text-gray-400';
                 } else {
                     const yesterdayMarketValue = totalPrevMv;
                     const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
                     // 金额主色：涨红跌绿
                     const amtCls = totalDayPnl > 0.005 ? 'text-[#e03131]' : (totalDayPnl < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
                     todayPnlEl.innerText = fmtPnlNum(totalDayPnl);
-                    todayPnlEl.className = 'text-[20px] font-bold tabular-nums num-transition ' + amtCls;
+                    todayPnlEl.className = 'text-[16px] font-bold tabular-nums num-transition ' + amtCls;
                     // 百分比副色：与金额一致涨红跌绿（无数据灰色已在上面处理）
                     const pctText = (dayPnlPct > 0.005 ? '+' : '') + dayPnlPct.toFixed(2) + '%';
                     const pctCls = dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
                     todayPnlPctEl.innerText = pctText;
-                    todayPnlPctEl.className = 'text-[11px] font-medium tabular-nums num-transition ' + pctCls;
+                    todayPnlPctEl.className = 'text-[10px] font-medium tabular-nums num-transition ' + pctCls;
                 }
                 // 含做T已兑现合计（归属交易日有当日买卖操作时显示；无做T隐藏）
                 const todayTEl = document.querySelector('#todayPnlT');

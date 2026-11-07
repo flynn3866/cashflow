@@ -547,7 +547,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <!-- 总资产（重点区：卡中卡面板，浅金渐变+高光+投影，突出层次与立体感） -->
                             <div class="py-1.5 text-center">
                                 <div class="text-[#cfc0a6] text-[10.5px] mb-1 flex items-center justify-center gap-1.5">
-                                    <button type="button" onclick="openAssetHighModal()" title="查看资产新高记录" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform">
+                                    <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 text-[#cfc0a6] active:scale-95 transition-transform">
                                         <i class="fa fa-bank text-[11px]" style="color:rgba(246,196,83,.8)"></i>
                                         <span>总资产</span><i class="fa fa-chevron-right text-[9px]"></i>
                                     </button>
@@ -1185,7 +1185,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
-    <!-- 资产新高记录独立页面（金色皇冠 · 每次破新高的里程碑轨迹） -->
+    <!-- 总资产趋势页（历史新高入口 · 年末总资产轨迹 + 翻倍推演） -->
     <div id="pageAssetHigh" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
@@ -1195,42 +1195,96 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <button id="assetHighBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
                     <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                    资产新高记录
+                    总资产趋势
                 </h2>
-                <span class="ml-auto text-[10px] text-gray-400 text-right leading-tight">每一次总资产<br>刷新历史最高点</span>
+                <div class="ml-auto text-right leading-none">
+                    <div class="text-[9px] text-gray-400 mb-1">历史新高</div>
+                    <div id="ahHighVal" class="text-[13px] font-semibold tabular-nums" style="color:#a9642a">--</div>
+                    <div id="ahHighDate" class="text-[9px] text-gray-400 mt-0.5">--</div>
+                </div>
             </div>
         </div>
-        <div class="space-y-4">
-            <!-- 汇总卡：深棕金渐变（与资金流水/行业资产分布统一） -->
-            <div class="relative overflow-hidden rounded-2xl p-4 text-white" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-                <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-                <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
-                <div class="relative z-10 flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 flex-shrink-0"><i class="fa fa-trophy text-white text-lg"></i></div>
-                    <div class="flex-1 text-center">
-                        <div class="text-[11px] text-amber-100/60 mb-1">历史最高</div>
-                        <div id="ahMax" class="text-lg font-bold tabular-nums" style="color:#f7cf8f">--</div>
+
+        <!-- 汇总卡：总资产 / 总盈利 / 总收益率 / 最大回撤 -->
+        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
+            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+            <div class="relative z-10">
+                <div class="grid" style="grid-template-columns:1.55fr 1.05fr 0.8fr;">
+                    <div class="text-center px-1">
+                        <div class="text-[10.5px] text-amber-100/55 mb-1">总资产</div>
+                        <div id="ahTotalAsset" class="text-[17px] font-bold tabular-nums whitespace-nowrap" style="color:#ffffff">--</div>
+                        <div class="text-[9px] text-amber-100/35 mt-0.5 leading-[14px]">市值 + 现金</div>
                     </div>
-                    <div class="w-px h-9 bg-white/10 flex-shrink-0"></div>
-                    <div class="flex-1 text-center">
-                        <div class="text-[11px] text-amber-100/60 mb-1">最近新高</div>
-                        <div id="ahLast" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    <div class="text-center px-1 border-l border-r" style="border-color:rgba(230,210,163,0.14);">
+                        <div class="text-[10.5px] text-amber-100/55 mb-1">总盈利</div>
+                        <div id="ahPnl" class="text-[17px] font-bold tabular-nums whitespace-nowrap" style="color:#ff6b6d">--</div>
+                        <div class="mt-0.5 leading-[14px] whitespace-nowrap"><span class="text-[9px] text-amber-100/35">总收益率</span><span id="ahRet" class="font-semibold tabular-nums ml-1" style="font-size:11px;color:#a8987e">--</span></div>
+                    </div>
+                    <div class="text-center px-1">
+                        <div class="text-[10.5px] text-amber-100/55 mb-1">最大回撤</div>
+                        <div id="ahMaxDD" class="text-[15px] font-bold tabular-nums whitespace-nowrap" style="color:#ffb08a">--</div>
+                        <div id="ahMaxDDSub" class="text-[9px] text-amber-100/35 mt-0.5 leading-[14px]">峰值 → 谷底</div>
                     </div>
                 </div>
             </div>
-            <!-- 破新高记录大卡片（参考资金流水的资金动向白卡） -->
-            <div class="bg-white rounded-2xl card-shadow overflow-hidden">
-                <div class="px-4 pt-3 pb-2.5 flex items-center justify-between">
-                    <div class="flex items-center gap-1.5">
-                        <div class="w-1 h-3.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
-                        <span class="text-[13px] font-semibold text-gray-700">破新高记录</span>
-                    </div>
-                    <div id="ahCount" class="text-[10px] text-gray-400 bg-gray-50 rounded-full px-2.5 py-1">--</div>
-                </div>
-                <div class="border-t border-gray-100"></div>
-                <div id="assetHighList" class="px-4 py-3"></div>
+        </div>
+
+        <!-- 逐年总资产与增速 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <span class="text-[14px] font-semibold text-gray-800">逐年总资产与增速</span>
+                <span id="ahTrendMeta" class="text-[10px] text-gray-400 ml-auto">--</span>
             </div>
+            <div class="px-2 pt-2.5 pb-1">
+                <div id="chartAssetTrend" style="width:100%;height:230px;"></div>
+                <div id="ahTrendEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">暂无年度总资产数据</div>
+            </div>
+            <div class="px-5 pb-2 text-[10px] text-gray-400 leading-relaxed">历史年份取年末锁定快照，今年为实时总资产；增速按相邻年度末比较</div>
+        </div>
+
+        <!-- 72 法则：翻倍年限推演 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <span class="text-[14px] font-semibold text-gray-800">资产翻倍推演</span>
+                <span class="text-[10px] text-gray-400 ml-auto">72 法则 · 72 ÷ 年化</span>
+            </div>
+            <div class="grid grid-cols-3 divide-x divide-gray-100">
+                <div class="px-2 py-3.5 text-center">
+                    <div class="text-[10px] text-gray-400 mb-1.5">保守</div>
+                    <div class="text-[17px] font-bold tabular-nums text-gray-700">14.4<span class="text-[10px] font-medium text-gray-400 ml-0.5">年</span></div>
+                    <div class="text-[9.5px] text-gray-400 mt-1">年化 5%</div>
+                </div>
+                <div class="px-2 py-3.5 text-center bg-[#fdf8ef]">
+                    <div class="text-[10px] font-semibold text-amber-600 mb-1.5">中性</div>
+                    <div class="text-[17px] font-bold tabular-nums" style="color:#a9642a">10.3–9.0<span class="text-[10px] font-medium ml-0.5">年</span></div>
+                    <div class="text-[9.5px] text-gray-400 mt-1">年化 7%–8%</div>
+                </div>
+                <div class="px-2 py-3.5 text-center">
+                    <div class="text-[10px] text-gray-400 mb-1.5">乐观</div>
+                    <div class="text-[17px] font-bold tabular-nums text-gray-700">7.2<span class="text-[10px] font-medium text-gray-400 ml-0.5">年</span></div>
+                    <div class="text-[9.5px] text-gray-400 mt-1">年化 10%</div>
+                </div>
+            </div>
+            <div class="px-5 pb-3 text-[10px] text-gray-400 leading-relaxed">假设收益全额复投、年化恒定；实际受分红再投入节奏与市场波动影响，仅供量级参考</div>
+        </div>
+
+        <!-- 年度明细 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <span class="text-[14px] font-semibold text-gray-800">年度明细</span>
+                <span class="text-[10px] text-gray-400 ml-auto">年末总资产 / 同比</span>
+            </div>
+            <div class="flex items-center px-5 py-1.5 text-[10px] text-gray-400 bg-[#faf7ef] border-b border-gray-100">
+                <div class="w-20">年度</div>
+                <div class="flex-1 text-right">年末总资产</div>
+                <div class="w-[64px] text-right">同比</div>
+            </div>
+            <div id="assetTrendYearList"></div>
         </div>
     </div>
 
@@ -1521,7 +1575,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
             </div>
             <div id="sdMaPanel" class="hidden px-3 pt-2 flex flex-wrap gap-1.5"></div>
-            <div id="sdKlineChart" class="w-full" style="height:272px;border-radius:12px;overflow:hidden;background:#fdfbf6;transition:background .25s ease"></div>
+            <div class="relative">
+                <div id="sdKlineChart" class="w-full" style="height:430px;border-radius:12px;overflow:hidden;background:#fdfbf6;transition:background .25s ease;touch-action:pan-y;-webkit-user-select:none;user-select:none"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;padding:5px 0 0 9px;">
+                <span style="font-size:9px;color:var(--zc,#a89a86);opacity:.75;">缩放</span>
+                <div id="sdKlineZoomCtrl" style="display:flex;gap:6px;">
+                    <button onclick="sdKlineZoomStep(1)" aria-label="放大K线" style="width:26px;height:24px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:14px;font-weight:600;line-height:1;box-shadow:0 1px 2px rgba(60,40,20,.08);-webkit-tap-highlight-color:transparent;">+</button>
+                    <button onclick="sdKlineZoomStep(-1)" aria-label="缩小K线" style="width:26px;height:24px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:14px;font-weight:600;line-height:1;-webkit-tap-highlight-color:transparent;">−</button>
+                </div>
+            </div>
             <div id="sdBookWrap" class="hidden px-3 pb-1 mt-2.5 pt-2.5" style="border-top:1px solid #f4f1ea">
                 <div id="sdBookCard" class="rounded-xl" style="background:#fbf8f1;transition:background .25s ease">
                     <div class="flex items-center justify-between px-3 pt-2 pb-1">
@@ -1531,7 +1594,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div id="sdBookBody" class="px-3 pb-2"></div>
                 </div>
             </div>
-            <div class="px-4 pb-2.5 text-[9px] text-gray-400 leading-relaxed">分时含均价线与昨收基准；日/周/月K 前复权，年K 按自然年；副图为成交量。双指可缩放，底部滑块可平移，点“均线”可增减均线。</div>
+            <div class="px-4 pb-2.5 text-[9px] text-gray-400 leading-relaxed">分时含均价线与昨收基准；日/周/月K 前复权，年K 按自然年；副图为成交量。双指、滚轮或左下角 ± 缩放（始终锁定最新一根），按住左右拖动可平移，点“均线”可增减均线。</div>
         </div>
         <!-- 单股检查：护城河体检 + 分红可持续性三查 + 估值温度计（巴菲特式体检报告） -->
         <div id="sdMoatCard" class="hidden bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
@@ -2713,9 +2776,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                         </div>
                     </div>
-                    <div class="py-2.5 px-3 text-center">
-                        <div class="text-[10.5px] text-[#cfc0a6]">累计盈亏</div>
+                    <div class="py-2.5 px-3 text-center flex flex-col justify-center">
+                        <div class="text-[10.5px] text-[#cfc0a6]">总盈利</div>
                         <div class="text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 num-transition" id="mineTotalPnl">0.00</div>
+                        <div class="mt-1.5 flex items-baseline justify-center gap-1.5 leading-none">
+                            <span class="text-[10px] text-[#a8987e]">总收益率</span>
+                            <span id="mineTotalRet" class="font-semibold tabular-nums text-[#a8987e]" style="font-size:13px;">--</span>
+                        </div>
                     </div>
                     <div class="py-2.5 px-3 text-center">
                         <div class="text-[10.5px] text-[#cfc0a6]">今年分红</div>
@@ -2924,7 +2991,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="flex items-center justify-between">
                     <div>
                         <div id="divDetailTitle" class="text-[11px] text-amber-100/60 mb-1"><i class="fa fa-coins mr-1"></i>今年已收分红</div>
-                        <div class="text-[26px] font-bold text-amber-200 tabular-nums" id="divDetailTotal">0.00</div>
+                        <div class="text-[26px] font-bold text-white tabular-nums" id="divDetailTotal">0.00</div>
                     </div>
                     <div class="text-right space-y-1">
                         <div class="text-[11px] text-amber-100/60" id="divDetailCountLine">分红笔数 <span class="text-amber-200 font-semibold" id="divDetailCount">0</span></div>
@@ -6252,7 +6319,281 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 setTimeout(playHighFx, 600);
             }
         }
-        // 资产新高记录弹窗（金色时间线，倒序显示最新5条）
+        // ============ 总资产趋势页（年末资产序列 / 同比 / 72 法则） ============
+        var assetTrendChart = null;
+        var assetTrendResizeBound = false;
+
+        // 总盈利 / 总收益率（我的页顶部卡与本页共用，口径唯一）
+        // 总盈利 = 总资产 − (初始投入 + 全部转入 − 转出)
+        // 总收益率 = 总盈利 ÷ (初始投入 + 全部转入)，分母不扣转出
+        function calcPnlRet(){
+            const sum = calcSummary();
+            const totalAsset = Number(sum.totalAsset) || 0;
+            const invested = Number(getTotalInvested()) || 0;
+            let gross = Number(historyData.initialCost) || 0;
+            (historyData.fundInflows || []).forEach(function(f){
+                const a = Number(f.amount) || 0;
+                if(a > 0) gross += a;
+            });
+            const pnl = totalAsset - invested;
+            return {
+                totalAsset: totalAsset,
+                invested: invested,
+                gross: gross,
+                pnl: pnl,
+                ret: gross > 0 ? (pnl / gross * 100) : null
+            };
+        }
+
+        // 年末总资产序列（与资产分析页同口径）：手动 yearlyAssets > 年度快照 > 月归档 > 日归档；今年取实时
+        function buildYearlyAssetSeries(){
+            const curYear = String(new Date().getFullYear());
+            const curTotal = Number(calcSummary().totalAsset) || 0;
+            const yearSet = {};
+            Object.keys(historyData.yearlyAssets || {}).forEach(function(y){
+                yearSet[y] = { year: y, value: Number(historyData.yearlyAssets[y]) || 0, source: 'manual' };
+            });
+            Object.keys(historyData.yearSnapshots || {}).forEach(function(y){
+                if(yearSet[y] && yearSet[y].source === 'manual') return;
+                const sp = historyData.yearSnapshots[y];
+                if(sp && Number(sp.totalAsset) > 0) yearSet[y] = { year: y, value: Number(sp.totalAsset), source: 'snapshot' };
+            });
+            Object.keys(historyData.monthlyAssets || {}).forEach(function(m){
+                const y = m.substring(0, 4);
+                if(yearSet[y] && (yearSet[y].source === 'manual' || yearSet[y].source === 'snapshot')) return;
+                if(!yearSet[y]) yearSet[y] = { year: y, value: null, source: 'monthly' };
+                const v = Number(historyData.monthlyAssets[m]) || 0;
+                if(yearSet[y].value == null || m > (yearSet[y].lastMonth || '')){ yearSet[y].value = v; yearSet[y].lastMonth = m; }
+            });
+            Object.keys(historyData.dailyAssets || {}).forEach(function(d){
+                const y = d.substring(0, 4);
+                if(yearSet[y] && (yearSet[y].source === 'manual' || yearSet[y].source === 'snapshot')) return;
+                if(!yearSet[y]) yearSet[y] = { year: y, value: null, source: 'daily' };
+                if(yearSet[y].source === 'daily'){
+                    const v = Number(historyData.dailyAssets[d]) || 0;
+                    if(yearSet[y].value == null || d > (yearSet[y].lastDay || '')){ yearSet[y].value = v; yearSet[y].lastDay = d; }
+                }
+            });
+            // 当年永远取实时（未结束的年份不锁定旧快照）
+            yearSet[curYear] = { year: curYear, value: Number(curTotal.toFixed(2)), source: 'current' };
+            const years = Object.keys(yearSet).sort();
+            const values = years.map(function(y){ return yearSet[y].value; });
+            return { years: years, values: values, yearSet: yearSet, currentYear: curYear };
+        }
+
+        function assetYoY(values){
+            return values.map(function(v, i){
+                if(i === 0) return null;
+                const a = Number(values[i-1]);
+                if(!(a > 0) || v == null) return null;
+                return Number(((Number(v) - a) / a * 100).toFixed(2));
+            });
+        }
+
+        function renderAssetTrendPage(){
+            const st = getAssetHighState();
+            const hv = document.querySelector('#ahHighVal');
+            const hd = document.querySelector('#ahHighDate');
+            if(hv) hv.innerText = st.histMax > 0 ? fmtMoney(st.histMax) : '--';
+            if(hd) hd.innerText = st.histDate ? (st.histDate.substring(0,4) + '.' + st.histDate.substring(5,7) + '.' + st.histDate.substring(8,10)) : '--';
+
+            const pr = calcPnlRet();
+            const setTxt = function(id, v, color){ const el = document.querySelector('#' + id); if(!el) return; el.innerText = v; if(color) el.style.color = color; };
+            // 总资产按真实金额展示（不用"万"），保留两位小数；位数多时自动缩字号，避免窄屏溢出
+            setTxt('ahTotalAsset', Number(pr.totalAsset).toFixed(2));
+            const __taEl = document.querySelector('#ahTotalAsset');
+            if(__taEl){
+                const __taLen = __taEl.innerText.length;
+                __taEl.style.fontSize = __taLen >= 13 ? '12px' : (__taLen >= 11 ? '14px' : '17px');
+            }
+            setTxt('ahPnl', fmtPnlNum(pr.pnl), pr.pnl >= 0 ? '#ff6b6d' : '#3ed08a');
+            const __pnlEl = document.querySelector('#ahPnl');
+            if(__pnlEl){
+                const __pnlLen = __pnlEl.innerText.length;
+                __pnlEl.style.fontSize = __pnlLen >= 9 ? '14px' : (__pnlLen >= 8 ? '16px' : '17px');
+            }
+            setTxt('ahRet', pr.ret == null ? '--' : fmtPctNum(pr.ret), pr.ret == null ? '#a8987e' : (pr.ret >= 0 ? '#ff6b6d' : '#3ed08a'));
+
+            const dd = ensureMaxDrawdown(false);
+            // 与统计页资产分析卡同一函数、同一缓存：无有效回撤（不足两个年末快照）时统一显示 --
+            const ddValid = !!(dd && dd.pct != null && dd.peakDate);
+            const ddPct = ddValid ? Number(dd.pct) : null;
+            setTxt('ahMaxDD', !ddValid ? '--' : (ddPct > 0 ? ('-' + ddPct.toFixed(2) + '%') : '0.00%'), (ddPct != null && ddPct > 0) ? '#ffb08a' : '#cfc0a6');
+            const __ddEl = document.querySelector('#ahMaxDD');
+            if(__ddEl){ __ddEl.style.fontSize = __ddEl.innerText.length >= 8 ? '13px' : '15px'; }
+            const ddSub = document.querySelector('#ahMaxDDSub');
+            if(ddSub){
+                if(!ddValid) ddSub.innerText = '峰值 → 谷底';
+                else if(ddPct <= 0) ddSub.innerText = '暂无回撤';
+                else ddSub.innerText = ((dd.peakDate.substring(0,4) + '.' + dd.peakDate.substring(5,7)) + ' → ' + (dd.troughDate.substring(0,4) + '.' + dd.troughDate.substring(5,7)));
+            }
+
+            const ys = buildYearlyAssetSeries();
+            const hasData = ys.values.some(function(v){ return Number(v) > 0; });
+            const meta = document.querySelector('#ahTrendMeta');
+            if(meta) meta.innerText = hasData ? (ys.years.length + ' 个年度') : '--';
+
+            const listEl = document.querySelector('#assetTrendYearList');
+            if(listEl) renderAssetTrendYearList(ys, listEl);
+
+            const chartEl = document.querySelector('#chartAssetTrend');
+            const emptyEl = document.querySelector('#ahTrendEmpty');
+            if(!hasData){
+                if(chartEl) chartEl.style.display = 'none';
+                if(emptyEl) emptyEl.classList.remove('hidden');
+                return;
+            }
+            if(chartEl) chartEl.style.display = '';
+            if(emptyEl) emptyEl.classList.add('hidden');
+            drawAssetTrendChart(ys);
+        }
+
+        function renderAssetTrendYearList(ys, listEl){
+            const yoy = assetYoY(ys.values);
+            const curY = ys.currentYear;
+            let html = '';
+            for(let i = ys.years.length - 1; i >= 0; i--){
+                const y = ys.years[i];
+                const v = ys.values[i];
+                const g = yoy[i];
+                const isCur = y === curY;
+                const amt = (v != null && Number(v) > 0) ? ('¥' + fmtMoney(v)) : '--';
+                const gTxt = (g == null) ? '--' : ((g >= 0 ? '+' : '') + g.toFixed(1) + '%');
+                const gColor = (g == null) ? '#b8ab98' : (g >= 0 ? '#a9642a' : '#00a05c');
+                html += '<div class="flex items-center px-5 py-2.5 border-b border-gray-50">'
+                    + '<div class="w-20 text-[12px] font-semibold text-gray-700 tabular-nums">' + y + ' 年' + (isCur ? '<span class="ml-1 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1 py-0.5 rounded">今年</span>' : '') + '</div>'
+                    + '<div class="flex-1 text-right text-[13px] font-semibold tabular-nums" style="color:#5a3b1e">' + amt + '</div>'
+                    + '<div class="w-[64px] text-right text-[11px] font-semibold tabular-nums" style="color:' + gColor + '">' + gTxt + '</div>'
+                    + '</div>';
+            }
+            listEl.innerHTML = html || '<div class="px-5 py-8 text-center text-[12px] text-gray-400">暂无年度数据</div>';
+        }
+
+        function drawAssetTrendChart(ys){
+            if(typeof echarts === 'undefined') return;
+            const el = document.querySelector('#chartAssetTrend');
+            if(!el) return;
+            if(!assetTrendChart || assetTrendChart.isDisposed()){
+                assetTrendChart = echarts.init(el);
+            }
+            const n = ys.years.length;
+            const vals = ys.values.map(function(v){ return (v == null ? null : Math.round(Number(v) * 100) / 100); });
+            const yoy = assetYoY(ys.values);
+            const gVals = yoy.filter(function(v){ return v != null; });
+            const gMax = gVals.length ? Math.max.apply(null, gVals) : 20;
+            const gMin = gVals.length ? Math.min.apply(null, gVals) : -10;
+            const axisMax = Math.max(20, Math.ceil(gMax / 10) * 10);
+            const axisMin = Math.min(-10, Math.floor(gMin / 10) * 10);
+            // 几十年数据：x 轴标签抽稀 + 柱宽收窄 + 关闭柱顶标签
+            let xInterval = 0;
+            if(n > 50) xInterval = 9;
+            else if(n > 30) xInterval = 4;
+            else if(n > 18) xInterval = 2;
+            else if(n > 10) xInterval = 1;
+            const showBarLabel = n <= 12;
+            const barWidth = n === 1 ? '26%' : (n <= 4 ? '48%' : (n <= 8 ? '40%' : (n <= 16 ? '30%' : '62%')));
+            const barMaxWidth = n === 1 ? 72 : 22;
+
+            assetTrendChart.setOption({
+                animationDuration: 600,
+                grid: { left: 44, right: (n > 1 && gVals.length > 0) ? 42 : 14, top: 26, bottom: 22 },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(169,100,42,0.06)' } },
+                    backgroundColor: 'rgba(58,37,22,0.94)',
+                    borderWidth: 0,
+                    padding: [7, 10],
+                    textStyle: { color: '#f7ead0', fontSize: 11 },
+                    formatter: function(ps){
+                        const y = ps[0].axisValue;
+                        const amt = ps[0].data;
+                        let g = null;
+                        for(let i = 0; i < ps.length; i++){ if(ps[i].seriesType === 'line') g = ps[i].data; }
+                        return y + ' 年末<br/>总资产 ¥' + (amt == null ? '--' : fmtMoney(amt))
+                            + '<br/>同比 ' + (g == null ? '--' : ((g >= 0 ? '+' : '') + g.toFixed(1) + '%'));
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ys.years,
+                    axisLine: { lineStyle: { color: '#efe6d6' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#8a7a67', fontSize: 10, margin: 8, interval: xInterval }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        splitLine: { lineStyle: { color: '#f4ecdd', type: 'dashed' } },
+                        axisLabel: {
+                            color: '#a99a86', fontSize: 9,
+                            formatter: function(v){ return v >= 10000 ? (v / 10000).toFixed(1) + '万' : v; }
+                        }
+                    },
+                    {
+                        type: 'value',
+                        show: n > 1 && gVals.length > 0,
+                        min: axisMin, max: axisMax,
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        splitLine: { show: false },
+                        axisLabel: {
+                            color: '#c99a5a', fontSize: 9,
+                            formatter: function(v){ return (v > 0 ? '+' : '') + v + '%'; }
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: '年末总资产',
+                        type: 'bar',
+                        data: vals,
+                        barWidth: barWidth,
+                        barMaxWidth: barMaxWidth,
+                        itemStyle: {
+                            borderRadius: [4, 4, 0, 0],
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#d9b27a' },
+                                { offset: 1, color: '#8f5b2a' }
+                            ])
+                        },
+                        label: {
+                            show: showBarLabel, position: 'top', distance: 4,
+                            color: '#8a7a67', fontSize: n > 6 ? 8 : 9,
+                            formatter: function(p){
+                                if(p.data == null || !p.data) return '';
+                                return p.data >= 10000 ? (p.data / 10000).toFixed(1) + '万' : p.data;
+                            }
+                        }
+                    },
+                    {
+                        name: '同比增速',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: yoy,
+                        show: n > 1 && gVals.length > 0,
+                        connectNulls: false,
+                        symbol: 'circle',
+                        symbolSize: 5,
+                        showSymbol: true,
+                        lineStyle: { width: 1.6, color: '#e39412' },
+                        itemStyle: { color: '#e39412', borderColor: '#fff7e6', borderWidth: 1.5 },
+                        areaStyle: { color: 'rgba(227,148,18,0.07)' }
+                    }
+                ]
+            }, true);
+
+            if(!assetTrendResizeBound){
+                assetTrendResizeBound = true;
+                window.addEventListener('resize', function(){
+                    try{ if(assetTrendChart && !assetTrendChart.isDisposed()) assetTrendChart.resize(); }catch(e){}
+                });
+            }
+            setTimeout(function(){ try{ if(assetTrendChart && !assetTrendChart.isDisposed()) assetTrendChart.resize(); }catch(e){} }, 60);
+        }
+
+        // 资产新高记录弹窗（历史新高入口，现为总资产趋势页）
         function openAssetHighModal(){
             // 仅保留最新 6 条新高记录（更早的记录删除，减少冗余；历史最高始终在最后一条）
             if(historyData.assetHighs && historyData.assetHighs.length > 6){
@@ -6260,64 +6601,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 saveHistory();
             }
             rememberScroll();
-            const st = getAssetHighState();
-            const highs = st.highs;
-            const cur = st.cur;
-            const today = todayStr();
-            // 当前触及新高也计入展示（盘中实时记录已在 assetHighs 中，避免重复）
-            const displayAll = highs.slice();
-            const lastH = displayAll.length ? displayAll[displayAll.length - 1] : null;
-            if(st.isNewHigh && !(lastH && lastH.date === today)){
-                displayAll.push({ date: today, amount: Number(cur.toFixed(2)), isLive: true });
-            }
-            // 今天的记录统一标记为实时（盘中记录 isLive 在快照推导中会丢失，用日期兜底）
-            displayAll.forEach(function(h){
-                if(h.date === today) h.isLive = true;
-            });
-            // 汇总：历史最高 + 最近新高（当天已破新高则最高点即当天记录值）
-            document.querySelector('#ahMax').innerText = fmtMoney(st.isNewHigh ? (st.histDate === today ? st.histMax : cur) : st.histMax);
-            document.querySelector('#ahLast').innerText = displayAll.length
-                ? displayAll[displayAll.length - 1].date.substring(0, 4) + '.' + displayAll[displayAll.length - 1].date.substring(5, 7) + '.' + displayAll[displayAll.length - 1].date.substring(8, 10)
-                : '--';
-            // 倒序（最新在上），只显示最近5条
-            const descList = displayAll.slice().reverse();
-            const showList = descList.slice(0, 6);
-            document.querySelector('#ahCount').innerText = '共 ' + displayAll.length + ' 次';
-            const listDom = document.querySelector('#assetHighList');
-            if(!displayAll.length){
-                listDom.innerHTML = '<div class="text-center py-10 text-gray-400"><span class="w-12 h-12 rounded-full bg-[#faf3e3] border border-[#eedfc0] flex items-center justify-center mx-auto mb-3"><i class="fa fa-money text-accent text-xl"></i></span><div class="text-sm">暂无资产新高记录</div><span class="text-xs mt-1 block">每天收盘后自动记录总资产刷新历史最高点的时刻</span></div>';
-            } else {
-                let html = '<div class="relative pl-6">';
-                html += '<div class="absolute left-[5px] top-2 bottom-2 w-px bg-gradient-to-b from-amber-300 via-amber-200 to-transparent"></div>';
-                showList.forEach(function(h, i){
-                    const isLive = !!h.isLive;
-                    const dotCls = isLive
-                        ? 'bg-gradient-to-br from-amber-400 to-yellow-500 ring-4 ring-amber-100'
-                        : 'bg-amber-300';
-                    const dateStr = h.date.substring(0, 4) + '年' + Number(h.date.substring(5, 7)) + '月' + Number(h.date.substring(8, 10)) + '日';
-                    html += '<div class="relative pb-3">';
-                    html += '<div class="absolute left-[-19px] top-1.5 w-2.5 h-2.5 rounded-full ' + dotCls + '"></div>';
-                    html += '<div class="bg-white rounded-xl card-shadow-sm px-3.5 py-2.5 flex justify-between items-center">';
-                    html += '<div class="flex items-center gap-2 min-w-0">';
-                    html += '<span class="' + (isLive ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white' : 'bg-amber-50 text-amber-600') + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0"><i class="fa fa-trophy text-[8px] mr-0.5"></i>' + (isLive ? '今日新高' : '破新高') + '</span>';
-                    html += '<div class="text-sm font-semibold text-gray-800">' + dateStr + '</div>';
-                    html += '</div>';
-                    html += '<div class="text-right shrink-0 ml-2">';
-                    html += '<div class="text-sm font-bold text-amber-600 tabular-nums">' + fmtMoney(h.amount) + '</div>';
-                    html += '<div class="text-[10px] text-gray-400 mt-0.5">' + (isLive ? '实时 · 收盘后入册' : '总资产峰值') + '</div>';
-                    html += '</div></div></div>';
-                    if(i < showList.length - 1){
-                        html += '<div class="ml-6 mb-3 border-t border-dashed border-gray-200"></div>';
-                    }
-                });
-                html += '</div>';
-                listDom.innerHTML = html;
-            }
-            // 打开资产新高页面（隐藏持仓页）
+            // 打开总资产趋势页面（隐藏持仓页）
             document.querySelector('#pageHold').classList.add('hidden');
             document.querySelector('#pageAssetHigh').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
+            renderAssetTrendPage();
+            setTimeout(function(){
+                try{ if(assetTrendChart && !assetTrendChart.isDisposed()) assetTrendChart.resize(); }catch(e){}
+            }, 60);
         }
         function closeAssetHighModal(){
             // 关闭资产新高页面，恢复持仓页
@@ -9552,7 +9844,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         //           accent=主数字是否用品牌橙 / detail=详情页回调（可选）/ subStatic=静态副文本（可选）
         const mineOverviewItems = [
             { icon: 'fa-money', label: '投入成本', valueId: 'mineInvestCost', subStatic: '初始投入 + 历年净流入', detail: 'openCostDetail()' },
-            { icon: 'fa-area-chart', label: '复利年化', valueId: 'mineCagr', subDynamicId: 'mineCagrYears' },
+            { icon: 'fa-area-chart', label: '年化收益', labelHtml: '年化收益<span class="text-[9px] text-gray-400 opacity-70 ml-0.5">(XIRR)</span>', valueId: 'mineCagr', subDynamicId: 'mineCagrYears' },
             { icon: 'fa-tachometer', label: '最新净值', valueId: 'mineNav', subId: 'mineNavGrowth', subIsValue: true, detail: 'openNavDetail()' },
             { icon: 'fa-coins', label: '自由现金流', valueId: 'mineFreeCashflow', accent: true, subStatic: '今年已收分红', detail: "openDivDetail('total')" }
         ];
@@ -10048,8 +10340,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="flex items-center justify-center gap-1.5 mb-1.5">'
                     + '<i class="fa ' + iconCls + ' text-[11px]"></i>'
                     + (it.detail
-                        ? '<button type="button" onclick="' + it.detail + '" title="查看详情" class="relative text-gray-400 text-[11px] flex items-center gap-1.5 active:scale-95 transition-transform"><span class="tracking-wide">' + it.label + '</span><i class="fa fa-chevron-right text-[9px] text-gray-400"></i><span class="absolute rounded-lg" style="inset:-8px;"></span></button>'
-                        : '<span class="text-[11px] text-gray-400 tracking-wide">' + it.label + '</span>')
+                        ? '<button type="button" onclick="' + it.detail + '" title="查看详情" class="relative text-gray-400 text-[11px] flex items-center gap-1.5 active:scale-95 transition-transform"><span class="tracking-wide">' + (it.labelHtml || it.label) + '</span><i class="fa fa-chevron-right text-[9px] text-gray-400"></i><span class="absolute rounded-lg" style="inset:-8px;"></span></button>'
+                        : '<span class="text-[11px] text-gray-400 tracking-wide">' + (it.labelHtml || it.label) + '</span>')
                     + '</div>'
                     + '<div class="text-[17px] font-semibold ' + valCls + ' tabular-nums" id="' + it.valueId + '">0.00</div>'
                     + subHtml
@@ -10133,14 +10425,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#mineHKShare').innerText = mS.hkShareNum != null ? mS.hkShareNum : sum.hkShareNum;
             // 更新时间：显示存储快照的真实更新时间
             document.querySelector('#mineUpdateTime').innerText = (mS.time || '--');
-            // 投入成本 = 初始投入 + 每笔资金流水（含取出为负），实时计算（公共函数，与持仓页成本息率同源）
-            const investTotalV = getTotalInvested();
-            // 顶部卡片：累计盈亏 = 总资产 - 投入成本（只显示金额，涨红跌绿；总资产含现金）
-            const cumPnl = Number(sum.totalAsset) - investTotalV;
+            // 投入成本 / 总盈利 / 总收益率：与总资产趋势页共用 calcPnlRet，口径唯一
+            const __pr = calcPnlRet();
+            const investTotalV = __pr.invested;
+            const grossInvestV = __pr.gross;
+            const cumPnl = __pr.pnl;
             const pnlEl = document.querySelector('#mineTotalPnl');
             if(pnlEl){
                 numTween(pnlEl, cumPnl, fmtPnlNum);
-                pnlEl.className = 'text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 num-transition ' + (cumPnl >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
+                pnlEl.className = 'text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 num-transition ' + (cumPnl >= 0 ? 'text-[#ff6b6d]' : 'text-[#3ed08a]');
+            }
+            // 总收益率 = 总盈利 ÷ 累计转入总额（分母不扣转出）
+            const retEl = document.querySelector('#mineTotalRet');
+            if(retEl){
+                if(grossInvestV > 0){
+                    const cumRet = cumPnl / grossInvestV * 100;
+                    retEl.innerText = fmtPctNum(cumRet);
+                    retEl.className = 'font-semibold tabular-nums ' + (cumRet >= 0 ? 'text-[#ff6b6d]' : 'text-[#3ed08a]');
+                } else {
+                    retEl.innerText = '--';
+                    retEl.className = 'font-semibold tabular-nums text-[#a8987e]';
+                }
             }
             // 持仓概览：复利年化 CAGR（实时计算优先——随总资产/现金实时联动；快照仅在实时缺失时兜底）
             const cagrEl = document.querySelector('#mineCagr');
@@ -12177,7 +12482,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     bg: '#131518', grid: '#24282d', axis: '#2b2f34', text: '#8b939c',
                     tipBg: 'rgba(28,31,34,0.97)', tipBorder: '#30353b', tipText: '#d5dae0', tipSub: '#8b939c',
                     pointer: '#2b3037', up: '#f25555', down: '#2fc57c',
-                    volUp: 'rgba(242,85,85,0.55)', volDown: 'rgba(47,197,124,0.55)',
+                    volUp: '#f25555', volDown: '#2fc57c',
                     areaUp: ['rgba(242,85,85,0.26)', 'rgba(242,85,85,0)'],
                     areaDown: ['rgba(47,197,124,0.26)', 'rgba(47,197,124,0)'],
                     avg: '#e8b04f', base: '#6b7280', ma: SDKLINE_MA_COLOR_DARK,
@@ -12191,7 +12496,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 bg: '#fdfbf6', grid: '#f4f1ea', axis: '#eee', text: '#b3b3b3',
                 tipBg: 'rgba(255,255,255,0.97)', tipBorder: '#eee', tipText: '#333', tipSub: '#999',
                 pointer: '#26221c', up: SDKLINE_UP, down: SDKLINE_DOWN,
-                volUp: 'rgba(224,49,49,0.45)', volDown: 'rgba(0,160,92,0.45)',
+                volUp: SDKLINE_UP, volDown: SDKLINE_DOWN,
                 areaUp: ['rgba(224,49,49,0.20)', 'rgba(224,49,49,0)'],
                 areaDown: ['rgba(0,160,92,0.20)', 'rgba(0,160,92,0)'],
                 avg: '#d89b3f', base: '#c3bbab', ma: SDKLINE_MA_COLOR,
@@ -12283,6 +12588,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdKlineCode = String(code || '');
             sdKlineMarket = market === 'HK' ? 'HK' : 'A';
             sdKlineKlt = 0;
+            sdKlineViewCount = null;
             sdKlineSeq++;
             try{ sdBookReset(); }catch(e){}
             if(sdKlineInst){ try{ sdKlineInst.dispose(); }catch(e){} sdKlineInst = null; }
@@ -12295,6 +12601,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             klt = isNaN(n) ? 101 : n;
             if(klt === sdKlineKlt) return;
             sdKlineKlt = klt;
+            sdKlineViewCount = null;
             sdKlineTabsPaint();
             const metaEl = document.querySelector('#sdKlineMeta');
             if(metaEl) metaEl.innerText = sdKlinePeriodName(klt) + ' 加载中…';
@@ -12615,8 +12922,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 animationDuration: 200,
                 backgroundColor: t.bg,
                 grid: [
-                    { left: 20, right: 54, top: 10, height: '58%' },
-                    { left: 20, right: 54, top: '66%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
+                    { left: 20, right: 54, top: 10, height: '63%' },
+                    { left: 20, right: 54, top: '69%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
                 ],
                 axisPointer: { link: [{ xAxisIndex: 'all' }], label: { backgroundColor: t.pointer, fontSize: 9 } },
                 tooltip: {
@@ -12668,6 +12975,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     { name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barMaxWidth: 3 }
                 ]
             }, true);
+            sdKlineZoomPaint();
             const meta = document.querySelector('#sdKlineMeta');
             if(meta){
                 const pct = preClose ? (last.price / preClose - 1) * 100 : 0;
@@ -12675,6 +12983,95 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 meta.innerHTML = '分时 ' + dateTxt + ' <span style="color:' + cc + ';font-weight:600">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
             }
         }
+        // ===== K线缩放：始终锁定最新一根（右侧锚定），± 按钮 / 滚轮 / 双指 =====
+        let sdKlineBarsTotal = 0;
+        let sdKlineViewCount = null;
+        let sdKlineZoomBound = false;
+        let sdKlinePinchDist = 0, sdKlinePinchCount = 0;
+
+        function sdKlineDefaultCount(){
+            const el = document.querySelector('#sdKlineChart');
+            const w = ((el && el.clientWidth) ? el.clientWidth : 360) - 64;
+            const base = Math.round(w / 5.6);
+            return Math.max(12, Math.min(120, Math.round(base * 0.64)));
+        }
+        function sdKlineCurrentCount(){
+            try{
+                const dz = sdKlineInst.getOption().dataZoom[0];
+                const total = sdKlineBarsTotal || ((sdKlineInst.getOption().series[0].data || []).length);
+                return Math.max(1, Math.round((Number(dz.end) - Number(dz.start)) / 100 * total));
+            }catch(e){ return sdKlineBarsTotal || 0; }
+        }
+        function sdKlineZoomTo(count){
+            if(sdKlineIsTrend()) return;
+            if(!sdKlineInst || sdKlineInst.isDisposed()) return;
+            const total = sdKlineBarsTotal;
+            if(!total) return;
+            const minC = Math.min(12, total);
+            const c = Math.max(minC, Math.min(total, Math.round(count)));
+            sdKlineViewCount = c;
+            const start = total > c ? (1 - c / total) * 100 : 0;
+            sdKlineInst.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: start, end: 100 });
+        }
+        function sdKlineZoomStep(dir){
+            const cur = sdKlineCurrentCount() || sdKlineDefaultCount();
+            sdKlineZoomTo(dir > 0 ? cur * 0.8 : cur * 1.25);
+        }
+        function sdKlineZoomPaint(){
+            const box = document.querySelector('#sdKlineZoomCtrl');
+            if(!box) return;
+            box.style.display = sdKlineIsTrend() ? 'none' : 'flex';
+            const wrap = box.parentNode;
+            if(wrap && wrap.style) wrap.style.display = sdKlineIsTrend() ? 'none' : 'flex';
+            const day = !sdKlineDark;
+            box.style.setProperty('--zc', day ? '#a89a86' : '#9aa3ac');
+            box.style.setProperty('--zb', day ? 'rgba(255,255,255,0.92)' : 'rgba(26,29,33,0.92)');
+            box.style.setProperty('--zd', day ? '#ece3d2' : '#333941');
+        }
+        function sdKlineOnWheel(e){
+            if(sdKlineIsTrend()) return;
+            if(!sdKlineInst || sdKlineInst.isDisposed()) return;
+            e.preventDefault();
+            const cur = sdKlineCurrentCount() || sdKlineDefaultCount();
+            const f = e.deltaY > 0 ? 1.12 : 0.89;
+            sdKlineZoomTo(cur * f);
+        }
+        function sdKlineOnTouchStart(e){
+            if(sdKlineIsTrend()){ sdKlinePinchDist = 0; return; }
+            if(e.touches && e.touches.length === 2){
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                sdKlinePinchDist = Math.sqrt(dx * dx + dy * dy) || 0;
+                sdKlinePinchCount = sdKlineCurrentCount();
+            } else {
+                sdKlinePinchDist = 0;
+            }
+        }
+        function sdKlineOnTouchMove(e){
+            if(sdKlineIsTrend()) return;
+            if(!sdKlineInst || sdKlineInst.isDisposed()) return;
+            if(e.touches && e.touches.length === 2 && sdKlinePinchDist > 0){
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const d = Math.sqrt(dx * dx + dy * dy);
+                if(d > 0) sdKlineZoomTo(sdKlinePinchCount * (sdKlinePinchDist / d));
+            }
+        }
+        function sdKlineOnTouchEnd(e){
+            if(!e.touches || e.touches.length < 2) sdKlinePinchDist = 0;
+        }
+        function sdKlineBindZoom(){
+            const el = document.querySelector('#sdKlineChart');
+            if(!el || sdKlineZoomBound) return;
+            sdKlineZoomBound = true;
+            el.addEventListener('wheel', sdKlineOnWheel, { passive: false });
+            el.addEventListener('touchstart', sdKlineOnTouchStart, { passive: true });
+            el.addEventListener('touchmove', sdKlineOnTouchMove, { passive: false });
+            el.addEventListener('touchend', sdKlineOnTouchEnd, { passive: true });
+            el.addEventListener('touchcancel', sdKlineOnTouchEnd, { passive: true });
+        }
+
         function sdKlineRenderK(pack){
             const t = sdKlineTheme();
             const inst = sdKlineEnsureInst();
@@ -12687,10 +13084,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 candles.push([r.o, r.c, r.l, r.h]);
                 vols.push({ value: r.v, itemStyle: { color: r.c >= r.o ? t.volUp : t.volDown } });
             }
-            const showCount = Math.min(rows.length, 120);
+            sdKlineBarsTotal = rows.length;
+            const showCount = Math.min(rows.length, sdKlineViewCount || sdKlineDefaultCount());
             const startPct = rows.length > showCount ? (1 - showCount / rows.length) * 100 : 0;
             const series = [
-                { name: 'K线', type: 'candlestick', data: candles, barMaxWidth: 12,
+                { name: 'K线', type: 'candlestick', data: candles, barMaxWidth: 10, barCategoryGap: '26%',
                   itemStyle: { color: t.up, color0: t.down, borderColor: t.up, borderColor0: t.down, borderWidth: 1 } }
             ];
             for(let i = 0; i < SDKLINE_MA_LIST.length; i++){
@@ -12698,24 +13096,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(!sdMaOn[n]) continue;
                 series.push({ name: 'MA' + n, type: 'line', data: sdKlineMA(rows, n), showSymbol: false, smooth: false, lineStyle: { width: 1, color: (t.ma[n] || SDKLINE_MA_COLOR[n]) } });
             }
-            series.push({ name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barMaxWidth: 12 });
+            series.push({ name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barMaxWidth: 10, barCategoryGap: '26%', itemStyle: { borderRadius: [1, 1, 0, 0] } });
             const lastRow = rows[rows.length - 1];
             series[0].markPoint = { silent: true, symbol: 'circle', symbolSize: 4,
                 data: [{ coord: [rows.length - 1, lastRow.c] }],
                 itemStyle: { color: lastRow.c >= lastRow.o ? t.up : t.down, borderColor: t.bg, borderWidth: 1 },
                 label: { show: false } };
             const zoom = [
-                { type: 'inside', xAxisIndex: [0, 1], start: startPct, end: 100, zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnTouchMove: false }
+                { type: 'inside', xAxisIndex: [0, 1], start: startPct, end: 100, zoomOnMouseWheel: false, zoomOnPinch: false, moveOnMouseMove: true, moveOnTouchMove: false }
             ];
-            if(sdKlineKlt !== 106){
-                zoom.push({ type: 'slider', xAxisIndex: [0, 1], height: 8, bottom: 1, borderColor: 'transparent',
-                    backgroundColor: t.sliderBg, fillerColor: t.sliderFill,
-                    handleSize: '70%', handleStyle: { color: t.sliderHandle, borderColor: t.sliderHandle, borderRadius: 2 },
-                    showDetail: false, brushSelect: false,
-                    textStyle: { color: t.sliderText, fontSize: 9 },
-                    dataBackground: { lineStyle: { color: t.sliderDataLine, width: 0.5 }, areaStyle: { color: t.sliderDataArea } },
-                    selectedDataBackground: { lineStyle: { color: t.sliderSelLine, width: 0.5 }, areaStyle: { color: t.sliderSelArea } } });
-            }
             inst.setOption({
                 animation: true,
                 animationDuration: 220,
@@ -12723,8 +13112,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 animationEasingUpdate: 'cubicOut',
                 backgroundColor: t.bg,
                 grid: [
-                    { left: 20, right: 54, top: 10, height: '56%' },
-                    { left: 20, right: 54, top: '64%', height: '17%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
+                    { left: 20, right: 54, top: 10, height: '63%' },
+                    { left: 20, right: 54, top: '69%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
                 ],
                 dataZoom: zoom,
                 axisPointer: { link: [{ xAxisIndex: 'all' }], label: { backgroundColor: t.pointer, fontSize: 9 } },
@@ -12764,6 +13153,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 ],
                 series: series
             }, true);
+            sdKlineBindZoom();
+            sdKlineZoomPaint();
             const meta = document.querySelector('#sdKlineMeta');
             if(meta){
                 const last = rows[rows.length - 1];
@@ -19871,48 +20262,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const curYear = new Date().getFullYear();
             // 当前总资产（市值 + 现金，与顶部卡/我的页同口径）
             let curTotal = Number(calcSummary().totalAsset) || 0;
-            // 收集所有有数据的年份
-            const yearSet = {};
-            // 1. 优先从手动编辑的yearlyAssets获取（已锁定的数据不会被自动计算覆盖）
-            Object.keys(historyData.yearlyAssets || {}).forEach(function(y){
-                yearSet[y] = { year: y, value: historyData.yearlyAssets[y], source: 'manual' };
-            });
-            // 1.5 年度快照（用户年末手动保存的权威数据；手动 yearlyAssets 仍最优先）
-            Object.keys(historyData.yearSnapshots || {}).forEach(function(y){
-                if(yearSet[y] && yearSet[y].source === 'manual') return;
-                const sp = historyData.yearSnapshots[y];
-                if(sp && Number(sp.totalAsset) > 0) yearSet[y] = { year: y, value: Number(sp.totalAsset), source: 'snapshot' };
-            });
-            // 2. 从monthlyAssets提取历史年份（取该年最后一个月的数据作为年终数据），不覆盖手动/快照数据
-            Object.keys(historyData.monthlyAssets).forEach(function(m){
-                const y = m.substring(0, 4);
-                if(yearSet[y] && (yearSet[y].source === 'manual' || yearSet[y].source === 'snapshot')) return;
-                if(!yearSet[y]) yearSet[y] = { year: y, value: null, source: 'monthly' };
-                const val = historyData.monthlyAssets[m];
-                if(yearSet[y].value == null || m > yearSet[y].lastMonth){
-                    yearSet[y].value = val;
-                    yearSet[y].lastMonth = m;
-                }
-            });
-            // 3. 从dailyAssets补充（如果monthlyAssets没有该年数据），不覆盖手动/快照数据
-            Object.keys(historyData.dailyAssets).forEach(function(d){
-                const y = d.substring(0, 4);
-                if(yearSet[y] && (yearSet[y].source === 'manual' || yearSet[y].source === 'snapshot')) return;
-                if(!yearSet[y]) yearSet[y] = { year: y, value: null, source: 'daily' };
-                if(yearSet[y].source === 'daily'){
-                    const val = historyData.dailyAssets[d];
-                    if(yearSet[y].value == null || d > yearSet[y].lastDay){
-                        yearSet[y].value = val;
-                        yearSet[y].lastDay = d;
-                    }
-                }
-            });
-            // 4. 当前年份：永远取实时总资产（每天更新；当年未结束，即使存过快照/手动归档也不锁定旧值，
-            //    年底自动进入历史年份后按上方锁定规则取年终权威值）
-            yearSet[String(curYear)] = { year: String(curYear), value: Number(curTotal.toFixed(2)), source: 'current' };
-            // 按年份排序
-            const assetYears = Object.keys(yearSet).sort();
-            const assetValues = assetYears.map(function(y){ return yearSet[y].value; });
+            // 年末资产序列：与总资产趋势页共用 buildYearlyAssetSeries，口径唯一
+            const _ys = buildYearlyAssetSeries();
+            const yearSet = _ys.yearSet;
+            const assetYears = _ys.years;
+            const assetValues = _ys.values;
             // 显示最新总资产
             const latestAsset = assetValues.length ? assetValues[assetValues.length - 1] : 0;
             document.querySelector('#analysisLatestAsset').innerText = '最新：' + fmtTooltipMoney(latestAsset);

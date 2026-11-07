@@ -547,13 +547,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                 </div>
 
-                <!-- 下一笔分红倒计时（无数据自动隐藏） -->
-                <div id="nextDivCountdown" class="hidden mx-4 mb-1 flex items-center justify-center gap-2 whitespace-nowrap text-[9.5px] text-[#cfc0a6]/70">
-                    <span>下一笔分红 <span id="nextDivDays" class="text-[10px] font-semibold text-[#e8c88a] tabular-nums">--</span> 天</span>
-                    <span style="color:rgba(230,210,163,0.22)">·</span>
-                    <span>预计 <span id="nextDivAmt" class="text-[10px] font-semibold text-[#e8c88a] tabular-nums">--</span></span>
-                </div>
-
                 <!-- 更多指标：收纳折叠（回本口径也在此处查询） -->
                 <div class="mt-0.5">
                     <button type="button" id="moreMetricsToggle" onclick="toggleMoreMetrics()" class="w-full flex items-center justify-center gap-1.5 py-1.5 text-[10.5px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-all">
@@ -605,7 +598,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div class="py-1.5 pl-2 text-right">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
                                 <i class="fa fa-area-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span class="whitespace-nowrap">开户至今收益率</span>
+                                <span class="whitespace-nowrap">开户至今</span>
                             </div>
                             <div class="text-[13px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                         </div>
@@ -615,6 +608,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span>不复投 <span id="sumBeNo" class="text-[11px] font-semibold tabular-nums text-white">--</span></span>
                         <span>缺口 <span id="sumBeGap" class="text-[11px] font-semibold tabular-nums text-amber-200">--</span></span>
                         <button type="button" onclick="openBreakEvenPage()" class="flex items-center gap-1 text-[#cfc0a6] active:scale-95 transition-transform">回本详情<i class="fa fa-chevron-right text-[8px]"></i></button>
+                    </div>
+                </div>
+
+                <!-- 下一笔分红（常显；分隔线 + 无预告时给占位，避免卡高跳动） -->
+                <div id="nextDivFooter" class="mx-4 mt-1.5 pt-2" style="border-top:1px solid rgba(230,210,163,0.12);">
+                    <div class="flex items-center justify-between gap-2">
+                        <div id="nextDivCountdown" class="min-w-0 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] text-[#cfc0a6]/80">
+                            <span id="nextDivEmpty" class="text-[10px] text-[#cfc0a6]/65">下一笔分红 · 暂无预告</span>
+                            <span id="nextDivDetail" class="hidden flex items-center gap-1.5">
+                                <span id="nextDivDate" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span>
+                                <span style="color:rgba(230,210,163,0.22)">·</span>
+                                <span id="nextDivStock" class="text-[#e8c88a] truncate" style="max-width:52px">--</span>
+                                <span style="color:rgba(230,210,163,0.22)">·</span>
+                                <span>还有 <span id="nextDivDays" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span> 天</span>
+                                <span style="color:rgba(230,210,163,0.22)">·</span>
+                                <span>约 <span id="nextDivAmt" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span></span>
+                            </span>
+                        </div>
+                        <button type="button" onclick="openDivScheduleFromHold()" class="shrink-0 flex items-center gap-0.5 text-[10px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-transform">
+                            <span>分红日历</span><i class="fa fa-chevron-right text-[8px]"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1549,11 +1563,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="relative">
                 <div id="sdKlineChart" class="w-full" style="height:430px;border-radius:12px;overflow:hidden;background:#fdfbf6;transition:background .25s ease;touch-action:pan-y;-webkit-user-select:none;user-select:none"></div>
             </div>
-            <div style="display:flex;align-items:center;gap:7px;padding:5px 0 0 9px;">
+            <div id="sdKlineCtrlBar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 9px 0;">
+                <div style="display:flex;align-items:center;gap:7px;">
                 <span style="font-size:9px;color:var(--zc,#a89a86);opacity:.75;">缩放</span>
                 <div id="sdKlineZoomCtrl" style="display:flex;gap:6px;">
-                    <button onclick="sdKlineZoomStep(1)" aria-label="放大K线" style="width:26px;height:24px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:14px;font-weight:600;line-height:1;box-shadow:0 1px 2px rgba(60,40,20,.08);-webkit-tap-highlight-color:transparent;">+</button>
-                    <button onclick="sdKlineZoomStep(-1)" aria-label="缩小K线" style="width:26px;height:24px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:14px;font-weight:600;line-height:1;-webkit-tap-highlight-color:transparent;">−</button>
+                    <button onclick="sdKlineZoomStep(1)" aria-label="放大K线" style="width:30px;height:26px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:15px;font-weight:600;line-height:1;box-shadow:0 1px 2px rgba(60,40,20,.08);-webkit-tap-highlight-color:transparent;">+</button>
+                    <button onclick="sdKlineZoomStep(-1)" aria-label="缩小K线" style="width:30px;height:26px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:15px;font-weight:600;line-height:1;-webkit-tap-highlight-color:transparent;">−</button>
+                </div>
+                </div>
+                <div id="sdKlinePanCtrl" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <span style="font-size:9px;color:var(--zc,#a89a86);opacity:.75;">平移</span>
+                    <button id="sdKlinePanLeft" onpointerdown="sdKlinePanStart(-1)" onpointerup="sdKlinePanStop()" onpointerleave="sdKlinePanStop()" onpointercancel="sdKlinePanStop()" oncontextmenu="return false" aria-label="向左平移K线" style="width:30px;height:26px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:15px;font-weight:600;line-height:1;box-shadow:0 1px 2px rgba(60,40,20,.08);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;">‹</button>
+                    <button id="sdKlinePanRight" onpointerdown="sdKlinePanStart(1)" onpointerup="sdKlinePanStop()" onpointerleave="sdKlinePanStop()" onpointercancel="sdKlinePanStop()" oncontextmenu="return false" aria-label="向右平移K线" style="width:30px;height:26px;border-radius:7px;border:1px solid var(--zd,#ece3d2);background:var(--zb,rgba(255,255,255,.92));color:var(--zc,#a89a86);font-size:15px;font-weight:600;line-height:1;box-shadow:0 1px 2px rgba(60,40,20,.08);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;">›</button>
                 </div>
             </div>
             <div id="sdBookWrap" class="hidden px-3 pb-1 mt-2.5 pt-2.5" style="border-top:1px solid #f4f1ea">
@@ -1565,7 +1586,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div id="sdBookBody" class="px-3 pb-2"></div>
                 </div>
             </div>
-            <div class="px-4 pb-2.5 text-[9px] text-gray-400 leading-relaxed">分时含均价线与昨收基准；日/周/月K 前复权，年K 按自然年；副图为成交量。双指、滚轮或左下角 ± 缩放（始终锁定最新一根），按住左右拖动可平移，点“均线”可增减均线。</div>
+            <div class="px-4 pb-2.5 text-[9px] text-gray-400 leading-relaxed">分时含均价线与昨收基准；日/周/月K 前复权，年K 按自然年；副图为成交量。双指、滚轮或左下角 ± 缩放（始终锁定最新一根），右下角 ‹ › 点击一步、长按连续平移，点“均线”可增减均线。</div>
         </div>
         <!-- 单股检查：护城河体检 + 分红可持续性三查 + 估值温度计（巴菲特式体检报告） -->
         <div id="sdMoatCard" class="hidden bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
@@ -1582,7 +1603,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-line-chart text-[12px] text-accent"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">财务数据 <span class="text-[10px] font-normal text-gray-400 ml-0.5">最近5年 · 年报口径</span></div>
             </div>
-            <div id="sdFinBody" class="overflow-auto max-h-[60vh] overscroll-none" style="-webkit-overflow-scrolling:touch;overscroll-behavior:none;"></div>
+            <div id="sdFinBody" class="overflow-auto" style="-webkit-overflow-scrolling:touch;padding-bottom:4px;"></div>
         </div>
         <!-- 行业排名 -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
@@ -2731,37 +2752,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="grid grid-cols-2 gap-0 px-2 py-1">
                     <div class="py-2.5 px-3 text-center">
                         <div class="text-[10.5px] text-[#cfc0a6]">总资产</div>
-                        <!-- 重点区：卡中卡面板（与首页总资产格同款，浅金渐变+高光+投影） -->
-                        <div class="mt-1.5 rounded-xl px-2 py-2 text-center" style="background:linear-gradient(180deg,rgba(255,255,255,0.17),rgba(255,255,255,0.06));box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 3px 10px rgba(0,0,0,0.20);border:1px solid rgba(230,210,163,0.16);">
-                            <div class="text-[19px] font-semibold text-[#ffffff] whitespace-nowrap tabular-nums num-transition leading-none" id="mineTotalAsset">0</div>
-                            <!-- 总资产分解：总市值 · 现金（与首页顶部卡同款竖排） -->
-                            <div class="grid grid-cols-2 gap-1 mt-2 leading-none whitespace-nowrap" id="mineAssetBreakdown">
-                                <div class="flex flex-col items-center gap-[2px]">
-                                    <span class="text-[#f0e2bd] text-[9px] tracking-wide">市值</span>
-                                    <span class="ab-mkt-v text-white text-[12.5px] font-medium tabular-nums">0</span>
-                                </div>
-                                <div class="flex flex-col items-center gap-[2px] cursor-pointer active:scale-95 transition-transform" onclick="openCashEdit()" title="点击修改现金">
-                                    <span class="text-[#f0e2bd] text-[9px] tracking-wide">现金</span>
-                                    <span class="ab-cash-v text-white text-[12.5px] font-medium tabular-nums">0</span>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineTotalAsset">0</div>
                     </div>
-                    <div class="py-2.5 px-3 text-center flex flex-col justify-center">
+                    <div class="py-2.5 px-3 text-center">
+                        <div class="text-[10.5px] text-[#cfc0a6]">累计分红</div>
+                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineTotalDiv">0</div>
+                    </div>
+                    <div class="py-2.5 px-3 text-center">
                         <div class="text-[10.5px] text-[#cfc0a6]">总盈利</div>
                         <div class="text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 num-transition" id="mineTotalPnl">0.00</div>
-                        <div class="mt-1.5 flex items-baseline justify-center gap-1.5 leading-none">
-                            <span class="text-[10px] text-[#a8987e]">总收益率</span>
-                            <span id="mineTotalRet" class="font-semibold tabular-nums text-[#a8987e]" style="font-size:13px;">--</span>
-                        </div>
                     </div>
                     <div class="py-2.5 px-3 text-center">
-                        <div class="text-[10.5px] text-[#cfc0a6]">今年分红</div>
-                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineYearDiv">0</div>
-                    </div>
-                    <div class="py-2.5 px-3 text-center">
-                        <div class="text-[10.5px] text-[#cfc0a6]">累计收息</div>
-                        <div class="text-[18px] font-semibold text-[#ffffff] whitespace-nowrap mt-1 tabular-nums num-transition" id="mineTotalDiv">0</div>
+                        <div class="text-[10.5px] text-[#cfc0a6]">总收益率</div>
+                        <div class="text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 text-[#a8987e]" id="mineTotalRet">--</div>
                     </div>
                 </div>
             </div>
@@ -6433,8 +6436,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const amt = (v != null && Number(v) > 0) ? ('¥' + fmtMoney(v)) : '--';
                 const gTxt = (g == null) ? '--' : ((g >= 0 ? '+' : '') + g.toFixed(1) + '%');
                 const gColor = (g == null) ? '#b8ab98' : (g >= 0 ? '#a9642a' : '#00a05c');
-                // 当年收益 / 收益率：今年实时算，历史年直接读取已固化账本（快照优先，不重算）
-                const st = getYearStatForDisplay(y, isCur ? (Number(v) || 0) : 0);
+                // 当年收益 / 收益率：今年沿用实时口径；历史年仅读年度快照，快照没有再读手动年度收益率，其余一律留空（不重算、不兜底）
+                const st = isCur ? getYearStatForDisplay(y, (Number(v) || 0)) : getHistoricalYearStatStrict(y);
                 const pnlTxt = (st.profit != null) ? fmtPnlNum(st.profit) : null;
                 const pnlRateTxt = (st.rate != null && isFinite(st.rate)) ? ((st.rate >= 0 ? '+' : '') + st.rate.toFixed(2) + '%') : null;
                 const pnlColor = (st.profit == null) ? '#b8ab98' : (st.profit === 0 ? '#a8987e' : (st.profit > 0 ? '#a9642a' : '#00a05c'));
@@ -10390,14 +10393,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             const mS = loadStatsDaily().mine || {};
             numTween(document.querySelector('#mineTotalAsset'), sum.totalAsset, fmtMoney); // 总资产实时（平滑滚动）
-            const mBrkEl = document.querySelector('#mineAssetBreakdown');
-            if(mBrkEl){
-                const mmv = mBrkEl.querySelector('.ab-mkt-v');
-                const mcv = mBrkEl.querySelector('.ab-cash-v');
-                if(mmv) mmv.innerText = fmtMoney(sum.totalMarket);
-                if(mcv) mcv.innerText = fmtMoney(sum.cash);
-            }
-            numTween(document.querySelector('#mineYearDiv'), mS.yearDiv != null ? mS.yearDiv : sum.totalYearDiv, fmtMoney);
             numTween(document.querySelector('#mineTotalDiv'), mS.totalDiv != null ? mS.totalDiv : sum.totalDivReceived, fmtMoney);
             // 关注数量：本地实时数据（增删即时变化），不依赖每日快照
             const mcEl = document.querySelector('#mineWatchCount');
@@ -10449,10 +10444,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(grossInvestV > 0){
                     const cumRet = cumPnl / grossInvestV * 100;
                     retEl.innerText = fmtPctNum(cumRet);
-                    retEl.className = 'font-semibold tabular-nums ' + (cumRet >= 0 ? 'text-[#ff6b6d]' : 'text-[#3ed08a]');
+                    retEl.className = 'text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 ' + (cumRet >= 0 ? 'text-[#ff6b6d]' : 'text-[#3ed08a]');
                 } else {
                     retEl.innerText = '--';
-                    retEl.className = 'font-semibold tabular-nums text-[#a8987e]';
+                    retEl.className = 'text-[18px] font-semibold tabular-nums whitespace-nowrap mt-1 text-[#a8987e]';
                 }
             }
             // 持仓概览：复利年化 CAGR（实时计算优先——随总资产/现金实时联动；快照仅在实时缺失时兜底）
@@ -12597,6 +12592,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdKlineMarket = market === 'HK' ? 'HK' : 'A';
             sdKlineKlt = 0;
             sdKlineViewCount = null;
+            sdKlinePanStartPct = null;
             sdKlineSeq++;
             try{ sdBookReset(); }catch(e){}
             if(sdKlineInst){ try{ sdKlineInst.dispose(); }catch(e){} sdKlineInst = null; }
@@ -12610,6 +12606,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(klt === sdKlineKlt) return;
             sdKlineKlt = klt;
             sdKlineViewCount = null;
+            sdKlinePanStartPct = null;
             sdKlineTabsPaint();
             const metaEl = document.querySelector('#sdKlineMeta');
             if(metaEl) metaEl.innerText = sdKlinePeriodName(klt) + ' 加载中…';
@@ -12994,14 +12991,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ===== K线缩放：始终锁定最新一根（右侧锚定），± 按钮 / 滚轮 / 双指 =====
         let sdKlineBarsTotal = 0;
         let sdKlineViewCount = null;
+        let sdKlinePanStartPct = null;   // 手动平移后的窗口起点（null=右锚定最新一根）
         let sdKlineZoomBound = false;
         let sdKlinePinchDist = 0, sdKlinePinchCount = 0;
 
         function sdKlineDefaultCount(){
-            const el = document.querySelector('#sdKlineChart');
-            const w = ((el && el.clientWidth) ? el.clientWidth : 360) - 64;
-            const base = Math.round(w / 5.6);
-            return Math.max(12, Math.min(120, Math.round(base * 0.64)));
+            // 默认视野固定 69 根 K 线（不再按图表宽度换算）
+            return 69;
         }
         function sdKlineCurrentCount(){
             try{
@@ -13018,23 +13014,94 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const minC = Math.min(12, total);
             const c = Math.max(minC, Math.min(total, Math.round(count)));
             sdKlineViewCount = c;
+            sdKlinePanStartPct = null;   // 缩放回到右锚定最新一根
             const start = total > c ? (1 - c / total) * 100 : 0;
             sdKlineInst.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: start, end: 100 });
+            sdKlinePanPaint();
         }
         function sdKlineZoomStep(dir){
-            const cur = sdKlineCurrentCount() || sdKlineDefaultCount();
-            sdKlineZoomTo(dir > 0 ? cur * 0.8 : cur * 1.25);
+            const cur = sdKlineViewCount || sdKlineCurrentCount() || sdKlineDefaultCount();
+            // 每点一次 + / − 固定增减 14 根 K 线（+ 放大=根数变少，− 缩小=根数变多）
+            sdKlineZoomTo(dir > 0 ? cur - 14 : cur + 14);
+        }
+        // ===== 左右平移：只由底部 ‹ › 驱动（点击一步 / 长按连续），图表本身不响应手指拖动 =====
+        let sdKlinePanHoldTimer = null, sdKlinePanRepeatTimer = null, sdKlinePanDocBound = false;
+        function sdKlinePanRange(){
+            try{
+                const dz = sdKlineInst.getOption().dataZoom[0];
+                return { start: Number(dz.start) || 0, end: Number(dz.end) || 100 };
+            }catch(e){ return null; }
+        }
+        function sdKlinePanPaint(){
+            const box = document.querySelector('#sdKlinePanCtrl');
+            if(!box) return;
+            const trend = sdKlineIsTrend();
+            box.style.display = trend ? 'none' : 'flex';
+            if(trend) return;
+            const r = sdKlinePanRange();
+            if(!r) return;
+            const paintBtn = function(b, off){
+                if(!b) return;
+                b.disabled = off;
+                b.style.opacity = off ? '.35' : '1';
+                b.style.cursor = off ? 'default' : 'pointer';
+            };
+            paintBtn(document.querySelector('#sdKlinePanLeft'), r.start <= 0.001);
+            paintBtn(document.querySelector('#sdKlinePanRight'), r.end >= 99.999);
+        }
+        function sdKlinePanStep(dir, stepBars){
+            if(sdKlineIsTrend()) return false;
+            if(!sdKlineInst || sdKlineInst.isDisposed()) return false;
+            const r = sdKlinePanRange();
+            const total = sdKlineBarsTotal;
+            if(!r || !total) return false;
+            const width = Math.max(0.0001, r.end - r.start);          // 可视窗口宽度（%）
+            const bars = stepBars || Math.max(6, Math.round((sdKlineViewCount || sdKlineCurrentCount() || sdKlineDefaultCount()) / 5));
+            const delta = bars / total * 100;                          // 单击 ≈1/5 屏，长按按小步连续
+            const ns = Math.max(0, Math.min(100 - width, dir < 0 ? r.start - delta : r.start + delta));
+            if(Math.abs(ns - r.start) < 0.0001) return false;
+            sdKlinePanStartPct = ns;
+            sdKlineInst.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: ns, end: ns + width });
+            sdKlinePanPaint();
+            return true;
+        }
+        function sdKlinePanStart(dir){
+            if(sdKlineIsTrend()) return;
+            sdKlinePanStop();
+            if(!sdKlinePanStep(dir)) return;
+            sdKlinePanHoldTimer = setTimeout(function(){
+                sdKlinePanRepeatTimer = setInterval(function(){
+                    if(!sdKlinePanStep(dir, 7)) sdKlinePanStop();
+                }, 180);
+            }, 420);
+            if(!sdKlinePanDocBound){
+                sdKlinePanDocBound = true;
+                document.addEventListener('pointerup', sdKlinePanStop, true);
+                document.addEventListener('pointercancel', sdKlinePanStop, true);
+            }
+        }
+        function sdKlinePanStop(){
+            if(sdKlinePanHoldTimer){ clearTimeout(sdKlinePanHoldTimer); sdKlinePanHoldTimer = null; }
+            if(sdKlinePanRepeatTimer){ clearInterval(sdKlinePanRepeatTimer); sdKlinePanRepeatTimer = null; }
         }
         function sdKlineZoomPaint(){
             const box = document.querySelector('#sdKlineZoomCtrl');
             if(!box) return;
-            box.style.display = sdKlineIsTrend() ? 'none' : 'flex';
-            const wrap = box.parentNode;
-            if(wrap && wrap.style) wrap.style.display = sdKlineIsTrend() ? 'none' : 'flex';
+            const trend = sdKlineIsTrend();
+            box.style.display = trend ? 'none' : 'flex';
+            const bar = document.querySelector('#sdKlineCtrlBar');
+            if(bar && bar.style) bar.style.display = trend ? 'none' : 'flex';
             const day = !sdKlineDark;
             box.style.setProperty('--zc', day ? '#a89a86' : '#9aa3ac');
             box.style.setProperty('--zb', day ? 'rgba(255,255,255,0.92)' : 'rgba(26,29,33,0.92)');
             box.style.setProperty('--zd', day ? '#ece3d2' : '#333941');
+            const pan = document.querySelector('#sdKlinePanCtrl');
+            if(pan){
+                pan.style.setProperty('--zc', day ? '#a89a86' : '#9aa3ac');
+                pan.style.setProperty('--zb', day ? 'rgba(255,255,255,0.92)' : 'rgba(26,29,33,0.92)');
+                pan.style.setProperty('--zd', day ? '#ece3d2' : '#333941');
+            }
+            sdKlinePanPaint();
         }
         function sdKlineOnWheel(e){
             if(sdKlineIsTrend()) return;
@@ -13094,7 +13161,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             sdKlineBarsTotal = rows.length;
             const showCount = Math.min(rows.length, sdKlineViewCount || sdKlineDefaultCount());
-            const startPct = rows.length > showCount ? (1 - showCount / rows.length) * 100 : 0;
+            const widthPct = rows.length ? Math.min(100, showCount / rows.length * 100) : 100;
+            // 手动平移过的窗口按存下的起点重建，避免行情刷新/重绘时被拉回最新一根
+            const startPct = sdKlinePanStartPct == null
+                ? (rows.length > showCount ? 100 - widthPct : 0)
+                : Math.max(0, Math.min(100 - widthPct, sdKlinePanStartPct));
+            const endPct = startPct + widthPct;
             const series = [
                 { name: 'K线', type: 'candlestick', data: candles, barMaxWidth: 10, barCategoryGap: '26%',
                   itemStyle: { color: t.up, color0: t.down, borderColor: t.up, borderColor0: t.down, borderWidth: 1 } }
@@ -13111,7 +13183,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 itemStyle: { color: lastRow.c >= lastRow.o ? t.up : t.down, borderColor: t.bg, borderWidth: 1 },
                 label: { show: false } };
             const zoom = [
-                { type: 'inside', xAxisIndex: [0, 1], start: startPct, end: 100, zoomOnMouseWheel: false, zoomOnPinch: false, moveOnMouseMove: true, moveOnTouchMove: false }
+                // 用隐藏 slider 只承载可视窗口，彻底关掉图表内置的拖动平移（手指上下滑=滚动页面），
+                // 平移交给底部 ‹ › 按钮（点击一步、长按连续），缩放仍走滚轮/双指/± 按钮自接管
+                { type: 'slider', xAxisIndex: [0, 1], start: startPct, end: endPct, show: false }
             ];
             inst.setOption({
                 animation: true,
@@ -13736,22 +13810,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 ]}
             ];
             const noteIcon = '<i class="fa fa-info-circle text-[9px] text-gray-300"></i>';
-            let html = '<div class="min-w-[660px]">'
+            // 横向滑动时首列（指标名）吸附在左侧，右侧年份数据从它下面滑过
+            const stickyCell = function(bg, z){
+                return 'position:sticky;left:0;z-index:' + (z || 2) + ';background:' + bg + ';border-right:1px solid #efe5d3;box-shadow:5px 0 6px -5px rgba(90,70,40,.10);';
+            };
+            let html = '<div class="min-w-[628px]">'
                 + '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0] sticky top-0 z-10">'
-                + '<div class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \ 年份</div>';
+                + '<div style="' + stickyCell('#faf7ef', 30) + '" class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \ 年份</div>';
             yrs.forEach(function(r){
                 html += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
             });
             html += '</div>';
             sections.forEach(function(sec){
                 // 分区标题条
-                html += '<div class="flex items-center gap-1.5 px-3 py-1.5 bg-[#f5ecda] border-b border-[#eedfc0]">'
+                html += '<div class="flex items-center py-1.5 bg-[#f5ecda] border-b border-[#eedfc0]">'
+                    + '<div style="position:sticky;left:0;display:flex;align-items:center;gap:6px;padding:0 12px;background:#f5ecda;">'
                     + '<div class="w-[3px] h-[11px] rounded-full bg-accent"></div>'
-                    + '<div class="text-[11px] font-semibold text-[#8a5a1e]">' + sec.title + '</div></div>';
+                    + '<div class="text-[11px] font-semibold text-[#8a5a1e]">' + sec.title + '</div></div></div>';
                 sec.rows.forEach(function(rd, idx){
                     if(rd.gold){
                         html += '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-gradient-to-r from-[#f7ecd2] to-[#fdf8ec] border-b border-[#eedfc0]">'
-                            + '<div class="px-3 py-2.5 text-[12px] font-semibold text-[#8a5a1e] flex items-center gap-1">' + rd.label
+                            + '<div style="' + stickyCell('#f7ecd2') + '" class="px-3 py-2.5 text-[12px] font-semibold text-[#8a5a1e] flex items-center gap-1">' + rd.label
                             + (rd.note ? '<i class="fa fa-info-circle text-[9px] text-[#c9a35a]" title="利润现金含量 = 经营现金流净额 ÷ 归母净利润；自由现金流 = 经营现金流 − 购建资产现金（巴菲特口径：经营现金流 − 资本支出）"></i>' : '')
                             + '</div>';
                         yrs.forEach(function(r){
@@ -13761,7 +13840,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         html += '</div>';
                     } else {
                         html += '<div class="grid grid-cols-[150px_repeat(5,1fr)] ' + (idx % 2 ? 'bg-white' : 'bg-[#fdfbf5]') + ' border-b border-gray-50">'
-                            + '<div class="px-3 py-2.5 text-[11.5px] text-gray-500 flex items-center gap-1">' + rd.label
+                            + '<div style="' + stickyCell(idx % 2 ? '#ffffff' : '#fdfbf5') + '" class="px-3 py-2.5 text-[11.5px] text-gray-500 flex items-center gap-1">' + rd.label
                             + (rd.note ? noteIcon : '')
                             + '</div>';
                         yrs.forEach(function(r){
@@ -13772,11 +13851,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                 });
             });
-            // 利润现金含量解读（替换原口径说明）
-            html += '<div class="px-4 py-2.5 text-[10.5px] leading-relaxed bg-[#fdf9f0] border-t border-[#eedfc0] text-gray-500">'
-                + '<div class="font-semibold text-[#8a5a1e] mb-1">利润现金含量解读</div>'
-                + '＞1（＞100%）：利润现金含量充足，每 1 元账面净利润，收到超过 1 元经营现金，是好现象；＝1（100%）：账面利润基本都收回现金；＜1（＜100%）：利润现金不足，一部分利润只是账面数字，现金没收回来；负数：净利润为正但经营现金流负，利润基本没有现金支撑，风险高。'
-                + '</div></div>';
+            html += '</div>';
             html += '</div>';
             return html;
         }
@@ -13823,16 +13898,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 { label: '核心一级资本充足率', fn: function(r){ return pct1(r.HXYJBCZL); }, note: '核心一级资本充足率 = 核心一级资本净额 ÷ 风险加权资产，监管要求不低于 5%（并表）' },
                 { label: '分红率', fn: function(r, y){ const d = divYear[y]; return d && d.eps > 0 && d.per > 0 ? (d.per / d.eps * 100).toFixed(1) + '%' : '--'; }, note: '股利支付率 = 年度每股分红 ÷ 年度基本每股收益，与东方财富 F10 分红融资口径一致' }
             ];
-            let html = '<div class="min-w-[660px]">'
+            let html = '<div class="min-w-[628px]">'
                 + '<div class="grid grid-cols-[150px_repeat(5,1fr)] bg-[#faf7ef] border-b border-[#eedfc0] sticky top-0 z-10">'
-                + '<div class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \\ 年份</div>';
+                + '<div style="position:sticky;left:0;z-index:30;background:#faf7ef;border-right:1px solid #efe5d3;box-shadow:5px 0 6px -5px rgba(90,70,40,.10);" class="px-3 py-2 text-[11px] text-gray-500 font-medium">指标 \\ 年份</div>';
             yrs.forEach(function(r){
                 html += '<div class="px-2 py-2 text-right text-[12px] font-semibold text-gray-700 tabular-nums">' + String(r.REPORT_DATE).substring(0, 4) + '</div>';
             });
             html += '</div>';
             rowsDef.forEach(function(rd, idx){
                 html += '<div class="grid grid-cols-[150px_repeat(5,1fr)] ' + (idx % 2 ? 'bg-white' : 'bg-[#fdfbf5]') + ' border-b border-gray-50">'
-                    + '<div class="px-3 py-2.5 text-[12px] text-gray-700 flex items-center gap-1">' + rd.label
+                    + '<div style="position:sticky;left:0;z-index:2;background:' + (idx % 2 ? '#ffffff' : '#fdfbf5') + ';border-right:1px solid #efe5d3;box-shadow:5px 0 6px -5px rgba(90,70,40,.10);" class="px-3 py-2.5 text-[12px] text-gray-700 flex items-center gap-1">' + rd.label
                     + (rd.note ? '<i class="fa fa-info-circle text-[9px] text-gray-300" title="' + rd.note + '"></i>' : '')
                     + '</div>';
                 yrs.forEach(function(r){
@@ -14313,6 +14388,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function scheduleYearStatsSave(){
             if(__ysSaveTimer) return;
             __ysSaveTimer = setTimeout(function(){ __ysSaveTimer = null; saveHistory(); }, 300);
+        }
+        // 历史年严格取值（仅供年度明细）：年度快照最高优先 → 无快照再读手动年度收益率 → 都没有就留空
+        // 不调用 calcYearStats、不读 yearlyStats、不用 yearlyReturn 兜底，避免重算出容易误解的数字
+        function getHistoricalYearStatStrict(y){
+            const snap = (historyData.yearSnapshots || {})[y];
+            let profit = null, rate = null, src = 'none';
+            if(snap){
+                if(snap.yearPnl != null && isFinite(Number(snap.yearPnl))) profit = Number(snap.yearPnl);
+                if(snap.yearReturn != null && isFinite(Number(snap.yearReturn))) rate = Number(snap.yearReturn);
+                if(profit != null || rate != null) src = 'snapshot';
+            }
+            if(rate == null && historyData.manualYearlyReturn && historyData.manualYearlyReturn[y] != null){
+                const v = historyData.yearlyReturn ? historyData.yearlyReturn[y] : null;
+                if(v != null && isFinite(Number(v))){ rate = Number(v); if(src === 'none') src = 'manual'; }
+            }
+            return { profit: profit, rate: rate, src: src };
         }
         function getYearStatForDisplay(y, curTotal){
             const curY = String(new Date().getFullYear());
@@ -16180,6 +16271,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             openStatsSection('today');
         }
         // 首页顶卡「现金」：跳转统计-资金流水详情页（现金变动全景），返回回首页
+        // 首页「分红日历」入口：打开统计-分红派发日程（返回时回首页）
+        function openDivScheduleFromHold(){
+            window.__statsFromHold = true;
+            renderStatsPage();
+            document.querySelector('#pageHold').classList.add('hidden');
+            openStatsSection('schedule');
+        }
         function openCashFlowFromHold(){
             window.__statsFromHold = true;
             renderStatsPage();
@@ -17798,9 +17896,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let html = '';
             slice.forEach(function(ev, i){
                 const isFeeRow = ev.type === 'fee';
-                const badgeCls = isFeeRow ? 'bg-[#f1f3f5] text-[#8b939c]' : ((ev.type === 'in' || ev.type === 'buy') ? 'bg-[#fff1f0] text-[#e03131]' : ((ev.type === 'out' || ev.type === 'sell') ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-[#faf3e3] text-accent'));
-                const badgeText = isFeeRow ? '费用' : ((ev.type === 'in' || ev.type === 'out') ? '转账' : (ev.type === 'buy' ? '买入' : (ev.type === 'sell' ? '卖出' : '分红')));
-                const amtCls = isFeeRow ? 'text-[#8b939c]' : ((ev.type === 'in' || ev.type === 'buy') ? 'text-[#e03131]' : ((ev.type === 'out' || ev.type === 'sell') ? 'text-[#00b57a]' : 'text-accent'));
+                const isAdjRow = ev.type === 'adj';
+                const badgeCls = isFeeRow ? 'bg-[#f1f3f5] text-[#8b939c]' : (isAdjRow ? 'bg-[#eef1f4] text-[#64748b]' : ((ev.type === 'in' || ev.type === 'buy') ? 'bg-[#fff1f0] text-[#e03131]' : ((ev.type === 'out' || ev.type === 'sell') ? 'bg-[#e8faf3] text-[#00b57a]' : 'bg-[#faf3e3] text-accent')));
+                const badgeText = isFeeRow ? '费用' : (isAdjRow ? '调整' : ((ev.type === 'in' || ev.type === 'out') ? '转账' : (ev.type === 'buy' ? '买入' : (ev.type === 'sell' ? '卖出' : '分红'))));
+                const amtCls = isFeeRow ? 'text-[#8b939c]' : (isAdjRow ? 'text-[#64748b]' : ((ev.type === 'in' || ev.type === 'buy') ? 'text-[#e03131]' : ((ev.type === 'out' || ev.type === 'sell') ? 'text-[#00b57a]' : 'text-accent')));
                 html += '<div class="grid grid-cols-[minmax(0,1fr)_62px_96px] gap-1 items-center px-4 py-3' + (i < slice.length - 1 ? ' border-b border-gray-100' : '') + '">'
                     + '<div class="flex items-center gap-2 min-w-0">'
                     + '<span class="' + badgeCls + ' text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0">' + badgeText + '</span>'
@@ -21856,7 +21955,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 showToast('请输入有效数字');
                 return;
             }
-            historyData.cashBalance = Math.round(v * 100) / 100;
+            const oldCash = Math.round((Number(historyData.cashBalance) || 0) * 100) / 100;
+            const newCash = Math.round(v * 100) / 100;
+            historyData.cashBalance = newCash;
+            // 手动改现金＝一笔余额调整流水（只留痕，不计入转入/转出总额）
+            const cashDelta = Math.round((newCash - oldCash) * 100) / 100;
+            if(cashDelta !== 0){
+                if(!historyData.cashFlowLog) historyData.cashFlowLog = [];
+                historyData.cashFlowLog.unshift({
+                    type: 'adj',
+                    title: '修改余额',
+                    detail: '现金 ' + fmtMoney(oldCash) + ' → ' + fmtMoney(newCash),
+                    amount: cashDelta,
+                    dateStr: todayStr(),
+                    cashAfter: newCash,
+                    ts: Date.now(),
+                    manual: true
+                });
+                historyData.cashFlowUpdatedAt = todayStr() + ' ' + statsRefreshNow();
+            }
             saveHistory();
             flushAllNow();
             closeCashEdit();
@@ -21865,6 +21982,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 全站联动：若统计页/资产分析详情页可见，同步刷新（修改现金后无需等待交易时段2秒或30分钟轮询）
             try{
                 if(!document.querySelector('#pageStats').classList.contains('hidden')) refreshStatsCardSummaries();
+                if(!document.querySelector('#pageStatsCashFlow').classList.contains('hidden')) renderStatsCashFlow();
                 if(!document.querySelector('#pageAnalysis').classList.contains('hidden')){
                     recordDailyAssets();
                     finalizePastMonths();
@@ -21961,14 +22079,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                 });
             });
-            if(!best){ card.classList.add('hidden'); return; }
-            card.classList.remove('hidden');
+            const emptyEl = document.querySelector('#nextDivEmpty');
+            const detailEl = document.querySelector('#nextDivDetail');
+            if(!best){
+                card.removeAttribute('title');
+                if(emptyEl) emptyEl.classList.remove('hidden');
+                if(detailEl) detailEl.classList.add('hidden');
+                return;
+            }
+            if(emptyEl) emptyEl.classList.add('hidden');
+            if(detailEl) detailEl.classList.remove('hidden');
             const dEl = document.querySelector('#nextDivDays');
             if(dEl) dEl.innerText = best.days;
             const aEl = document.querySelector('#nextDivAmt');
             if(aEl) aEl.innerText = fmtMoney(best.per * best.count);
+            const dateEl = document.querySelector('#nextDivDate');
+            if(dateEl) dateEl.innerText = String(best.date || '').slice(5);
             const sEl = document.querySelector('#nextDivStock');
-            if(sEl) sEl.innerText = best.name + (best.per > 0 ? ' · 每股' + best.per.toFixed(2) + ' 元' : '');
+            if(sEl) sEl.innerText = best.name || '--';
+            card.title = (best.name || '') + (best.per > 0 ? ' 每股 ' + best.per.toFixed(2) + ' 元' : '') + ' · ' + best.date;
         }
         function updateSummaryCard(sum){
             const stNumEl = document.querySelector('#stockNum');

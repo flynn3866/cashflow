@@ -9844,7 +9844,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             { icon: 'fa-money', label: '投入成本', valueId: 'mineInvestCost', subStatic: '初始投入 + 历年净流入', detail: 'openCostDetail()' },
             { icon: 'fa-area-chart', label: '年化收益', labelHtml: '年化收益<span class="text-[9px] text-gray-400 opacity-70 ml-0.5">(XIRR)</span>', valueId: 'mineCagr', subDynamicId: 'mineCagrYears' },
             { icon: 'fa-tachometer', label: '最新净值', valueId: 'mineNav', subId: 'mineNavGrowth', subIsValue: true, detail: 'openNavDetail()' },
-            { icon: 'fa-coins', label: '自由现金流', valueId: 'mineFreeCashflow', accent: true, subStatic: '今年已收分红', detail: "openDivDetail('total')" }
+            { icon: 'fa-coins', label: '自由现金流', valueId: 'mineFreeCashflow', accent: true, valNeutral: true, subStatic: '今年已收分红', detail: "openDivDetail('total')" }
         ];
         // ============ XIRR 年化收益率（资金投入每笔记录日期，精确到天；投入为负、取出/终端为正） ============
         function xirr(cashflows){
@@ -10339,7 +10339,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let h = '';
             mineOverviewItems.forEach(function(it){
                 const iconCls = it.accent ? 'text-accent' : 'text-gray-400';
-                const valCls = it.accent ? 'text-accent' : 'text-gray-800';
+                const valCls = (it.accent && !it.valNeutral) ? 'text-accent' : 'text-gray-800';
                 const subHtml = it.subIsValue
                     ? '<div class="text-[10.5px] mt-1" id="' + it.subId + '">+0.00%</div>'
                     : (it.subDynamicId
@@ -10470,7 +10470,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(navEl){
                 const navV = lastNav ? lastNav.nav : (mS.nav != null ? mS.nav : 1);
                 navEl.innerText = navV.toFixed(2);
-                navEl.className = 'text-lg font-semibold text-accent tabular-nums';
+                navEl.className = 'text-lg font-semibold text-gray-800 tabular-nums';
             }
             const navGrowthEl = document.querySelector('#mineNavGrowth');
             if(navGrowthEl){
@@ -12452,6 +12452,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         try{ sdKlineDark = lsGet('dividendKlineDark') === '1'; }catch(e){ sdKlineDark = false; }
         const SDKLINE_MA_COLOR_DARK = { 5: '#f0b350', 10: '#7fb6e0', 20: '#b39ce0', 30: '#3ec98a', 60: '#e5786a', 120: '#93a3b0', 250: '#c9a06a' };
 
+        let sdKlineSelActive = false;
+        let sdKlineSelDate = '';
+        let sdKlineLastPack = null;
+        let sdKlineMetaLatestHtml = '';
+        let sdKlineSelectBound = false;
+        let sdKlineLongPressTimer = null;
+        let sdKlinePress = null;
+
         function sdKlinePeriodName(klt){
             if(klt === 0) return '分时';
             return klt === 102 ? '周K' : (klt === 103 ? '月K' : (klt === 106 ? '年K' : '日K'));
@@ -12484,7 +12492,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return {
                     bg: '#131518', grid: '#24282d', axis: '#2b2f34', text: '#8b939c',
                     tipBg: 'rgba(28,31,34,0.97)', tipBorder: '#30353b', tipText: '#d5dae0', tipSub: '#8b939c',
-                    pointer: '#2b3037', up: '#f25555', down: '#2fc57c',
+                    pointer: '#8b939c', up: '#f25555', down: '#2fc57c',
                     volUp: '#f25555', volDown: '#2fc57c',
                     areaUp: ['rgba(242,85,85,0.26)', 'rgba(242,85,85,0)'],
                     areaDown: ['rgba(47,197,124,0.26)', 'rgba(47,197,124,0)'],
@@ -12593,6 +12601,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdKlineKlt = 0;
             sdKlineViewCount = null;
             sdKlinePanStartPct = null;
+            sdKlineClearSelection(false);
+            sdKlineLastPack = null;
             sdKlineSeq++;
             try{ sdBookReset(); }catch(e){}
             if(sdKlineInst){ try{ sdKlineInst.dispose(); }catch(e){} sdKlineInst = null; }
@@ -12607,6 +12617,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdKlineKlt = klt;
             sdKlineViewCount = null;
             sdKlinePanStartPct = null;
+            sdKlineClearSelection(true);
             sdKlineTabsPaint();
             const metaEl = document.querySelector('#sdKlineMeta');
             if(metaEl) metaEl.innerText = sdKlinePeriodName(klt) + ' 加载中…';
@@ -12871,6 +12882,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function sdKlineRender(pack){
             if(!pack || !pack.rows || !pack.rows.length) return;
+            sdKlineLastPack = pack;
+            if(pack.type === 'trend' && sdKlineSelActive) sdKlineClearSelection(false);
             const dom = document.querySelector('#sdKlineChart');
             if(dom) dom.style.background = sdKlineDark ? '#131518' : '#fdfbf6';
             if(pack.type === 'trend'){ sdKlineRenderTrend(pack); sdBookShow(true); }
@@ -12930,29 +12943,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     { left: 20, right: 54, top: 10, height: '63%' },
                     { left: 20, right: 54, top: '69%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
                 ],
-                axisPointer: { link: [{ xAxisIndex: 'all' }], label: { backgroundColor: t.pointer, fontSize: 9 } },
-                tooltip: {
-                    trigger: 'axis',
-                    appendToBody: true,
-                    confine: true,
-                    z: 1000,
-                    backgroundColor: t.tipBg,
-                    borderColor: t.tipBorder,
-                    borderWidth: 1,
-                    textStyle: { color: t.tipText, fontSize: 11 },
-                    padding: [7, 10],
-                    formatter: function(ps){
-                        const p = ps[0], i = p.dataIndex, r = rowMap[times[i]];
-                        if(!r) return '<div style="font-size:10px;color:' + t.tipSub + '">' + dateTxt + ' ' + times[i] + ' 暂无成交</div>';
-                        const pct = preClose ? (r.price / preClose - 1) * 100 : 0;
-                        const cc = pct >= 0 ? t.up : t.down;
-                        return '<div style="font-size:10px;color:' + t.tipSub + ';margin-bottom:3px">' + dateTxt + ' ' + times[i] + '</div>'
-                            + '价 <b style="color:' + cc + '">' + r.price.toFixed(3) + '</b><br>'
-                            + '涨跌 <b style="color:' + cc + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</b><br>'
-                            + (r.avg != null ? '均价 ' + r.avg.toFixed(3) + '<br>' : '')
-                            + '量 ' + sdKlineVolText(r.v);
-                    }
-                },
                 xAxis: [
                     { type: 'category', data: times, boundaryGap: false, axisLine: { lineStyle: { color: t.axis } }, axisTick: { show: false }, axisLabel: { show: false }, axisPointer: { label: { show: false } } },
                     { type: 'category', gridIndex: 1, data: times, boundaryGap: false, axisLine: { lineStyle: { color: t.axis } }, axisTick: { show: false },
@@ -12985,7 +12975,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(meta){
                 const pct = preClose ? (last.price / preClose - 1) * 100 : 0;
                 const cc = pct >= 0 ? SDKLINE_UP : SDKLINE_DOWN;
-                meta.innerHTML = '分时 ' + dateTxt + ' <span style="color:' + cc + ';font-weight:600">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+                sdKlineMetaLatestHtml = '分时 ' + dateTxt + ' <span style="color:' + cc + ';font-weight:600">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+                meta.innerHTML = sdKlineMetaLatestHtml;
             }
         }
         // ===== K线缩放：始终锁定最新一根（右侧锚定），± 按钮 / 滚轮 / 双指 =====
@@ -13147,6 +13138,123 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             el.addEventListener('touchcancel', sdKlineOnTouchEnd, { passive: true });
         }
 
+        // ===== K线长按选点：静止 1 秒显示十字线，数据推送到顶部行情卡；轻点图表取消 =====
+        function sdKlineCancelPress(){
+            if(sdKlineLongPressTimer){ clearTimeout(sdKlineLongPressTimer); sdKlineLongPressTimer = null; }
+            sdKlinePress = null;
+        }
+        function sdKlineIndexAt(clientX, clientY){
+            if(!sdKlineLastPack || !sdKlineLastPack.rows || !sdKlineInst || sdKlineInst.isDisposed() || sdKlineIsTrend()) return -1;
+            const el = document.querySelector('#sdKlineChart');
+            if(!el) return -1;
+            const rect = el.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const rows = sdKlineLastPack.rows;
+            let dz = null;
+            try{ dz = sdKlineInst.getOption().dataZoom[0]; }catch(e){}
+            const total = rows.length;
+            let start = 0, end = total - 1;
+            if(dz){
+                start = Math.max(0, Math.floor((Number(dz.start) || 0) / 100 * total));
+                end = Math.min(total - 1, Math.ceil((Number(dz.end) || 100) / 100 * total) - 1);
+            }
+            let best = -1, bestD = Infinity;
+            for(let i = start; i <= end; i++){
+                let px = sdKlineInst.convertToPixel({ xAxisIndex: 0 }, i);
+                if(Array.isArray(px)) px = px[0];
+                if(!isFinite(px)) continue;
+                const d = Math.abs(px - x);
+                if(d < bestD){ bestD = d; best = i; }
+            }
+            return best;
+        }
+        function sdKlineSelectRow(row, idx){
+            if(!row || !sdKlineLastPack) return;
+            const rows = sdKlineLastPack.rows;
+            const prev = idx > 0 ? Number(rows[idx - 1].c) : Number(row.o);
+            const pct = prev ? (Number(row.c) / prev - 1) * 100 : 0;
+            sdKlineSelActive = true;
+            sdKlineSelDate = String(row.d || '');
+            sdKlineApplySelectionMark(rows, idx);
+            sdQuoteSetFields({
+                code: sdKlineCode, market: sdKlineMarket, price: Number(row.c),
+                pct: pct, chg: (Number(row.c) - prev),
+                open: Number(row.o), high: Number(row.h), low: Number(row.l),
+                prevClose: prev, date: String(row.d || '')
+            }, true);
+            const meta = document.querySelector('#sdKlineMeta');
+            if(meta){
+                const cc = pct >= 0 ? SDKLINE_UP : SDKLINE_DOWN;
+                meta.innerHTML = '选中 ' + String(row.d || '') + ' <span style="color:' + cc + ';font-weight:600">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+            }
+        }
+        function sdKlineApplySelectionMark(rows, idx){
+            if(!sdKlineInst || sdKlineInst.isDisposed() || sdKlineIsTrend() || !rows || !rows.length) return;
+            const t = sdKlineTheme();
+            const last = rows[rows.length - 1];
+            const mp = [{ coord: [last.d, last.c], itemStyle: { color: last.c >= last.o ? t.up : t.down } }];
+            let lines = [];
+            if(idx >= 0 && rows[idx]){
+                const r = rows[idx];
+                lines = [{ xAxis: r.d }, { yAxis: r.c }];
+                if(r.d !== last.d) mp.push({ coord: [r.d, r.c], itemStyle: { color: r.c >= r.o ? t.up : t.down } });
+            }
+            sdKlineInst.setOption({ series: [{ markLine: { silent: true, symbol: 'none', label: { show: false },
+                lineStyle: { color: t.pointer, width: 1, type: 'dashed', opacity: 0.9 }, data: lines },
+                markPoint: { silent: true, symbol: 'circle', symbolSize: 5, data: mp,
+                    itemStyle: { borderColor: t.bg, borderWidth: 1 }, label: { show: false } } }] });
+        }
+        function sdKlineClearSelection(restore){
+            const had = sdKlineSelActive;
+            sdKlineSelActive = false;
+            sdKlineSelDate = '';
+            sdKlineCancelPress();
+            if(sdKlineLastPack && sdKlineLastPack.rows) sdKlineApplySelectionMark(sdKlineLastPack.rows, -1);
+            if(had && restore) sdQuoteRestoreLatest();
+            const meta = document.querySelector('#sdKlineMeta');
+            if(meta && sdKlineMetaLatestHtml) meta.innerHTML = sdKlineMetaLatestHtml;
+        }
+        function sdKlineBindSelect(){
+            const el = document.querySelector('#sdKlineChart');
+            if(!el || sdKlineSelectBound) return;
+            sdKlineSelectBound = true;
+            const cancel = function(){ sdKlineCancelPress(); };
+            const down = function(e){
+                if(sdKlineIsTrend()) return;
+                if(e.pointerType === 'mouse' && e.button !== 0) return;
+                if(e.isPrimary === false){ sdKlineCancelPress(); return; }
+                sdKlineCancelPress();
+                sdKlinePress = { x: e.clientX, y: e.clientY, t: Date.now(), moved: false, long: false };
+                sdKlineLongPressTimer = setTimeout(function(){
+                    if(!sdKlinePress) return;
+                    if(Math.abs(sdKlinePress.x - e.clientX) > 8 || Math.abs(sdKlinePress.y - e.clientY) > 8){ sdKlineCancelPress(); return; }
+                    const idx = sdKlineIndexAt(sdKlinePress.x, sdKlinePress.y);
+                    if(idx < 0) return;
+                    sdKlinePress.long = true;
+                    sdKlineSelectRow(sdKlineLastPack.rows[idx], idx);
+                }, 1000);
+            };
+            const move = function(e){
+                if(!sdKlinePress || sdKlinePress.long) return;
+                if(Math.abs(e.clientX - sdKlinePress.x) > 8 || Math.abs(e.clientY - sdKlinePress.y) > 8){
+                    sdKlinePress.moved = true;
+                    sdKlineCancelPress();
+                }
+            };
+            const up = function(e){
+                if(!sdKlinePress) return;
+                const p = sdKlinePress;
+                const dt = Date.now() - p.t;
+                sdKlineCancelPress();
+                if(sdKlineSelActive && !p.long && !p.moved && dt < 1000) sdKlineClearSelection(true);
+            };
+            el.addEventListener('pointerdown', down, { passive: true });
+            el.addEventListener('pointermove', move, { passive: true });
+            el.addEventListener('pointerup', up, { passive: true });
+            el.addEventListener('pointercancel', cancel, { passive: true });
+            el.addEventListener('pointerleave', cancel, { passive: true });
+        }
+
         function sdKlineRenderK(pack){
             const t = sdKlineTheme();
             const inst = sdKlineEnsureInst();
@@ -13178,10 +13286,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             series.push({ name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barMaxWidth: 10, barCategoryGap: '26%', itemStyle: { borderRadius: [1, 1, 0, 0] } });
             const lastRow = rows[rows.length - 1];
-            series[0].markPoint = { silent: true, symbol: 'circle', symbolSize: 4,
-                data: [{ coord: [rows.length - 1, lastRow.c] }],
-                itemStyle: { color: lastRow.c >= lastRow.o ? t.up : t.down, borderColor: t.bg, borderWidth: 1 },
+            const selIdx = sdKlineSelActive ? rows.findIndex(function(r){ return r.d === sdKlineSelDate; }) : -1;
+            const mpData = [{ coord: [lastRow.d, lastRow.c], itemStyle: { color: lastRow.c >= lastRow.o ? t.up : t.down } }];
+            if(selIdx >= 0 && selIdx !== rows.length - 1){
+                const sr = rows[selIdx];
+                mpData.push({ coord: [sr.d, sr.c], itemStyle: { color: sr.c >= sr.o ? t.up : t.down } });
+            }
+            series[0].markPoint = { silent: true, symbol: 'circle', symbolSize: 5,
+                data: mpData,
+                itemStyle: { borderColor: t.bg, borderWidth: 1 },
                 label: { show: false } };
+            series[0].markLine = { silent: true, symbol: 'none', label: { show: false },
+                lineStyle: { color: t.pointer, width: 1, type: 'dashed', opacity: 0.9 },
+                data: selIdx >= 0 ? [{ xAxis: rows[selIdx].d }, { yAxis: rows[selIdx].c }] : [] };
             const zoom = [
                 // 用隐藏 slider 只承载可视窗口，彻底关掉图表内置的拖动平移（手指上下滑=滚动页面），
                 // 平移交给底部 ‹ › 按钮（点击一步、长按连续），缩放仍走滚轮/双指/± 按钮自接管
@@ -13198,29 +13315,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     { left: 20, right: 54, top: '69%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
                 ],
                 dataZoom: zoom,
-                axisPointer: { link: [{ xAxisIndex: 'all' }], label: { backgroundColor: t.pointer, fontSize: 9 } },
-                tooltip: {
-                    trigger: 'axis',
-                    appendToBody: true,
-                    confine: true,
-                    z: 1000,
-                    backgroundColor: t.tipBg,
-                    borderColor: t.tipBorder,
-                    borderWidth: 1,
-                    textStyle: { color: t.tipText, fontSize: 11 },
-                    padding: [7, 10],
-                    formatter: function(ps){
-                        const p = ps[0], i = p.dataIndex, r = rows[i];
-                        if(!r) return '';
-                        const prev = i > 0 ? rows[i - 1].c : r.o;
-                        const pct = prev ? (r.c / prev - 1) * 100 : 0;
-                        const cc = r.c >= prev ? t.up : t.down;
-                        return '<div style="font-size:10px;color:' + t.tipSub + ';margin-bottom:3px">' + r.d + '</div>'
-                            + '开 <b>' + r.o.toFixed(2) + '</b>　收 <b style="color:' + cc + '">' + r.c.toFixed(2) + '</b><br>'
-                            + '高 ' + r.h.toFixed(2) + '　低 ' + r.l.toFixed(2) + '<br>'
-                            + '涨跌 <b style="color:' + cc + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</b>　量 ' + sdKlineVolText(r.v);
-                    }
-                },
                 xAxis: [
                     { type: 'category', data: dates, boundaryGap: true, axisLine: { lineStyle: { color: t.axis } }, axisTick: { show: false }, axisLabel: { show: false }, axisPointer: { label: { show: false } } },
                     { type: 'category', gridIndex: 1, data: dates, boundaryGap: true, axisLine: { lineStyle: { color: t.axis } }, axisTick: { show: false }, axisLabel: { show: true, fontSize: 9, color: t.text, margin: 5, hideOverlap: true } }
@@ -13236,6 +13330,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 series: series
             }, true);
             sdKlineBindZoom();
+            sdKlineBindSelect();
             sdKlineZoomPaint();
             const meta = document.querySelector('#sdKlineMeta');
             if(meta){
@@ -13243,10 +13338,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const prev = rows.length > 1 ? rows[rows.length - 2].c : last.o;
                 const pct = prev ? (last.c / prev - 1) * 100 : 0;
                 const cc = pct >= 0 ? SDKLINE_UP : SDKLINE_DOWN;
-                meta.innerHTML = sdKlinePeriodName(sdKlineKlt) + ' ' + last.d + ' <span style="color:' + cc + ';font-weight:600">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+                sdKlineMetaLatestHtml = sdKlinePeriodName(sdKlineKlt) + ' ' + last.d + ' <span style="color:' + cc + ';font-weight:600">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+                meta.innerHTML = sdKlineMetaLatestHtml;
+                if(selIdx >= 0){
+                    const sr = rows[selIdx];
+                    const sp = selIdx > 0 ? rows[selIdx - 1].c : sr.o;
+                    const spct = sp ? (sr.c / sp - 1) * 100 : 0;
+                    const sc = spct >= 0 ? SDKLINE_UP : SDKLINE_DOWN;
+                    meta.innerHTML = '选中 ' + sr.d + ' <span style="color:' + sc + ';font-weight:600">' + (spct >= 0 ? '+' : '') + spct.toFixed(2) + '%</span>';
+                }
             }
+            if(sdKlineSelActive && selIdx < 0) sdKlineClearSelection(true);
         }
         function sdKlineDispose(){
+            sdKlineClearSelection(false);
+            sdKlineLastPack = null;
+            sdKlineCancelPress();
             sdKlineSeq++;
             if(sdKlineInst){ try{ sdKlineInst.dispose(); }catch(e){} }
             sdKlineInst = null;
@@ -13414,9 +13521,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     el.innerText = (val != null && val > 0) ? fmtPrice(val, code, isHk) : '--';
                     if(val != null && val > 0) el.style.color = sdPxColor(val, pvC);
                 };
-                setTxt('#sdOpen', v.open);
-                setTxt('#sdHigh', v.high);
-                setTxt('#sdLow', v.low);
+                if(!sdKlineSelActive){
+                    setTxt('#sdOpen', v.open);
+                    setTxt('#sdHigh', v.high);
+                    setTxt('#sdLow', v.low);
+                }
+                if(sdQuoteLatestSnapshot && sdQuoteLatestSnapshot.code === code){
+                    if(v.open > 0) sdQuoteLatestSnapshot.open = Number(v.open);
+                    if(v.high > 0) sdQuoteLatestSnapshot.high = Number(v.high);
+                    if(v.low > 0) sdQuoteLatestSnapshot.low = Number(v.low);
+                    if(v.prevClose > 0) sdQuoteLatestSnapshot.prevClose = Number(v.prevClose);
+                }
                 if(watchQuotes[code]){
                     watchQuotes[code].open = v.open;
                     watchQuotes[code].high = v.high;
@@ -13431,35 +13546,78 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(sdLiveTimer){ clearInterval(sdLiveTimer); sdLiveTimer = null; }
             try{ sdBookSeq++; }catch(e){}
         }
-        function sdQuotePatch(code, market, v){
-            if(!v || !(v.price > 0)) return;
+        let sdQuoteLatestSnapshot = null;
+        function sdQuoteSetFields(s, selected){
+            if(!s) return;
+            const code = s.code || sdKlineCode;
+            const market = s.market || sdKlineMarket;
             const isHk = market === 'HK';
-            const price = v.price;
-            const pct = (v.changePct != null && !isNaN(v.changePct)) ? v.changePct : null;
-            const chg = (v.change != null && !isNaN(v.change)) ? v.change : null;
+            const price = (s.price != null && Number(s.price) > 0) ? Number(s.price) : null;
+            const pct = (s.pct != null && !isNaN(Number(s.pct))) ? Number(s.pct) : null;
+            const chg = (s.chg != null && !isNaN(Number(s.chg))) ? Number(s.chg) : null;
+            const prev = (s.prevClose != null && Number(s.prevClose) > 0) ? Number(s.prevClose) : 0;
+            const nowD = new Date();
+            const hm = ('0' + nowD.getHours()).slice(-2) + ':' + ('0' + nowD.getMinutes()).slice(-2);
+            const time = s.time || hm;
             const pctColor = pct == null ? '#c9c2b6' : (pct > 0 ? '#ff6b6b' : (pct < 0 ? '#3ecf8e' : '#e8d9bc'));
             const chgColor = chg == null ? '#a89b84' : (chg > 0 ? '#ff6b6b' : (chg < 0 ? '#3ecf8e' : '#e8d9bc'));
             const px = document.querySelector('#sdPrice');
-            if(px){ px.innerText = fmtPrice(price, code, isHk); px.style.color = pctColor; }
+            if(px){ px.innerText = price != null ? fmtPrice(price, code, isHk) : '--'; px.style.color = pctColor; }
             const pc = document.querySelector('#sdPct');
             if(pc){ pc.innerText = pct == null ? '--' : (pct > 0 ? '+' : '') + pct.toFixed(2) + '%'; pc.style.color = pctColor; }
             const cg = document.querySelector('#sdChg');
             if(cg){ cg.innerText = chg == null ? '--' : (chg > 0 ? '+' : '') + Number(chg).toFixed(2); cg.style.color = chgColor; }
-            const pvC = (v.prevClose > 0) ? Number(v.prevClose) : 0;
             const setP = function(id, val){
                 const el = document.querySelector(id);
                 if(!el) return;
-                if(val != null && val > 0){ el.innerText = fmtPrice(val, code, isHk); el.style.color = sdPxColor(val, pvC); }
+                if(val != null && Number(val) > 0){
+                    el.innerText = fmtPrice(Number(val), code, isHk);
+                    el.style.color = sdPxColor(Number(val), prev);
+                } else {
+                    el.innerText = '--';
+                    el.style.color = '#a89b84';
+                }
             };
-            setP('#sdOpen', v.open);
-            setP('#sdHigh', v.high);
-            setP('#sdLow', v.low);
+            setP('#sdOpen', s.open);
+            setP('#sdHigh', s.high);
+            setP('#sdLow', s.low);
+            const pl = document.querySelector('#sdPriceLabel');
+            if(pl) pl.innerText = selected ? '选中价' : '最新价';
+            const cl = document.querySelector('#sdQuoteClockLabel');
+            if(cl) cl.innerText = selected ? '选中K线' : '更新时间';
+            const clk = document.querySelector('#sdQuoteClock');
+            if(clk) clk.innerText = selected ? (s.date || '--') : time;
+            const t = document.querySelector('#sdTime');
+            if(t) t.innerText = selected ? ('K线 ' + (s.date || '') + ' 选中') : (time + ' 已刷新');
+        }
+        function sdQuoteRestoreLatest(){
+            let s = sdQuoteLatestSnapshot;
+            if(!s || s.code !== sdKlineCode){
+                const q = watchQuotes[sdKlineCode] || {};
+                if(!(q.price > 0)) return;
+                s = { code: sdKlineCode, market: sdKlineMarket, price: q.price, pct: q.changePct, chg: q.change,
+                    open: q.open, high: q.high, low: q.low, prevClose: q.prevClose, time: q.time };
+            }
+            sdQuoteSetFields(s, false);
+        }
+        function sdQuotePatch(code, market, v){
+            if(!v || !(v.price > 0)) return;
+            const price = Number(v.price);
+            const pct = (v.changePct != null && !isNaN(v.changePct)) ? Number(v.changePct) : null;
+            const chg = (v.change != null && !isNaN(v.change)) ? Number(v.change) : null;
             const nowD = new Date();
             const hm = ('0' + nowD.getHours()).slice(-2) + ':' + ('0' + nowD.getMinutes()).slice(-2);
-            const clk = document.querySelector('#sdQuoteClock');
-            if(clk) clk.innerText = hm;
-            const t = document.querySelector('#sdTime');
-            if(t) t.innerText = hm + ' 已刷新';
+            const prevSnap = (sdQuoteLatestSnapshot && sdQuoteLatestSnapshot.code === code) ? sdQuoteLatestSnapshot : null;
+            const latest = {
+                code: code, market: market, price: price, pct: pct, chg: chg,
+                open: (v.open != null && Number(v.open) > 0) ? Number(v.open) : (prevSnap ? prevSnap.open : null),
+                high: (v.high != null && Number(v.high) > 0) ? Number(v.high) : (prevSnap ? prevSnap.high : null),
+                low: (v.low != null && Number(v.low) > 0) ? Number(v.low) : (prevSnap ? prevSnap.low : null),
+                prevClose: (v.prevClose != null && Number(v.prevClose) > 0) ? Number(v.prevClose) : (prevSnap ? prevSnap.prevClose : 0),
+                time: hm
+            };
+            sdQuoteLatestSnapshot = latest;
+            if(!sdKlineSelActive) sdQuoteSetFields(latest, false);
             const wq = watchQuotes[code];
             if(wq){
                 wq.price = price;
@@ -13530,13 +13688,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const priceTxt = price != null ? (market === 'HK' ? fmtPrice(price, code, true) : fmtPrice(price, code, false)) : '--';
             document.querySelector('#sdQuoteBody').innerHTML = ''
                 + '<div class="flex items-end justify-between">'
-                + '<div><div class="text-[11px] text-[#a89b84] mb-1">最新价</div>'
+                + '<div><div id="sdPriceLabel" class="text-[11px] text-[#a89b84] mb-1">最新价</div>'
                 + '<div class="flex items-baseline gap-2.5">'
                 + '<span id="sdPrice" class="text-[34px] font-bold tabular-nums leading-none" style="color:' + pctColor + '">' + priceTxt + '</span>'
                 + '<span id="sdPct" class="text-[14px] font-semibold tabular-nums" style="color:' + pctColor + '">' + pctTxt + '</span>'
                 + '<span id="sdChg" class="text-[12px] font-semibold tabular-nums" style="color:' + chgColor + '">' + chgTxt + '</span>'
                 + '</div></div>'
-                + '<div class="text-right"><div class="text-[10px] text-[#a89b84]">更新时间</div>'
+                + '<div class="text-right"><div id="sdQuoteClockLabel" class="text-[10px] text-[#a89b84]">更新时间</div>'
                 + '<div id="sdQuoteClock" class="text-[13px] text-[#e8d9bc] font-medium tabular-nums mt-0.5">' + hm + '</div></div>'
                 + '</div>'
                 + '<div class="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-white/10">'
@@ -13551,6 +13709,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div><div class="text-[10px] text-[#a89b84] mb-1">市盈率TTM</div><div class="text-[14px] font-semibold tabular-nums text-[#f0e6d2]">' + (pe != null ? pe.toFixed(2) : '--') + '</div></div>'
                 + '<div><div class="text-[10px] text-[#a89b84] mb-1">市净率</div><div class="text-[14px] font-semibold tabular-nums text-[#f0e6d2]">' + (pb != null ? pb.toFixed(2) : '--') + '</div></div>'
                 + '</div>';
+            sdQuoteLatestSnapshot = { code: code, market: market, price: price, pct: pct, chg: chg,
+                open: q.open, high: q.high, low: q.low, prevClose: q.prevClose, time: hm };
             if(market !== 'HK' && (q.open == null || q.high == null || q.low == null)){
                 sdQuoteFillExtra(code, market, my);
             }

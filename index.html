@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261001.138';</script>
+    <script>window.APP_VERSION = '20261108.168';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1254,7 +1254,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
                     <div class="min-w-0 flex-1">
-                        <div class="text-[9px] text-[#a8987e]">区间累计</div>
+                        <div class="text-[9px] text-[#a8987e]">最新</div>
                         <div id="ahReturnCum" class="mt-1 text-[19px] font-bold tabular-nums leading-none text-[#8a5a2b]">--</div>
                     </div>
                     <div class="text-right">
@@ -5739,14 +5739,39 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const currentVersion = window.APP_VERSION || '1.0';
             if(savedVersion && savedVersion !== currentVersion){
                 lsSet('appVersion', currentVersion);
-                // 清除可能的缓存后刷新
-                if('caches' in window){
-                    caches.keys().then(function(names){
-                        names.forEach(function(name){ caches.delete(name); });
-                    });
+                // ⚠ 版本号存在 kv 桶里，落库是 400ms 防抖的异步写入；而 kv 的启动加载是"IndexedDB 优先"
+                // （localStorage 只迁移 IDB 里没有的键）。旧写法在这里立刻 reload，那次 kv 写入来不及落地，
+                // 重载后 bootstrap 又从 IndexedDB 读回旧版本号 → 再判定"版本变了" → 不停刷新（死循环）。
+                // 因此：先立刻触发落库，再轮询 IndexedDB 里的真实值，确认读到新版本号才允许刷新；否则放弃刷新、照常启动。
+                let persisted = false;
+                try{
+                    if(AppDB.ok && AppDB.db){
+                        try{ flushAllNow(); }catch(e){}
+                        for(let i = 0; i < 30; i++){
+                            let env = null;
+                            try{ env = parseEnv(await AppDB.get('kv', 'appVersion')); }catch(e){ env = null; }
+                            if(env && env.s === currentVersion){ persisted = true; break; }
+                            await new Promise(function(res){ setTimeout(res, 50); });
+                        }
+                    }else{
+                        persisted = true; // 没有 IndexedDB：只依赖 localStorage，lsSet 已同步写好
+                    }
+                }catch(e){ persisted = false; }
+                // 二次保险：同一版本号在同一标签页最多自动刷新一次，任何意外都不会造成反复刷新
+                let alreadyTried = false;
+                try{ alreadyTried = sessionStorage.getItem('verReloadOnce_' + currentVersion) === '1'; }catch(e){}
+                if(persisted && !alreadyTried){
+                    try{ sessionStorage.setItem('verReloadOnce_' + currentVersion, '1'); }catch(e){}
+                    // 清除可能的缓存后刷新
+                    if('caches' in window){
+                        caches.keys().then(function(names){
+                            names.forEach(function(name){ caches.delete(name); });
+                        });
+                    }
+                    window.location.reload(true);
+                    return;
                 }
-                window.location.reload(true);
-                return;
+                // 版本号没落库成功或本轮已试过刷新：不再刷新，继续正常启动（新代码已在本次加载中生效）
             }
             if(!savedVersion){
                 lsSet('appVersion', currentVersion);
@@ -5827,6 +5852,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // 方案3：到期分红自动入账（打开软件即把已到登记日 18:00 的待入账分红转为已收现金，只一次）
             settlePendingDivs();
+            // 一次性口径切换：assetDaily.rate 由"当日收益率"改为"总收益率"（与我的页/本页顶部卡同源）。
+            // 只跑一次（标记落 kv）；失败不阻断启动，下次打开再试。历史行按新公式重算，旧行残留的 dayRate 一并清掉。
+            if(AppDB.ok && lsGet(ASSET_DAILY_RATE_SEM_KEY) !== ASSET_DAILY_RATE_SEM){
+                try{
+                    const migrated = await AssetDaily.backfillTotalReturnRates();
+                    if(migrated) lsSet(ASSET_DAILY_RATE_SEM_KEY, ASSET_DAILY_RATE_SEM);
+                }catch(e){}
+            }
             // 交易日才维护当天资产快照；非交易日不写，避免制造没有行情的“每日记录”。
             // 有持仓时先等启动后的首次完整行情刷新成功，再由 refreshAll 检查并写入；
             // 纯现金账户没有行情依赖，启动后直接比对当天记录。
@@ -6110,14 +6143,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         };
         // ==================== 每日总资产快照（assetDaily） ====================
         // 一条 = 一天，date 主键。当天多次打开用 put 覆盖，天然去重。
-        function dailyRatePct(total, prevTotal){
-            const t = Number(total), p = Number(prevTotal);
-            if(!isFinite(t) || !isFinite(p) || p <= 0) return 0;
-            const r = (t / p - 1) * 100;
-            return Number(r.toFixed(4));
-        }
+        // 行结构只有四个字段：{ date, total, rate, ts }，其中 rate 恒为"总收益率（累计）"。
+        // 表内不再保存任何"当日收益率/日涨跌幅"，避免两种口径混在一列里互相覆盖。
         const ASSET_DAILY = 'assetDaily';
+        // rate 字段的语义版本标记：'totalRet2' = 总收益率（累计）且行内不再保留 dayRate。
+        // 版本值一变，下一次启动会再跑一次回填（幂等：已干净的行不重写），确保旧行残留字段被清掉。
+        const ASSET_DAILY_RATE_SEM_KEY = 'assetDailyRateSem';
+        const ASSET_DAILY_RATE_SEM = 'totalRet2';
         const AssetDaily = {
+            // rate = 总收益率（累计，口径同"我的"页 / 总资产趋势页顶部卡 = calcPnlRet()）
             put: function(date, total, rate){
                 if(!AppDB.ok || !AppDB.db) return Promise.resolve(false);
                 const hasRate = !(rate === null || rate === undefined || rate === '' || !isFinite(Number(rate)));
@@ -6178,26 +6212,32 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(!AppDB.ok || !AppDB.db) return Promise.resolve(0);
                 return AppDB.count(ASSET_DAILY).catch(function(){ return 0; });
             },
-            // 给历史行补齐 rate 字段；跳过今天，避免和当天实时写入互相覆盖。
-            backfillRates: async function(){
+            // 一次性把历史行的 rate 由"当日收益率"改写为"总收益率"（口径 = calcPnlRet()）：
+            //   rate = (当日归档总资产 − 截至当日的净投入) ÷ (初始投入 + 截至当日的全部转入) × 100
+            // 旧行里若残留 dayRate（上一版的当日收益字段）一并抹掉，整行按 {date,total,rate,ts} 重写。
+            // 跳过今天（由实时写入维护），已与新口径一致的记录不重写，避免无谓 I/O。
+            backfillTotalReturnRates: async function(){
                 if(!AppDB.ok || !AppDB.db) return false;
                 let all;
                 try{ all = await AppDB.getAll(ASSET_DAILY); }catch(e){ return false; }
                 const today = todayStr();
                 const keys = Object.keys(all || {}).sort();
-                let prev = 0;
                 const rows = [];
                 keys.forEach(function(d){
                     const row = all[d];
                     if(!row) return;
+                    if(d >= today) return;
                     const total = Number(row.total) || 0;
-                    if(total <= 0){ prev = 0; return; }
-                    if(d === today){ prev = total; return; }
-                    const rate = dailyRatePct(total, prev);
-                    if(!isFinite(Number(row.rate)) || Math.abs(Number(row.rate) - rate) > 0.0001){
+                    if(!(total > 0)) return;
+                    const rate = totalReturnRateAtDate(total, d);
+                    const oldRate = (row.rate === null || row.rate === undefined || row.rate === '' || !isFinite(Number(row.rate))) ? null : Number(row.rate);
+                    const rateChanged = (rate === null)
+                        ? (row.rate !== null && row.rate !== undefined)
+                        : (oldRate === null || Math.abs(oldRate - rate) > 0.0001);
+                    const hasLegacyDay = Object.prototype.hasOwnProperty.call(row, 'dayRate');
+                    if(rateChanged || hasLegacyDay){
                         rows.push({ date: d, total: total, rate: rate, ts: Number(row.ts) || Date.now() });
                     }
-                    prev = total;
                 });
                 for(let i = 0; i < rows.length; i += 1000){
                     try{ await AppDB.putObjBatch(ASSET_DAILY, rows.slice(i, i + 1000)); }catch(e){}
@@ -6217,12 +6257,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const n = await AssetDaily.count();
                     if(n >= keys.length + (src[today] ? 1 : 0)) return true;
                 }catch(e){}
-                let prev = 0;
                 const rows = keys.sort().map(function(d){
                     const total = Number(src[d]);
-                    const rate = dailyRatePct(total, prev);
-                    prev = total;
-                    return { date: d, total: total, rate: rate, ts: Date.now() };
+                    return { date: d, total: total, rate: totalReturnRateAtDate(total, d), ts: Date.now() };
                 });
                 for(let i = 0; i < rows.length; i += 1000){
                     try{ await AppDB.putObjBatch(ASSET_DAILY, rows.slice(i, i + 1000)); }catch(e){}
@@ -7055,15 +7092,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const timeMin = now.getHours() * 60 + now.getMinutes();
             return timeMin >= assetDailyCloseTargetMin();
         }
-        // 当天快照的唯一计算口径：总资产 = 市值 + 现金；收益率取首页今日盈亏同一份结果。
+        // 当天快照的唯一计算口径：总资产 = 市值 + 现金；
+        // rate = 总收益率（累计，直接复用 calcPnlRet，与"我的"页 / 本页顶部汇总卡同一份结果，口径唯一）。
+        // 表内不保存当日收益率。
         function buildTodayAssetDailySnapshot(){
             if(!holdDataList.length && !(Number(historyData.cashBalance) > 0)) return null;
             let total = 0;
             holdDataList.forEach(function(it){ total += getMarketValue(it); });
             total += Number(historyData.cashBalance) || 0;
             const val = Number(total.toFixed(2));
-            const todaySnap = calcTodayPnlSnapshot();
-            const rate = (todaySnap.hasValidDayPct && isFinite(Number(todaySnap.dayPnlPct))) ? Number(Number(todaySnap.dayPnlPct).toFixed(4)) : null;
+            const pr = calcPnlRet();
+            const rate = (pr.ret != null && isFinite(Number(pr.ret))) ? Number(Number(pr.ret).toFixed(4)) : null;
             return { date: todayStr(), total: val, rate: rate };
         }
         function assetDailyRowMatches(row, snap){
@@ -7078,7 +7117,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const rate = Number(row.rate);
                 rateOk = row.rate != null && isFinite(rate) && Math.abs(rate - snap.rate) < 0.0001;
             }
-            return totalOk && rateOk;
+            // 旧版本写过的行可能带 dayRate 字段：即使数值已一致也算"不干净"，触发一次整行重写把它抹掉。
+            const clean = !Object.prototype.hasOwnProperty.call(row, 'dayRate');
+            return totalOk && rateOk && clean;
         }
         // 兼容层 dailyAssets 只同步当天值；assetDaily 一致时不重写表记录。
         function syncHistoryDailyTotal(snap){
@@ -7389,6 +7430,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 pnl: pnl,
                 ret: gross > 0 ? (pnl / gross * 100) : null
             };
+        }
+
+        // 指定日期（收盘口径）的总收益率：与 calcPnlRet 完全同一公式，只是把"累计资金"截到该日。
+        //   total  = 该日归档的总资产（assetDaily.total）
+        //   净投入 = 初始投入 + 该日（含）之前的全部资金流水（转入为正、转出为负）
+        //   毛投入 = 初始投入 + 该日（含）之前的全部转入（只累加正数，分母不扣转出）
+        // 初始投入按 initialCostDate 计入（该日之前的行不把期初本金算进来，避免早期行算出离谱值；
+        // 与 getFundFlows 把初始投入挂在 initialCostDate 上的处理一致）。
+        // 用于历史行 rate 的回填/迁移；今天的实时值仍直接取 calcPnlRet()，确保与页面显示逐位一致。
+        function totalReturnRateAtDate(total, dateStr){
+            const t = Number(total) || 0;
+            if(!(t > 0)) return null;
+            const asOf = String(dateStr || '');
+            const initCost = Number(historyData.initialCost) || 0;
+            const initDate = String(historyData.initialCostDate || '2020-01-01');
+            const initIn = (!asOf || initDate <= asOf);
+            let net = initIn ? initCost : 0;
+            let gross = initIn ? initCost : 0;
+            (historyData.fundInflows || []).forEach(function(f){
+                const amt = Number(f.amount) || 0;
+                if(!amt) return;
+                const d = String(f.date || '2020-01-01');
+                if(asOf && d > asOf) return;
+                net += amt;
+                if(amt > 0) gross += amt;
+            });
+            if(!(gross > 0)) return null;
+            return Number(((t - net) / gross * 100).toFixed(4));
         }
 
         // 年末总资产序列（与资产分析页同口径）：手动 yearlyAssets > 年度快照 > 月归档 > 日归档；今年取实时
@@ -7849,7 +7918,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let todayRow = null;
             try{ todayRow = await AppDB.get(ASSET_DAILY, today); }catch(e){}
             const hasTodayRow = !!(todayRow && Number(todayRow.total) > 0);
-            // 历史数据只读 assetDaily 原值；今天的行不取库内旧值，统一由首页实时数据覆盖。
+            // 历史数据只读 assetDaily 原值（rate 即总收益率）；今天的行不取库内旧值，统一由首页实时数据覆盖。
             const history = (dbRows || []).filter(function(r){
                 return r && /^\d{4}-\d{2}-\d{2}$/.test(String(r.date || '')) && String(r.date) < today && Number(r.total) > 0;
             }).map(function(r){
@@ -7864,8 +7933,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let rows = history;
             const hasToday = !!(hasTodayRow && totalNow > 0);
             if(hasToday){
-                const snap = calcTodayPnlSnapshot();
-                const todayRate = (snap.hasValidDayPct && isFinite(Number(snap.dayPnlPct))) ? Number(Number(snap.dayPnlPct).toFixed(4)) : null;
+                // 今日点同样取"总收益率"实时值（calcPnlRet，与我的页/本页顶部汇总卡同源）。
+                const pr = calcPnlRet();
+                const todayRate = (pr.ret != null && isFinite(Number(pr.ret))) ? Number(Number(pr.ret).toFixed(4)) : null;
                 rows = history.concat([{ date: today, value: totalNow, rate: todayRate, today: true }]);
             }
             if(range === 'all' && rows.length > 1200){
@@ -7966,7 +8036,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const dtext = grain === 'month' ? row.date.substring(0, 7).replace('-', '.') : row.date.replace(/-/g, '.');
                         let html = dtext + '<br/>总资产 ' + fmtMoney(row.value);
                         if(row.rate !== null && row.rate !== undefined && isFinite(Number(row.rate))){
-                            html += '<br/>当日收益率 ' + fmtPctNum(row.rate);
+                            html += '<br/>总收益率 ' + fmtPctNum(row.rate);
                         }
                         return html;
                     }
@@ -8133,7 +8203,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             loadAndRenderAssetTrack();
         }
 
-        // ==================== 收益率轨迹：按日收益率走势 ====================
+        // ==================== 收益率轨迹：按日"总收益率"（累计口径）走势 ====================
         function syncReturnTabs(){
             const ranges = [['1y', '#returnRange1y'], ['3y', '#returnRange3y'], ['5y', '#returnRange5y'], ['all', '#returnRangeAll']];
             ranges.forEach(function(item){
@@ -8154,6 +8224,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return { rows: rows, grain: data.grain };
         }
 
+        // 收益率轨迹的区间统计：rate 已改为"总收益率（累计）"，
+        // 因此不再做逐日复利连乘（那会变成对百分数做复合，无意义），改为取最新值与区间高低点。
         function renderReturnStats(rows){
             const cumEl = document.querySelector('#ahReturnCum');
             const bestEl = document.querySelector('#ahReturnBest');
@@ -8164,17 +8236,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(worstEl){ worstEl.innerText = '--'; worstEl.style.color = '#9ca3af'; }
                 return;
             }
-            let cum = 1, best = -Infinity, worst = Infinity;
+            let latest = null, best = -Infinity, worst = Infinity;
             rows.forEach(function(r){
-                const rate = Number(r.rate) || 0;
-                cum *= (1 + rate / 100);
+                const rate = Number(r.rate);
+                if(!isFinite(rate)) return;
+                latest = rate;
                 if(rate > best) best = rate;
                 if(rate < worst) worst = rate;
             });
-            const cumPct = (cum - 1) * 100;
             if(cumEl){
-                cumEl.innerText = fmtPctNum(cumPct);
-                cumEl.style.color = cumPct > 0 ? '#D45329' : (cumPct < 0 ? '#00a05c' : '#8a7a67');
+                if(latest == null || !isFinite(latest)){
+                    cumEl.innerText = '--'; cumEl.style.color = '#9ca3af';
+                }else{
+                    cumEl.innerText = fmtPctNum(latest);
+                    cumEl.style.color = latest > 0 ? '#D45329' : (latest < 0 ? '#00a05c' : '#8a7a67');
+                }
             }
             if(bestEl){
                 bestEl.innerText = isFinite(best) ? fmtPctNum(best) : '--';
@@ -8242,8 +8318,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const row = rows[ps[0].dataIndex];
                         if(!row) return '';
                         const dtext = grain === 'month' ? row.date.substring(0, 7).replace('-', '.') : row.date.replace(/-/g, '.');
-                        return dtext + '<br/>' + (grain === 'month' ? '月收益率 ' : '日收益率 ') + fmtPctNum(row.rate)
-                            + '<br/>总资产 ' + fmtMoney(row.total);
+                        return dtext + '<br/>总收益率 ' + fmtPctNum(row.rate) + '<br/>总资产 ' + fmtMoney(row.total);
                     }
                 },
                 xAxis: {
@@ -21430,8 +21505,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // 占比分母 = 组合总资产（含现金）；现金单列，行业+现金合计 100%
                     const posDenom = Number(calcSummary().totalAsset) || totalMV;
                     const posCash = Math.max(0, posDenom - totalMV);
-                    // 行业颜色调色板（柔和专业的配色）
-                    const industryColors = ['#B07A45', '#7E9C8C', '#A66054', '#6F8B9E', '#B99A6B', '#8B7B9E', '#8C7A57', '#5F8A7D', '#C08552', '#7A8794'];
+                    // 行业颜色调色板（浓烈鲜明：以大红/紫红为主，相邻扇区红紫交替，保证可分辨）
+                    const industryColors = ['#E11D48', '#7C3AED', '#F43F5E', '#C026D3', '#DC2626', '#4F46E5', '#F97316', '#A21CAF', '#BE123C', '#6D28D9'];
                     // 按行业分组
                     const industryMap = {};
                     stockMV.forEach(function(x){
@@ -24982,7 +25057,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 return w;
             }
-            // 行业颜色调色板（和仓位分布环形图一致）
+            // 行业颜色调色板（持仓页列表模式的行业分组色，独立于仓位分布环形图，两者不必强求一致）
             const industryColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
             // 按行业分组
             const industryMap = {};

@@ -1231,7 +1231,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <span id="ahTrendTitle" class="text-[15px] font-semibold text-gray-800 tracking-wide">收益率轨迹</span>
                             <span id="ahTrendMeta" class="text-[9.5px] text-[#a8987e] ml-auto tabular-nums">--</span>
                         </div>
-                        <div id="ahTrendSub" class="text-[9.5px] text-[#b3a48f] mt-0.5">每日快照 · 自动累积</div>
+                        <div id="ahTrendSub" class="text-[9.5px] text-[#b3a48f] mt-0.5">快照表原值 · 今日首页实时</div>
                     </div>
                 </div>
                 <div class="mt-3 grid grid-cols-3 gap-1 rounded-[12px] p-1 border border-[#efe4d2]" style="background:#f6eee0;">
@@ -1267,7 +1267,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div id="ahReturnWorst" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
                     </div>
                 </div>
-                <div id="ahReturnNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">按相邻记录日总资产环比 · 未打开的日子不补点</div>
+                <div id="ahReturnNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">读取每日快照表 · 历史原值 · 今日首页实时</div>
             </div>
 
             <div id="assetTrackPanel" class="hidden px-2 pt-2.5 pb-1">
@@ -1296,7 +1296,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div id="ahTrackMin" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
                     </div>
                 </div>
-                <div id="ahTrackNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">每日快照 · 未打开的日子不补点</div>
+                <div id="ahTrackNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">读取每日快照表 · 历史原值 · 今日首页实时</div>
             </div>
 
             <div id="assetYearPanel" class="hidden px-2 pt-2.5 pb-1">
@@ -2128,34 +2128,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <!-- 未来 12 个月分红到账：已公布优先，未公布按去年同期推算 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
+        <div class="rounded-2xl card-shadow overflow-hidden mb-4" style="background:linear-gradient(180deg,#fffefb 0%,#fdf7ec 100%);border:1px solid #f1e3cb;">
+            <div class="px-4 py-2.5 border-b border-[#f0e2ca] flex items-center gap-2">
                 <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">未来 12 个月分红</span>
+                <span class="text-[16px] font-semibold text-gray-800">未来 12 个月</span>
                 <span id="fwdDivTag" class="text-[10px] text-gray-400 ml-auto tabular-nums">--</span>
             </div>
-            <div class="px-5 pt-4 pb-1">
+            <div class="px-4 pt-3.5 pb-1">
                 <div class="flex items-baseline gap-2">
-                    <span id="fwdDivTotal" class="text-[27px] font-bold tabular-nums leading-none" style="color:#5a3b1e">--</span>
-                    <span class="text-[11px] text-gray-400">预计到账</span>
+                    <span id="fwdDivTotal" class="text-[30px] font-bold tabular-nums leading-none" style="color:#5a3b1e">--</span>
+                    <span class="text-[10px] text-gray-400">预计到账</span>
                 </div>
-                <div id="fwdDivSplit" class="text-[11px] text-gray-500 mt-1.5 tabular-nums">--</div>
+                <div id="fwdDivSplit" class="text-[10px] text-gray-500 mt-1.5 tabular-nums">--</div>
+                <div id="fwdDivNext" class="mt-2 min-h-[18px] flex items-center gap-1.5 text-[10px] tabular-nums text-gray-500">
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#d89b3f"></span>
+                    <span>下一笔 --</span>
+                </div>
             </div>
-            <div id="fwdDivBars" class="px-5 pt-2 grid grid-cols-12 gap-1 items-end"></div>
-            <div id="fwdDivMonths" class="px-5 pb-2.5 grid grid-cols-12 gap-1 text-[8px] text-gray-400 text-center"></div>
-            <div id="fwdDivList" class="border-t border-gray-100 divide-y divide-gray-50"></div>
-        </div>
-
-        <!-- 分红预测：今年各月预计分红汇总（月度柱形图） -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">分红预测</span>
-                <span class="text-[10px] text-gray-400 ml-auto" id="statsDivMonthTag">今年暂无已公布分红</span>
-            </div>
-            <div class="px-4 py-4">
-                <div id="chartStatsDivMonth" style="width:100%;height:220px;"></div>
-                <div class="text-[10px] text-gray-400 mt-2 leading-relaxed">按各持仓 A 股今年已公布的分红方案（每股分红 × 当前持股数）逐月汇总，金额为人民币；未公布分红方案的持仓暂不纳入。</div>
+            <div id="fwdDivBars" class="px-4 pt-2 grid grid-cols-12 gap-1 items-end"></div>
+            <div id="fwdDivMonths" class="px-4 pb-3 grid grid-cols-12 gap-1 text-[8px] text-gray-400 text-center"></div>
+            <button id="fwdDivListToggle" type="button" aria-expanded="false" onclick="toggleFwdDivList()" class="w-full px-4 py-2.5 border-t border-[#f0e4d2] flex items-center justify-center gap-1.5 text-[11px] text-gray-500 active:bg-[#faf3e3]">
+                <span id="fwdDivListToggleText">查看明细</span>
+                <i id="fwdDivListToggleIcon" class="fa fa-angle-down text-[10px] text-gray-400 transition-transform"></i>
+            </button>
+            <div id="fwdDivListBody" class="hidden border-t border-[#f0e4d2]">
+                <div id="fwdDivList" class="divide-y divide-gray-50"></div>
             </div>
         </div>
 
@@ -2165,12 +2162,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .divcal-in{animation:divCalIn .18s ease-out}
         </style>
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+            <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
                 <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">分红日历</span>
+                <span class="text-[16px] font-semibold text-gray-800">分红日历</span>
                 <span id="divCalSummary" class="text-[10px] text-gray-400 ml-auto tabular-nums">--</span>
             </div>
-            <div class="px-3 pt-2.5 flex items-center justify-between">
+            <div class="px-3 pt-2 flex items-center justify-between">
                 <button onclick="divCalShift(-1)" class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 active:scale-95 transition-transform"><i class="fa fa-angle-left text-[15px]"></i></button>
                 <div id="divCalMonth" class="text-[13px] font-semibold text-gray-800 tabular-nums">--</div>
                 <div class="flex items-center gap-1">
@@ -2178,26 +2175,44 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <button onclick="divCalShift(1)" class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 active:scale-95 transition-transform"><i class="fa fa-angle-right text-[15px]"></i></button>
                 </div>
             </div>
-            <div class="px-3 pt-2 grid grid-cols-7 gap-1" id="divCalWeekHead"></div>
+            <div class="px-3 pt-1.5 grid grid-cols-7 gap-1" id="divCalWeekHead"></div>
             <div class="px-3 pb-1 grid grid-cols-7 gap-1" id="divCalGrid"></div>
             <div class="px-4 py-1.5 flex items-center gap-3 text-[9px] text-gray-400 border-t border-gray-50">
                 <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:#8b6bb8"></span>登记</span>
                 <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:#d89b3f"></span>除权</span>
                 <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:#2f9e73"></span>到账</span>
-                <span class="ml-auto">金额按当前持股估算</span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:#7f8b99"></span>预估</span>
+                <span class="ml-auto">按当前持股估算</span>
             </div>
-            <div id="divCalDayList" class="border-t border-gray-100 divide-y divide-gray-50"></div>
+            <div id="divCalDayList" class="hidden border-t border-gray-100 divide-y divide-gray-50"></div>
         </div>
+
+        <!-- 分红预测：今年各月预计分红汇总（月度柱形图） -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <span class="text-[16px] font-semibold text-gray-800">今年派发节奏</span>
+                <span class="text-[10px] text-gray-400 ml-auto" id="statsDivMonthTag">今年暂无已公布分红</span>
+            </div>
+            <div class="px-3 pt-3 pb-3">
+                <div id="chartStatsDivMonth" style="width:100%;height:168px;"></div>
+                <div class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">按持仓 A 股已公布方案（每股分红 × 持股数）逐月汇总；未公布方案暂不纳入。</div>
+            </div>
+        </div>
+
         <!-- 分红预计派发时间表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-
+            <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <span class="text-[16px] font-semibold text-gray-800">今年派发记录</span>
+                <span id="statsScheduleTag" class="text-[10px] text-gray-400 ml-auto tabular-nums">--</span>
+            </div>
             <div id="statsDividendWrap">
                 <div id="statsDividendList" class="divide-y divide-gray-100">
                     <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无分红数据</div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- 统计详情：目标规划 -->
@@ -5141,6 +5156,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let refreshing = false;     // 防止并发
         let quoteUpdatedTs = 0;     // 最近一次行情刷新成功时间戳（今日盈亏/做T条"刷新时间"来源）
         let quoteFetchLastOk = false; // 本会话是否至少成功拉取过一次行情（统计页日快照据此决定是否固化）
+        // 每日资产快照：启动后等首次完整行情成功再落库；收盘后定时补写当天一次
+        let lastQuoteRefreshOk = false;      // 最近一次 refreshAll 是否所有需要报价的持仓都成功
+        let _assetDailyStartupPending = false; // 启动后的当天快照是否仍在等待首次成功刷新
+        let _assetDailyCloseDoneKey = null;    // 当天收盘快照已写标记：YYYY-MM-DD#close
         // ==================== 仓位分布收盘快照机制 ====================
         // 仓位分布数据不需要每2秒刷新，每天收盘后更新一次，交易时间内使用上一交易日快照
         const POSITION_SNAPSHOT_KEY = 'dividendPositionSnapshot';
@@ -5359,19 +5378,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         async function refreshAll(){
-            if(refreshing) return;
-            if(!holdDataList.length) return;
+            if(refreshing) return false;
+            if(!holdDataList.length) return false;
             refreshing = true;
+            lastQuoteRefreshOk = false;
             try{
                 const hasHk = holdDataList.some(it => it.marketType === 'HK');
                 let fxUpdated = false;
+                let fxOk = true;
                 // 1) 港币→人民币汇率（有港股时，且≥5分钟才重拉）
                 if(hasHk && (Date.now() - lastFxAt > 300000)){
+                    fxOk = false;
                     const rate = await new Promise(function(res){ fetchFxRate(function(r){ res(r); }); });
                     if(rate && rate > 0.5 && rate < 1.5){
                         hkFxRate = rate;
                         lastFxAt = Date.now();
                         fxUpdated = true;
+                        fxOk = true;
                         try{ lsSet('dividendHkFx', String(rate)); }catch(e){}
                     }
                 }
@@ -5382,10 +5405,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const quotes = await new Promise(function(res){
                     fetchQuotesBatch(quoteList, function(q){ res(q); });
                 });
+                const quoteNeed = holdDataList.filter(it => Number(it.count) > 0).length;
+                let quoteGot = 0;
                 let changed = false;
                 holdDataList.forEach(function(it){
                     const q = quotes[getTencentPrefix(it.marketType, it.code)];
                     if(q && q.price != null && !isNaN(q.price) && q.price > 0){
+                        if(Number(it.count) > 0) quoteGot++;
                         quoteFetchLastOk = true;
                         quoteUpdatedTs = Date.now();
                         it.nowPrice = q.price;
@@ -5404,6 +5430,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         changed = true;
                     }
                 });
+                const quoteOk = quoteNeed === 0 || quoteGot >= quoteNeed;
+                lastQuoteRefreshOk = !!(quoteOk && fxOk);
+                // 启动后第一次“所有持仓报价都成功”的刷新完成，才检查当天快照；
+                // 没有记录或与最新总资产/收益率不一致才写，已一致则不重复覆盖。
+                if(lastQuoteRefreshOk && _assetDailyStartupPending){
+                    let startupSnapshotDone = false;
+                    try{ startupSnapshotDone = await ensureTodayAssetDailySnapshot(); }catch(e){ startupSnapshotDone = false; }
+                    if(startupSnapshotDone){
+                        _assetDailyStartupPending = false;
+                        if(isAssetDailyClosedNow()) _assetDailyCloseDoneKey = todayStr() + '#close';
+                    }
+                }
                 updatePositionWarn();
                 // 更新关注股票行情（内存 + 本地持久化）
                 let watchChanged = false;
@@ -5689,6 +5727,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     try{ _cb(); }catch(e){}
                 }
             }
+            return lastQuoteRefreshOk;
         }
 
         // 页面初始化
@@ -5779,8 +5818,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             loadDivCache();
             // 加载资产分析历史数据，记录今日总资产，归档已过去月份
             loadHistory();
-            // 老库升级：把历史 dailyAssets 补进独立表（后台执行，失败不影响页面）
-            try{ AssetDaily.migrateFromHistory().then(function(){ return AssetDaily.backfillRates(); }).catch(function(){}); }catch(e){}
+            // 历史趋势只读 assetDaily 表，启动不再迁移旧 dailyAssets，也不回算历史收益率。
             // 启动即自愈（此时 historyData 已从存储加载，覆盖安全）：
             // 清理存量重复分红/除权记录与重复清仓记录，不依赖后续刷新是否成功
             if(dedupDivRecords()){
@@ -5789,7 +5827,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // 方案3：到期分红自动入账（打开软件即把已到登记日 18:00 的待入账分红转为已收现金，只一次）
             settlePendingDivs();
-            recordDailyAssets();
+            // 交易日才维护当天资产快照；非交易日不写，避免制造没有行情的“每日记录”。
+            // 有持仓时先等启动后的首次完整行情刷新成功，再由 refreshAll 检查并写入；
+            // 纯现金账户没有行情依赖，启动后直接比对当天记录。
+            if(isTradingDay(new Date())){
+                if(holdDataList.length){
+                    _assetDailyStartupPending = true;
+                } else if(Number(historyData.cashBalance) > 0){
+                    ensureTodayAssetDailySnapshot();
+                }
+            }
             finalizePastMonths();
             // 补存历史年份最终净值（最后一天未打开时，首次打开即保存最新一刻数据）
             archiveYearlyNav();
@@ -6073,8 +6120,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const AssetDaily = {
             put: function(date, total, rate){
                 if(!AppDB.ok || !AppDB.db) return Promise.resolve(false);
-                const row = { date: String(date), total: Number(total), rate: isFinite(Number(rate)) ? Number(rate) : 0, ts: Date.now() };
+                const hasRate = !(rate === null || rate === undefined || rate === '' || !isFinite(Number(rate)));
+                const row = { date: String(date), total: Number(total), rate: hasRate ? Number(rate) : null, ts: Date.now() };
                 return AppDB.putObj(ASSET_DAILY, row).then(function(){ return true; }).catch(function(){ return false; });
+            },
+            get: function(date){
+                if(!AppDB.ok || !AppDB.db) return Promise.resolve(null);
+                return AppDB.range(ASSET_DAILY, String(date), String(date), 1, 'next').then(function(rows){
+                    return rows && rows[0] ? rows[0] : null;
+                }).catch(function(){ return null; });
             },
             loadRange: async function(start, end){
                 if(!AppDB.ok || !AppDB.db) return [];
@@ -6082,6 +6136,43 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const rows = await AppDB.range(ASSET_DAILY, start, end, 30000, 'next');
                     return rows || [];
                 }catch(e){ return []; }
+            },
+            // 大区间只取等步抽样行，避免百万级记录一次性进内存；仍保证首行与末行参与。
+            loadRangeSampled: async function(start, end, maxPoints){
+                if(!AppDB.ok || !AppDB.db) return { rows: [], total: 0 };
+                const max = Math.max(2, Number(maxPoints) || 1200);
+                try{
+                    const rng = IDBKeyRange.bound(start, end);
+                    const countStore = AppDB.db.transaction(ASSET_DAILY, 'readonly').objectStore(ASSET_DAILY);
+                    const total = await new Promise(function(res, rej){
+                        const rq = countStore.count(rng);
+                        rq.onsuccess = function(){ res(Number(rq.result) || 0); };
+                        rq.onerror = function(){ rej(rq.error); };
+                    });
+                    if(total <= max){
+                        const rows = await AppDB.range(ASSET_DAILY, start, end, max, 'next');
+                        return { rows: rows || [], total: total };
+                    }
+                    const step = Math.max(1, Math.floor((total - 1) / (max - 1)));
+                    const rows = [];
+                    await new Promise(function(res, rej){
+                        const cursorStore = AppDB.db.transaction(ASSET_DAILY, 'readonly').objectStore(ASSET_DAILY);
+                        const rq = cursorStore.openCursor(rng, 'next');
+                        rq.onsuccess = function(){
+                            const c = rq.result;
+                            if(!c || rows.length >= max - 1){ res(); return; }
+                            rows.push(c.value);
+                            c.advance(step);
+                        };
+                        rq.onerror = function(){ rej(rq.error); };
+                    });
+                    const lastRows = await AppDB.range(ASSET_DAILY, start, end, 1, 'prev');
+                    if(lastRows && lastRows[0]){
+                        const lastDate = String(lastRows[0].date);
+                        if(!rows.length || String(rows[rows.length - 1].date) !== lastDate) rows.push(lastRows[0]);
+                    }
+                    return { rows: rows, total: total };
+                }catch(e){ return { rows: [], total: 0 }; }
             },
             count: function(){
                 if(!AppDB.ok || !AppDB.db) return Promise.resolve(0);
@@ -6143,7 +6234,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let _assetDailyTimer = null;
         function queueAssetDailySnapshot(date, total, rate){
             if(!AppDB.ok) return;
-            _assetDailyPending = { date: String(date), total: Number(total), rate: Number(rate) || 0 };
+            const hasRate = !(rate === null || rate === undefined || rate === '' || !isFinite(Number(rate)));
+            _assetDailyPending = { date: String(date), total: Number(total), rate: hasRate ? Number(rate) : null };
             if(_assetDailyTimer) return;
             _assetDailyTimer = setTimeout(function(){
                 _assetDailyTimer = null;
@@ -6950,35 +7042,78 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const d = new Date();
             return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
         }
-        // 记录今日总资产（每次加载覆盖当天，确保月底归档用最新值；总资产 = 市值 + 现金）
-        // 双写：main 里的 dailyAssets 保留为兼容层，独立 assetDaily 表承载长期按日轨迹。
-        let _dailyPrevCache = null;
-        function prevDailyTotalBefore(date){
-            if(_dailyPrevCache && _dailyPrevCache.forDate === date) return _dailyPrevCache;
-            let prevDate = null, prevTotal = 0;
-            const src = historyData.dailyAssets || {};
-            Object.keys(src).forEach(function(d){
-                if(d >= date) return;
-                const v = Number(src[d]);
-                if(!isFinite(v) || v <= 0) return;
-                if(!prevDate || d > prevDate){ prevDate = d; prevTotal = v; }
-            });
-            _dailyPrevCache = { forDate: date, date: prevDate, total: prevTotal };
-            return _dailyPrevCache;
+        // 当天收盘快照的目标时刻：有港股则等港股收盘（16:05），只有 A 股用 15:05。
+        function assetDailyCloseTargetMin(){
+            const hasHk = holdDataList.some(function(it){ return it.marketType === 'HK' && Number(it.count) > 0; });
+            return hasHk ? (16 * 60 + 5) : (15 * 60 + 5);
         }
-        function recordDailyAssets(){
-            if(!holdDataList.length && !(Number(historyData.cashBalance) > 0)) return;
-            const ts = todayStr();
+        // 当前是否已经过了当天收盘快照时刻（周末不算交易日）。
+        function isAssetDailyClosedNow(){
+            const now = new Date();
+            const day = now.getDay();
+            if(day === 0 || day === 6) return false;
+            const timeMin = now.getHours() * 60 + now.getMinutes();
+            return timeMin >= assetDailyCloseTargetMin();
+        }
+        // 当天快照的唯一计算口径：总资产 = 市值 + 现金；收益率取首页今日盈亏同一份结果。
+        function buildTodayAssetDailySnapshot(){
+            if(!holdDataList.length && !(Number(historyData.cashBalance) > 0)) return null;
             let total = 0;
             holdDataList.forEach(function(it){ total += getMarketValue(it); });
             total += Number(historyData.cashBalance) || 0;
             const val = Number(total.toFixed(2));
-            const prevInfo = prevDailyTotalBefore(ts);
-            const rate = dailyRatePct(val, prevInfo.total);
-            const prev = historyData.dailyAssets[ts];
-            historyData.dailyAssets[ts] = val;
-            if(prev == null || Math.abs(Number(prev) - val) > 0.005) saveHistory();
-            queueAssetDailySnapshot(ts, val, rate);
+            const todaySnap = calcTodayPnlSnapshot();
+            const rate = (todaySnap.hasValidDayPct && isFinite(Number(todaySnap.dayPnlPct))) ? Number(Number(todaySnap.dayPnlPct).toFixed(4)) : null;
+            return { date: todayStr(), total: val, rate: rate };
+        }
+        function assetDailyRowMatches(row, snap){
+            if(!row || !snap) return false;
+            const total = Number(row.total);
+            const totalOk = isFinite(total) && Math.abs(total - snap.total) < 0.005;
+            let rateOk = false;
+            if(snap.rate === null){
+                // 收益率无效时必须存 null；旧逻辑存下来的 0 不算一致，要修正。
+                rateOk = (row.rate === null || row.rate === undefined);
+            }else{
+                const rate = Number(row.rate);
+                rateOk = row.rate != null && isFinite(rate) && Math.abs(rate - snap.rate) < 0.0001;
+            }
+            return totalOk && rateOk;
+        }
+        // 兼容层 dailyAssets 只同步当天值；assetDaily 一致时不重写表记录。
+        function syncHistoryDailyTotal(snap){
+            if(!snap || !historyData.dailyAssets) return;
+            const prev = historyData.dailyAssets[snap.date];
+            historyData.dailyAssets[snap.date] = snap.total;
+            if(prev == null || Math.abs(Number(prev) - snap.total) > 0.005) saveHistory();
+        }
+        // 启动/收盘后的“检查后写入”：当天没有记录，或总资产/收益率与最新值不一致时才写。
+        async function ensureTodayAssetDailySnapshot(){
+            if(!isTradingDay(new Date())) return true;
+            const snap = buildTodayAssetDailySnapshot();
+            if(!snap) return true;
+            let row = null;
+            try{ row = await AssetDaily.get(snap.date); }catch(e){ return false; }
+            if(assetDailyRowMatches(row, snap)){
+                syncHistoryDailyTotal(snap);
+                return true;
+            }
+            try{
+                recordDailyAssets();
+                return true;
+            }catch(e){ return false; }
+        }
+        // 记录今日总资产（每次加载覆盖当天，确保月底归档用最新值；总资产 = 市值 + 现金）
+        // 双写：main 里的 dailyAssets 保留为兼容层，独立 assetDaily 表承载长期按日轨迹。
+        function recordDailyAssets(){
+            // 启动后首次快照必须等到“所有需要报价的持仓都刷新成功”；不能用缓存价落库。
+            if(_assetDailyStartupPending && !lastQuoteRefreshOk) return;
+            // 非交易日不写资产快照：周末没有新的收盘价，写入只会产生虚假的“每日记录”。
+            if(!isTradingDay(new Date())) return;
+            const snap = buildTodayAssetDailySnapshot();
+            if(!snap) return;
+            syncHistoryDailyTotal(snap);
+            queueAssetDailySnapshot(snap.date, snap.total, snap.rate);
         }
 
         // ==================== 总资产新高（金色皇冠 · 里程碑轨迹） ====================
@@ -7697,37 +7832,52 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         async function loadAssetTrackRows(range){
             const today = todayStr();
-            const rateMap = {};
-            if(range === 'all'){
-                const mrows = assetTrackMonthlyRows();
-                if(mrows.length >= 6) return { rows: mrows, grain: 'month', rateMap: rateMap };
-            }
             const start = range === 'all' ? '1900-01-01' : assetTrackStartDate(range);
-            const map = {};
-            assetTrackRowsFromMemory(start).forEach(function(r){ map[r.date] = r.value; });
-            // 独立表补齐内存里没有的旧日快照；内存中的当天值优先，避免未 flush 时被旧值覆盖。
-            if(AppDB.ok){
-                try{
-                    const dbRows = await AssetDaily.loadRange(start, today);
-                    dbRows.forEach(function(r){
-                        if(!r || !r.date) return;
-                        const total = Number(r.total) || 0;
-                        if(!(r.date in map)) map[r.date] = total;
-                        // 今天的 rate 可能在内存里已更新而库内尚未 flush，交给实时计算，避免用旧率。
-                        if(r.date !== today && isFinite(Number(r.rate))) rateMap[r.date] = Number(r.rate);
-                    });
-                }catch(e){}
+            if(!AppDB.ok) return { rows: [], grain: 'day' };
+            let dbRows = [];
+            let sampledTotal = 0;
+            try{
+                if(range === 'all'){
+                    const pack = await AssetDaily.loadRangeSampled(start, today, 1200);
+                    dbRows = pack.rows || [];
+                    sampledTotal = Number(pack.total) || 0;
+                }else{
+                    dbRows = await AssetDaily.loadRange(start, today);
+                }
+            }catch(e){}
+            // 今天只有表里确实存在当天记录时才接入首页实时值；表里没有就跳过今天，不做空白占位。
+            let todayRow = null;
+            try{ todayRow = await AppDB.get(ASSET_DAILY, today); }catch(e){}
+            const hasTodayRow = !!(todayRow && Number(todayRow.total) > 0);
+            // 历史数据只读 assetDaily 原值；今天的行不取库内旧值，统一由首页实时数据覆盖。
+            const history = (dbRows || []).filter(function(r){
+                return r && /^\d{4}-\d{2}-\d{2}$/.test(String(r.date || '')) && String(r.date) < today && Number(r.total) > 0;
+            }).map(function(r){
+                return {
+                    date: String(r.date),
+                    value: Number(r.total),
+                    rate: (r.rate === null || r.rate === undefined || r.rate === '' || !isFinite(Number(r.rate))) ? null : Number(r.rate)
+                };
+            }).sort(function(a, b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+            if(!history.length) return { rows: [], grain: 'day', hasToday: false };
+            const totalNow = Number(calcSummary().totalAsset) || 0;
+            let rows = history;
+            const hasToday = !!(hasTodayRow && totalNow > 0);
+            if(hasToday){
+                const snap = calcTodayPnlSnapshot();
+                const todayRate = (snap.hasValidDayPct && isFinite(Number(snap.dayPnlPct))) ? Number(Number(snap.dayPnlPct).toFixed(4)) : null;
+                rows = history.concat([{ date: today, value: totalNow, rate: todayRate, today: true }]);
             }
-            let rows = Object.keys(map).sort().map(function(d){ return { date: d, value: map[d] }; }).filter(function(r){ return r.value > 0; });
             if(range === 'all' && rows.length > 1200){
                 const step = Math.ceil(rows.length / 1200);
                 const sampled = [];
-                rows.forEach(function(r, i){
-                    if(i === 0 || i === rows.length - 1 || i % step === 0) sampled.push(r);
-                });
-                return { rows: sampled, grain: 'day-sample', rateMap: rateMap };
+                rows.forEach(function(r, i){ if(i === 0 || i === rows.length - 1 || i % step === 0) sampled.push(r); });
+                return { rows: sampled, grain: 'day-sample', hasToday: hasToday };
             }
-            return { rows: rows, grain: 'day', rateMap: rateMap };
+            if(range === 'all' && sampledTotal > 1200){
+                return { rows: rows, grain: 'day-sample', hasToday: hasToday };
+            }
+            return { rows: rows, grain: 'day', hasToday: hasToday };
         }
 
         function renderAssetTrackStats(rows){
@@ -7815,11 +7965,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         if(!row) return '';
                         const dtext = grain === 'month' ? row.date.substring(0, 7).replace('-', '.') : row.date.replace(/-/g, '.');
                         let html = dtext + '<br/>总资产 ' + fmtMoney(row.value);
-                        if(i > 0){
-                            const prev = Number(rows[i - 1].value) || 0;
-                            const d = Number(row.value) - prev;
-                            const pct = prev > 0 ? (d / prev * 100) : null;
-                            html += '<br/><span style="color:' + (d >= 0 ? '#ffb08a' : '#7fe0a0') + '">较前值 ' + fmtPnlNum(d) + (pct == null ? '' : (' · ' + fmtPctNum(pct))) + '</span>';
+                        if(row.rate !== null && row.rate !== undefined && isFinite(Number(row.rate))){
+                            html += '<br/>当日收益率 ' + fmtPctNum(row.rate);
                         }
                         return html;
                     }
@@ -7911,7 +8058,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const title = document.querySelector('#ahTrendTitle');
             if(title) title.innerText = assetTrackMode === 'year' ? '逐年总资产与增速' : (assetTrackMode === 'return' ? '收益率轨迹' : '资产轨迹');
             const sub = document.querySelector('#ahTrendSub');
-            if(sub) sub.innerText = assetTrackMode === 'year' ? '历年末快照 · 当年实时' : '每日快照 · 自动累积';
+            if(sub) sub.innerText = assetTrackMode === 'year' ? '历年末快照 · 当年实时' : '快照表原值 · 今日首页实时';
         }
 
         async function loadAndRenderAssetTrack(){
@@ -7935,13 +8082,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(chartEl) chartEl.style.display = '';
             if(emptyEl) emptyEl.classList.add('hidden');
             const label = _assetTrackRangeLabels[range] || '';
-            const unit = data.grain === 'month' ? '个月' : (data.grain === 'day-sample' ? '个抽样点' : '个记录日');
+            const unit = data.grain === 'day-sample' ? '个抽样点' : '个记录日';
             if(meta) meta.innerText = label + ' · ' + data.rows.length + ' ' + unit;
             const note = document.querySelector('#ahTrackNote');
+            const hasToday = (data.rows || []).some(function(r){ return r && r.today; });
             if(note){
-                note.innerText = data.grain === 'month' ? '全部区间按月聚合 · 未打开的日子不补点'
-                    : (data.grain === 'day-sample' ? '全部区间按抽样展示 · 未打开的日子不补点' : '每日快照 · 未打开的日子不补点');
+                note.innerText = data.grain === 'day-sample' ? '读取快照表 · 抽样展示 · 历史原值'
+                    : (hasToday ? '读取快照表 · 历史原值 · 今日首页实时' : '读取快照表 · 历史原值');
             }
+            const sub = document.querySelector('#ahTrendSub');
+            if(sub && assetTrackMode !== 'year') sub.innerText = hasToday ? '快照表原值 · 今日首页实时' : '快照表原值 · 历史记录';
             drawAssetTrackChart(data.rows, data.grain);
         }
 
@@ -7996,16 +8146,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         async function loadReturnRateRows(range){
             const data = await loadAssetTrackRows(range);
-            const rows = [];
-            const rateMap = data.rateMap || {};
-            let prevTotal = 0;
-            (data.rows || []).forEach(function(r, i){
-                let rate = rateMap[r.date];
-                if(!(typeof rate === 'number' && isFinite(rate))){
-                    rate = (i > 0 && prevTotal > 0) ? dailyRatePct(r.value, prevTotal) : 0;
-                }
-                rows.push({ date: r.date, total: Number(r.value), rate: Number(rate) || 0 });
-                prevTotal = Number(r.value);
+            const rows = (data.rows || []).filter(function(r){
+                return r && r.rate !== null && r.rate !== undefined && r.rate !== '' && isFinite(Number(r.rate)) && Number(r.value) > 0;
+            }).map(function(r){
+                return { date: r.date, total: Number(r.value), rate: Number(r.rate), today: !!r.today };
             });
             return { rows: rows, grain: data.grain };
         }
@@ -8199,13 +8343,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(chartEl) chartEl.style.display = '';
             if(emptyEl) emptyEl.classList.add('hidden');
             const label = _assetTrackRangeLabels[range] || '';
-            const unit = data.grain === 'month' ? '个月' : (data.grain === 'day-sample' ? '个抽样点' : '个记录日');
+            const unit = data.grain === 'day-sample' ? '个抽样点' : '个记录日';
             if(meta) meta.innerText = label + ' · ' + data.rows.length + ' ' + unit;
             const note = document.querySelector('#ahReturnNote');
+            const hasToday = (data.rows || []).some(function(r){ return r && r.today; });
             if(note){
-                note.innerText = data.grain === 'month' ? '全部区间按月聚合 · 月收益率 · 未打开的日子不补点'
-                    : (data.grain === 'day-sample' ? '全部区间按抽样展示 · 按相邻记录日环比' : '按相邻记录日总资产环比 · 未打开的日子不补点');
+                note.innerText = data.grain === 'day-sample' ? '读取快照表 · 抽样展示 · 历史原值'
+                    : (hasToday ? '读取快照表 · 历史原值 · 今日首页实时' : '读取快照表 · 历史原值');
             }
+            const sub = document.querySelector('#ahTrendSub');
+            if(sub && assetTrackMode !== 'year') sub.innerText = hasToday ? '快照表原值 · 今日首页实时' : '快照表原值 · 历史记录';
             drawReturnChart(data.rows, data.grain);
         }
 
@@ -14665,6 +14812,71 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return Math.max(1, Math.round((Number(dz.end) - Number(dz.start)) / 100 * total));
             }catch(e){ return sdKlineBarsTotal || 0; }
         }
+        // 东方财富式价格尺：可见 K 线的最高/最低价作为上下限，固定 4 等分 5 根横线。
+        // 画布和横线像素位置由 grid 固定，只有价格上下限随缩放/平移/刷新变化。
+        function sdKlineVisibleRange(startPct, endPct, stageTotal, realCount){
+            const total = Math.max(1, Number(stageTotal) || Number(realCount) || 1);
+            const s = Math.max(0, Math.floor((Number(startPct) || 0) / 100 * total));
+            const rawEnd = Number(endPct);
+            let e = (isFinite(rawEnd) ? rawEnd : 100) >= 99.999
+                ? total - 1
+                : Math.floor((Number(endPct) || 100) / 100 * total);
+            e = Math.min(realCount - 1, Math.max(0, e));
+            let st = Math.min(Math.max(0, realCount - 1), s);
+            if(st > e) st = e;
+            return { start: st, end: Math.max(0, e) };
+        }
+        function sdKlinePriceAxisFor(rows, startPct, endPct, stageTotal){
+            const n = rows ? rows.length : 0;
+            if(!n) return { min: 0, max: 1, interval: 0.25 };
+            const ir = sdKlineVisibleRange(startPct, endPct, stageTotal, n);
+            let lo = Infinity, hi = -Infinity;
+            for(let i = ir.start; i <= ir.end; i++){
+                const r = rows[i];
+                if(!r) continue;
+                const l = Number(r.l), h = Number(r.h), o = Number(r.o), c = Number(r.c);
+                if(isFinite(l)) lo = Math.min(lo, l);
+                if(isFinite(h)) hi = Math.max(hi, h);
+                if(isFinite(o)) lo = Math.min(lo, o);
+                if(isFinite(o)) hi = Math.max(hi, o);
+                if(isFinite(c)) lo = Math.min(lo, c);
+                if(isFinite(c)) hi = Math.max(hi, c);
+            }
+            // 均线也要完整落在五根横线之间：只取可见窗口内的点，
+            // 左端 MA 会引用窗口之前的数据，因此必须按 MA 序列实际值取极值。
+            for(let mi = 0; mi < SDKLINE_MA_LIST.length; mi++){
+                const n = SDKLINE_MA_LIST[mi];
+                if(!sdMaOn[n]) continue;
+                const ma = sdKlineMA(rows, n);
+                for(let i = ir.start; i <= ir.end; i++){
+                    const v = Number(ma[i]);
+                    if(!isFinite(v)) continue;
+                    if(v < lo) lo = v;
+                    if(v > hi) hi = v;
+                }
+            }
+            if(!isFinite(lo) || !isFinite(hi)){ lo = 0; hi = 1; }
+            if(hi <= lo){
+                const pad = Math.max(Math.abs(hi || 1) * 0.01, 0.01);
+                lo -= pad; hi += pad;
+            }
+            // 给极值留约 0.12 像素的呼吸边距：最高/最低的均线或影线不会正好压在
+            // 图框线上被 1px 描边裁掉；刻度仍按两位小数显示，工行样例保持
+            // 8.88 / 8.43 / 7.98 / 7.54 / 7.09。
+            const pad = Math.max((hi - lo) * 0.0006, 1e-9);
+            lo -= pad; hi += pad;
+            return { min: lo, max: hi, interval: (hi - lo) / 4 };
+        }
+        function sdKlineUpdatePriceAxis(startPct, endPct){
+            if(sdKlineIsTrend() || !sdKlineInst || sdKlineInst.isDisposed() || !sdKlineLastPack || !sdKlineLastPack.rows) return;
+            const rows = sdKlineLastPack.rows;
+            const total = sdKlineSparseStage ? sdKlineBarsTotal : rows.length;
+            const axis = sdKlinePriceAxisFor(rows, startPct, endPct, total);
+            const ys = (sdKlineInst.getOption().yAxis || []).slice();
+            if(!ys[0]) return;
+            ys[0] = Object.assign({}, ys[0], { min: axis.min, max: axis.max, interval: axis.interval, splitNumber: 4, scale: false });
+            sdKlineInst.setOption({ animation: false, animationDurationUpdate: 0, yAxis: ys });
+        }
         function sdKlineZoomTo(count){
             if(sdKlineIsTrend()) return;
             if(!sdKlineInst || sdKlineInst.isDisposed()) return;
@@ -14688,6 +14900,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 end = 100;
             }
             sdKlineInst.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: start, end: end });
+            sdKlineUpdatePriceAxis(start, end);
             sdKlinePanPaint();
             sdKlineZoomPaint();
         }
@@ -14736,6 +14949,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(Math.abs(ns - r.start) < 0.0001) return false;
             sdKlinePanStartPct = ns;
             sdKlineInst.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: ns, end: ns + width });
+            sdKlineUpdatePriceAxis(ns, ns + width);
             sdKlinePanPaint();
             return true;
         }
@@ -14952,7 +15166,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!sdKlineInst || sdKlineInst.isDisposed() || sdKlineIsTrend() || !rows || !rows.length) return;
             const t = sdKlineTheme();
             const last = rows[rows.length - 1];
-            const mp = [{ coord: [last.d, last.c], itemStyle: { color: last.c >= last.o ? t.candleUp : t.candleDown } }];
+            // 最新一根不再常驻一个小圆点；只有长按选中某根时才画选中点。
+            const mp = [];
             let lines = [];
             if(idx >= 0 && rows[idx]){
                 const r = rows[idx];
@@ -14965,7 +15180,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     lines.push({ yAxis: r.c });
                     sdKlineShowCrossPrice(null);
                 }
-                if(r.d !== last.d) mp.push({ coord: [r.d, r.c], itemStyle: { color: r.c >= r.o ? t.candleUp : t.candleDown } });
+                mp.push({ coord: [r.d, r.c], itemStyle: { color: r.c >= r.o ? t.candleUp : t.candleDown } });
             } else {
                 sdKlineShowCrossPrice(null);
             }
@@ -15119,10 +15334,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 series.push({ name: 'MA' + n, type: 'line', data: maData, showSymbol: false, smooth: false, lineStyle: { width: 1, color: (t.ma[n] || SDKLINE_MA_COLOR[n]) } });
             }
             series.push({ name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barWidth: barPx, itemStyle: { borderRadius: 0 } });
-            const lastRow = rows[rows.length - 1];
             const selIdx = sdKlineSelActive ? rows.findIndex(function(r){ return r.d === sdKlineSelDate; }) : -1;
-            const mpData = [{ coord: [lastRow.d, lastRow.c], itemStyle: { color: lastRow.c >= lastRow.o ? t.candleUp : t.candleDown } }];
-            if(selIdx >= 0 && selIdx !== rows.length - 1){
+            const mpData = [];
+            if(selIdx >= 0){
                 const sr = rows[selIdx];
                 mpData.push({ coord: [sr.d, sr.c], itemStyle: { color: sr.c >= sr.o ? t.candleUp : t.candleDown } });
             }
@@ -15138,6 +15352,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 平移交给底部 ‹ › 按钮（点击一步、长按连续），缩放仍走滚轮/双指/± 按钮自接管
                 { type: 'slider', xAxisIndex: [0, 1], start: startPct, end: endPct, show: false }
             ];
+            const priceAxis = sdKlinePriceAxisFor(rows, startPct, endPct, stageTotal);
             inst.setOption({
                 animation: true,
                 animationDuration: 220,
@@ -15145,8 +15360,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 animationEasingUpdate: 'cubicOut',
                 backgroundColor: t.bg,
                 grid: [
-                    { left: 8, right: gridRight, top: 10, height: '63%' },
-                    { left: 8, right: gridRight, top: '69%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
+                    // 主图 66.87%：当前 323px 图表高度下约 216px，正好 4 等分每格 54px；
+                    // 比原来的 203.49px 增加约 12.5px，K 线更陡。成交量区同步下移并略收。
+                    { left: 8, right: gridRight, top: 10, height: '66.87%' },
+                    { left: 8, right: gridRight, top: '73%', height: '16%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
                 ],
                 dataZoom: zoom,
                 xAxis: [
@@ -15154,7 +15371,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     { type: 'category', gridIndex: 1, data: dates, boundaryGap: true, axisLine: { lineStyle: { color: t.axis } }, axisTick: { show: false }, axisLabel: { show: true, fontSize: 9, color: t.text, margin: 5, hideOverlap: true } }
                 ],
                 yAxis: [
-                    { scale: true, splitNumber: 4, position: 'left', axisLine: { show: false }, axisTick: { show: false },
+                    { scale: false, min: priceAxis.min, max: priceAxis.max, interval: priceAxis.interval, splitNumber: 4, position: 'left', axisLine: { show: false }, axisTick: { show: false },
                       axisLabel: { inside: true, margin: 2, align: 'left', fontSize: 9, color: t.text, formatter: function(v){ return Number(v).toFixed(2); } },
                       splitLine: { lineStyle: { color: t.grid, type: 'dashed' } } },
                     { gridIndex: 1, scale: true, splitNumber: 1, position: 'left', axisLine: { show: false }, axisTick: { show: false },
@@ -18360,6 +18577,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 分红派发日程：图表已在 renderStatsPage 初始化，打开仅 resize（未初始化时才兜底重建）
             if(key === 'schedule'){
                 try{ renderForwardDiv12(); }catch(e){}
+                // 打开日程页时，日历默认落在最近一个仍有分红事件的月份，避免一进来就是空月
+                divCalY = null; divCalM = null; divCalSel = ''; divCalKey = ''; divCalAutoNextMonth = true;
+                try{ renderDivCalendar(); }catch(e){}
                 requestAnimationFrame(function(){
                     const mcEl = document.querySelector('#chartStatsDivMonth');
                     if(mcEl){
@@ -20445,10 +20665,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // ===== 分红日历：登记/除权/到账 月视图（A股公告 + 手工到账，纯本地数据）=====
         let divCalY = null, divCalM = null, divCalSel = '';
+        let divCalAutoNextMonth = false;
         let divCalKey = '';
         let divCalLastMonth = '';
-        const DIVCAL_COLOR = { reg: '#8b6bb8', ex: '#d89b3f', pay: '#2f9e73' };
-        const DIVCAL_TEXT = { reg: '登记', ex: '除权', pay: '到账' };
+        const DIVCAL_COLOR = { reg: '#8b6bb8', ex: '#d89b3f', pay: '#2f9e73', est: '#65778b' };
+        const DIVCAL_TEXT = { reg: '登记', ex: '除权', pay: '到账', est: '预估' };
 
         // 从 A 股分红缓存中取某年逐笔方案（除权日 + 每股），已实施优先去重
         function yearDivEventsFromCache(code, yStr){
@@ -20560,6 +20781,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return { total: published + estimate, published: published, estimate: estimate, undated: undated, items: items, start: iso(now) };
         }
 
+        function toggleFwdDivList(){
+            const body = document.querySelector('#fwdDivListBody');
+            const btn = document.querySelector('#fwdDivListToggle');
+            if(!body) return;
+            const nowHidden = body.classList.toggle('hidden');
+            const open = !nowHidden;
+            if(btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            const icon = document.querySelector('#fwdDivListToggleIcon');
+            if(icon){
+                icon.classList.toggle('fa-angle-up', open);
+                icon.classList.toggle('fa-angle-down', !open);
+            }
+        }
         function renderForwardDiv12(){
             const totalEl = document.querySelector('#fwdDivTotal');
             if(!totalEl) return;
@@ -20569,6 +20803,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(tagEl) tagEl.innerText = d.items.length ? (d.items.length + ' 笔 · 未来 12 个月') : '暂无已公布或可推算的分红';
             const splitEl = document.querySelector('#fwdDivSplit');
             if(splitEl) splitEl.innerText = d.items.length ? ('已公布 ' + fmtMoney(d.published) + ' · 预估 ' + fmtMoney(d.estimate) + (d.undated > 0 ? '（待定 ' + fmtMoney(d.undated) + '）' : '')) : '暂无持仓或未获取分红方案';
+            const nextEl = document.querySelector('#fwdDivNext');
+            if(nextEl){
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                const nextItem = d.items.find(function(it){
+                    if(!it.date) return false;
+                    const dd = new Date(it.date + 'T00:00:00');
+                    return dd >= today;
+                });
+                if(nextItem){
+                    const dd = new Date(nextItem.date + 'T00:00:00');
+                    const days = Math.max(0, Math.round((dd - today) / 86400000));
+                    nextEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#d89b3f"></span>'
+                        + '<span class="text-gray-400">下一笔</span>'
+                        + '<span class="text-gray-700 font-medium">' + nextItem.date.substring(5) + ' · ' + nextItem.name + '</span>'
+                        + '<span class="ml-auto text-gray-400">' + (days === 0 ? '今天' : days + ' 天后') + '</span>'
+                        + '<span class="font-semibold" style="color:#a9642a">' + fmtMoney(nextItem.amt) + '</span>';
+                } else {
+                    nextEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#d8c8ae"></span><span class="text-gray-400">暂无已排期分红</span>';
+                }
+            }
             const barsEl = document.querySelector('#fwdDivBars');
             const monthsEl = document.querySelector('#fwdDivMonths');
             const now = new Date();
@@ -20602,7 +20856,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             const listEl = document.querySelector('#fwdDivList');
             if(!listEl) return;
-            if(!d.items.length){
+            const listBody = document.querySelector('#fwdDivListBody');
+            const toggleBtn = document.querySelector('#fwdDivListToggle');
+            const toggleText = document.querySelector('#fwdDivListToggleText');
+            const hasItems = d.items.length > 0;
+            if(toggleBtn) toggleBtn.classList.toggle('hidden', !hasItems);
+            if(toggleText) toggleText.innerText = hasItems ? ('查看明细 · ' + d.items.length + ' 笔') : '查看明细';
+            if(!hasItems){
+                if(listBody) listBody.classList.add('hidden');
+                if(toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                const icon = document.querySelector('#fwdDivListToggleIcon');
+                if(icon){ icon.classList.remove('fa-angle-up'); icon.classList.add('fa-angle-down'); }
                 listEl.innerHTML = '<div class="px-4 py-6 text-center text-[11px] text-gray-400">暂无未来 12 个月分红数据</div>';
                 return;
             }
@@ -20623,6 +20887,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         function divCalToday(){
+            divCalAutoNextMonth = false;
             const t = new Date();
             divCalY = t.getFullYear();
             divCalM = t.getMonth() + 1;
@@ -20631,6 +20896,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderDivCalendar();
         }
         function divCalShift(n){
+            divCalAutoNextMonth = false;
             if(divCalY == null) divCalToday();
             divCalM += n;
             if(divCalM < 1){ divCalM = 12; divCalY -= 1; }
@@ -20640,6 +20906,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderDivCalendar();
         }
         function divCalSelect(ds){
+            divCalAutoNextMonth = false;
             divCalSel = (divCalSel === ds) ? '' : ds;
             divCalKey = '';
             renderDivCalendar();
@@ -20671,19 +20938,45 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     push(d, 'pay', it, Number(r.perShare) || 0, Number(r.amount) || 0, String(Number(r.amount) || 0));
                 });
             });
+            // 未来 12 个月的推算派发日也进入日历，用灰蓝“预估”点区分真实到账
+            try{
+                const fwd = calcForwardDiv12();
+                fwd.items.forEach(function(it){
+                    if(!it.date || it.src === 'published') return;
+                    const sameDay = (map[it.date] || []).some(function(e){ return e.code === it.code; });
+                    if(sameDay) return;
+                    push(it.date, 'est', { code: it.code, name: it.name, marketType: it.market }, it.per, it.amt, 'est|' + it.src);
+                });
+            }catch(e){}
             return map;
         }
         function renderDivCalendar(){
-            if(divCalY == null){
-                const t = new Date();
-                divCalY = t.getFullYear();
-                divCalM = t.getMonth() + 1;
-                divCalSel = '';
-            }
             const g = document.querySelector('#divCalGrid');
             const head = document.querySelector('#divCalWeekHead');
             if(!g || !head) return;
             const map = divCalEvents();
+            if(divCalY == null || divCalAutoNextMonth){
+                const t = new Date();
+                const today = todayStr();
+                const keys = Object.keys(map).sort();
+                const nextKey = keys.filter(function(ds){ return ds >= today; })[0];
+                if(nextKey){
+                    divCalY = parseInt(nextKey.substring(0, 4), 10);
+                    divCalM = parseInt(nextKey.substring(5, 7), 10);
+                    divCalAutoNextMonth = false;
+                } else {
+                    // 没有未来事件时先落在最近一次事件月；缓存后补到未来日期则继续跳一次
+                    const pastKey = keys.filter(function(ds){ return ds <= today; }).pop();
+                    if(pastKey){
+                        divCalY = parseInt(pastKey.substring(0, 4), 10);
+                        divCalM = parseInt(pastKey.substring(5, 7), 10);
+                    } else if(divCalY == null){
+                        divCalY = t.getFullYear();
+                        divCalM = t.getMonth() + 1;
+                    }
+                }
+                divCalSel = '';
+            }
             const holdKey = holdDataList.map(function(it){ return it.code + ':' + it.count; }).join(',');
             const key = divCalY + '-' + divCalM + '|' + divCalSel + '|' + JSON.stringify(map) + '|' + holdKey;
             if(key === divCalKey) return;
@@ -20711,6 +21004,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 evs.forEach(function(e){
                     if(e.type === 'pay') amt += Number(e.amt) || 0;
                     else if(e.type === 'ex' && !hasPay) amt += Number(e.amt) || 0;
+                    else if(e.type === 'est' && !hasPay) amt += Number(e.amt) || 0;
                 });
                 const isToday = ds === todayS;
                 const isSel = ds === divCalSel;
@@ -20721,7 +21015,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const numCls = isToday
                     ? 'w-5 h-5 rounded-full bg-accent text-white text-[11px] font-semibold flex items-center justify-center tabular-nums'
                     : 'text-[11px] tabular-nums ' + (evs.length ? 'text-gray-700 font-medium' : 'text-gray-400');
-                html += '<button data-d="' + ds + '" class="h-[46px] rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all '
+                html += '<button data-d="' + ds + '" class="h-[40px] rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all '
                     + (isSel ? 'bg-[#faf3e3] ring-1 ring-[#e2cf9c]' : 'bg-white active:bg-gray-50') + '">'
                     + '<span class="' + numCls + '">' + d + '</span>'
                     + '<span class="flex items-center gap-[3px] h-[4px]">' + dots + more + '</span>'
@@ -20751,9 +21045,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 map[ds].forEach(function(e){ rows.push({ d: ds, e: e }); });
             });
             if(!rows.length){
-                listEl.innerHTML = '<div class="px-4 py-6 text-center text-[11px] text-gray-400">' + (divCalSel ? '该日暂无分红事件' : '本月暂无分红事件，可切换月份查看') + '</div>';
+                listEl.classList.add('hidden');
+                listEl.innerHTML = '';
                 return;
             }
+            listEl.classList.remove('hidden');
             let lh = '<div class="px-4 py-2 text-[10px] text-gray-400 bg-gray-50/60">' + (divCalSel ? (divCalSel + ' 当日明细') : ('本月明细 · ' + rows.length + ' 条')) + '</div>';
             rows.forEach(function(o){
                 const e = o.e, color = DIVCAL_COLOR[e.type];
@@ -21742,6 +22038,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 });
             });
             window._statsCardSchedule = upcoming.length ? ('即将派发 ' + upcoming.length + ' 笔') : (passed.length ? '已派发 ' + passed.length + ' 笔' : '暂无分红');
+            const scheduleTagEl = document.querySelector('#statsScheduleTag');
+            if(scheduleTagEl){
+                const schedTotal = upcoming.length + passed.length;
+                scheduleTagEl.innerText = schedTotal
+                    ? (upcoming.length ? ('今年 · ' + schedTotal + ' 笔') : ('已派发 · ' + passed.length + ' 笔'))
+                    : '今年 · 暂无';
+            }
             // ===== 2.1 分红预测：今年各月预计分红（月度柱形图，复用 divCache 数据，按当前持股数计算）=====
             try{
                 const monthMap = {}, monthDetail = {}, monthSeen = {};
@@ -21791,7 +22094,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     } else {
                         if(mcEl._chart){ mcEl._chart.dispose(); mcEl._chart = null; }
                         if(mKeys.length){
-                        if(mcEl._empty){ mcEl.innerHTML = ''; mcEl.style.height = '220px'; mcEl._empty = false; }
+                        if(mcEl._empty){ mcEl.innerHTML = ''; mcEl.style.height = '168px'; mcEl._empty = false; }
                         const mcNew = echarts.init(mcEl);
                         mcNew.setOption({
                             tooltip: {
@@ -24136,6 +24439,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(sEl) sEl.innerText = best.name || '--';
             card.title = (best.name || '') + (best.per > 0 ? ' 每股 ' + best.per.toFixed(2) + ' 元' : '') + ' · ' + best.date;
         }
+        function calcTodayPnlSnapshot(){
+            let totalDayPnl = 0, totalMarketValue = 0, totalPrevMv = 0, hasValidDayPct = false;
+            let totalDayT = 0, hasDayT = false;
+            holdDataList.forEach(function(it){
+                if(it.nowPrice && it.count){
+                    const flow = calcDayFlow(it);
+                    if(flow.hasBase){
+                        hasValidDayPct = true;
+                        const fx = it.marketType === 'HK' ? hkFxRate : 1;
+                        totalMarketValue += it.nowPrice * it.count * fx;
+                        totalPrevMv += flow.prevMv;
+                        totalDayPnl += flow.pnl;
+                        if(flow.buyQty > 0 && flow.sellQty > 0){
+                            hasDayT = true;
+                            totalDayT += flow.tProfit;
+                        }
+                    }
+                }
+            });
+            return {
+                totalDayPnl: totalDayPnl,
+                totalMarketValue: totalMarketValue,
+                totalPrevMv: totalPrevMv,
+                hasValidDayPct: hasValidDayPct,
+                dayPnlPct: totalPrevMv > 0 ? (totalDayPnl / totalPrevMv * 100) : null,
+                totalDayT: totalDayT,
+                hasDayT: hasDayT
+            };
+        }
         function updateSummaryCard(sum){
             const stNumEl = document.querySelector('#stockNum');
             if(stNumEl) stNumEl.innerText = sum.holdLen;
@@ -24222,32 +24554,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const todayPnlEl = document.querySelector('#todayPnl');
             const todayPnlPctEl = document.querySelector('#todayPnlPct');
             if(todayPnlEl && todayPnlPctEl){
-                let totalDayPnl = 0, totalMarketValue = 0, totalPrevMv = 0, hasValidDayPct = false;
-                let totalDayT = 0, hasDayT = false;
-                holdDataList.forEach(function(it){
-                    if(it.nowPrice && it.count){
-                        const flow = calcDayFlow(it);
-                        if(flow.hasBase){
-                            hasValidDayPct = true;
-                            const fx = it.marketType === 'HK' ? hkFxRate : 1;
-                            totalMarketValue += it.nowPrice * it.count * fx;
-                            totalPrevMv += flow.prevMv; // 昨收市值 = 昨收价 × 昨日股数（总账口径）
-                            totalDayPnl += flow.pnl;
-                            if(flow.buyQty > 0 && flow.sellQty > 0){
-                                hasDayT = true;
-                                totalDayT += flow.tProfit;
-                            }
-                        }
-                    }
-                });
+                const todaySnap = calcTodayPnlSnapshot();
+                const totalDayPnl = todaySnap.totalDayPnl;
+                const hasValidDayPct = todaySnap.hasValidDayPct;
+                const totalDayT = todaySnap.totalDayT;
+                const hasDayT = todaySnap.hasDayT;
                 if(!hasValidDayPct){
                     todayPnlEl.innerText = '--';
                     todayPnlEl.className = 'text-[16px] font-bold tabular-nums num-transition text-gray-400';
                     todayPnlPctEl.innerText = '--';
                     todayPnlPctEl.className = 'text-[10px] font-medium tabular-nums num-transition text-gray-400';
                 } else {
-                    const yesterdayMarketValue = totalPrevMv;
-                    const dayPnlPct = yesterdayMarketValue > 0 ? (totalDayPnl / yesterdayMarketValue * 100) : 0;
+                    const dayPnlPct = todaySnap.dayPnlPct == null ? 0 : todaySnap.dayPnlPct;
                     // 金额主色：涨红跌绿
                     const amtCls = totalDayPnl > 0.005 ? 'text-[#e03131]' : (totalDayPnl < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
                     todayPnlEl.innerText = fmtPnlNum(totalDayPnl);
@@ -27358,7 +27676,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             historyData = historyData;
                             // 重新加载历史数据到内存
                             loadHistory();
-                            try{ AssetDaily.migrateFromHistory().then(function(){ return AssetDaily.backfillRates(); }).catch(function(){}); }catch(e){}
+                            // 历史趋势只读 assetDaily 表，启动不再迁移旧 dailyAssets，也不回算历史收益率。
                         }
                         // 保存港币汇率（如果有）
                         if(hkFxRate){
@@ -27466,7 +27784,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             showToast('数据已清空');
         });
 
-        init();
+        init().then(function(){
+            // 初始化完成后确保启动快照依赖的首次行情刷新会执行（避免 500ms 定时器早于 init 完成而落空）。
+            if(_assetDailyStartupPending && !refreshing) refreshAll();
+        });
         initHighFx();
 
         // 刷新/首次加载后强制回到页面顶部（避免浏览器刷新保留滚动位置导致越刷越往下）
@@ -27503,6 +27824,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         setTimeout(refreshAll, 500);
         // 启动智能刷新
         startSmartRefresh();
+        // 每日收盘快照：A 股 15:05、有港股 16:05；只要页面开着，不管当前在哪个页面都检查一次。
+        // 只有当天记录缺失或与最新总资产/收益率不一致才写；非交易日直接跳过。
+        async function maybeWriteAssetDailyClose(){
+            if(!holdDataList.length && !(Number(historyData.cashBalance) > 0)) return;
+            if(!isAssetDailyClosedNow()) return;
+            const key = todayStr() + '#close';
+            if(_assetDailyCloseDoneKey === key) return;
+            // 纯现金账户没有行情依赖，直接按当前现金检查/写当天。
+            if(!holdDataList.length){
+                try{
+                    const done = await ensureTodayAssetDailySnapshot();
+                    if(done) _assetDailyCloseDoneKey = key;
+                }catch(e){}
+                return;
+            }
+            // 先刷新并等所有持仓报价成功；刷新失败则下一分钟继续重试。
+            refreshAll().then(async function(ok){
+                if(!ok) return;
+                if(_assetDailyCloseDoneKey === key) return;
+                if(_assetDailyStartupPending) return; // 交给启动快照流程重试，避免并发写
+                try{
+                    const done = await ensureTodayAssetDailySnapshot();
+                    if(done) _assetDailyCloseDoneKey = key;
+                }catch(e){}
+            });
+        }
+        setInterval(maybeWriteAssetDailyClose, 60 * 1000);
+        setTimeout(maybeWriteAssetDailyClose, 1200);
         // 自选页指数行情：页面加载后 1 秒拉取一次，之后交易时段约 10 秒 / 非交易时段 5 分钟更新
         setTimeout(refreshIndexQuotes, 1000);
         setInterval(function(){

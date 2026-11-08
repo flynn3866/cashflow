@@ -287,6 +287,8 @@
         .today-reg-pulse { animation: todayRegPulse 2.2s ease-in-out infinite; }
         /* 个股仓位预警条：显示时页面内容下移让位，隐藏时不占版面 */
         body.has-position-warn { padding-top: calc(env(safe-area-inset-top, 0px) + 38px); }
+        /* 详情页打开期间，预警条即使被异步刷新重新显示也不能压在详情页上 */
+        body.sd-detail-open #positionWarnBar { display: none !important; }
     
         /* ==================== 移动端交互体验升级（页面切换 / Tab 弹跳 / 弹窗动画 / 吸顶毛玻璃） ==================== */
         #pageHold, #pageStats, #pageAnalysis, #pageMilestone, #pageMine{
@@ -1682,9 +1684,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
             <div id="sdMaPanel" class="hidden px-3 pt-2 flex flex-wrap gap-1.5"></div>
             <div class="relative">
-                <div id="sdKlineChart" class="w-full" style="height:430px;border-radius:12px;overflow:hidden;background:#fdfbf6;transition:background .25s ease;touch-action:pan-y;-webkit-user-select:none;user-select:none"></div>
+                <div id="sdKlineChart" class="w-full" style="height:clamp(260px,calc(100vh - 560px),430px);border-radius:12px;overflow:hidden;background:#fdfbf6;transition:background .25s ease;touch-action:pan-y;-webkit-user-select:none;user-select:none"></div>
             </div>
-            <div id="sdKlineCtrlBar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 9px 0;">
+            <div id="sdKlineCtrlBar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 9px 0;position:relative;z-index:2;">
                 <div style="display:flex;align-items:center;gap:7px;">
                 <span style="font-size:9px;color:var(--zc,#a89a86);opacity:.75;">缩放</span>
                 <div id="sdKlineZoomCtrl" style="display:flex;gap:6px;">
@@ -11312,6 +11314,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function switchTab(tab){
             activeTab = tab;
+            // 详情页内点击底部导航：先恢复被详情页隐藏的宿主 chrome 与外层滚动，再正常切页
+            if(!document.querySelector('#pageStockDetail').classList.contains('hidden')){
+                try{ sdLiveStop(); sdKlineDispose(); }catch(e){}
+                if(typeof sdRestoreHostChrome === 'function') sdRestoreHostChrome();
+                sdDetailOrigin = 'watch';
+            }
             // 导航切换时不恢复滚动位置（详情页直接导航切换等效返回，清空记忆栈防错位）
             if(__scrollStack) __scrollStack.length = 0;
             // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心/股票详情），等效于点击左上角返回
@@ -14114,6 +14122,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let sdKlineSelectBound = false;
         let sdKlineLongPressTimer = null;
         let sdKlinePress = null;
+        let sdKlineMoveRaf = null, sdKlineMovePoint = null;
 
         function sdKlinePeriodName(klt){
             if(klt === 0) return '分时';
@@ -14638,6 +14647,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         // ===== K线缩放：始终锁定最新一根（右侧锚定），± 按钮 / 滚轮 / 双指 =====
         let sdKlineBarsTotal = 0;
+        let sdKlineRealCount = 0;       // 真实 K 线根数（不含右侧补位槽）
+        let sdKlineSparseStage = false; // 数据不足一屏：用 69 个槽位撑满舞台
         let sdKlineViewCount = null;
         let sdKlinePanStartPct = null;   // 手动平移后的窗口起点（null=右锚定最新一根）
         let sdKlineZoomBound = false;
@@ -14659,18 +14670,32 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!sdKlineInst || sdKlineInst.isDisposed()) return;
             const total = sdKlineBarsTotal;
             if(!total) return;
-            const minC = Math.min(12, total);
+            const sparse = sdKlineSparseStage && sdKlineRealCount > 0;
+            const minC = sparse ? Math.max(1, sdKlineRealCount) : Math.min(6, total);
             const c = Math.max(minC, Math.min(total, Math.round(count)));
             sdKlineViewCount = c;
-            sdKlinePanStartPct = null;   // 缩放回到右锚定最新一根
-            const start = total > c ? (1 - c / total) * 100 : 0;
-            sdKlineInst.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: start, end: 100 });
+            sdKlinePanStartPct = null;
+            let start, end;
+            if(sparse){
+                // 数据不足 69 根：左端固定在舞台左侧，可视窗口向右生长；
+                // c 降到真实根数时，最新一根刚好贴住舞台右边缘，然后停止放大。
+                start = 0;
+                // dataZoom 的 endValue 是闭区间：c 个分类需要 end=(c-1)/total，
+                // 否则会多留一个空槽，最新一根到不了舞台右边缘。
+                end = c >= total ? 100 : Math.max(0.001, Math.min(100, (c - 1) / total * 100));
+            }else{
+                start = total > c ? (1 - c / total) * 100 : 0;
+                end = 100;
+            }
+            sdKlineInst.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, start: start, end: end });
             sdKlinePanPaint();
+            sdKlineZoomPaint();
         }
         function sdKlineZoomStep(dir){
             const cur = sdKlineViewCount || sdKlineCurrentCount() || sdKlineDefaultCount();
-            // 每点一次 + / − 固定增减 14 根 K 线（+ 放大=根数变少，− 缩小=根数变多）
-            sdKlineZoomTo(dir > 0 ? cur - 14 : cur + 14);
+            // 大数据每次 14 根；年 K 这类小样本每次 2 根，避免一次到底后按钮看起来失灵
+            const step = sdKlineSparseStage ? 14 : ((sdKlineBarsTotal && sdKlineBarsTotal <= 20) ? 2 : 14);
+            sdKlineZoomTo(dir > 0 ? cur - step : cur + step);
         }
         // ===== 左右平移：只由底部 ‹ › 驱动（点击一步 / 长按连续），图表本身不响应手指拖动 =====
         let sdKlinePanHoldTimer = null, sdKlinePanRepeatTimer = null, sdKlinePanDocBound = false;
@@ -14694,8 +14719,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 b.style.opacity = off ? '.35' : '1';
                 b.style.cursor = off ? 'default' : 'pointer';
             };
+            const sparseFilled = sdKlineSparseStage && sdKlineViewCount != null && sdKlineViewCount <= sdKlineRealCount;
             paintBtn(document.querySelector('#sdKlinePanLeft'), r.start <= 0.001);
-            paintBtn(document.querySelector('#sdKlinePanRight'), r.end >= 99.999);
+            paintBtn(document.querySelector('#sdKlinePanRight'), sparseFilled || r.end >= 99.999);
         }
         function sdKlinePanStep(dir, stepBars){
             if(sdKlineIsTrend()) return false;
@@ -14748,6 +14774,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 pan.style.setProperty('--zc', day ? '#a89a86' : '#9aa3ac');
                 pan.style.setProperty('--zb', day ? 'rgba(255,255,255,0.92)' : 'rgba(26,29,33,0.92)');
                 pan.style.setProperty('--zd', day ? '#ece3d2' : '#333941');
+            }
+            const curView = sdKlineViewCount || sdKlineCurrentCount() || sdKlineBarsTotal;
+            const atMax = sdKlineSparseStage && sdKlineViewCount != null && sdKlineViewCount <= sdKlineRealCount;
+            const atMin = sdKlineBarsTotal > 0 && curView >= sdKlineBarsTotal;
+            const btns = box.querySelectorAll('button');
+            if(btns[0]){
+                btns[0].disabled = atMax;
+                btns[0].style.opacity = atMax ? '.35' : '1';
+                btns[0].style.cursor = atMax ? 'default' : 'pointer';
+            }
+            if(btns[1]){
+                btns[1].disabled = atMin;
+                btns[1].style.opacity = atMin ? '.35' : '1';
+                btns[1].style.cursor = atMin ? 'default' : 'pointer';
             }
             sdKlinePanPaint();
         }
@@ -14802,6 +14842,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ===== K线长按选点：静止 1 秒显示十字线，数据推送到顶部行情卡；轻点图表取消 =====
         function sdKlineCancelPress(){
             if(sdKlineLongPressTimer){ clearTimeout(sdKlineLongPressTimer); sdKlineLongPressTimer = null; }
+            if(sdKlineMoveRaf != null){ cancelAnimationFrame(sdKlineMoveRaf); sdKlineMoveRaf = null; }
+            sdKlineMovePoint = null;
             sdKlinePress = null;
             sdKlineSetCrossGesture(false);
         }
@@ -14867,11 +14909,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const rows = sdKlineLastPack.rows;
             let dz = null;
             try{ dz = sdKlineInst.getOption().dataZoom[0]; }catch(e){}
-            const total = rows.length;
-            let start = 0, end = total - 1;
+            // 稀疏舞台的 dataZoom 作用在 69 个槽位上，但真正的数据只有 rows.length 根，
+            // 长按选点必须把槽位换算回真实行号，不能再用 rows.length 当分母。
+            const stageTotal = sdKlineSparseStage ? sdKlineBarsTotal : rows.length;
+            let start = 0, end = rows.length - 1;
             if(dz){
-                start = Math.max(0, Math.floor((Number(dz.start) || 0) / 100 * total));
-                end = Math.min(total - 1, Math.ceil((Number(dz.end) || 100) / 100 * total) - 1);
+                start = Math.max(0, Math.floor((Number(dz.start) || 0) / 100 * stageTotal));
+                end = Math.min(rows.length - 1, Math.floor((Number(dz.end) || 100) / 100 * stageTotal));
             }
             let best = -1, bestD = Infinity;
             for(let i = start; i <= end; i++){
@@ -14925,7 +14969,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             } else {
                 sdKlineShowCrossPrice(null);
             }
-            sdKlineInst.setOption({ series: [{ markLine: { silent: true, symbol: 'none', label: { show: false },
+            // 十字线必须跟手：选中标记直接落位，不能继承主图 260ms 的 animationDurationUpdate
+            sdKlineInst.setOption({ animation: false, animationDurationUpdate: 0,
+                series: [{ markLine: { silent: true, symbol: 'none', label: { show: false },
                 lineStyle: { color: t.pointer, width: 1, type: 'solid', opacity: 0.85 }, data: lines },
                 markPoint: { silent: true, symbol: 'circle', symbolSize: 5, data: mp,
                     itemStyle: { borderColor: t.bg, borderWidth: 1 }, label: { show: false } } }] });
@@ -14970,14 +15016,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 长按已激活后，手指左右拖动即可连续切换选中 K 线
                 if(sdKlinePress.long){
                     if(e.cancelable){ try{ e.preventDefault(); }catch(_){} }
-                    const idx = sdKlineIndexAt(e.clientX, e.clientY);
-                    const activeIdx = idx >= 0 ? idx : sdKlinePress.lastIdx;
-                    const cross = sdKlinePriceAt(e.clientY);
-                    const yMoved = cross && (!sdKlinePress.lastY || Math.abs(cross.y - sdKlinePress.lastY) >= 1);
-                    if(activeIdx >= 0 && (idx !== sdKlinePress.lastIdx || yMoved)){
-                        if(idx >= 0) sdKlinePress.lastIdx = idx;
-                        if(cross) sdKlinePress.lastY = cross.y;
-                        sdKlineSelectRow(sdKlineLastPack.rows[activeIdx], activeIdx, e.clientY);
+                    // 原生 pointermove 频率可能高于屏幕帧率：只保留最新坐标，每帧最多重绘一次十字线
+                    sdKlineMovePoint = { x: e.clientX, y: e.clientY };
+                    if(sdKlineMoveRaf == null){
+                        sdKlineMoveRaf = requestAnimationFrame(function(){
+                            sdKlineMoveRaf = null;
+                            const p = sdKlineMovePoint;
+                            sdKlineMovePoint = null;
+                            if(!p || !sdKlinePress || !sdKlinePress.long) return;
+                            const idx = sdKlineIndexAt(p.x, p.y);
+                            const activeIdx = idx >= 0 ? idx : sdKlinePress.lastIdx;
+                            const cross = sdKlinePriceAt(p.y);
+                            const yMoved = cross && (!sdKlinePress.lastY || Math.abs(cross.y - sdKlinePress.lastY) >= 1);
+                            if(activeIdx >= 0 && (idx !== sdKlinePress.lastIdx || yMoved)){
+                                if(idx >= 0) sdKlinePress.lastIdx = idx;
+                                if(cross) sdKlinePress.lastY = cross.y;
+                                sdKlineSelectRow(sdKlineLastPack.rows[activeIdx], activeIdx, p.y);
+                            }
+                        });
                     }
                     return;
                 }
@@ -15005,33 +15061,64 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const inst = sdKlineEnsureInst();
             if(!inst) return;
             const rows = pack.rows;
+            const realCount = rows.length;
+            const sparse = realCount < sdKlineDefaultCount();
+            const stageTotal = sparse ? sdKlineDefaultCount() : realCount;
+            sdKlineRealCount = realCount;
+            sdKlineSparseStage = sparse;
+            sdKlineBarsTotal = stageTotal;
             const dates = [], candles = [], vols = [];
-            for(let i = 0; i < rows.length; i++){
-                const r = rows[i];
-                dates.push(r.d);
-                candles.push([r.o, r.c, r.l, r.h]);
-                vols.push({ value: r.v, itemStyle: r.c >= r.o
-                    ? { color: t.bg, borderColor: t.candleUp, borderWidth: 1 }
-                    : { color: t.candleDown, borderColor: t.candleDown, borderWidth: 1 } });
+            for(let i = 0; i < stageTotal; i++){
+                if(i < realCount){
+                    const r = rows[i];
+                    dates.push(r.d);
+                    candles.push([r.o, r.c, r.l, r.h]);
+                    vols.push({ value: r.v, itemStyle: r.c >= r.o
+                        ? { color: t.bg, borderColor: t.candleUp, borderWidth: 1 }
+                        : { color: t.candleDown, borderColor: t.candleDown, borderWidth: 1 } });
+                }else{
+                    // 右侧补位槽：背景板仍铺满整幅，但不画柱子、不占默认视野密度
+                    dates.push('');
+                    candles.push('-');
+                    vols.push({ value: '-' });
+                }
             }
-            sdKlineBarsTotal = rows.length;
-            const showCount = Math.min(rows.length, sdKlineViewCount || sdKlineDefaultCount());
-            const widthPct = rows.length ? Math.min(100, showCount / rows.length * 100) : 100;
-            // 手动平移过的窗口按存下的起点重建，避免行情刷新/重绘时被拉回最新一根
-            const startPct = sdKlinePanStartPct == null
-                ? (rows.length > showCount ? 100 - widthPct : 0)
-                : Math.max(0, Math.min(100 - widthPct, sdKlinePanStartPct));
-            const endPct = startPct + widthPct;
+            const showCount = sparse
+                ? Math.min(stageTotal, sdKlineViewCount || stageTotal)
+                : Math.min(realCount, sdKlineViewCount || sdKlineDefaultCount());
+            const widthPct = stageTotal ? Math.min(100, showCount / stageTotal * 100) : 100;
+            // 数据不足一屏时窗口从左端开始，向右扩展；否则按最新一根右锚定
+            const startPct = sparse
+                ? (sdKlinePanStartPct == null ? 0 : Math.max(0, Math.min(100 - widthPct, sdKlinePanStartPct)))
+                : (sdKlinePanStartPct == null
+                    ? (realCount > showCount ? 100 - widthPct : 0)
+                    : Math.max(0, Math.min(100 - widthPct, sdKlinePanStartPct)));
+            // 稀疏舞台的 dataZoom end 采用闭区间，避免右侧多留一个空槽；
+            // 数据填满时直接用 100 收尾。
+            const endPct = sparse
+                ? (showCount >= stageTotal ? 100 : startPct + Math.max(0.001, (showCount - 1) / stageTotal * 100))
+                : startPct + widthPct;
+            // 绘图区（含主图与成交量背景板）始终铺满整幅图表舞台，不再按默认 69 根收缩。
+            // 数据不足时也保留整幅背景，缩放窗口以全部舞台为基准。
+            const chartEl = document.querySelector('#sdKlineChart');
+            const chartW = Math.max(120, (chartEl && chartEl.clientWidth) || 640);
+            const plotW = Math.max(120, chartW - 16);
+            const gridW = plotW;
+            const gridRight = 8;
+            const densitySlots = sparse ? stageTotal : Math.min(realCount, sdKlineDefaultCount());
+            const barPx = Math.max(3, Math.min(12, plotW / Math.max(1, densitySlots) * 0.78));
             const series = [
-                { name: 'K线', type: 'candlestick', data: candles, barMaxWidth: 12, barWidth: '78%', barCategoryGap: '18%',
+                { name: 'K线', type: 'candlestick', data: candles, barWidth: barPx,
                   itemStyle: { color: t.bg, color0: t.candleDown, borderColor: t.candleUp, borderColor0: t.candleDown, borderWidth: 1 } }
             ];
             for(let i = 0; i < SDKLINE_MA_LIST.length; i++){
                 const n = SDKLINE_MA_LIST[i];
                 if(!sdMaOn[n]) continue;
-                series.push({ name: 'MA' + n, type: 'line', data: sdKlineMA(rows, n), showSymbol: false, smooth: false, lineStyle: { width: 1, color: (t.ma[n] || SDKLINE_MA_COLOR[n]) } });
+                const maData = sdKlineMA(rows, n);
+                if(sparse){ for(let k = realCount; k < stageTotal; k++) maData.push('-'); }
+                series.push({ name: 'MA' + n, type: 'line', data: maData, showSymbol: false, smooth: false, lineStyle: { width: 1, color: (t.ma[n] || SDKLINE_MA_COLOR[n]) } });
             }
-            series.push({ name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barMaxWidth: 12, barWidth: '78%', barCategoryGap: '18%', itemStyle: { borderRadius: 0 } });
+            series.push({ name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barWidth: barPx, itemStyle: { borderRadius: 0 } });
             const lastRow = rows[rows.length - 1];
             const selIdx = sdKlineSelActive ? rows.findIndex(function(r){ return r.d === sdKlineSelDate; }) : -1;
             const mpData = [{ coord: [lastRow.d, lastRow.c], itemStyle: { color: lastRow.c >= lastRow.o ? t.candleUp : t.candleDown } }];
@@ -15058,8 +15145,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 animationEasingUpdate: 'cubicOut',
                 backgroundColor: t.bg,
                 grid: [
-                    { left: 8, right: 8, top: 10, height: '63%' },
-                    { left: 8, right: 8, top: '69%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
+                    { left: 8, right: gridRight, top: 10, height: '63%' },
+                    { left: 8, right: gridRight, top: '69%', height: '18%', show: true, borderWidth: 0, backgroundColor: sdKlineDark ? '#171a20' : '#f8f2e6' }
                 ],
                 dataZoom: zoom,
                 xAxis: [
@@ -15109,6 +15196,32 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(sdKlineInst && !sdKlineInst.isDisposed()){ try{ sdKlineInst.resize(); }catch(e){} }
         });
 
+        // 股票详情页是真正的全屏二级页：保留底部导航条，只隐藏悬浮按钮/预警条；关闭时按原状态恢复
+        let sdDetailChromeState = null;
+        function sdHideHostChrome(){
+            // 详情页需要保留底部导航条；只隐藏会压住详情内容的 FAB 与顶部预警条
+            const nav = document.querySelector('#bottomNav');
+            if(nav) nav.classList.remove('hidden');
+            const sels = ['#openModalBtn', '#cfAddFab', '#positionWarnBar'];
+            const state = {};
+            sels.forEach(function(sel){
+                const el = document.querySelector(sel);
+                state[sel] = el ? el.classList.contains('hidden') : true;
+                if(el) el.classList.add('hidden');
+            });
+            sdDetailChromeState = state;
+        }
+        function sdRestoreHostChrome(){
+            document.body.classList.remove('sd-detail-open');
+            const state = sdDetailChromeState;
+            if(!state) return;
+            Object.keys(state).forEach(function(sel){
+                const el = document.querySelector(sel);
+                if(el && !state[sel]) el.classList.remove('hidden');
+            });
+            sdDetailChromeState = null;
+            document.body.classList.remove('sd-detail-open');
+        }
         let sdDetailOrigin = 'watch';
         function openStockDetail(code, market, name, fromTab){
             sdDetailOrigin = fromTab === 'hold' ? 'hold' : 'watch';
@@ -15116,6 +15229,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 详情页为 fixed 容器内部滚动（与自选页同款防橡皮筋方案）：锁死 body，滚动全部发生在容器内
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
+            document.body.classList.add('sd-detail-open');
+            sdHideHostChrome();
+            if(sdDetailOrigin === 'hold'){
+                // 从首页持仓进入时必须隐藏首页，否则详情页会与首页叠在一起（自选入口原本就会隐藏）
+                const holdPg = document.querySelector('#pageHold');
+                if(holdPg) holdPg.classList.add('hidden');
+            }
             document.querySelector('#pageWatchSel').classList.add('hidden');
             const page = document.querySelector('#pageStockDetail');
             page.classList.remove('hidden');
@@ -15154,6 +15274,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     document.documentElement.style.overflow = 'hidden';
                     renderWatchSelPage();
                 }
+                sdRestoreHostChrome();
                 sdDetailOrigin = 'watch';
             });
         }

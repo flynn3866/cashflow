@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261108.168';</script>
+    <script>window.APP_VERSION = '20261109.171';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1250,7 +1250,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
                 <div class="relative">
                     <div id="chartAssetReturn" style="width:100%;height:238px;"></div>
-                    <div id="ahAssetReturnEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">暂无每日收益率记录</div>
+                    <div id="ahAssetReturnEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">暂无总收益率记录</div>
                 </div>
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
                     <div class="min-w-0 flex-1">
@@ -5160,6 +5160,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let lastQuoteRefreshOk = false;      // 最近一次 refreshAll 是否所有需要报价的持仓都成功
         let _assetDailyStartupPending = false; // 启动后的当天快照是否仍在等待首次成功刷新
         let _assetDailyCloseDoneKey = null;    // 当天收盘快照已写标记：YYYY-MM-DD#close
+        // 启动保护期：init 全部加载完成后至少等 3 分钟，且必须已完整加载，才允许写 assetDaily。
+        // 防止首页/详情页或 1.2s 收盘检查在历史资金、持仓、行情尚未就绪时写入瞬时错误的总收益率。
+        const ASSET_DAILY_STARTUP_GRACE_MS = 3 * 60 * 1000;
+        let _assetDailyDataLoaded = false;     // init 全部数据加载完成后置 true
+        let _assetDailyWriteArmedAt = 0;       // 启动保护期结束时间戳；此前一律不写
         // ==================== 仓位分布收盘快照机制 ====================
         // 仓位分布数据不需要每2秒刷新，每天收盘后更新一次，交易时间内使用上一交易日快照
         const POSITION_SNAPSHOT_KEY = 'dividendPositionSnapshot';
@@ -5852,13 +5857,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // 方案3：到期分红自动入账（打开软件即把已到登记日 18:00 的待入账分红转为已收现金，只一次）
             settlePendingDivs();
-            // 一次性口径切换：assetDaily.rate 由"当日收益率"改为"总收益率"（与我的页/本页顶部卡同源）。
-            // 只跑一次（标记落 kv）；失败不阻断启动，下次打开再试。历史行按新公式重算，旧行残留的 dayRate 一并清掉。
-            if(AppDB.ok && lsGet(ASSET_DAILY_RATE_SEM_KEY) !== ASSET_DAILY_RATE_SEM){
-                try{
-                    const migrated = await AssetDaily.backfillTotalReturnRates();
-                    if(migrated) lsSet(ASSET_DAILY_RATE_SEM_KEY, ASSET_DAILY_RATE_SEM);
-                }catch(e){}
+            // 收益率/总资产趋势只从 2026-11-09 起：启动时永久清理 assetDaily 中更早的行，
+            // 不计算、不回填任何历史 rate；只动 assetDaily，不碰 main / dailyAssets 等其他表。
+            if(AppDB.ok){
+                try{ await AssetDaily.purgeBefore(ASSET_DAILY_START_DATE); }catch(e){}
             }
             // 交易日才维护当天资产快照；非交易日不写，避免制造没有行情的“每日记录”。
             // 有持仓时先等启动后的首次完整行情刷新成功，再由 refreshAll 检查并写入；
@@ -5899,6 +5901,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 自动补全缺失的行业信息：对industry为"其他"的A股股票，自动从东方财富获取
             // 行业信息基本不变，获取成功后保存，不再重复获取（参考券商行业分类刷新机制）
             fetchMissingIndustries();
+            // ===== 启动保护期：全部数据（持仓/历史/资金流水/现金）加载完成后再计时 3 分钟 =====
+            // 保护期内 assetDaily 一律不写；结束后由下面的定时器主动补一次“检查后写入”。
+            // 这样不会出现“启动瞬间用未加载完全的 totalInvested 算出 0.01%”并被覆盖进当天/昨天记录。
+            try{ recalcTotalInvested(); saveHistory(); }catch(e){}
+            _assetDailyDataLoaded = true;
+            _assetDailyWriteArmedAt = Date.now() + ASSET_DAILY_STARTUP_GRACE_MS;
+            setTimeout(function(){
+                if(!assetDailyWritesReady()) return;
+                if(holdDataList.length){
+                    refreshAll();
+                }else if(Number(historyData.cashBalance) > 0){
+                    ensureTodayAssetDailySnapshot();
+                }
+            }, ASSET_DAILY_STARTUP_GRACE_MS + 1000);
         }
 
         // 自动补全缺失的行业信息（串行逐个获取，避免并发请求过多）
@@ -6146,10 +6162,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 行结构只有四个字段：{ date, total, rate, ts }，其中 rate 恒为"总收益率（累计）"。
         // 表内不再保存任何"当日收益率/日涨跌幅"，避免两种口径混在一列里互相覆盖。
         const ASSET_DAILY = 'assetDaily';
-        // rate 字段的语义版本标记：'totalRet2' = 总收益率（累计）且行内不再保留 dayRate。
-        // 版本值一变，下一次启动会再跑一次回填（幂等：已干净的行不重写），确保旧行残留字段被清掉。
-        const ASSET_DAILY_RATE_SEM_KEY = 'assetDailyRateSem';
-        const ASSET_DAILY_RATE_SEM = 'totalRet2';
+        // 本次历史清理基线：只保留 2026-11-09 及之后的真实每日记录；
+        // 之前的旧行一次性清理，不再按任何公式回填历史 rate。
+        const ASSET_DAILY_START_DATE = '2026-11-09';
         const AssetDaily = {
             // rate = 总收益率（累计，口径同"我的"页 / 总资产趋势页顶部卡 = calcPnlRet()）
             put: function(date, total, rate){
@@ -6212,59 +6227,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(!AppDB.ok || !AppDB.db) return Promise.resolve(0);
                 return AppDB.count(ASSET_DAILY).catch(function(){ return 0; });
             },
-            // 一次性把历史行的 rate 由"当日收益率"改写为"总收益率"（口径 = calcPnlRet()）：
-            //   rate = (当日归档总资产 − 截至当日的净投入) ÷ (初始投入 + 截至当日的全部转入) × 100
-            // 旧行里若残留 dayRate（上一版的当日收益字段）一并抹掉，整行按 {date,total,rate,ts} 重写。
-            // 跳过今天（由实时写入维护），已与新口径一致的记录不重写，避免无谓 I/O。
-            backfillTotalReturnRates: async function(){
-                if(!AppDB.ok || !AppDB.db) return false;
-                let all;
-                try{ all = await AppDB.getAll(ASSET_DAILY); }catch(e){ return false; }
-                const today = todayStr();
-                const keys = Object.keys(all || {}).sort();
-                const rows = [];
-                keys.forEach(function(d){
-                    const row = all[d];
-                    if(!row) return;
-                    if(d >= today) return;
-                    const total = Number(row.total) || 0;
-                    if(!(total > 0)) return;
-                    const rate = totalReturnRateAtDate(total, d);
-                    const oldRate = (row.rate === null || row.rate === undefined || row.rate === '' || !isFinite(Number(row.rate))) ? null : Number(row.rate);
-                    const rateChanged = (rate === null)
-                        ? (row.rate !== null && row.rate !== undefined)
-                        : (oldRate === null || Math.abs(oldRate - rate) > 0.0001);
-                    const hasLegacyDay = Object.prototype.hasOwnProperty.call(row, 'dayRate');
-                    if(rateChanged || hasLegacyDay){
-                        rows.push({ date: d, total: total, rate: rate, ts: Number(row.ts) || Date.now() });
-                    }
+            // 永久清理起始日之前的历史行：只动 assetDaily，不碰 main / dailyAssets 等其他表。
+            // 使用游标逐条 delete，保证不会误删 >= ASSET_DAILY_START_DATE 的真实记录；
+            // 重复执行是幂等的，删除 0 行也正常完成。
+            purgeBefore: function(date){
+                if(!AppDB.ok || !AppDB.db) return Promise.resolve(0);
+                const cutoff = String(date || '');
+                return new Promise(function(res, rej){
+                    try{
+                        let removed = 0;
+                        const tx = AppDB.db.transaction(ASSET_DAILY, 'readwrite');
+                        const os = tx.objectStore(ASSET_DAILY);
+                        const rq = os.openCursor(IDBKeyRange.upperBound(cutoff, true));
+                        rq.onsuccess = function(){
+                            const c = rq.result;
+                            if(!c) return;
+                            c.delete();
+                            removed += 1;
+                            c.continue();
+                        };
+                        rq.onerror = function(){ rej(rq.error); };
+                        tx.oncomplete = function(){ res(removed); };
+                        tx.onerror = function(){ rej(tx.error); };
+                        tx.onabort = function(){ rej(tx.error); };
+                    }catch(e){ rej(e); }
                 });
-                for(let i = 0; i < rows.length; i += 1000){
-                    try{ await AppDB.putObjBatch(ASSET_DAILY, rows.slice(i, i + 1000)); }catch(e){}
-                }
-                return true;
-            },
-            // 首次升级时把 main 快照里的 dailyAssets 迁到独立表；已迁过按条数跳过。
-            migrateFromHistory: async function(){
-                if(!AppDB.ok || !AppDB.db) return false;
-                const src = historyData.dailyAssets || {};
-                const today = todayStr();
-                const keys = Object.keys(src).filter(function(d){
-                    return /^\d{4}-\d{2}-\d{2}$/.test(d) && Number(src[d]) > 0 && d !== today;
-                });
-                if(!keys.length) return false;
-                try{
-                    const n = await AssetDaily.count();
-                    if(n >= keys.length + (src[today] ? 1 : 0)) return true;
-                }catch(e){}
-                const rows = keys.sort().map(function(d){
-                    const total = Number(src[d]);
-                    return { date: d, total: total, rate: totalReturnRateAtDate(total, d), ts: Date.now() };
-                });
-                for(let i = 0; i < rows.length; i += 1000){
-                    try{ await AppDB.putObjBatch(ASSET_DAILY, rows.slice(i, i + 1000)); }catch(e){}
-                }
-                return true;
             }
         };
         let _assetDailyPending = null;
@@ -7128,9 +7115,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             historyData.dailyAssets[snap.date] = snap.total;
             if(prev == null || Math.abs(Number(prev) - snap.total) > 0.005) saveHistory();
         }
+        // 启动保护期闸门：init 未完成或 3 分钟保护期未过，任何路径都不允许写 assetDaily。
+        function assetDailyWritesReady(){
+            return _assetDailyDataLoaded && _assetDailyWriteArmedAt > 0 && Date.now() >= _assetDailyWriteArmedAt;
+        }
         // 启动/收盘后的“检查后写入”：当天没有记录，或总资产/收益率与最新值不一致时才写。
         async function ensureTodayAssetDailySnapshot(){
             if(!isTradingDay(new Date())) return true;
+            // 数据未完整加载 / 仍在启动保护期内：不落库，保留 pending 以便保护期结束后重试。
+            if(!assetDailyWritesReady()) return false;
             const snap = buildTodayAssetDailySnapshot();
             if(!snap) return true;
             let row = null;
@@ -7140,21 +7133,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return true;
             }
             try{
-                recordDailyAssets();
-                return true;
+                return recordDailyAssets();
             }catch(e){ return false; }
         }
         // 记录今日总资产（每次加载覆盖当天，确保月底归档用最新值；总资产 = 市值 + 现金）
         // 双写：main 里的 dailyAssets 保留为兼容层，独立 assetDaily 表承载长期按日轨迹。
         function recordDailyAssets(){
+            // 启动保护期：init 未完成 / 未满 3 分钟，任何页面刷新或用户操作都不得写快照。
+            if(!assetDailyWritesReady()) return false;
             // 启动后首次快照必须等到“所有需要报价的持仓都刷新成功”；不能用缓存价落库。
-            if(_assetDailyStartupPending && !lastQuoteRefreshOk) return;
+            if(_assetDailyStartupPending && !lastQuoteRefreshOk) return false;
             // 非交易日不写资产快照：周末没有新的收盘价，写入只会产生虚假的“每日记录”。
-            if(!isTradingDay(new Date())) return;
+            if(!isTradingDay(new Date())) return false;
             const snap = buildTodayAssetDailySnapshot();
-            if(!snap) return;
+            if(!snap) return false;
             syncHistoryDailyTotal(snap);
             queueAssetDailySnapshot(snap.date, snap.total, snap.rate);
+            return true;
         }
 
         // ==================== 总资产新高（金色皇冠 · 里程碑轨迹） ====================
@@ -7430,34 +7425,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 pnl: pnl,
                 ret: gross > 0 ? (pnl / gross * 100) : null
             };
-        }
-
-        // 指定日期（收盘口径）的总收益率：与 calcPnlRet 完全同一公式，只是把"累计资金"截到该日。
-        //   total  = 该日归档的总资产（assetDaily.total）
-        //   净投入 = 初始投入 + 该日（含）之前的全部资金流水（转入为正、转出为负）
-        //   毛投入 = 初始投入 + 该日（含）之前的全部转入（只累加正数，分母不扣转出）
-        // 初始投入按 initialCostDate 计入（该日之前的行不把期初本金算进来，避免早期行算出离谱值；
-        // 与 getFundFlows 把初始投入挂在 initialCostDate 上的处理一致）。
-        // 用于历史行 rate 的回填/迁移；今天的实时值仍直接取 calcPnlRet()，确保与页面显示逐位一致。
-        function totalReturnRateAtDate(total, dateStr){
-            const t = Number(total) || 0;
-            if(!(t > 0)) return null;
-            const asOf = String(dateStr || '');
-            const initCost = Number(historyData.initialCost) || 0;
-            const initDate = String(historyData.initialCostDate || '2020-01-01');
-            const initIn = (!asOf || initDate <= asOf);
-            let net = initIn ? initCost : 0;
-            let gross = initIn ? initCost : 0;
-            (historyData.fundInflows || []).forEach(function(f){
-                const amt = Number(f.amount) || 0;
-                if(!amt) return;
-                const d = String(f.date || '2020-01-01');
-                if(asOf && d > asOf) return;
-                net += amt;
-                if(amt > 0) gross += amt;
-            });
-            if(!(gross > 0)) return null;
-            return Number(((t - net) / gross * 100).toFixed(4));
         }
 
         // 年末总资产序列（与资产分析页同口径）：手动 yearlyAssets > 年度快照 > 月归档 > 日归档；今年取实时
@@ -7901,7 +7868,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         async function loadAssetTrackRows(range){
             const today = todayStr();
-            const start = range === 'all' ? '1900-01-01' : assetTrackStartDate(range);
+            const rawStart = range === 'all' ? '1900-01-01' : assetTrackStartDate(range);
+            // 两张趋势图的历史只从 2026-11-09 起读；即使旧行清理失败，也不会把基线之前的数据画出来。
+            const start = rawStart < ASSET_DAILY_START_DATE ? ASSET_DAILY_START_DATE : rawStart;
             if(!AppDB.ok) return { rows: [], grain: 'day' };
             let dbRows = [];
             let sampledTotal = 0;
@@ -7920,7 +7889,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const hasTodayRow = !!(todayRow && Number(todayRow.total) > 0);
             // 历史数据只读 assetDaily 原值（rate 即总收益率）；今天的行不取库内旧值，统一由首页实时数据覆盖。
             const history = (dbRows || []).filter(function(r){
-                return r && /^\d{4}-\d{2}-\d{2}$/.test(String(r.date || '')) && String(r.date) < today && Number(r.total) > 0;
+                return r && /^\d{4}-\d{2}-\d{2}$/.test(String(r.date || ''))
+                    && String(r.date) >= ASSET_DAILY_START_DATE
+                    && String(r.date) < today
+                    && Number(r.total) > 0
+                    // 周末不是交易日：即使旧版本/异常路径留下过周末行，也绝不画进趋势图。
+                    && isTradingDayStr(r.date);
             }).map(function(r){
                 return {
                     date: String(r.date),
@@ -7928,16 +7902,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     rate: (r.rate === null || r.rate === undefined || r.rate === '' || !isFinite(Number(r.rate))) ? null : Number(r.rate)
                 };
             }).sort(function(a, b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
-            if(!history.length) return { rows: [], grain: 'day', hasToday: false };
             const totalNow = Number(calcSummary().totalAsset) || 0;
+            // 今天若为周末也不接实时点：周末没有新收盘价，不应产生当日趋势点。
+            const hasToday = !!(hasTodayRow && totalNow > 0 && isTradingDay(new Date()));
             let rows = history;
-            const hasToday = !!(hasTodayRow && totalNow > 0);
             if(hasToday){
                 // 今日点同样取"总收益率"实时值（calcPnlRet，与我的页/本页顶部汇总卡同源）。
                 const pr = calcPnlRet();
                 const todayRate = (pr.ret != null && isFinite(Number(pr.ret))) ? Number(Number(pr.ret).toFixed(4)) : null;
                 rows = history.concat([{ date: today, value: totalNow, rate: todayRate, today: true }]);
             }
+            // 表里只有今天一行（11.9 起点）时也要画今天，不再因为“没有历史行”直接返回空。
+            if(!rows.length) return { rows: [], grain: 'day', hasToday: false };
             if(range === 'all' && rows.length > 1200){
                 const step = Math.ceil(rows.length / 1200);
                 const sampled = [];
@@ -7978,6 +7954,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(mn) mn.innerText = fmtMoney(minV);
         }
 
+        // 两张资产趋势图共用同一份 tooltip 结构：固定顺序（总资产 → 总收益率），
+        // 当前图对应指标用金色加粗并标“本图”，避免一张图收益率在上、另一张在下造成误读。
+        function assetTrendTooltipHtml(row, total, chartName, grain, primary){
+            if(!row) return '';
+            const dateText = grain === 'month'
+                ? String(row.date || '').substring(0, 7).replace('-', '.')
+                : String(row.date || '').replace(/-/g, '.');
+            const totalText = isFinite(Number(total)) ? fmtMoney(Number(total)) : '--';
+            const rateRaw = row.rate;
+            const rateValid = rateRaw !== null && rateRaw !== undefined && rateRaw !== '' && isFinite(Number(rateRaw));
+            const rateText = rateValid ? fmtPctNum(Number(rateRaw)) : '--';
+            const primaryStyle = 'color:#F6C453;font-weight:600';
+            const secondaryStyle = 'color:rgba(253,247,236,0.62)';
+            function line(label, val, key){
+                const hit = key === primary;
+                return '<span style="' + (hit ? primaryStyle : secondaryStyle) + '">' + label + ' ' + val + '</span>'
+                    + (hit ? '<span style="color:#F6C453;font-size:8.5px;margin-left:4px">本图</span>' : '');
+            }
+            return '<div style="font-size:9px;color:rgba(253,247,236,0.48);margin-bottom:2px">' + chartName + '</div>'
+                + '<div style="font-size:10px;color:rgba(253,247,236,0.78);margin-bottom:3px">' + dateText + '</div>'
+                + line('总资产', totalText, 'total')
+                + '<br/>' + line('总收益率', rateText, 'rate');
+        }
         function drawAssetTrackChart(rows, grain){
             const el = document.querySelector('#chartAssetTrack');
             if(!el || !rows || !rows.length) return;
@@ -8008,7 +8007,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             assetTrackChart.setOption({
                 animationDuration: 650,
                 animationEasing: 'cubicOut',
-                grid: { left: 10, right: 24, top: 24, bottom: 24, containLabel: true },
+                grid: { left: 10, right: 52, top: 40, bottom: 24, containLabel: true },
                 graphic: flat ? [{
                     type: 'text', left: 'center', top: '18%', silent: true,
                     style: {
@@ -8033,12 +8032,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const i = ps[0].dataIndex;
                         const row = rows[i];
                         if(!row) return '';
-                        const dtext = grain === 'month' ? row.date.substring(0, 7).replace('-', '.') : row.date.replace(/-/g, '.');
-                        let html = dtext + '<br/>总资产 ' + fmtMoney(row.value);
-                        if(row.rate !== null && row.rate !== undefined && isFinite(Number(row.rate))){
-                            html += '<br/>总收益率 ' + fmtPctNum(row.rate);
-                        }
-                        return html;
+                        return assetTrendTooltipHtml(row, row.value,
+                            assetTrackMode === 'year' ? '逐年总资产' : '资产轨迹',
+                            grain, 'total');
                     }
                 },
                 xAxis: {
@@ -8090,9 +8086,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             coord: [n - 1, lastVal],
                             itemStyle: { color: '#a9642a', borderColor: '#fffaf2', borderWidth: 2, shadowBlur: 10, shadowColor: 'rgba(169,100,42,0.35)' },
                             label: {
-                                show: true, position: 'left', distance: 4, formatter: '当前',
-                                color: '#8a5a2b', fontSize: 9,
-                                backgroundColor: 'rgba(255,250,241,0.94)',
+                                show: true, position: 'top', distance: 8,
+                                formatter: '当前 ' + fmtMoney(lastVal),
+                                color: '#8a5a2b', fontSize: 9.5,
+                                backgroundColor: 'rgba(255,250,241,0.96)',
                                 borderColor: '#eadfce', borderWidth: 1, borderRadius: 4, padding: [2, 5]
                             }
                         }]
@@ -8293,7 +8290,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             assetReturnChart.setOption({
                 animationDuration: 650,
                 animationEasing: 'cubicOut',
-                grid: { left: 10, right: 24, top: 24, bottom: 24, containLabel: true },
+                grid: { left: 10, right: 52, top: 40, bottom: 24, containLabel: true },
                 graphic: flat ? [{
                     type: 'text', left: 'center', top: '18%', silent: true,
                     style: {
@@ -8317,8 +8314,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         if(!ps || !ps.length) return '';
                         const row = rows[ps[0].dataIndex];
                         if(!row) return '';
-                        const dtext = grain === 'month' ? row.date.substring(0, 7).replace('-', '.') : row.date.replace(/-/g, '.');
-                        return dtext + '<br/>总收益率 ' + fmtPctNum(row.rate) + '<br/>总资产 ' + fmtMoney(row.total);
+                        return assetTrendTooltipHtml(row, row.total, '收益率轨迹', grain, 'rate');
                     }
                 },
                 xAxis: {
@@ -8377,9 +8373,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             coord: [n - 1, lastVal],
                             itemStyle: { color: lastColor, borderColor: '#fffaf2', borderWidth: 2, shadowBlur: 10, shadowColor: 'rgba(212,83,41,0.35)' },
                             label: {
-                                show: true, position: 'left', distance: 4, formatter: '当前',
-                                color: '#8a5a2b', fontSize: 9,
-                                backgroundColor: 'rgba(255,250,241,0.94)',
+                                show: true, position: 'top', distance: 8,
+                                formatter: '当前 ' + fmtPctNum(lastVal),
+                                color: '#8a5a2b', fontSize: 9.5,
+                                backgroundColor: 'rgba(255,250,241,0.96)',
                                 borderColor: '#eadfce', borderWidth: 1, borderRadius: 4, padding: [2, 5]
                             }
                         }]
@@ -17915,6 +17912,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const day = d.getDay();
             return day !== 0 && day !== 6;
         }
+        // 按 YYYY-MM-DD 字符串判断是否交易日（手动拆年月日，避免 iOS 对非标准日期字符串解析不一致）。
+        function isTradingDayStr(dateStr){
+            const p = String(dateStr || '').split('-');
+            if(p.length !== 3) return false;
+            const y = Number(p[0]), m = Number(p[1]), d = Number(p[2]);
+            if(!isFinite(y) || !isFinite(m) || !isFinite(d)) return false;
+            return isTradingDay(new Date(y, m - 1, d));
+        }
         // 按天数据（统计页四板块 / 分红 / 我的页等）的刷新期键：
         // 每个交易日两个刷新点——早上 6:00 与晚上 20:00（拉取/计算并覆盖存储），
         // 其他时间直接读取对应刷新期已存储的数据展示，不随每2秒刷新或点击导航变化。
@@ -21506,7 +21511,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const posDenom = Number(calcSummary().totalAsset) || totalMV;
                     const posCash = Math.max(0, posDenom - totalMV);
                     // 行业颜色调色板（浓烈鲜明：以大红/紫红为主，相邻扇区红紫交替，保证可分辨）
-                    const industryColors = ['#E11D48', '#7C3AED', '#F43F5E', '#C026D3', '#DC2626', '#4F46E5', '#F97316', '#A21CAF', '#BE123C', '#6D28D9'];
+                    const industryColors = ['#F59E0B', '#3B82F6', '#10B981', '#F43F5E', '#8B5CF6', '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#6366F1', '#14B8A6', '#A855F7'];
                     // 按行业分组
                     const industryMap = {};
                     stockMV.forEach(function(x){
@@ -27904,6 +27909,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         async function maybeWriteAssetDailyClose(){
             if(!holdDataList.length && !(Number(historyData.cashBalance) > 0)) return;
             if(!isAssetDailyClosedNow()) return;
+            // 启动保护期未结束：不要用尚未加载完成的数据写快照，等保护期结束后再检查。
+            if(!assetDailyWritesReady()) return;
             const key = todayStr() + '#close';
             if(_assetDailyCloseDoneKey === key) return;
             // 纯现金账户没有行情依赖，直接按当前现金检查/写当天。

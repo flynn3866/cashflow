@@ -4461,6 +4461,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             'settingsCollapseState','statsCollapseState','statsSubCollapse','dividendMilestones',
             'divCashFlow','dividendFeeCfg','dividendGoalCfg'];
         let holdDataList = [];
+        // 主数据加载完成闸门：init 解析完已存持仓（或确认本来无数据）前，禁止 saveLocal 把空数组/半成品写回
+        let _holdDataLoaded = false;
+        // 清空所有数据执行中：禁止任何保存/快照/账本回写，避免刷新前把旧数据重新写回
+        let _allDataClearing = false;
 
         // dom元素
         const openModalBtn = document.querySelector('#openModalBtn');
@@ -5137,7 +5141,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         });
 
-        // ============ 每5秒自动刷新最新行情 / 分红 / 汇率 ============
+        // ============ 交易时段每3秒自动刷新最新行情 / 分红 / 汇率 ============
         const divCacheMap = {};     // A股分红记录缓存：code -> {t, period, records}，每天刷新一次（键=当天日期，含周末）
         const DIV_CACHE_KEY = 'dividendDivCache'; // 分红缓存持久化：当天其余时间直接读存储，不重复请求
         function loadDivCache(){
@@ -5381,6 +5385,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     changePct: 0
                 };
             });
+        }
+
+        // 今日涨跌幅详情页是否可见：首页“今日盈亏”与统计页“今日涨跌幅”共用同一个详情页，
+        // 刷新判断不能只看 activeTab（首页入口进入时 activeTab 仍是 hold），必须按详情页真实可见状态判断。
+        function isStatsTodayRankingVisible(){
+            const pg = document.querySelector('#pageStatsToday');
+            return !!pg && !pg.classList.contains('hidden');
         }
 
         async function refreshAll(){
@@ -5628,8 +5639,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         if(window.__pageScrolling){ window.__pageDirty = true; }
                         else updateHoldQuotes();
                     }
-                    // B：统计页不跟随持仓行情整页重建；今日排行由独立 5 秒定时器增量刷新，
-                    //    其余按天/快照板块只在进入页面、退出详情页、收盘快照后整页刷新一次
+                    // B：统计页不跟随持仓行情整页重建；今日排行直接复用本次持仓行情刷新结果，
+                    //    只增量重绘排行；其余按天/快照板块只在进入页面、退出详情页、收盘快照后整页刷新一次
+                    //    今日涨跌幅详情页（activeStatsSection='today'）本身就是排行，必须继续跟随3秒刷新；
+                    //    首页“今日盈亏”入口也打开同一详情页，按页面真实可见性统一处理，不依赖 activeTab。
+                    if(isStatsTodayRankingVisible() || (activeTab === 'stats' && (!activeStatsSection || activeStatsSection === 'today'))){
+                        if(window.__pageScrolling){
+                            window.__pageDirty = true;
+                        } else {
+                            try{ renderStatsTodayRanking(); }catch(e){}
+                        }
+                    }
                     // 如果资产分析图表详情页可见，同步更新顶部关键指标（文本实时更新，图表不频繁渲染）
                     if(!document.querySelector('#pageAnalysis').classList.contains('hidden')){
                         recordDailyAssets();
@@ -5801,7 +5821,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         console.log('修复', it.name, '：清除了', beforeCount - it.processedDivDates.length, '条建仓日前的错误除权记录');
                     }
                 });
+                _holdDataLoaded = true;
                 saveLocal();
+            } else {
+                // 确认本地没有已存持仓：空仓本身是有效状态，后续 saveLocal 允许写入
+                _holdDataLoaded = true;
             }
             // 读取上次保存的港币汇率
             const fx = lsGet('dividendHkFx');
@@ -5914,6 +5938,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // 保存到本地存储
         function saveLocal() {
+            // 主数据未完成加载前，holdDataList 可能还是空数组或半成品；此时禁止写回，避免覆盖真实持仓
+            if(!_holdDataLoaded || _allDataClearing) return;
             lsSet(STORAGE_KEY, JSON.stringify(holdDataList));
             // 持仓数据变更：立即失效按天快照，下次读取自动重建为最新（6:00/20:00 定时刷新机制不变）
             invalidateStatsSnaps();
@@ -6137,6 +6163,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const AssetDaily = {
             // rate = 总收益率（累计，口径同"我的"页 / 总资产趋势页顶部卡 = calcPnlRet()）
             put: function(date, total, rate){
+                if(_allDataClearing) return Promise.resolve(false);
                 if(!AppDB.ok || !AppDB.db) return Promise.resolve(false);
                 const hasRate = !(rate === null || rate === undefined || rate === '' || !isFinite(Number(rate)));
                 const row = { date: String(date), total: Number(total), rate: hasRate ? Number(rate) : null, ts: Date.now() };
@@ -6226,6 +6253,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let _assetDailyPending = null;
         let _assetDailyTimer = null;
         function queueAssetDailySnapshot(date, total, rate){
+            if(_allDataClearing) return;
             if(!AppDB.ok) return;
             const hasRate = !(rate === null || rate === undefined || rate === '' || !isFinite(Number(rate)));
             _assetDailyPending = { date: String(date), total: Number(total), rate: hasRate ? Number(rate) : null };
@@ -6238,6 +6266,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }, 700);
         }
         function flushAssetDailyNow(){
+            if(_allDataClearing){ _assetDailyPending = null; return; }
             if(_assetDailyTimer){ clearTimeout(_assetDailyTimer); _assetDailyTimer = null; }
             const p = _assetDailyPending;
             _assetDailyPending = null;
@@ -6354,6 +6383,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }catch(e){ return null; }
         }
         function lsSet(key, val){
+            if(_allDataClearing) return val;
             _kvMemo[key] = val;
             const env = mainEnv(val);
             if(!NO_LS_BACKUP[key]){
@@ -6365,6 +6395,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return val;
         }
         function lsRemove(key){
+            if(_allDataClearing) return;
             delete _kvMemo[key];
             if(!NO_LS_BACKUP[key]){
                 try{ localStorage.removeItem(key); }catch(e){}
@@ -6378,6 +6409,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             _flushTimer = setTimeout(function(){ _flushTimer = null; flushAll(); }, 400);
         }
         function flushAll(){
+            if(_allDataClearing){ _flushTimer = null; return; }
             if(_flushing){ _flushAgain = true; return; }
             const mainKeys = Object.keys(_dirtyMain);
             const kvKeys = Object.keys(_dirtyKv);
@@ -6466,6 +6498,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }catch(e){}
         }
         function saveHistory(){
+            if(_allDataClearing) return;
             try{ lsSet(HISTORY_KEY, JSON.stringify(historyData)); }catch(e){}
         }
 
@@ -6600,6 +6633,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             _tradeSync: null,
 
             init: function(){
+                if(_allDataClearing) return Promise.resolve(false);
                 const self = this;
                 if(this.readyPromise) return this.readyPromise;
                 this.readyPromise = (async function(){
@@ -6768,6 +6802,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             },
 
             persistMeta: function(){
+                if(_allDataClearing) return Promise.resolve(false);
                 this.meta = {
                     migrated: true,
                     agg: this.agg,
@@ -6781,6 +6816,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             },
 
             syncCash: function(){
+                if(_allDataClearing) return Promise.resolve(false);
                 const self = this;
                 if(!this.ready){ return this.init().then(function(){ return self.syncCash(); }); }
                 if(this._cashSync) return this._cashSync;
@@ -6788,7 +6824,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const state = self.cfState || self.currentCashState();
                     let batch = [], seen = {}, changed = false;
                     const flush = async function(){
-                        if(!batch.length) return;
+                        if(!batch.length || _allDataClearing) return;
                         const rows = batch.splice(0, batch.length);
                         const fresh = [];
                         for(let i = 0; i < rows.length; i++){
@@ -6852,6 +6888,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             },
 
             syncTrade: function(){
+                if(_allDataClearing) return Promise.resolve(false);
                 const self = this;
                 if(!this.ready){ return this.init().then(function(){ return self.syncTrade(); }); }
                 if(this._tradeSync) return this._tradeSync;
@@ -6859,7 +6896,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const state = self.tradeState || self.currentTradeState();
                     let batch = [], seen = {}, changed = false;
                     const flush = async function(){
-                        if(!batch.length) return;
+                        if(!batch.length || _allDataClearing) return;
                         const rows = batch.splice(0, batch.length);
                         const fresh = [];
                         for(let i = 0; i < rows.length; i++){
@@ -6911,6 +6948,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             },
 
             addCashRow: async function(raw){
+                if(_allDataClearing) return null;
                 if(!this.ready) await this.init();
                 const row = ledgerCashRow(raw);
                 const old = await AppDB.get(LEDGER_CF, row.id);
@@ -7971,21 +8009,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return s.substring(2, 7).replace('-', '.');
             };
             const lastVal = vals[n - 1];
-            const unit = grain === 'month' ? '个月' : (grain === 'day-sample' ? '个抽样点' : '个记录日');
-            const flat = n === 1 || (maxV - minV) < Math.max(Math.abs(maxV) * 0.0005, 50);
             assetTrackChart.setOption({
                 animationDuration: 650,
                 animationEasing: 'cubicOut',
                 grid: { left: 10, right: 52, top: 40, bottom: 24, containLabel: true },
-                graphic: flat ? [{
-                    type: 'text', left: 'center', top: '18%', silent: true,
-                    style: {
-                        text: '数据积累中\n已记录 ' + n + ' ' + unit,
-                        textAlign: 'center', textVerticalAlign: 'middle',
-                        fill: '#8a7a67', font: '11px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif',
-                        lineHeight: 18, backgroundColor: 'rgba(255,251,243,0.90)', padding: [4, 8], borderRadius: 6
-                    }
-                }] : [],
                 tooltip: {
                     trigger: 'axis',
                     confine: true,
@@ -8254,21 +8281,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             };
             const lastVal = vals[n - 1];
             const lastColor = lastVal >= 0 ? '#D45329' : '#00A05C';
-            const unit = grain === 'month' ? '个月' : (grain === 'day-sample' ? '个抽样点' : '个记录日');
-            const flat = n === 1 || (maxV - minV) < Math.max(Math.abs(maxV) * 0.002, 0.005);
             assetReturnChart.setOption({
                 animationDuration: 650,
                 animationEasing: 'cubicOut',
                 grid: { left: 10, right: 52, top: 40, bottom: 24, containLabel: true },
-                graphic: flat ? [{
-                    type: 'text', left: 'center', top: '18%', silent: true,
-                    style: {
-                        text: '数据积累中\n已记录 ' + n + ' ' + unit,
-                        textAlign: 'center', textVerticalAlign: 'middle',
-                        fill: '#8a7a67', font: '11px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif',
-                        lineHeight: 18, backgroundColor: 'rgba(255,251,243,0.90)', padding: [4, 8], borderRadius: 6
-                    }
-                }] : [],
                 tooltip: {
                     trigger: 'axis',
                     confine: true,
@@ -11658,7 +11674,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             stickyBars.forEach(function(el){ el.classList.toggle('sticky-scrolled', scrolled); });
             const holdVisible = !document.getElementById('pageHold').classList.contains('hidden');
             const statsVisible = !document.getElementById('pageStats').classList.contains('hidden');
-            if(holdVisible || statsVisible){
+            const statsTodayVisible = !document.getElementById('pageStatsToday').classList.contains('hidden');
+            if(holdVisible || statsVisible || statsTodayVisible){
                 window.__pageScrolling = true;
                 clearTimeout(__scrollPauseTimer);
                 __scrollPauseTimer = setTimeout(function(){
@@ -11666,8 +11683,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(window.__pageDirty){
                         window.__pageDirty = false;
                         try{
-                            if(activeTab === 'hold') updateHoldQuotes();
-                            else if(activeTab === 'stats') renderStatsTodayRanking();
+                            if(isStatsTodayRankingVisible()) renderStatsTodayRanking();
+                            else if(activeTab === 'hold') updateHoldQuotes();
+                            else if(activeTab === 'stats' && (!activeStatsSection || activeStatsSection === 'today')) renderStatsTodayRanking();
                         }catch(e){}
                     }
                 }, 150);
@@ -14359,6 +14377,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return klt === 102 ? '周K' : (klt === 103 ? '月K' : (klt === 106 ? '年K' : '日K'));
         }
         function sdKlineIsTrend(){ return sdKlineKlt === 0; }
+        function sdKlineLocalDateStr(d){
+            const x = d || new Date();
+            return x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2) + '-' + ('0' + x.getDate()).slice(-2);
+        }
+        // 分时取数时段：交易日9点前/周末显示上一交易日；交易日9:00-9:15清空；9:15后取当日实时
+        function sdKlineTrendMode(){
+            if(!isTradingTimeStarted()) return 'prev';
+            if(isPreOpen()) return 'preopen';
+            return 'live';
+        }
         // 分时横轴：按市场交易时段铺满全天（未发生的分钟留空，东财式）
         function sdKlineTrendAxis(market, rows){
             const segs = market === 'HK' ? [['09:30', '12:00'], ['13:00', '16:00']] : [['09:30', '11:30'], ['13:00', '15:00']];
@@ -14387,6 +14415,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     bg: '#131518', grid: '#24282d', axis: '#2b2f34', text: '#8b939c',
                     tipBg: 'rgba(28,31,34,0.97)', tipBorder: '#30353b', tipText: '#d5dae0', tipSub: '#8b939c',
                     pointer: '#8b939c', up: '#f25555', down: '#2fc57c',
+                    trend: '#ffffff',
+                    trendArea: ['rgba(255,255,255,0.16)', 'rgba(255,255,255,0)'],
                     candleUp: '#CE463D', candleDown: '#68E0E0',
                     volUp: '#f25555', volDown: '#2fc57c',
                     areaUp: ['rgba(242,85,85,0.26)', 'rgba(242,85,85,0)'],
@@ -14402,6 +14432,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 bg: '#fdfbf6', grid: '#f4f1ea', axis: '#eee', text: '#b3b3b3',
                 tipBg: 'rgba(255,255,255,0.97)', tipBorder: '#eee', tipText: '#333', tipSub: '#999',
                 pointer: '#26221c', up: SDKLINE_UP, down: SDKLINE_DOWN,
+                trend: '#2f4f8f',
+                trendArea: ['rgba(47,79,143,0.16)', 'rgba(47,79,143,0)'],
                 candleUp: '#E04B3F', candleDown: '#489c2c',
                 volUp: SDKLINE_UP, volDown: SDKLINE_DOWN,
                 areaUp: ['rgba(224,49,49,0.20)', 'rgba(224,49,49,0)'],
@@ -14482,7 +14514,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdMaPaint();
             sdKlineThemePaint();
         }
+        let sdKlineBlankShown = false;
+        // 9:00-9:15 空舞台：保留K线图的5根横向分割线，不显示任何数据
+        function sdKlineBlankStageHtml(){
+            const lineColor = sdKlineDark ? '#2b2f34' : '#e8e2d6';
+            let lines = '';
+            for(let i = 0; i < 5; i++){
+                const top = i === 4 ? 'calc(100% - 1px)' : (i * 25) + '%';
+                lines += '<div style="position:absolute;left:0;right:0;top:' + top + ';height:0;border-top:1px dashed ' + lineColor + ';opacity:0.9"></div>';
+            }
+            return '<div data-sdblank-stage="1" style="position:relative;height:100%;width:100%;overflow:hidden">' + lines + '</div>';
+        }
+        function sdKlineBlank(){
+            try{ sdKlineClearSelection(false); }catch(e){}
+            if(sdKlineInst){ try{ sdKlineInst.dispose(); }catch(e){} sdKlineInst = null; }
+            const el = document.querySelector('#sdKlineChart');
+            if(el){
+                el.style.background = sdKlineDark ? '#131518' : '#fdfbf6';
+                el.innerHTML = sdKlineBlankStageHtml();
+                el.setAttribute('data-sdblank', '1');
+            }
+            sdKlineBlankShown = true;
+            sdKlineLastPack = null;
+            const meta = document.querySelector('#sdKlineMeta');
+            if(meta) meta.innerText = '--';
+        }
         function sdKlineSkeleton(txt){
+            sdKlineBlankShown = false;
+            const el0 = document.querySelector('#sdKlineChart');
+            if(el0) el0.removeAttribute('data-sdblank');
             if(sdKlineInst){ try{ sdKlineInst.dispose(); }catch(e){} sdKlineInst = null; }
             const el = document.querySelector('#sdKlineChart');
             if(el){
@@ -14665,7 +14725,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function sdKlineLoad(force){
             if(!sdKlineCode) return;
             const klt = sdKlineKlt;
-            const key = sdKlineCode + '_' + klt;
+            const mode = klt === 0 ? sdKlineTrendMode() : '';
+            // 交易日9:00-9:15：当日分时还没有数据，清空为空背景板，不发请求也不显示错误
+            if(klt === 0 && mode === 'preopen'){
+                sdKlineSeq++;
+                sdKlineBlank();
+                return;
+            }
+            const key = sdKlineCode + '_' + klt + (mode ? '_' + mode : '');
             const ttl = klt === 0 ? 3 * 60 * 1000 : 6 * 3600 * 1000;
             const c = sdKlineCache[key];
             if(!force && c && (Date.now() - c.ts) < ttl && c.rows && c.rows.length){
@@ -14674,10 +14741,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             const seq = ++sdKlineSeq;
             const code = sdKlineCode, market = sdKlineMarket;
-            if(!c) sdKlineSkeleton(klt === 0 ? '分时加载中' : 'K线加载中');
+            if(!c){
+                if(klt !== 0) sdKlineSkeleton('K线加载中');
+                else if(!sdKlineBlankShown) sdKlineSkeleton('分时加载中');
+            }
             sdKlineFetch(code, market, klt, function(err, pack){
                 if(seq !== sdKlineSeq) return;
                 if(err || !pack || !pack.rows || !pack.rows.length){
+                    // 9:15后当日分时接口偶尔还没出数据：保持空盘，3秒后自动重试，不再进入错误态
+                    if(klt === 0 && mode !== 'prev'){
+                        sdKlineBlank();
+                        return;
+                    }
                     const el = document.querySelector('#sdKlineChart');
                     if(sdKlineInst){ try{ sdKlineInst.dispose(); }catch(e){} sdKlineInst = null; }
                     if(el){
@@ -14692,13 +14767,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 pack.ts = Date.now();
                 sdKlineCache[key] = pack;
                 sdKlineRender(pack);
-            });
+            }, mode);
         }
-        function sdKlineFetch(code, market, klt, done){
+        function sdKlineFetch(code, market, klt, done, mode){
             let secid = '';
             try{ secid = getSecid({ code: code, marketType: market }); }catch(e){}
             if(!secid){ done('no-secid'); return; }
             const isTrend = (klt === 0);
+            const usePrev = isTrend && mode === 'prev';
             const cb = '__sdKl' + Math.floor(Math.random() * 1e6);
             let finished = false;
             const timer = setTimeout(function(){
@@ -14723,7 +14799,33 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             const p = String(list[i]).split(',');
                             const px = Number(p[2]) || Number(p[1]);
                             if(!(px > 0)) continue;
-                            rows.push({ d: p[0], t: String(p[0]).slice(11, 16), price: px, avg: Number(p[7]) || null, v: Number(p[5]) || 0, a: Number(p[6]) || 0 });
+                            rows.push({ d: p[0], date: String(p[0]).slice(0, 10), t: String(p[0]).slice(11, 16), price: px, avg: Number(p[7]) || null, v: Number(p[5]) || 0, a: Number(p[6]) || 0 });
+                        }
+                        if(usePrev){
+                            // 历史分时接口给多日数据：取今天之前最近一个交易日；9点前/周末不再请求当日空数据
+                            const today = sdKlineLocalDateStr();
+                            const dateSet = {}, dates = [];
+                            for(let i = 0; i < rows.length; i++){
+                                const ds = rows[i].date;
+                                if(ds && ds < today && !dateSet[ds]){ dateSet[ds] = true; dates.push(ds); }
+                            }
+                            dates.sort();
+                            const target = dates.length ? dates[dates.length - 1] : '';
+                            if(!target){ finish('no-prev'); return; }
+                            let preClose = 0;
+                            const targetIdx = dates.indexOf(target);
+                            if(targetIdx > 0){
+                                const priorDate = dates[targetIdx - 1];
+                                for(let i = rows.length - 1; i >= 0; i--){
+                                    if(rows[i].date === priorDate){ preClose = Number(rows[i].price) || 0; break; }
+                                }
+                            }
+                            const dayRows = [];
+                            for(let i = 0; i < rows.length; i++){
+                                if(rows[i].date === target) dayRows.push(rows[i]);
+                            }
+                            finish(null, { type: 'trend', preClose: preClose, rows: dayRows, day: target });
+                            return;
                         }
                         finish(null, { type: 'trend', preClose: Number(d && d.preClose) || 0, rows: rows });
                     } else {
@@ -14742,8 +14844,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const sc = document.createElement('script');
             sc.setAttribute('data-sdkl', cb);
             if(isTrend){
-                sc.src = 'https://push2.eastmoney.com/api/qt/stock/trends2/get?secid=' + secid
-                    + '&fields1=f1,f2,f3,f4,f5,f6,f7,f8&fields2=f51,f52,f53,f54,f55,f56,f57,f58&iscr=0&ndays=1&cb=' + cb;
+                sc.src = usePrev
+                    ? 'https://push2his.eastmoney.com/api/qt/stock/trends2/get?secid=' + secid
+                        + '&fields1=f1,f2,f3,f4,f5,f6,f7,f8&fields2=f51,f52,f53,f54,f55,f56,f57,f58&iscr=0&ndays=5&cb=' + cb
+                    : 'https://push2.eastmoney.com/api/qt/stock/trends2/get?secid=' + secid
+                        + '&fields1=f1,f2,f3,f4,f5,f6,f7,f8&fields2=f51,f52,f53,f54,f55,f56,f57,f58&iscr=0&ndays=1&cb=' + cb;
             } else {
                 sc.src = 'https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=' + secid
                     + '&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58'
@@ -14779,9 +14884,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function sdKlineRender(pack){
             if(!pack || !pack.rows || !pack.rows.length) return;
             sdKlineLastPack = pack;
+            sdKlineBlankShown = false;
             if(pack.type === 'trend' && sdKlineSelActive) sdKlineClearSelection(false);
             const dom = document.querySelector('#sdKlineChart');
-            if(dom) dom.style.background = sdKlineDark ? '#131518' : '#fdfbf6';
+            if(dom){ dom.removeAttribute('data-sdblank'); dom.style.background = sdKlineDark ? '#131518' : '#fdfbf6'; }
             if(pack.type === 'trend'){ sdKlineRenderTrend(pack); sdBookShow(true); }
             else { sdKlineRenderK(pack); sdBookShow(false); }
             try{ if(sdKlineInst) sdKlineInst.resize(); }catch(e){}
@@ -14823,13 +14929,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const last = rows[rows.length - 1];
             let lastIdx = -1;
             for(let i = prices.length - 1; i >= 0; i--){ if(prices[i] != null){ lastIdx = i; break; } }
-            const up = preClose ? last.price >= preClose : true;
-            const lineColor = up ? t.up : t.down;
+            const lineColor = t.trend;
             const base = preClose || lo;
             const span = Math.max(hi - base, base - lo) * 1.06 || base * 0.02;
-            const areaStops = up
-                ? [{ offset: 0, color: t.areaUp[0] }, { offset: 1, color: t.areaUp[1] }]
-                : [{ offset: 0, color: t.areaDown[0] }, { offset: 1, color: t.areaDown[1] }];
+            const areaStops = [{ offset: 0, color: t.trendArea[0] }, { offset: 1, color: t.trendArea[1] }];
             const dateTxt = String(last.d || '').slice(0, 10);
             inst.setOption({
                 animation: true,
@@ -14862,7 +14965,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         data: [{ coord: [lastIdx, prices[lastIdx]] }],
                         itemStyle: { color: lineColor, borderColor: t.bg, borderWidth: 1 },
                         label: { show: false } } : undefined },
-                    { name: '均价', type: 'line', data: avgs, showSymbol: false, smooth: false, lineStyle: { width: 1, color: t.avg } },
+                    { name: '均价', type: 'line', data: avgs, showSymbol: false, smooth: false, lineStyle: { width: 1, color: t.trend, opacity: 0.55 } },
                     { name: '成交量', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: vols, barMaxWidth: 3 }
                 ]
             }, true);
@@ -25228,8 +25331,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <button type="button" onclick="openTradeModal(${item.id},'buy')" class="py-1 rounded-md text-[#e03131] text-xs font-semibold active:scale-95 transition-transform">买入</button>
                         <button type="button" onclick="openTradeModal(${item.id},'sell')" class="py-1 rounded-md text-[#00b57a] text-xs font-semibold active:scale-95 transition-transform">卖出</button>
                         <button type="button" onclick="editItem(${item.id})" class="py-1 rounded-md text-gray-500 text-xs font-medium active:scale-95 transition-transform">编辑</button>
+                        <button type="button" onclick="openHoldStockDetail('${item.id}')" class="py-1 rounded-md text-accent text-xs font-semibold active:scale-95 transition-transform">行情</button>
                         <button type="button" onclick="openTradeLogPage(${item.id})" class="py-1 rounded-md text-gray-500 text-xs font-medium active:scale-95 transition-transform">明细</button>
-                        <button type="button" onclick="openHoldStockDetail('${item.id}')" class="py-1 rounded-md text-accent text-xs font-semibold active:scale-95 transition-transform">详情</button>
                     </div>
                     `
                 });
@@ -27766,6 +27869,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         // 保存持仓数据
                         lsSet(STORAGE_KEY, JSON.stringify(holdData));
                         holdDataList = holdData;
+                        _holdDataLoaded = true;
                         // 保存历史数据（如果有）
                         if(historyData){
                             lsSet(HISTORY_KEY, JSON.stringify(historyData));
@@ -27829,7 +27933,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             reader.readAsText(file);
         });
 
-        // 我的页面：清空所有数据（持仓/资金流水/收支/自选/做T累计/成本快照/缓存全部清空，仅保留页面自身，不误删其他本地页面数据）
+        // 我的页面：清空所有数据（持仓/历史/资金流水/交易统计/总资产与收益率快照/收支/自选/做T累计/成本快照/缓存全部清空，仅保留页面自身，不误删其他本地页面数据）
         // 自定义确认弹窗：清空按钮 → 打开弹窗；确认 → 执行清空；取消/遮罩/关闭 → 关闭弹窗
         const clearConfirmModal = document.querySelector('#clearConfirmModal');
         const openClearConfirm = function(){
@@ -27848,6 +27952,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         clearConfirmModal.addEventListener('click', function(e){ if(e.target === clearConfirmModal) closeClearConfirm(); });
         document.querySelector('#ccConfirm').addEventListener('click', function(){
             closeClearConfirm();
+            // 0) 进入清空态：从此刻起禁止任何保存、快照、账本回写，避免 300ms 重载窗口内把旧数据写回
+            _allDataClearing = true;
+            try{
+                if(_assetDailyTimer){ clearTimeout(_assetDailyTimer); _assetDailyTimer = null; }
+                _assetDailyPending = null;
+            }catch(e){}
+            try{
+                Ledger.ready = false;
+                Ledger.readyPromise = null;
+                Ledger.meta = null;
+                Ledger.agg = null;
+                Ledger.cfState = null;
+                Ledger.tradeState = null;
+                Ledger._cashSync = null;
+                Ledger._tradeSync = null;
+            }catch(e){}
             // 1) 清空 localStorage 业务键（主数据 + 导出白名单 + 可重建缓存 + dividend 前缀兜底；不整库 clear，避免误删同源其他本地页面数据）
             const clearKeys = [STORAGE_KEY, HISTORY_KEY, 'appVersion'];
             EXPORT_KEYS.forEach(function(k){ if(clearKeys.indexOf(k) < 0) clearKeys.push(k); });
@@ -27857,13 +27977,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(k && k.indexOf('dividend') === 0 && clearKeys.indexOf(k) < 0) clearKeys.push(k);
             }
             clearKeys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
-            // 2) IndexedDB 只删本应用键（main 主数据 + kv 业务键）；不整桶 clear，避免误删同库其他页面数据
+            // 2) IndexedDB：main/kv 仍按本应用键删除；另外 4 张独立业务表整表 clear。
+            //    cfLog=资金流水，tradeEvents=交易统计明细，ledgerMeta=账本迁移标记/汇总/增量水位，assetDaily=总资产与收益率每日快照。
+            //    只对 main/kv 做按 key 删除，避免误删同库其他页面数据；这 4 张表属于本应用专属表，必须整表清空。
+            const clearStores = ['cfLog', 'tradeEvents', 'ledgerMeta', 'assetDaily'];
             const reload = function(){ setTimeout(function(){ location.reload(); }, 300); };
             const doIdbDelete = function(){
                 try{
-                    const tx = AppDB.db.transaction(['main','kv'], 'readwrite');
+                    const tx = AppDB.db.transaction(['main','kv'].concat(clearStores), 'readwrite');
                     [HISTORY_KEY, STORAGE_KEY].forEach(function(k){ tx.objectStore('main').delete(k); });
                     clearKeys.forEach(function(k){ tx.objectStore('kv').delete(k); });
+                    clearStores.forEach(function(name){ tx.objectStore(name).clear(); });
                     tx.oncomplete = reload;
                     tx.onerror = reload;
                     tx.onabort = reload;
@@ -28003,12 +28127,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }, 60 * 1000);
         // 每10秒检查一次交易时间，动态启停刷新（及时响应开盘/收盘/午休）；后台暂停
         setInterval(function(){ if(document.hidden) return; startSmartRefresh(); }, 10000);
-        // 统计页今日涨跌幅排行：仅统计首页可见时每5秒增量刷新一次；统计详情页不刷新
-        setInterval(function(){
-            if(document.hidden) return;
-            if(activeTab !== 'stats' || activeStatsSection) return;
-            try{ renderStatsTodayRanking(); }catch(e){}
-        }, 5000);
+        // 统计页今日涨跌幅不再单独起定时器：refreshAll 持仓行情刷新成功后按当前页面增量重绘
         // ===== 耗电优化：切后台暂停行情刷新，回前台立即刷新并恢复（页面行为完全不变） =====
         document.addEventListener('visibilitychange', function(){
             if(document.hidden){

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261109.204';</script>
+    <script>window.APP_VERSION = '20261110.211';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1046,6 +1046,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div id="logTodayFloat" class="text-[16px] font-bold tabular-nums" style="color:#ffffff">--</div>
                 </div>
             </div>
+        </div>
+
+        <!-- 每月做T盈利：以每月月初（上月末收盘持仓）为底仓，月内闭环配对 -->
+        <div id="tlMonthlyTCard" class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-start gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bar-chart text-[12px] text-accent"></i></div>
+                <div class="min-w-0">
+                    <div class="text-[13px] font-semibold text-gray-800 leading-5">每月做T盈利</div>
+                    <div class="text-[9px] text-gray-400 mt-0.5">近 12 个月 · 上月末收盘底仓</div>
+                </div>
+                <div class="ml-auto text-right pl-2 flex-shrink-0">
+                    <div class="text-[8.5px] text-gray-400">近12月累计</div>
+                    <div id="tlMonthlyTTotal" class="text-[13px] font-bold tabular-nums mt-0.5 text-gray-800">--</div>
+                </div>
+            </div>
+            <div id="tlMonthlyTChartWrap" class="relative" style="height:190px">
+                <div id="tlMonthlyTChart" class="w-full h-full"></div>
+                <div id="tlMonthlyTEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div class="text-[10.5px] font-medium text-gray-500">近 12 个月暂无可配平的做 T</div>
+                    <div class="text-[9px] text-gray-400 mt-1">有闭环买卖后，会在这里按月统计</div>
+                </div>
+            </div>
+            <div id="tlMonthlyTNote" class="px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">只计当月已闭环的做 T；卖出底仓不参与配对，月末未接回不计入。</div>
         </div>
 
         <!-- 资金与分红流水：标题 + 过滤 + 时间线 合并大卡片（参考今日涨跌幅详情页列表卡片风格） -->
@@ -2101,6 +2124,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="text-[10px] text-gray-400 leading-relaxed">行业累计盈亏（含已清仓，行业为映射后统计大类）÷ Σ|行业盈亏| 的盈亏规模占比，各行业以不同颜色区分，右侧金额红涨绿跌，仅展示占比 &gt; 1% 的行业。</div>
                 </div>
             </div>
+        </div>
+        <!-- 盈亏贡献榜：盈利榜 / 亏损榜双列，各取前五；与下方完整排行共用同一份累计盈亏数据 -->
+        <div id="pnlContribCard" class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+            <div class="px-4 pt-3.5 pb-2 flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-[13px] font-semibold text-gray-800">盈亏贡献榜</div>
+                    <div class="mt-1 text-[9.5px] text-gray-400">谁赚得最多，谁拖累最大 · 各取前五 · 含已清仓</div>
+                </div>
+                <div id="pnlContribChip" class="rounded-full px-2 py-1 text-[9px] text-gray-500 bg-gray-50 whitespace-nowrap">--</div>
+            </div>
+            <div id="statsPnlContribList" class="px-3 pb-3">
+                <div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>
+            </div>
+            <div class="px-4 pb-3 pt-2 border-t border-gray-50 text-[8.5px] text-gray-400 leading-relaxed">按累计盈亏金额排序，盈利榜取正贡献前五，亏损榜取拖累前五；完整名单见下方排行</div>
         </div>
         <!-- 盈亏排行：按累计盈亏额降序（收盘后更新一次，其他时间延用） -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
@@ -8950,56 +8987,198 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         //        = 现价×当前股数 − 昨收×昨日股数 + 卖出总额 − 买入总额
         // 数学上等价于 FIFO 分段算法，但不依赖份额分配，且昨日持仓股数由当前股数反推今日净变动。
         // 同时产出：日内已兑现盈亏（做T利润=卖出总额−买入总额）、昨日市值、今日买卖股数（供展示过滤）。
-        // 做T计算器：低价优先配对（用户定义口径，A股T+1需历史底仓才能卖出）
-        // 配对策略：当日买入池按价格升序（低价优先）；卖出优先配当日买入池（反手T：利润=卖价−买价）；
-        //          买入优先配等待买回的卖出（正T：利润=卖价−买价）；只买不卖→待配对池(加仓)不计T；
-        //          只卖不买回→纯减仓不计T。利润不含手续费；配对不掉的部分留在待配对池。
-        function calcDayTProfitPair(trades){
-            const pendingBuyPool = [];
-            const pendingSellPool = [];
-            let totalTProfit = 0;
-            let matchedCount = 0;
-            for(let ti = 0; ti < trades.length; ti++){
-                const tr = trades[ti];
-                const isBuy = tr.type === 'buy';
-                const price = Number(tr.price) || 0;
-                let remainVol = Math.abs(Number(tr.volume)) || 0;
-                if(isBuy){
-                    // 买入：优先匹配等待买回的卖出（正T：先卖后买）
-                    let i = 0;
-                    while(remainVol > 0 && i < pendingSellPool.length){
-                        const sellItem = pendingSellPool[i];
-                        const matchVol = Math.min(remainVol, sellItem.volume);
-                        totalTProfit += matchVol * (sellItem.price - price);
-                        matchedCount++;
-                        sellItem.volume -= matchVol;
-                        remainVol -= matchVol;
-                        if(sellItem.volume <= 0) pendingSellPool.splice(i, 1);
-                        else i++;
+        // 做T计算器（最新版）：单只标的独立配对池，支持严格日内 / 跨日闭环两种模式。
+        // 低价优先买池、高价优先卖池；底仓不参与 T 配对。详情页仍固定使用严格日内模式。
+        function tDayKey(d){
+            const dd = new Date(d);
+            return dd.getFullYear() + '-' + ('0' + (dd.getMonth() + 1)).slice(-2) + '-' + ('0' + dd.getDate()).slice(-2);
+        }
+
+        class TPool {
+            constructor(onlyIntraDay, initPosition){
+                this.onlyIntraDay = !!onlyIntraDay;
+                this.pendingBuy = [];
+                this.pendingSell = [];
+                this.basePosition = (initPosition || []).map(function(p){
+                    return { price: Number(p.price) || 0, volume: Number(p.volume) || 0 };
+                });
+                this.totalTProfit = 0;
+                this.totalTVolume = 0;
+                this.detail = [];
+                this.lastDayKey = null;
+            }
+            sortBuy(){
+                this.pendingBuy.sort(function(a, b){ return a.price - b.price; });
+            }
+            sortSell(){
+                this.pendingSell.sort(function(a, b){ return b.price - a.price; });
+            }
+            addTrade(type, price, volume, dayKey){
+                // 严格日内模式：跨天时清空两边的未闭环挂单（当天没接回/没卖出都不算T）
+                if(this.onlyIntraDay && this.lastDayKey && this.lastDayKey !== dayKey){
+                    this.pendingBuy = [];
+                    this.pendingSell = [];
+                }
+                this.lastDayKey = dayKey;
+                let remain = Math.abs(Number(volume)) || 0;
+                price = Number(price) || 0;
+                if(type === 'buy'){
+                    // 买入：优先匹配等待买回的卖出（正T闭环）
+                    while(remain > 1e-9 && this.pendingSell.length > 0){
+                        const s = this.pendingSell[0];
+                        const matchVol = Math.min(remain, s.volume);
+                        const profit = matchVol * (s.price - price);
+                        this.totalTProfit += profit;
+                        this.totalTVolume += matchVol;
+                        this.detail.push({
+                            type: 'positiveT',
+                            matchVol: matchVol,
+                            sellPrice: s.price,
+                            buyPrice: price,
+                            profit: profit,
+                            dayKey: dayKey
+                        });
+                        s.volume -= matchVol;
+                        remain -= matchVol;
+                        if(s.volume <= 1e-9){
+                            this.pendingSell.shift();
+                        } else {
+                            break;
+                        }
                     }
-                    if(remainVol > 0){
-                        pendingBuyPool.push({ price: price, volume: remainVol });
-                        pendingBuyPool.sort(function(a, b){ return a.price - b.price; }); // 低价优先
+                    if(remain > 1e-9){
+                        this.pendingBuy.push({ price: price, volume: remain });
+                        this.sortBuy();
                     }
                 } else {
-                    // 卖出：优先匹配待配对买入池（反手T：先买后卖，配最低价买入）
-                    let i = 0;
-                    while(remainVol > 0 && i < pendingBuyPool.length){
-                        const buyItem = pendingBuyPool[i];
-                        const matchVol = Math.min(remainVol, buyItem.volume);
-                        totalTProfit += matchVol * (price - buyItem.price);
-                        matchedCount++;
-                        buyItem.volume -= matchVol;
-                        remainVol -= matchVol;
-                        if(buyItem.volume <= 0) pendingBuyPool.splice(i, 1);
-                        else i++;
+                    // 卖出：优先匹配待配对买入（反手T闭环）
+                    while(remain > 1e-9 && this.pendingBuy.length > 0){
+                        const b = this.pendingBuy[0];
+                        const matchVol = Math.min(remain, b.volume);
+                        const profit = matchVol * (price - b.price);
+                        this.totalTProfit += profit;
+                        this.totalTVolume += matchVol;
+                        this.detail.push({
+                            type: 'reverseT',
+                            matchVol: matchVol,
+                            buyPrice: b.price,
+                            sellPrice: price,
+                            profit: profit,
+                            dayKey: dayKey
+                        });
+                        b.volume -= matchVol;
+                        remain -= matchVol;
+                        if(b.volume <= 1e-9){
+                            this.pendingBuy.shift();
+                        } else {
+                            break;
+                        }
                     }
-                    if(remainVol > 0){
-                        pendingSellPool.push({ price: price, volume: remainVol }); // 没接回=纯减仓
+                    // 剩余卖出先消耗底仓（底仓卖出不算T）
+                    if(remain > 1e-9){
+                        let idx = 0;
+                        while(remain > 1e-9 && idx < this.basePosition.length){
+                            const b = this.basePosition[idx];
+                            const consume = Math.min(remain, b.volume);
+                            b.volume -= consume;
+                            remain -= consume;
+                            if(b.volume <= 1e-9){
+                                this.basePosition.splice(idx, 1);
+                            } else {
+                                idx++;
+                            }
+                        }
+                    }
+                    // 最后剩余卖出进入等待买回池（正T挂单）
+                    if(remain > 1e-9){
+                        this.pendingSell.push({ price: price, volume: remain });
+                        this.sortSell();
                     }
                 }
             }
-            return { tProfit: totalTProfit, matchedCount: matchedCount };
+            getResult(){
+                const unClosedSell = this.pendingSell.reduce(function(s, i){ return s + i.volume; }, 0);
+                const pendingBuyVol = this.pendingBuy.reduce(function(s, i){ return s + i.volume; }, 0);
+                const baseVol = this.basePosition.reduce(function(s, i){ return s + i.volume; }, 0);
+                return {
+                    tProfit: this.totalTProfit,
+                    closedTVolume: this.totalTVolume,
+                    detail: this.detail.slice(),
+                    pendingBuyPool: this.pendingBuy.slice(),
+                    basePosition: this.basePosition.slice(),
+                    baseVolume: baseVol,
+                    unClosedSellVolume: unClosedSell,
+                    pendingBuyVolume: pendingBuyVol
+                };
+            }
+        }
+
+        /**
+         * 任意区间做T统计（公用入口）
+         * @param {Array} allTrades 全部交易：{stock, type:'buy'|'sell', price, volume, date}
+         * @param {Date} rangeStart 区间起点
+         * @param {Date} rangeEnd 区间终点
+         * @param {Object} initBase 区间期初底仓：{stock:[{price,volume}]}
+         * @param {boolean} onlyIntraDay true=严格日内T / false=允许跨日闭环T
+         */
+        function calcRangeTProfit(allTrades, rangeStart, rangeEnd, initBase, onlyIntraDay){
+            const rs = new Date(rangeStart).getTime();
+            const re = new Date(rangeEnd).getTime();
+            const trades = (allTrades || []).filter(function(t){
+                const ts = new Date(t.date).getTime();
+                return ts >= rs && ts <= re;
+            }).map(function(t){
+                return {
+                    stock: String(t.stock || ''),
+                    type: t.type,
+                    price: Number(t.price) || 0,
+                    volume: Math.abs(Number(t.volume)) || 0,
+                    date: new Date(t.date),
+                    ts: new Date(t.date).getTime()
+                };
+            }).sort(function(a, b){ return a.ts - b.ts; });
+            const baseMap = initBase || {};
+            const poolMap = {};
+            trades.forEach(function(t){
+                if(!poolMap[t.stock]){
+                    const init = Object.prototype.hasOwnProperty.call(baseMap, t.stock) ? baseMap[t.stock] : [];
+                    poolMap[t.stock] = new TPool(onlyIntraDay, init);
+                }
+                poolMap[t.stock].addTrade(t.type, t.price, t.volume, tDayKey(t.date));
+            });
+            let totalAllTProfit = 0;
+            let totalAllTVolume = 0;
+            const stockResult = {};
+            Object.keys(poolMap).forEach(function(code){
+                const r = poolMap[code].getResult();
+                stockResult[code] = r;
+                totalAllTProfit += r.tProfit;
+                totalAllTVolume += r.closedTVolume;
+            });
+            return {
+                range: { start: rangeStart, end: rangeEnd },
+                totalTProfit: totalAllTProfit,
+                totalClosedTVolume: totalAllTVolume,
+                stockDetail: stockResult
+            };
+        }
+
+        // 当日单标的兼容入口：详情页固定 onlyIntraDay=true，保持“当日做T”口径；
+        // 当日没有区间期初底仓概念，initBase 传空对象，昨日底仓的当日卖出仍可与当日买入配对。
+        function calcDayTProfitPair(trades){
+            const stock = '__day__';
+            const all = (trades || []).map(function(tr, idx){
+                return {
+                    stock: stock,
+                    type: tr.type,
+                    price: Number(tr.price) || 0,
+                    volume: Math.abs(Number(tr.volume)) || 0,
+                    date: new Date(2000, 0, 1, 0, 0, idx)
+                };
+            });
+            const res = calcRangeTProfit(all, new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59, 999), {}, true);
+            const r = res.stockDetail[stock] || { tProfit: 0, detail: [] };
+            return { tProfit: r.tProfit, matchedCount: r.detail.length };
         }
         function calcDayFlow(item){
             const now = Number(item.nowPrice);
@@ -9053,7 +9232,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             refDay.setHours(0, 0, 0, 0);
             const dayStartTs = refDay.getTime();
             let buyQty = 0, buyAmt = 0, sellQty = 0, sellAmt = 0;
-            const dayTrades = []; // 当日交易（按时间序）→ 低价优先配对算闭环做T
+            const dayTrades = []; // 当日交易（按时间序）→ 买池低价优先 / 卖池高价优先配对算闭环T
             trs.forEach(function(tr){
                 const ts = Number(tr.t) || 0;
                 if(ts < dayStartTs) return;
@@ -9074,7 +9253,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const tPair = calcDayTProfitPair(dayTrades);
             return {
                 pnl: (now * holdQty - prevClose * prevQty + sellAmt - buyAmt) * fx,
-                // 日内已兑现盈亏（做T利润）：低价优先配对闭环T（加仓/纯减仓不计入）
+                // 日内已兑现盈亏（做T利润）：买池低价优先 / 卖池高价优先配对闭环T（加仓/纯减仓不计入）
                 tProfit: tPair.tProfit * fx,
                 prevMv: prevClose * prevQty * fx,
                 hasBase: true,
@@ -11414,6 +11593,172 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             tEl.style.color = tCls;
             tEl.innerText = hasT ? fmtPnlNum(flow.tProfit) : '--';
         }
+
+        // ==================== 每月做T盈利（单股明细页） ====================
+        // 口径：按自然月取区间 [月初, 月末]；月初底仓 = 上月末收盘持仓股数（只取 volume，不参与 T 配对）；
+        // 月内允许跨日闭环（onlyIntraDay=false），跨月不延续；只统计当月已经买回/卖出的闭环 T。
+        // 金额与今日条一致：港股按当前汇率折算人民币。
+        function tlMonthlyTDispose(){
+            try{ if(tlMonthlyTChart && !tlMonthlyTChart.isDisposed()) tlMonthlyTChart.dispose(); }catch(e){}
+            tlMonthlyTChart = null;
+        }
+        function tlMonthlyTAxis(v){
+            const n = Number(v) || 0;
+            if(Math.abs(n) >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + '万';
+            return Math.round(n).toString();
+        }
+        function renderTradeLogMonthlyT(item){
+            const el = document.querySelector('#tlMonthlyTChart');
+            if(!el) return;
+            tlMonthlyTDispose();
+            const totalEl = document.querySelector('#tlMonthlyTTotal');
+            const noteEl = document.querySelector('#tlMonthlyTNote');
+            const isHk = item && item.marketType === 'HK';
+            if(noteEl){
+                noteEl.innerText = '只计当月已闭环的做 T；卖出底仓不参与配对，月末未接回不计入。'
+                    + (isHk ? ' 港股金额已按汇率折算人民币。' : '');
+            }
+            if(!item){ if(totalEl) totalEl.innerText = '--'; return; }
+            const code = String(item.code || '');
+            const txList = item.transactions || [];
+            const now = new Date();
+            const fx = isHk ? (Number(hkFxRate) || 1) : 1;
+            const months = [];
+            for(let i = 11; i >= 0; i--){
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push({ y: d.getFullYear(), m: d.getMonth() });
+            }
+            const chartData = months.map(function(mm){
+                const start = new Date(mm.y, mm.m, 1, 0, 0, 0, 0).getTime();
+                const end = new Date(mm.y, mm.m + 1, 0, 23, 59, 59, 999).getTime();
+                // 月初底仓：上月末收盘时仍持有的股数（区间开始前的所有 delta 累计）
+                let baseQty = 0;
+                txList.forEach(function(tr){
+                    const ts = Number(tr.t);
+                    if(ts < start) baseQty += (Number(tr.delta) || 0);
+                });
+                const monthTrades = [];
+                txList.forEach(function(tr){
+                    const ts = Number(tr.t);
+                    if(ts < start || ts > end) return;
+                    const delta = Number(tr.delta) || 0;
+                    const price = Number(tr.price);
+                    if(!delta || !(price > 0)) return;
+                    monthTrades.push({
+                        stock: code,
+                        type: delta > 0 ? 'buy' : 'sell',
+                        price: price,
+                        volume: Math.abs(delta),
+                        date: new Date(ts)
+                    });
+                });
+                let tProfit = 0, tVolume = 0;
+                if(monthTrades.length){
+                    const initBase = {};
+                    if(baseQty > 1e-9) initBase[code] = [{ price: 0, volume: baseQty }];
+                    const res = calcRangeTProfit(monthTrades, new Date(start), new Date(end), initBase, false);
+                    tProfit = Number(res.totalTProfit) || 0;
+                    tVolume = Number(res.totalClosedTVolume) || 0;
+                }
+                return {
+                    label: (mm.m + 1) + '月',
+                    fullLabel: mm.y + '-' + String(mm.m + 1).padStart(2, '0'),
+                    value: tProfit * fx,
+                    volume: tVolume,
+                    baseQty: baseQty
+                };
+            });
+            const total = chartData.reduce(function(s, d){ return s + d.value; }, 0);
+            if(totalEl){
+                totalEl.innerText = fmtPnlNum(total);
+                totalEl.style.color = total > 0.005 ? '#e03131' : (total < -0.005 ? '#00a05c' : '#8a8175');
+            }
+            const hasAnyT = chartData.some(function(d){ return Math.abs(d.value) >= 0.005; });
+            const wrapEl = document.querySelector('#tlMonthlyTChartWrap');
+            const emptyEl = document.querySelector('#tlMonthlyTEmpty');
+            if(wrapEl) wrapEl.style.height = hasAnyT ? '190px' : '150px';
+            if(emptyEl) emptyEl.classList.toggle('hidden', hasAnyT);
+            if(!hasAnyT){
+                el.style.display = 'none';
+                return;
+            }
+            el.style.display = 'block';
+            if(typeof echarts === 'undefined') return;
+            try{ tlMonthlyTChart = echarts.init(el); }catch(e){ return; }
+            const values = chartData.map(function(d){ return d.value; });
+            tlMonthlyTChart.setOption({
+                animationDuration: 620,
+                animationEasing: 'cubicOut',
+                grid: { left: 4, right: 8, top: 26, bottom: 24, containLabel: true },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(90,59,30,0.06)' } },
+                    backgroundColor: 'rgba(23,23,23,0.94)',
+                    borderWidth: 0,
+                    padding: [7, 9],
+                    textStyle: { color: '#fff', fontSize: 10 },
+                    extraCssText: 'border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);',
+                    formatter: function(ps){
+                        const p = (ps && ps[0]) || {};
+                        const d = chartData[p.dataIndex] || {};
+                        return '<div style="font-size:10px;color:#e8d9bc">' + (d.fullLabel || '') + '</div>'
+                            + '<div style="font-size:12px;font-weight:600;color:#fff;margin-top:2px">做T ' + fmtPnlNum(d.value || 0) + '</div>'
+                            + '<div style="font-size:9px;color:#a89b84;margin-top:2px">闭环 ' + Math.round(d.volume || 0) + ' 股'
+                            + (d.baseQty > 0 ? ' · 上月末底仓 ' + Math.round(d.baseQty) + ' 股' : '') + '</div>';
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: chartData.map(function(d){ return d.label; }),
+                    axisLine: { lineStyle: { color: '#efe7d9' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#a8987e', fontSize: 8.5, interval: 0, margin: 8 }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitNumber: 3,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#b3a68f', fontSize: 8, formatter: tlMonthlyTAxis },
+                    splitLine: { lineStyle: { color: '#f4efe5', type: 'dashed' } }
+                },
+                series: [{
+                    type: 'bar',
+                    barWidth: '48%',
+                    label: {
+                        show: true,
+                        fontSize: 7.5,
+                        fontWeight: 600,
+                        formatter: function(p){
+                            const v = Number(p.value) || 0;
+                            if(Math.abs(v) >= 10000) return fmtPnlNum(v);
+                            if(Math.abs(v - Math.round(v)) < 0.005) return (v > 0 ? '+' : (v < 0 ? '-' : '')) + Math.abs(Math.round(v));
+                            return fmtPnlNum(v);
+                        }
+                    },
+                    data: values.map(function(v){
+                        const isZero = Math.abs(v) < 0.005;
+                        return {
+                            value: v,
+                            itemStyle: {
+                                color: v >= 0 ? '#e03131' : '#00a05c',
+                                borderRadius: v >= 0 ? [5, 5, 0, 0] : [0, 0, 5, 5]
+                            },
+                            label: {
+                                show: !isZero,
+                                position: v >= 0 ? 'top' : 'bottom',
+                                distance: 2,
+                                color: v >= 0 ? '#c92a2a' : '#008a52'
+                            }
+                        };
+                    }),
+                    emphasis: { scale: false, itemStyle: { opacity: 0.9 } },
+                    silent: false
+                }]
+            });
+            setTimeout(function(){ try{ if(tlMonthlyTChart && !tlMonthlyTChart.isDisposed()) tlMonthlyTChart.resize(); }catch(e){} }, 60);
+        }
+
         // 交易页面事件绑定
         document.querySelector('#tradeBackBtn').addEventListener('click', closeTradeModal);
         document.querySelector('#tradeCancel').addEventListener('click', closeTradeModal);
@@ -11458,6 +11803,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ==================== 交易明细独立页面（买卖流水 + 分红到账时间线） ====================
         // 手机上独立页面比弹窗体验更好：空间大、滚动流畅、支持分页；记录多时分批加载（每批50条）
         let tradeLogItemId = null;
+        let tlMonthlyTChart = null;
         let tradeLogPageCount = 50;
         let tradeLogFilter = 'all'; // 流水过滤：all / buy / sell / div
         function updateTradeLogFilterUI(){
@@ -11560,6 +11906,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
             renderTradeLogList();
+            renderTradeLogMonthlyT(item);
             // 进入明细页：立即刷新一次最新行情，行情返回后回调更新今日条；
             // 不在本页期间不轮询刷新（行情由全站增量更新维护），仅做T操作发生时联动刷新
             if(holdDataList.length){
@@ -11568,6 +11915,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
         function closeTradeLogPage(){
+            tlMonthlyTDispose();
             exitDetailPage(document.querySelector('#pageTradeLog'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
             // 恢复新增按钮（仅持仓页显示）
@@ -21904,6 +22252,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const loseAll = contributors.filter(function(it){ return (Number(it.pnl) || 0) < -0.005; });
             const winList = winAll.slice().sort(function(a, b){ return (Number(b.pnl) || 0) - (Number(a.pnl) || 0); }).slice(0, 5);
             const loseList = loseAll.slice().sort(function(a, b){ return (Number(a.pnl) || 0) - (Number(b.pnl) || 0); }).slice(0, 5);
+            const winSum = winAll.reduce(function(s, it){ return s + (Number(it.pnl) || 0); }, 0);
+            const loseSum = loseAll.reduce(function(s, it){ return s + (Number(it.pnl) || 0); }, 0);
             function contribRow(it, idx, isWin){
                 const pnl = Number(it.pnl) || 0;
                 const pct = it.changePct;
@@ -21920,13 +22270,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     '<div class="shrink-0 text-right text-[10.5px] font-semibold tabular-nums ' + pnlClass(pnl) + '">' + fmtPnlNum(pnl) + '</div>' +
                 '</div>';
             }
-            function contribColumn(title, isWin, list, total, emptyText){
+            function contribColumn(title, isWin, list, total, sum, emptyText){
                 const panelStyle = isWin
                     ? 'background:#fff8f5;border:1px solid #fbe9e2;'
                     : 'background:#f5fbf7;border:1px solid #e4f2e9;';
                 const dotCls = isWin ? 'bg-[#e03131]' : 'bg-[#00a05c]';
                 const titleCls = isWin ? 'text-[#e03131]' : 'text-[#00a05c]';
                 const countText = total > 5 ? '共 ' + total + ' 只' : total + ' 只';
+                const totalBorderCls = isWin ? 'border-[#fbe9e2]' : 'border-[#e4f2e9]';
                 return '<div class="rounded-xl px-2.5 pt-2.5 pb-1.5 min-w-0 flex flex-col" style="' + panelStyle + '">' +
                     '<div class="flex items-center justify-between gap-2">' +
                         '<span class="flex items-center gap-1.5 min-w-0"><span class="w-1.5 h-1.5 rounded-full ' + dotCls + ' shrink-0"></span><span class="text-[10.5px] font-semibold ' + titleCls + '">' + title + '</span></span>' +
@@ -21937,11 +22288,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             ? list.map(function(it, idx){ return contribRow(it, idx, isWin); }).join('')
                             : '<div class="py-7 text-center text-[9.5px] text-gray-400">' + emptyText + '</div>') +
                     '</div>' +
+                    '<div class="mt-1 pt-1.5 border-t ' + totalBorderCls + ' flex items-center justify-between gap-2">' +
+                        '<span class="text-[8.5px] text-gray-400">全部合计</span>' +
+                        '<span class="text-[10px] font-semibold tabular-nums ' + pnlClass(sum) + '">' + (total ? fmtPnlNum(sum) : '--') + '</span>' +
+                    '</div>' +
                 '</div>';
             }
             listEl.innerHTML = '<div class="grid grid-cols-2 gap-2 items-stretch">' +
-                contribColumn('盈利榜', true, winList, winAll.length, '暂无盈利') +
-                contribColumn('亏损榜', false, loseList, loseAll.length, '暂无亏损') +
+                contribColumn('盈利榜', true, winList, winAll.length, winSum, '暂无盈利') +
+                contribColumn('亏损榜', false, loseList, loseAll.length, loseSum, '暂无亏损') +
             '</div>';
         }
 
@@ -21949,8 +22304,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 统计页日快照版本号：版本升级（如新增logo等渲染结构变化）时强制重建当天快照，
             // 避免手机上继续展示旧版无logo的缓存HTML；同版本内仍按 6:00/20:00 双刷新点 + 其余读存储
             const STATS_SNAP_VERSION = 3;
-            // 盈亏排行列表结构版本：仅该列表改版时递增，避免旧快照继续渲染已删除的进度条
-            const PNL_RANK_LAYOUT_VERSION = 6;
+            // 盈亏排行列表结构版本：仅该列表/贡献榜改版时递增，避免旧快照继续渲染已删除的进度条
+            const PNL_RANK_LAYOUT_VERSION = 9;
             // 分红排行列表结构版本：独立于盈亏排行，新增分页/分隔线时递增
             const DIV_RANK_LAYOUT_VERSION = 2;
             // 仓位分布页结构版本：总览指标/行业配置/个股明细改版时递增
@@ -22174,6 +22529,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const closedList0 = historyData.closedStocks || [];
                 if(!holdDataList.length && !closedList0.length){
                     pnlRankListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>';
+                    const contribEl0 = document.querySelector('#statsPnlContribList');
+                    if(contribEl0) contribEl0.innerHTML = '<div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>';
+                    const contribCard0 = document.querySelector('#pnlContribCard');
+                    if(contribCard0) contribCard0.style.display = 'none';
+                    const contribChip0 = document.querySelector('#pnlContribChip');
+                    if(contribChip0){
+                        contribChip0.innerText = '--';
+                        contribChip0.className = 'rounded-full px-2 py-1 text-[9px] text-gray-500 bg-gray-50 whitespace-nowrap';
+                    }
                     pnlRankTotalEl.innerText = '--';
                     pnlRankTotalEl.className = 'text-[12px] font-bold tabular-nums text-gray-800';
                     pnlRankWinEl.innerText = '0';
@@ -22229,6 +22593,71 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
                         });
                     }
+                    // 贡献榜与完整排行共用 pnlRanks，不另算一套；盈利/亏损各取前五
+                    const contribWinAll = pnlRanks.filter(function(x){ return Number(x.pnl) > 0.01; });
+                    const contribLoseAll = pnlRanks.filter(function(x){ return Number(x.pnl) < -0.01; });
+                    const contribWin = contribWinAll.slice().sort(function(a, b){ return (Number(b.pnl) || 0) - (Number(a.pnl) || 0); }).slice(0, 5);
+                    const contribLose = contribLoseAll.slice().sort(function(a, b){ return (Number(a.pnl) || 0) - (Number(b.pnl) || 0); }).slice(0, 5);
+                    const contribWinSum = contribWinAll.reduce(function(s, x){ return s + (Number(x.pnl) || 0); }, 0);
+                    const contribLoseSum = contribLoseAll.reduce(function(s, x){ return s + (Number(x.pnl) || 0); }, 0);
+                    function contribRow(x, idx, isWin){
+                        const it = x.item, rec = x.rec;
+                        const rawName = String(x.closed ? (rec.name || rec.code || '') : (it.name || it.code || ''));
+                        const codeStr = String(x.closed ? (rec.code || '') : (it.code || ''));
+                        const pnl = Number(x.pnl) || 0;
+                        const pct = Number(x.pnlPct) || 0;
+                        const pctText = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+                        const badgeCls = idx === 0
+                            ? (isWin ? 'bg-[#e03131] text-white' : 'bg-[#00a05c] text-white')
+                            : (isWin ? 'bg-[#fdecec] text-[#e03131]' : 'bg-[#e7f6ee] text-[#00a05c]');
+                        return '<div class="flex items-center gap-1.5 py-[7px] border-b border-gray-100/80 last:border-0">'
+                            + '<div class="w-[17px] h-[17px] rounded-full ' + badgeCls + ' flex items-center justify-center text-[9px] font-bold shrink-0">' + (idx + 1) + '</div>'
+                            + '<div class="min-w-0 flex-1">'
+                            + '<div class="text-[11px] font-semibold text-gray-800 truncate leading-tight" title="' + escPnl(rawName) + '">' + escPnl(rawName) + '</div>'
+                            + '<div class="mt-[3px] text-[8px] text-gray-400 tabular-nums truncate">' + escPnl(codeStr) + ' · ' + pctText + '</div>'
+                            + '</div>'
+                            + '<div class="shrink-0 text-right text-[10.5px] font-semibold tabular-nums ' + pnlClass(pnl) + '">' + fmtPnlNum(pnl) + '</div>'
+                            + '</div>';
+                    }
+                    function contribColumn(title, isWin, list, total, sum, emptyText){
+                        const panelStyle = isWin
+                            ? 'background:#fff8f5;border:1px solid #fbe9e2;'
+                            : 'background:#f5fbf7;border:1px solid #e4f2e9;';
+                        const dotCls = isWin ? 'bg-[#e03131]' : 'bg-[#00a05c]';
+                        const titleCls = isWin ? 'text-[#e03131]' : 'text-[#00a05c]';
+                        const countText = total > 5 ? '共 ' + total + ' 只' : total + ' 只';
+                        const totalBorderCls = isWin ? 'border-[#fbe9e2]' : 'border-[#e4f2e9]';
+                        return '<div class="rounded-xl px-2.5 pt-2.5 pb-1.5 min-w-0 flex flex-col" style="' + panelStyle + '">'
+                            + '<div class="flex items-center justify-between gap-2">'
+                            + '<span class="flex items-center gap-1.5 min-w-0"><span class="w-1.5 h-1.5 rounded-full ' + dotCls + ' shrink-0"></span><span class="text-[10.5px] font-semibold ' + titleCls + '">' + title + '</span></span>'
+                            + '<span class="text-[8.5px] text-gray-400 whitespace-nowrap">' + countText + '</span>'
+                            + '</div>'
+                            + '<div class="mt-1 flex-1">'
+                            + (list.length
+                                ? list.map(function(x, idx){ return contribRow(x, idx, isWin); }).join('')
+                                : '<div class="py-7 text-center text-[9.5px] text-gray-400">' + emptyText + '</div>')
+                            + '</div>'
+                            + '<div class="mt-1 pt-1.5 border-t ' + totalBorderCls + ' flex items-center justify-between gap-2">'
+                            + '<span class="text-[8.5px] text-gray-400">全部合计</span>'
+                            + '<span class="text-[10px] font-semibold tabular-nums ' + pnlClass(sum) + '">' + (total ? fmtPnlNum(sum) : '--') + '</span>'
+                            + '</div>'
+                            + '</div>';
+                    }
+                    const contribHtml = '<div class="grid grid-cols-2 gap-2 items-stretch">'
+                        + contribColumn('盈利榜', true, contribWin, contribWinAll.length, contribWinSum, '暂无盈利')
+                        + contribColumn('亏损榜', false, contribLose, contribLoseAll.length, contribLoseSum, '暂无亏损')
+                        + '</div>';
+                    // 有累计盈亏数据就展示；空账本由下方空态分支隐藏
+                    const contribShow = true;
+                    const contribCardEl = document.querySelector('#pnlContribCard');
+                    if(contribCardEl) contribCardEl.style.display = contribShow ? '' : 'none';
+                    const contribChipEl = document.querySelector('#pnlContribChip');
+                    if(contribChipEl){
+                        contribChipEl.innerText = '盈利 ' + winCount + ' · 亏损 ' + loseCount;
+                        contribChipEl.className = 'rounded-full px-2 py-1 text-[9px] text-[#8a6a3f] bg-[#faf3e3] whitespace-nowrap';
+                    }
+                    const contribListEl = document.querySelector('#statsPnlContribList');
+                    if(contribListEl) contribListEl.innerHTML = contribHtml;
                     pnlRanks.forEach(function(x, idx){
                         const it = x.item;
                         const rec = x.rec;
@@ -22278,13 +22707,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
                     // 行情未就绪标记 stale=true：下次渲染自动重建重试
                     const snapF = loadStatsDaily();
-                    snapF.pnl = { v: STATS_SNAP_VERSION, key: pnlPeriodKey, layout: PNL_RANK_LAYOUT_VERSION, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, fp: statsSnapFingerprint(), listHtml: rankHtml, totalText: totalText, totalClass: totalClass, winText: String(winCount), loseText: String(loseCount) };
+                    snapF.pnl = { v: STATS_SNAP_VERSION, key: pnlPeriodKey, layout: PNL_RANK_LAYOUT_VERSION, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, fp: statsSnapFingerprint(), listHtml: rankHtml, contribHtml: contribHtml, contribShow: contribShow, totalText: totalText, totalClass: totalClass, winText: String(winCount), loseText: String(loseCount) };
                     saveStatsDaily(snapF);
                 }
             } else if(pnlSnapC.hasData){
                 // ---- 当天已有快照：直接读取存储渲染 ----
                 document.querySelector('#statsPnlRankList').innerHTML = pnlSnapC.listHtml;
                 applyPnlRankVisibility();
+                const contribEl = document.querySelector('#statsPnlContribList');
+                if(contribEl) contribEl.innerHTML = pnlSnapC.contribHtml || '<div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>';
+                const contribCard = document.querySelector('#pnlContribCard');
+                if(contribCard) contribCard.style.display = pnlSnapC.contribShow === true ? '' : 'none';
+                const contribChip = document.querySelector('#pnlContribChip');
+                if(contribChip){
+                    contribChip.innerText = '盈利 ' + pnlSnapC.winText + ' · 亏损 ' + pnlSnapC.loseText;
+                    contribChip.className = 'rounded-full px-2 py-1 text-[9px] text-[#8a6a3f] bg-[#faf3e3] whitespace-nowrap';
+                }
                 const tEl = document.querySelector('#pnlRankTotal');
                 tEl.innerText = pnlSnapC.totalText;
                 tEl.className = 'text-[12px] font-bold tabular-nums ' + pnlSnapC.totalClass;
@@ -22294,6 +22732,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 当天空快照：保留空态
                 document.querySelector('#statsPnlRankList').innerHTML = '<div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>';
                 applyPnlRankVisibility();
+                const contribElE = document.querySelector('#statsPnlContribList');
+                if(contribElE) contribElE.innerHTML = '<div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>';
+                const contribCardE = document.querySelector('#pnlContribCard');
+                if(contribCardE) contribCardE.style.display = 'none';
+                const contribChipE = document.querySelector('#pnlContribChip');
+                if(contribChipE){
+                    contribChipE.innerText = '--';
+                    contribChipE.className = 'rounded-full px-2 py-1 text-[9px] text-gray-500 bg-gray-50 whitespace-nowrap';
+                }
                 document.querySelector('#pnlRankTotal').innerText = '--';
                 document.querySelector('#pnlRankTotal').className = 'text-[12px] font-bold tabular-nums text-gray-800';
                 document.querySelector('#pnlRankWinCount').innerText = '0';

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261110.211';</script>
+    <script>window.APP_VERSION = '20261110.221';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -460,6 +460,277 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         /* 资金流水-类型徽标：统一 26×18；图标型自然居中，文字型补 1px 光学居中 */
         .cashflow-type-badge{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:18px; border-radius:6px; font-size:10px; line-height:1.5; font-weight:700; letter-spacing:0; color:#fff; flex-shrink:0; }
         .cashflow-type-badge.is-text{ padding-top:1px; }
+
+        /* ===== 交易统计页：做T盈利（期间切换 + 贡献榜） ===== */
+        .stats-t-shell{ position:relative; overflow:hidden; border-radius:18px; background:linear-gradient(180deg,#fffdf9 0%,#fdf8ef 100%); border:1px solid #eee2cd; box-shadow:0 5px 20px rgba(74,53,26,.07), 0 1px 2px rgba(74,53,26,.05); }
+        .stats-t-shell::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#d9b26f,#f1d79d,#d9b26f,transparent); opacity:.85; }
+        .stats-t-mark{ width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:linear-gradient(145deg,#4a3825,#2d2318); box-shadow:0 3px 9px rgba(45,35,24,.28), inset 0 1px 0 rgba(255,255,255,.12); }
+        .stats-t-chip{ display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:999px; background:#f4ede0; color:#8b7657; font-size:8.5px; line-height:1; font-weight:600; white-space:nowrap; }
+        .stats-t-tabs{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; padding:4px; margin-top:12px; background:#f4eee2; border:1px solid #eee4d2; border-radius:12px; }
+        .stats-t-tab{ border:0; background:transparent; border-radius:9px; padding:7px 3px; color:#8e8375; font-size:10px; font-weight:600; line-height:1.2; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
+        .stats-t-tab.is-on{ background:#33291e; color:#f2d492; box-shadow:0 2px 6px rgba(51,41,30,.22), inset 0 1px 0 rgba(255,255,255,.08); }
+        .stats-t-hero{ position:relative; overflow:hidden; margin-top:10px; border-radius:14px; padding:14px 14px 13px; color:#fff; background:linear-gradient(135deg,#2b241c 0%,#423426 58%,#56442d 100%); box-shadow:0 8px 22px rgba(43,36,28,.18), inset 0 1px 0 rgba(255,255,255,.07); }
+        .stats-t-hero::before{ content:''; position:absolute; width:190px; height:190px; right:-72px; top:-104px; border-radius:50%; background:radial-gradient(circle,rgba(247,207,143,.20),transparent 68%); pointer-events:none; }
+        .stats-t-hero::after{ content:''; position:absolute; width:150px; height:150px; left:-86px; bottom:-104px; border-radius:50%; background:radial-gradient(circle,rgba(212,83,41,.15),transparent 70%); pointer-events:none; }
+        .stats-t-kicker{ font-size:9px; letter-spacing:.14em; color:rgba(232,214,181,.62); }
+        .stats-t-amount{ font-size:29px; line-height:1; font-weight:700; letter-spacing:-.03em; color:#f5e3c6; font-variant-numeric:tabular-nums; }
+        .stats-t-hero .stats-t-badge{ display:inline-flex; align-items:center; padding:3px 7px; border-radius:999px; border:1px solid rgba(242,212,146,.22); background:rgba(242,212,146,.08); color:rgba(242,212,146,.82); font-size:8px; line-height:1; white-space:nowrap; }
+        .stats-t-split{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:12px; }
+        .stats-t-split-item{ border-radius:9px; padding:7px 9px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.08); }
+        .stats-t-split-label{ font-size:8px; color:rgba(232,214,181,.54); }
+        .stats-t-split-value{ margin-top:3px; font-size:11px; line-height:1.1; font-weight:650; font-variant-numeric:tabular-nums; }
+        .stats-t-metrics{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:9px; }
+        .stats-t-metric{ border-left:1px solid rgba(255,255,255,.10); padding-left:9px; min-width:0; }
+        .stats-t-metric:first-child{ border-left:0; padding-left:0; }
+        .stats-t-metric-label{ font-size:8px; color:rgba(232,214,181,.54); white-space:nowrap; }
+        .stats-t-metric-value{ margin-top:3px; font-size:11px; font-weight:650; color:#f7ead4; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .stats-t-rank-box{ margin-top:8px; border:1px solid #eee4d2; border-radius:13px; background:rgba(255,255,255,.62); overflow:hidden; }
+        .stats-t-rank-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:10px 11px 7px; }
+        .stats-t-rank-title{ font-size:12px; font-weight:600; color:#3d352b; line-height:1.25; }
+        .stats-t-rank-sub{ margin-top:2px; font-size:8px; color:#a39684; line-height:1.3; }
+        .stats-t-rank-grid{ display:grid; grid-template-columns:1fr 1fr; gap:7px; align-items:stretch; padding:0 7px 7px; }
+        .stats-t-rank-panel{ display:flex; flex-direction:column; min-width:0; border-radius:10px; padding:8px 8px 6px; }
+        .stats-t-rank-panel.is-win{ background:#fff8f5; border:1px solid #f8e3da; }
+        .stats-t-rank-panel.is-loss{ background:#f5fbf7; border:1px solid #e2f0e6; }
+        .stats-t-rank-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:5px; }
+        .stats-t-rank-panel-title{ display:flex; align-items:center; gap:5px; min-width:0; font-size:10px; font-weight:650; white-space:nowrap; }
+        .stats-t-rank-panel-title::before{ content:''; width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+        .stats-t-rank-panel.is-win .stats-t-rank-panel-title{ color:#d93832; }
+        .stats-t-rank-panel.is-win .stats-t-rank-panel-title::before{ background:#e03131; }
+        .stats-t-rank-panel.is-loss .stats-t-rank-panel-title{ color:#008c50; }
+        .stats-t-rank-panel.is-loss .stats-t-rank-panel-title::before{ background:#00a05c; }
+        .stats-t-rank-count{ font-size:7.5px; color:#a39684; white-space:nowrap; }
+        .stats-t-rank-list{ margin-top:3px; flex:1; }
+        .stats-t-row{ display:flex; align-items:center; gap:5px; padding:5px 0; border-bottom:1px solid rgba(224,214,197,.52); }
+        .stats-t-row:last-child{ border-bottom:0; }
+        .stats-t-rank-badge{ width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:8px; font-weight:700; line-height:1; }
+        .stats-t-row.is-win .stats-t-rank-badge{ color:#d93832; background:#fdecec; }
+        .stats-t-row.is-loss .stats-t-rank-badge{ color:#008c50; background:#e7f6ee; }
+        .stats-t-row.is-win .stats-t-rank-badge.is-first{ color:#fff; background:#e03131; }
+        .stats-t-row.is-loss .stats-t-rank-badge.is-first{ color:#fff; background:#00a05c; }
+        .stats-t-row-name{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; font-weight:600; line-height:1.2; color:#3b342b; }
+        .stats-t-row-meta{ display:flex; align-items:center; gap:3px; margin-top:2px; min-width:0; overflow:hidden; white-space:nowrap; font-size:7px; line-height:1.2; color:#a39684; }
+        .stats-t-row-meta > span{ overflow:hidden; text-overflow:ellipsis; }
+        .stats-t-closed{ display:inline-flex; align-items:center; height:13px; padding:0 3px; border-radius:3px; color:#9a7a56; background:#f4e9d7; font-size:6.5px; line-height:1; flex-shrink:0; }
+        .stats-t-row-amt{ flex-shrink:0; text-align:right; font-size:10px; font-weight:650; line-height:1.2; font-variant-numeric:tabular-nums; }
+        .stats-t-row-amt.is-win{ color:#e03131; }
+        .stats-t-row-amt.is-loss{ color:#00a05c; }
+        .stats-t-rank-foot{ display:flex; align-items:center; justify-content:space-between; gap:5px; margin-top:3px; padding-top:5px; border-top:1px solid rgba(224,214,197,.52); }
+        .stats-t-rank-foot span{ font-size:7.5px; color:#a39684; }
+        .stats-t-rank-foot strong{ font-size:9px; font-weight:650; font-variant-numeric:tabular-nums; }
+        .stats-t-empty{ padding:20px 8px 18px; text-align:center; color:#a39684; font-size:9.5px; }
+        .stats-t-foot{ padding:7px 4px 0; font-size:7.5px; line-height:1.45; color:#a39684; }
+        @media (max-width:360px){ .stats-t-amount{ font-size:26px; } .stats-t-tab{ font-size:9.5px; } .stats-t-row-name{ font-size:9.5px; } }
+        /* ===== 资金流水统计：资金结构 / 近12个月瀑布 / 年度账单 ===== */
+        .cashstat-map{ position:relative; overflow:hidden; border-radius:20px; background:#fffaf3; border:1px solid #efe0c9; box-shadow:0 3px 10px rgba(87,54,23,.07),0 1px 3px rgba(87,54,23,.05); }
+        .cashstat-map::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#5b1828,#a82d43 35%,#c99a4b 65%,#54305f); }
+        .cashstat-head{ position:relative; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:14px 14px 0; }
+        .cashstat-eyebrow{ font-size:7.5px; line-height:1; letter-spacing:.24em; color:#b58b63; font-weight:700; }
+        .cashstat-title{ display:flex; align-items:center; gap:6px; margin-top:4px; font-size:14px; line-height:1.2; font-weight:700; color:#35251c; letter-spacing:.02em; }
+        .cashstat-title span{ height:17px; padding:0 6px; border-radius:5px; display:inline-flex; align-items:center; color:#8d6b45; background:#f5e9d7; font-size:7px; font-weight:600; letter-spacing:.04em; }
+        .cashstat-map-hero{ position:relative; overflow:hidden; margin:10px 14px 0; padding:13px 14px 12px; border-radius:15px; background:linear-gradient(130deg,#4b1624 0%,#702034 55%,#4c2a56 100%); box-shadow:inset 0 1px 0 rgba(255,235,194,.14),0 5px 14px rgba(68,22,32,.16); }
+        .cashstat-map-hero::after{ content:''; position:absolute; right:-34px; top:-46px; width:112px; height:112px; border-radius:50%; background:radial-gradient(circle,rgba(255,211,144,.22),transparent 68%); pointer-events:none; }
+        .cashstat-net-label{ position:relative; z-index:1; display:flex; align-items:center; gap:5px; font-size:8px; color:#e4c8b2; letter-spacing:.09em; }
+        .cashstat-net-label::before{ content:''; width:4px; height:4px; border-radius:50%; background:#e3b46b; box-shadow:0 0 0 2px rgba(227,180,107,.18); }
+        .cashstat-net{ position:relative; z-index:1; margin-top:5px; font-size:30px; line-height:1.08; font-weight:750; letter-spacing:-.02em; color:#ffe2ae; font-variant-numeric:tabular-nums; }
+        .cashstat-net.is-down{ color:#9fe0bf; }
+        .cashstat-net small{ margin-left:4px; font-size:10px; font-weight:500; color:#d9b796; letter-spacing:.02em; }
+        .cashstat-net-sub{ position:relative; z-index:1; margin-top:5px; font-size:8px; line-height:1.5; color:#d6baa8; }
+        .cashstat-kpis{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; padding:9px 14px 0; }
+        .cashstat-kpi{ min-width:0; padding:8px 8px 7px; border-radius:10px; background:#fff; border:1px solid #f1e3cf; }
+        .cashstat-kpi-label{ font-size:7.5px; line-height:1.2; color:#a58f76; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .cashstat-kpi-value{ margin-top:3px; font-size:11px; line-height:1.2; font-weight:700; color:#3f3025; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .cashstat-kpi-value.is-up{ color:#b3384a; }
+        .cashstat-kpi-value.is-down{ color:#2f8f6b; }
+        .cashstat-flow-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; padding:12px 14px 0; }
+        .cashstat-flow-side{ min-width:0; }
+        .cashstat-flow-title{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
+        .cashstat-flow-title span{ font-size:8px; color:#9f8a72; letter-spacing:.05em; }
+        .cashstat-flow-title strong{ font-size:10px; color:#3f3025; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .cashstat-flow-title strong.is-up{ color:#b3384a; }
+        .cashstat-flow-title strong.is-out{ color:#69705f; }
+        .cashstat-bar{ display:flex; height:9px; margin-top:7px; border-radius:99px; overflow:hidden; background:#f2e7d7; box-shadow:inset 0 0 0 1px rgba(151,113,69,.08); }
+        .cashstat-seg{ min-width:2px; height:100%; transition:width .5s ease; }
+        .cashstat-seg.is-in1{ background:linear-gradient(90deg,#8f2337,#b3384a); }
+        .cashstat-seg.is-in2{ background:linear-gradient(90deg,#c7903f,#e0b35e); }
+        .cashstat-seg.is-in3{ background:linear-gradient(90deg,#5b346d,#8c5aa3); }
+        .cashstat-seg.is-out1{ background:linear-gradient(90deg,#3b7f66,#72b494); }
+        .cashstat-seg.is-out2{ background:linear-gradient(90deg,#a36b53,#c48e72); }
+        .cashstat-seg.is-out3{ background:linear-gradient(90deg,#7f8b9d,#aab4c1); }
+        .cashstat-seg.is-other{ background:linear-gradient(90deg,#a79583,#c7b8a6); }
+        .cashstat-legend{ display:flex; flex-wrap:wrap; gap:5px 12px; margin-top:7px; }
+        .cashstat-legend-item{ display:inline-flex; align-items:center; gap:4px; font-size:7.5px; line-height:1.2; color:#8f7d69; white-space:nowrap; }
+        .cashstat-legend-item i{ width:5px; height:5px; border-radius:50%; display:inline-block; }
+        .cashstat-legend-item b{ color:#4a3a2c; font-weight:650; font-variant-numeric:tabular-nums; }
+        .cashstat-legend-item em{ font-style:normal; color:#b8a38d; font-size:6.5px; font-variant-numeric:tabular-nums; }
+        .cashstat-map-note{ margin:9px 14px 12px; padding-top:8px; border-top:1px solid #f0e3d2; font-size:7.5px; line-height:1.55; color:#a38e78; }
+        .cashstat-chart-card{ position:relative; overflow:hidden; margin-top:12px; border-radius:20px; background:linear-gradient(155deg,#2b1420 0%,#3a1b2b 58%,#2d203d 100%); box-shadow:0 6px 18px rgba(46,18,32,.20),inset 0 1px 0 rgba(255,226,181,.10); }
+        .cashstat-chart-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:14px 14px 0; }
+        .cashstat-chart-head .cashstat-eyebrow{ color:#c79f83; }
+        .cashstat-chart-head .cashstat-title{ color:#fff2df; }
+        .cashstat-chart-head .cashstat-title span{ color:#d8b898; background:rgba(255,255,255,.10); }
+        .cashstat-chart-sub{ margin-top:4px; font-size:7.5px; line-height:1.4; color:#bda08f; }
+        .cashstat-chart-unit{ font-size:7.5px; color:#a88a7a; white-space:nowrap; padding-top:4px; }
+        .cashstat-chart-legend{ display:flex; flex-wrap:wrap; gap:5px 12px; padding:8px 14px 0; }
+        .cashstat-chart-legend .cashstat-legend-item{ color:#c9b3a3; }
+        .cashstat-chart-legend .cashstat-legend-item b{ color:#f2dfc9; }
+        .cashstat-chart{ height:218px; margin:1px 4px 0; }
+        .cashstat-chart-foot{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin:0 14px; padding:8px 0 12px; border-top:1px solid rgba(255,229,198,.14); font-size:7.5px; color:#c7ad9a; }
+        .cashstat-chart-foot strong{ font-size:11px; color:#ffd79c; font-weight:700; font-variant-numeric:tabular-nums; }
+        .cashstat-chart-foot strong.is-down{ color:#8ed5b5; }
+        .cashstat-chart-empty{ display:none; height:170px; margin:8px 14px 0; align-items:center; justify-content:center; flex-direction:column; gap:4px; border:1px dashed rgba(236,205,176,.24); border-radius:12px; text-align:center; }
+        .cashstat-chart-empty strong{ font-size:11px; color:#e4c7b1; font-weight:600; }
+        .cashstat-chart-empty span{ font-size:8px; color:#a88d7c; }
+        .cashstat-annual{ position:relative; overflow:hidden; margin-top:12px; border-radius:20px; background:#fffaf3; border:1px solid #efe0c9; box-shadow:0 3px 10px rgba(87,54,23,.07); }
+        .cashstat-annual::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#5b1828,#a82d43 40%,#54305f 75%,#c99a4b); }
+        .cashstat-annual-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:14px 14px 0; }
+        .cashstat-year-list{ display:flex; align-items:center; gap:4px; overflow-x:auto; scrollbar-width:none; }
+        .cashstat-year-list::-webkit-scrollbar{ display:none; }
+        .cashstat-year{ height:21px; padding:0 7px; border-radius:6px; border:1px solid #ead8be; background:#fff; color:#8f765c; font-size:8px; font-weight:600; white-space:nowrap; transition:background .2s,color .2s,box-shadow .2s,transform .15s; }
+        .cashstat-year:active{ transform:scale(.96); }
+        .cashstat-year.is-on{ border-color:#742034; background:#742034; color:#ffe5bb; box-shadow:0 2px 7px rgba(116,32,52,.20); }
+        .cashstat-annual-body{ margin:10px 14px 12px; }
+        .cashstat-annual-hero{ position:relative; overflow:hidden; padding:12px 13px; border-radius:13px; background:#fff3e4; border:1px solid #f0dfc5; }
+        .cashstat-annual-hero::after{ content:''; position:absolute; right:-20px; bottom:-30px; width:90px; height:90px; border-radius:50%; background:radial-gradient(circle,rgba(179,56,74,.12),transparent 68%); }
+        .cashstat-annual-hero-label{ position:relative; z-index:1; font-size:8px; color:#a48564; letter-spacing:.08em; }
+        .cashstat-annual-hero-label b{ color:#7c2638; font-size:9px; letter-spacing:0; }
+        .cashstat-annual-net{ position:relative; z-index:1; margin-top:4px; font-size:26px; line-height:1.1; font-weight:750; color:#a82d43; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+        .cashstat-annual-net.is-down{ color:#257d58; }
+        .cashstat-annual-net small{ margin-left:4px; font-size:9px; color:#a5886c; font-weight:500; }
+        .cashstat-annual-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin-top:8px; }
+        .cashstat-annual-cell{ padding:8px 9px; border-radius:9px; background:#fff; border:1px solid #f0e2cf; }
+        .cashstat-annual-cell-label{ font-size:7.5px; color:#a18b74; line-height:1.2; }
+        .cashstat-annual-cell-value{ margin-top:3px; font-size:11px; font-weight:700; color:#403126; line-height:1.2; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .cashstat-annual-cell-value.is-up{ color:#b3384a; }
+        .cashstat-annual-cell-value.is-down{ color:#2f8f6b; }
+        .cashstat-annual-foot{ margin-top:8px; padding-top:7px; border-top:1px solid #f0e2cf; font-size:7.5px; line-height:1.55; color:#a18b74; }
+        .cashstat-annual-empty{ padding:15px 8px 13px; text-align:center; font-size:9px; color:#aa9278; }
+        /* ===== 分红对比：增量总览 / 归因瀑布 / 贡献榜 ===== */
+        .divcmp-hero{ position:relative; overflow:hidden; margin-bottom:12px; padding:15px 16px 13px; border-radius:20px; background:linear-gradient(135deg,#2a1710 0%,#482416 51%,#5e3820 100%); border:1px solid rgba(255,218,162,.20); box-shadow:0 10px 24px rgba(67,34,18,.22),inset 0 1px 0 rgba(255,235,200,.16); color:#fff4df; }
+        .divcmp-hero::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#7c2638,#e0b06a 42%,#ffe2ae 55%,#a82d43 100%); }
+        .divcmp-hero::after{ content:''; position:absolute; right:-46px; top:-56px; width:190px; height:190px; border-radius:50%; background:radial-gradient(circle,rgba(255,211,143,.22),transparent 66%); pointer-events:none; }
+        .divcmp-hero-top{ position:relative; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+        .divcmp-eyebrow{ font-size:7.5px; letter-spacing:.18em; font-weight:600; color:#d8ae78; }
+        .divcmp-hero-title{ margin-top:4px; font-size:17px; line-height:1.2; font-weight:750; color:#fff4df; letter-spacing:.02em; }
+        .divcmp-badge{ display:inline-flex; align-items:center; gap:3px; flex-shrink:0; margin-top:1px; padding:3px 7px; border-radius:999px; border:1px solid rgba(255,220,170,.26); background:rgba(255,229,187,.10); color:#ffe2ae; font-size:8px; font-weight:700; white-space:nowrap; }
+        .divcmp-badge.is-down{ border-color:rgba(143,209,177,.24); background:rgba(143,209,177,.10); color:#9dd8b8; }
+        .divcmp-hero-main{ position:relative; z-index:1; margin-top:9px; }
+        .divcmp-hero-value{ display:flex; align-items:baseline; gap:4px; font-size:33px; line-height:1.05; font-weight:800; color:#ffd89a; letter-spacing:-.035em; font-variant-numeric:tabular-nums; text-shadow:0 2px 10px rgba(255,184,101,.14); }
+        .divcmp-hero-value.is-down{ color:#9dd8b8; text-shadow:none; }
+        .divcmp-hero-value small{ font-size:10px; font-weight:500; letter-spacing:0; color:#d3b391; }
+        .divcmp-hero-label{ position:relative; z-index:1; margin-top:3px; font-size:9px; color:#d5bca2; }
+        .divcmp-hero-label b{ color:#ffd89a; font-weight:700; }
+        .divcmp-kpis{ position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,225,187,.16); }
+        .divcmp-kpi{ min-width:0; padding:0 10px; }
+        .divcmp-kpi:first-child{ padding-left:0; }
+        .divcmp-kpi:last-child{ padding-right:0; }
+        .divcmp-kpi + .divcmp-kpi{ border-left:1px solid rgba(255,225,187,.17); }
+        .divcmp-kpi-label{ font-size:8px; color:#c8ab8f; line-height:1.2; white-space:nowrap; }
+        .divcmp-kpi-value{ margin-top:3px; font-size:14px; font-weight:700; color:#f7dfbf; line-height:1.2; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divcmp-kpi-value small{ margin-left:2px; font-size:8px; font-weight:500; color:#c8ab8f; }
+        .divcmp-counts{ position:relative; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:5px 11px; margin-top:9px; font-size:8px; color:#d6bc9f; }
+        .divcmp-counts i{ font-size:8px; margin-right:2px; }
+        .divcmp-counts .up{ color:#ffb59a; }
+        .divcmp-counts .down{ color:#9dd8b8; }
+        .divcmp-counts .muted{ color:#a98f78; }
+        .divcmp-hero-note{ position:relative; z-index:1; margin-top:7px; font-size:7.5px; line-height:1.5; color:#af9278; }
+        .divcmp-card{ position:relative; overflow:hidden; margin-bottom:12px; border-radius:18px; background:#fffaf3; border:1px solid #efe0c9; box-shadow:0 3px 10px rgba(87,54,23,.07); }
+        .divcmp-card-head{ display:flex; align-items:center; gap:9px; padding:13px 14px 9px; }
+        .divcmp-icon{ width:27px; height:27px; border-radius:9px; background:linear-gradient(135deg,#5b1828,#a82d43); color:#ffe2ae; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 7px rgba(91,24,40,.18); }
+        .divcmp-icon i{ font-size:11px; }
+        .divcmp-head-text{ min-width:0; flex:1; }
+        .divcmp-card-title{ font-size:13px; line-height:1.2; font-weight:700; color:#403126; }
+        .divcmp-card-sub{ margin-top:3px; font-size:8px; line-height:1.3; color:#a18b74; }
+        .divcmp-chip{ flex-shrink:0; padding:2px 6px; border-radius:5px; border:1px solid #ead8be; background:#fff; color:#9b7b55; font-size:7px; font-weight:700; letter-spacing:.04em; }
+        .divcmp-legend{ display:flex; flex-wrap:wrap; gap:4px 10px; padding:0 14px 3px; font-size:8px; color:#8f765c; }
+        .divcmp-legend span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+        .divcmp-legend i{ width:5px; height:5px; border-radius:50%; display:inline-block; flex-shrink:0; }
+        .divcmp-chart{ height:205px; margin:0 5px 0 1px; }
+        .divcmp-chart-empty{ display:none; height:155px; margin:4px 14px 0; align-items:center; justify-content:center; flex-direction:column; gap:3px; border:1px dashed #e2d3b0; border-radius:12px; background:#fdfbf5; text-align:center; }
+        .divcmp-chart-empty strong{ font-size:10px; color:#8a7057; font-weight:600; }
+        .divcmp-chart-empty span{ font-size:8px; color:#b09a83; }
+        .divcmp-chart-foot{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin:0 14px; padding:7px 0 12px; border-top:1px solid #f0e2cf; font-size:8px; line-height:1.45; color:#a18b74; }
+        .divcmp-chart-foot .divcmp-foot-start{ min-width:0; }
+        .divcmp-chart-foot strong{ color:#7c2638; font-size:10px; font-weight:700; font-variant-numeric:tabular-nums; }
+        .divcmp-chart-foot .divcmp-conc{ flex-shrink:0; text-align:right; color:#9b7b55; }
+        .divcmp-chart-foot .divcmp-conc b{ color:#b3384a; font-weight:700; }
+        .divcmp-rank-card{ padding-bottom:2px; }
+        .divcmp-rank-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 14px; padding:0 12px 7px; }
+        .divcmp-rank-col{ min-width:0; }
+        .divcmp-rank-col + .divcmp-rank-col{ border-left:1px solid #f0e2cf; padding-left:14px; }
+        .divcmp-rank-title{ display:flex; align-items:center; justify-content:space-between; gap:5px; padding:4px 1px 7px; font-size:9px; font-weight:700; }
+        .divcmp-rank-title .is-up{ color:#b3384a; }
+        .divcmp-rank-title .is-down{ color:#2f8f6b; }
+        .divcmp-rank-title em{ font-style:normal; font-size:7px; font-weight:500; color:#a18b74; }
+        .divcmp-rank-row{ display:grid; grid-template-columns:19px minmax(0,1fr) auto; gap:6px; align-items:center; padding:6px 0 5px; border-top:1px dashed #f3e7d7; }
+        .divcmp-rank-no{ width:17px; height:17px; border-radius:5px; background:#fbf1e2; color:#9a7b55; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
+        .divcmp-rank-no.is-top{ background:linear-gradient(135deg,#5b1828,#a82d43); color:#ffe2ae; }
+        .divcmp-rank-name{ min-width:0; font-size:11px; line-height:1.2; font-weight:650; color:#403126; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divcmp-rank-name span{ margin-left:3px; font-size:8px; font-weight:400; color:#a18b74; }
+        .divcmp-rank-tags{ display:flex; flex-wrap:wrap; gap:3px; margin-top:2px; }
+        .divcmp-rank-tag{ padding:1px 4px; border-radius:3px; background:#fbf1e2; color:#a17748; font-size:7px; line-height:1.3; white-space:nowrap; }
+        .divcmp-rank-tag.is-green{ background:#edf8f2; color:#2f8f6b; }
+        .divcmp-rank-bar{ height:2px; margin-top:4px; border-radius:2px; background:#f4e7d7; overflow:hidden; }
+        .divcmp-rank-bar span{ display:block; height:100%; border-radius:2px; background:linear-gradient(90deg,#d4a24e,#b3384a); }
+        .divcmp-rank-bar.is-down span{ background:linear-gradient(90deg,#88c7a9,#2f8f6b); }
+        .divcmp-rank-amt{ text-align:right; font-size:11px; font-weight:700; line-height:1.2; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .divcmp-rank-amt.is-up{ color:#b3384a; }
+        .divcmp-rank-amt.is-down{ color:#2f8f6b; }
+        .divcmp-rank-amt small{ display:block; margin-top:1px; font-size:7px; font-weight:400; color:#a18b74; }
+        .divcmp-rank-empty{ padding:18px 2px 22px; text-align:center; font-size:8px; color:#b09a83; }
+        /* 交易明细页 · 走势双标签（每月做T / 收盘成本）：沿用暖金账本语汇，图表区不额外抢色 */
+        .tl-flow-card{ background:linear-gradient(180deg,#fffdf9 0%,#fff 38%,#fff 100%); }
+        .tl-flow-card::before{ content:''; display:block; height:3px; background:linear-gradient(90deg,#7c2638,#e0b06a 42%,#ffe2ae 55%,#a82d43 100%); }
+        .tl-chart-tabs{ display:flex; gap:4px; margin-top:10px; padding:3px; border-radius:12px; background:#f5efe5; border:1px solid #ebdfcb; }
+        .tl-chart-tab{ flex:1; min-width:0; display:flex; align-items:center; justify-content:center; gap:4px; padding:7px 6px; border:0; border-radius:9px; background:transparent; color:#9b896f; font-size:10px; font-weight:600; line-height:1; cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
+        .tl-chart-tab:hover{ color:#7b4b2c; }
+        .tl-chart-tab.is-active{ color:#ffe2ae; background:linear-gradient(135deg,#3b2519 0%,#5c3a24 58%,#6b4328 100%); box-shadow:0 2px 8px rgba(68,40,22,.18),inset 0 1px 0 rgba(255,255,255,.10); }
+        .tl-chart-tab-dot{ width:4px; height:4px; border-radius:50%; background:#c9a35c; opacity:.55; flex:0 0 auto; }
+        .tl-chart-tab.is-active .tl-chart-tab-dot{ background:#ffd89a; opacity:1; box-shadow:0 0 6px rgba(255,216,154,.55); }
+        .tl-chart-wrap{ overflow:hidden; }
+        .tl-cost-kpis{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:9px 12px 10px; border-top:1px solid #f6eee2; background:linear-gradient(180deg,#fffdf9 0%,#fff 100%); }
+        .tl-cost-kpi{ min-width:0; padding:0 8px; border-left:1px solid #f1e6d6; }
+        .tl-cost-kpi:first-child{ border-left:0; padding-left:0; }
+        .tl-cost-kpi-label{ font-size:8.5px; color:#a3917c; line-height:1.35; }
+        .tl-cost-kpi-value{ margin-top:2px; font-size:12px; font-weight:700; color:#6d5138; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tl-cost-kpi-sub{ margin-top:1px; font-size:7.5px; color:#b09a83; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tl-cost-kpis.hidden, .tl-cost-legend.hidden{ display:none !important; }
+        .tl-cost-legend{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:0 16px 4px; color:#9b896f; font-size:8px; background:#fff; }
+        .tl-cost-legend span{ display:flex; align-items:center; gap:4px; }
+        .tl-cost-legend i{ width:5px; height:5px; border-radius:50%; display:inline-block; }
+        @media (max-width:420px){
+            .divcmp-hero{ padding:14px 14px 12px; }
+            .divcmp-hero-value{ font-size:29px; }
+            .divcmp-hero-title{ font-size:15px; }
+            .divcmp-kpi{ padding:0 7px; }
+            .divcmp-kpi-value{ font-size:12px; }
+            .divcmp-chart{ height:190px; }
+            .divcmp-rank-grid{ grid-template-columns:1fr; gap:4px; }
+            .divcmp-rank-col + .divcmp-rank-col{ border-left:0; padding-left:0; border-top:1px solid #f0e2cf; margin-top:4px; padding-top:4px; }
+            .tl-chart-tab{ font-size:9.5px; padding:7px 3px; }
+            .tl-cost-kpis{ padding:8px 7px 9px; }
+            .tl-cost-kpi{ padding:0 5px; }
+            .tl-cost-kpi-value{ font-size:10.5px; }
+        }
+        @media (max-width:420px){
+            .divcmp-hero{ padding:14px 14px 12px; }
+            .divcmp-hero-value{ font-size:29px; }
+            .divcmp-hero-title{ font-size:15px; }
+            .divcmp-kpi{ padding:0 7px; }
+            .divcmp-kpi-value{ font-size:12px; }
+            .divcmp-chart{ height:190px; }
+            .divcmp-rank-grid{ grid-template-columns:1fr; gap:4px; }
+            .divcmp-rank-col + .divcmp-rank-col{ border-left:0; padding-left:0; border-top:1px solid #f0e2cf; margin-top:4px; padding-top:4px; }
+        }
+        @media (max-width:420px){
+            .cashstat-flow-grid{ grid-template-columns:1fr; gap:10px; }
+            .cashstat-kpis{ gap:4px; }
+            .cashstat-kpi{ padding:7px 6px 6px; }
+            .cashstat-kpi-value{ font-size:10px; }
+            .cashstat-net{ font-size:27px; }
+            .cashstat-chart{ height:200px; }
+            .cashstat-annual-net{ font-size:24px; }
+        }
 </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
@@ -1048,27 +1319,64 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 每月做T盈利：以每月月初（上月末收盘持仓）为底仓，月内闭环配对 -->
-        <div id="tlMonthlyTCard" class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-start gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bar-chart text-[12px] text-accent"></i></div>
-                <div class="min-w-0">
-                    <div class="text-[13px] font-semibold text-gray-800 leading-5">每月做T盈利</div>
-                    <div class="text-[9px] text-gray-400 mt-0.5">近 12 个月 · 上月末收盘底仓</div>
+        <!-- 走势分析：每月做T盈利 / 收盘成本，共用同一卡片，标签切换 -->
+        <div id="tlMonthlyTCard" class="tl-flow-card bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
+            <div class="px-4 pt-3 pb-2.5 border-b border-gray-100">
+                <div class="flex items-start gap-2.5">
+                    <div id="tlChartIconWrap" class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i id="tlChartIcon" class="fa fa-bar-chart text-[12px] text-accent"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <div id="tlChartTitle" class="text-[13px] font-semibold text-gray-800 leading-5">每月做T盈利</div>
+                        <div id="tlChartSub" class="text-[9px] text-gray-400 mt-0.5">近 12 个月 · 月初底仓 / 月内建仓</div>
+                    </div>
+                    <div class="ml-auto text-right pl-2 flex-shrink-0">
+                        <div id="tlChartTotalLabel" class="text-[8.5px] text-gray-400">近12月累计</div>
+                        <div id="tlMonthlyTTotal" class="text-[13px] font-bold tabular-nums mt-0.5 text-gray-800">--</div>
+                    </div>
                 </div>
-                <div class="ml-auto text-right pl-2 flex-shrink-0">
-                    <div class="text-[8.5px] text-gray-400">近12月累计</div>
-                    <div id="tlMonthlyTTotal" class="text-[13px] font-bold tabular-nums mt-0.5 text-gray-800">--</div>
+                <div class="tl-chart-tabs" role="tablist" aria-label="走势图表切换">
+                    <button type="button" class="tl-chart-tab is-active" data-tab="t" onclick="setTradeLogChartTab('t')" role="tab" aria-selected="true"><span class="tl-chart-tab-dot"></span>每月做T</button>
+                    <button type="button" class="tl-chart-tab" data-tab="cost" onclick="setTradeLogChartTab('cost')" role="tab" aria-selected="false"><span class="tl-chart-tab-dot"></span>收盘成本</button>
                 </div>
             </div>
-            <div id="tlMonthlyTChartWrap" class="relative" style="height:190px">
+            <div id="tlMonthlyTChartWrap" class="relative tl-chart-wrap" style="height:190px">
                 <div id="tlMonthlyTChart" class="w-full h-full"></div>
                 <div id="tlMonthlyTEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <div class="text-[10.5px] font-medium text-gray-500">近 12 个月暂无可配平的做 T</div>
                     <div class="text-[9px] text-gray-400 mt-1">有闭环买卖后，会在这里按月统计</div>
                 </div>
             </div>
-            <div id="tlMonthlyTNote" class="px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">只计当月已闭环的做 T；卖出底仓不参与配对，月末未接回不计入。</div>
+            <div id="tlCostChartWrap" class="relative tl-chart-wrap hidden" style="height:205px">
+                <div id="tlCostChart" class="w-full h-full"></div>
+                <div id="tlCostEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div class="text-[10.5px] font-medium text-gray-500">暂无收盘成本轨迹</div>
+                    <div class="text-[9px] text-gray-400 mt-1">录入建仓、买卖或除权记录后自动生成</div>
+                </div>
+            </div>
+            <div id="tlCostKpis" class="tl-cost-kpis hidden">
+                <div class="tl-cost-kpi">
+                    <div class="tl-cost-kpi-label">累计变动</div>
+                    <div id="tlCostChange" class="tl-cost-kpi-value">--</div>
+                    <div id="tlCostChangeSub" class="tl-cost-kpi-sub">较建仓成本</div>
+                </div>
+                <div class="tl-cost-kpi">
+                    <div class="tl-cost-kpi-label">成本区间</div>
+                    <div id="tlCostRange" class="tl-cost-kpi-value">--</div>
+                    <div class="tl-cost-kpi-sub">最高 / 最低</div>
+                </div>
+                <div class="tl-cost-kpi">
+                    <div class="tl-cost-kpi-label">除权贡献</div>
+                    <div id="tlCostDiv" class="tl-cost-kpi-value">--</div>
+                    <div class="tl-cost-kpi-sub">每股累计扣减</div>
+                </div>
+            </div>
+            <div id="tlCostLegend" class="tl-cost-legend hidden">
+                <span><i style="background:#e03131"></i>买入</span>
+                <span><i style="background:#00a05c"></i>卖出</span>
+                <span><i style="background:#c9a35c"></i>除权</span>
+                <span><i style="background:#b06a3a"></i>收盘成本</span>
+            </div>
+            <div id="tlMonthlyTNote" class="px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">只计当月已闭环的做 T；月初有底仓则底仓不参与配对，月初无底仓则当月首笔买入视作底仓；月末未接回不计入；买卖已扣佣金、印花税、过户费。</div>
+            <div id="tlCostNote" class="hidden px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">按交易流水回放每日收盘成本：买入含佣金与过户费，卖出按净回款冲减成本，除权按每股分红扣减；无交易日沿用上一收盘成本。成本快照用于校准人工修正，最新值以首页持仓成本为准。</div>
         </div>
 
         <!-- 资金与分红流水：标题 + 过滤 + 时间线 合并大卡片（参考今日涨跌幅详情页列表卡片风格） -->
@@ -2001,7 +2309,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <div class="px-1 pb-2 text-[8.5px] leading-relaxed text-gray-400">
-            今日盈亏 = 今日市值 − 昨日市值 + 今日卖出成交额 − 今日买入成交额；港股按汇率折算人民币。做T已兑现为当日买卖闭环配对收益，已包含在今日盈亏中，不额外叠加。
+            今日盈亏 = 今日市值 − 昨日市值 + 今日卖出成交额 − 今日买入成交额；港股按汇率折算人民币。做T已兑现为当日买卖闭环配对收益，买卖均按扣费后的净价计算，不额外叠加。
         </div>
     </div>
 
@@ -2492,8 +2800,84 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </span>
             </div>
         </div>
+        <!-- 分红增量总览：把“今年比去年多了多少、增量从哪里来、谁贡献最大”提到最前 -->
+        <div id="divCompareHero" class="divcmp-hero">
+            <div class="divcmp-hero-top">
+                <div class="min-w-0">
+                    <div class="divcmp-eyebrow">DIVIDEND MOMENTUM</div>
+                    <div class="divcmp-hero-title">分红现金流同比</div>
+                </div>
+                <span id="divcmpGrowthBadge" class="divcmp-badge">--</span>
+            </div>
+            <div class="divcmp-hero-main">
+                <div id="divcmpDelta" class="divcmp-hero-value">--<small>同比增量</small></div>
+                <div id="divcmpDeltaLabel" class="divcmp-hero-label">今年较去年</div>
+            </div>
+            <div class="divcmp-kpis">
+                <div class="divcmp-kpi">
+                    <div class="divcmp-kpi-label">今年分红预测</div>
+                    <div id="divcmpForecast" class="divcmp-kpi-value">--</div>
+                </div>
+                <div class="divcmp-kpi">
+                    <div class="divcmp-kpi-label">去年实际到账</div>
+                    <div id="divcmpLast" class="divcmp-kpi-value">--</div>
+                </div>
+                <div class="divcmp-kpi">
+                    <div class="divcmp-kpi-label">有分红股票</div>
+                    <div id="divcmpStockCount" class="divcmp-kpi-value">--</div>
+                </div>
+            </div>
+            <div id="divcmpCounts" class="divcmp-counts"></div>
+            <div id="divcmpNote" class="divcmp-hero-note">口径：今年按当前持仓年化预测，去年按实际到账记录。</div>
+        </div>
+
+        <!-- 增量归因瀑布 -->
+        <div class="divcmp-card divcmp-chart-card">
+            <div class="divcmp-card-head">
+                <div class="divcmp-icon"><i class="fa fa-area-chart"></i></div>
+                <div class="divcmp-head-text">
+                    <div class="divcmp-card-title">增量来源</div>
+                    <div class="divcmp-card-sub">去年基数 → 今年预测 · 逐层归因</div>
+                </div>
+                <span class="divcmp-chip">WATERFALL</span>
+            </div>
+            <div class="divcmp-legend">
+                <span><i style="background:#d8c3a5;"></i>去年基数</span>
+                <span><i style="background:#b3384a;"></i>持仓变化</span>
+                <span><i style="background:#c99a4b;"></i>派息变化</span>
+                <span><i style="background:#d06a4c;"></i>新进/无记录</span>
+                <span><i style="background:#2f8f6b;"></i>清仓拖累</span>
+                <span><i style="background:#8b735c;"></i>结构变化</span>
+                <span><i style="background:#7c2638;"></i>今年预测</span>
+            </div>
+            <div id="divcmpChart" class="divcmp-chart"></div>
+            <div id="divcmpChartEmpty" class="divcmp-chart-empty">
+                <strong>暂无可归因的分红变化</strong>
+                <span>今年或去年暂无分红记录</span>
+            </div>
+            <div class="divcmp-chart-foot">
+                <div class="divcmp-foot-start" id="divcmpFootStart">去年基数 --</div>
+                <div class="divcmp-conc" id="divcmpConcentration">集中度 --</div>
+            </div>
+        </div>
+
+        <!-- 增量贡献榜：正贡献/拖累各前五 -->
+        <div class="divcmp-card divcmp-rank-card">
+            <div class="divcmp-card-head">
+                <div class="divcmp-icon"><i class="fa fa-trophy"></i></div>
+                <div class="divcmp-head-text">
+                    <div class="divcmp-card-title">增量贡献榜</div>
+                    <div class="divcmp-card-sub">谁把今年的分红抬上去，谁在拖后腿</div>
+                </div>
+                <span class="divcmp-chip">TOP 5</span>
+            </div>
+            <div id="divcmpRankBody" class="divcmp-rank-grid">
+                <div class="divcmp-rank-empty">正在计算…</div>
+            </div>
+        </div>
+
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
-            <!-- 口径说明 -->
+
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5 bg-white">
                 <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
                 <div class="text-[11px] text-gray-500 leading-relaxed">今年分红预测 = 最新持仓股数 × 全年每股分红（已发布均计入）；去年分红收入 = 该股票去年实际到账分红</div>
@@ -2702,10 +3086,84 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div id="cashTotalOut" class="text-base font-bold tabular-nums" style="color:#9ef0cf">--</div>
                 </div>
                 <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">净流入</div>
+                    <div class="text-[11px] text-amber-100/60 mb-1.5">外部净投入</div>
                     <div id="cashTotalNet" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
             </div>
+        </div>
+        <!-- 资金结构：把零散流水归纳成“钱从哪来、花到哪去、留下多少” -->
+        <div class="cashstat-map mb-4">
+            <div class="cashstat-head">
+                <div>
+                    <div class="cashstat-eyebrow">CAPITAL FLOW MAP</div>
+                    <div class="cashstat-title">资金结构 <span>全周期</span></div>
+                </div>
+            </div>
+            <div class="cashstat-map-hero">
+                <div class="cashstat-net-label">全周期现金净变动</div>
+                <div class="cashstat-net" id="cashstatNet">--<small>元</small></div>
+                <div class="cashstat-net-sub" id="cashstatNetSub">由转入、取出、分红、买卖与费用共同构成</div>
+            </div>
+            <div class="cashstat-kpis">
+                <div class="cashstat-kpi">
+                    <div class="cashstat-kpi-label">外部净投入</div>
+                    <div class="cashstat-kpi-value" id="cashstatExternal">--</div>
+                </div>
+                <div class="cashstat-kpi">
+                    <div class="cashstat-kpi-label">交易净额</div>
+                    <div class="cashstat-kpi-value" id="cashstatTrade">--</div>
+                </div>
+                <div class="cashstat-kpi">
+                    <div class="cashstat-kpi-label">分红入账</div>
+                    <div class="cashstat-kpi-value" id="cashstatDividend">--</div>
+                </div>
+            </div>
+            <div class="cashstat-flow-grid">
+                <div class="cashstat-flow-side">
+                    <div class="cashstat-flow-title"><span>资金来源</span><strong class="is-up" id="cashstatSourceTotal">--</strong></div>
+                    <div class="cashstat-bar" id="cashstatSourceBar"></div>
+                    <div class="cashstat-legend" id="cashstatSourceLegend"></div>
+                </div>
+                <div class="cashstat-flow-side">
+                    <div class="cashstat-flow-title"><span>资金去向</span><strong class="is-out" id="cashstatUseTotal">--</strong></div>
+                    <div class="cashstat-bar" id="cashstatUseBar"></div>
+                    <div class="cashstat-legend" id="cashstatUseLegend"></div>
+                </div>
+            </div>
+            <div class="cashstat-map-note" id="cashstatMapNote">口径：现金净变动 = 转入 + 分红 + 卖出回款 − 取出 − 买入 − 交易费用；与「资金动向」同一账本。</div>
+        </div>
+        <!-- 近12个月资金瀑布 -->
+        <div class="cashstat-chart-card mb-4">
+            <div class="cashstat-chart-head">
+                <div>
+                    <div class="cashstat-eyebrow">12-MONTH CASH WATERFALL</div>
+                    <div class="cashstat-title">近12个月资金瀑布 <span>月度</span></div>
+                    <div class="cashstat-chart-sub">每月流入 / 流出 / 窗口累计净额</div>
+                </div>
+                <div class="cashstat-chart-unit">单位：元</div>
+            </div>
+            <div class="cashstat-chart-legend" id="cashstatWaterLegend"></div>
+            <div class="cashstat-chart" id="cashstatWaterChart"></div>
+            <div class="cashstat-chart-empty" id="cashstatWaterEmpty">
+                <strong>近12个月暂无资金流水</strong>
+                <span>发生转入、分红或交易后，这里会自动生成月度瀑布</span>
+            </div>
+            <div class="cashstat-chart-foot">
+                <span>窗口累计净变动</span>
+                <strong id="cashstatWaterFootNet">--</strong>
+                <span id="cashstatWaterFootFlow" style="margin-left:auto">流入 -- · 流出 --</span>
+            </div>
+        </div>
+        <!-- 年度资金账单 -->
+        <div class="cashstat-annual mb-4">
+            <div class="cashstat-annual-head">
+                <div>
+                    <div class="cashstat-eyebrow">ANNUAL CASH STATEMENT</div>
+                    <div class="cashstat-title">年度资金账单</div>
+                </div>
+                <div class="cashstat-year-list" id="cashstatAnnualYears"></div>
+            </div>
+            <div class="cashstat-annual-body" id="cashstatAnnualBody"></div>
         </div>
         <!-- 资金动向时间线：标题右侧 = 计数 + 过滤条 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
@@ -2970,6 +3428,84 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="text-[11px] text-amber-100/60 mb-1.5">年均换手率</div>
                     <div id="tradeTurnoverAnnual" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
+            </div>
+        </div>
+        <!-- 做T盈利：期间切换 + 做T贡献榜（复用持仓详情页做T配对算法） -->
+        <div id="statsTCard" class="stats-t-shell mb-4">
+            <div class="px-4 pt-4 pb-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="stats-t-mark">
+                            <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M12 6v13"/></svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[13px] font-semibold text-gray-800">做T盈利</span>
+                                <span class="stats-t-chip">净收益</span>
+                            </div>
+                            <div id="statsTPeriodSub" class="mt-0.5 text-[9px] text-gray-400 truncate">本月 · 2026年11月</div>
+                        </div>
+                    </div>
+                    <div id="statsTParticipateChip" class="stats-t-chip">闭环 -- 笔</div>
+                </div>
+                <div id="statsTTabs" class="stats-t-tabs">
+                    <button type="button" data-t-period="day" onclick="setStatsTPeriod('day')" class="stats-t-tab">当天</button>
+                    <button type="button" data-t-period="month" onclick="setStatsTPeriod('month')" class="stats-t-tab is-on">本月</button>
+                    <button type="button" data-t-period="half" onclick="setStatsTPeriod('half')" class="stats-t-tab">最近半年</button>
+                    <button type="button" data-t-period="year" onclick="setStatsTPeriod('year')" class="stats-t-tab">今年</button>
+                </div>
+                <div class="stats-t-hero">
+                    <div class="relative z-10">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="stats-t-kicker">期间做T净收益</div>
+                                <div class="mt-1 flex items-baseline gap-1.5">
+                                    <span id="statsTTotal" class="stats-t-amount">0.00</span>
+                                    <span class="text-[9px] text-[#cfc0a6]/60">元</span>
+                                </div>
+                                <div class="mt-1 text-[8px] text-[#cfc0a6]/45">已扣佣金 · 印花税 · 过户费</div>
+                            </div>
+                            <span class="stats-t-badge">税后到手</span>
+                        </div>
+                        <div class="stats-t-split">
+                            <div class="stats-t-split-item">
+                                <div class="stats-t-split-label">盈利合计</div>
+                                <div id="statsTWinAmt" class="stats-t-split-value" style="color:#ff9b9b">--</div>
+                            </div>
+                            <div class="stats-t-split-item">
+                                <div class="stats-t-split-label">亏损合计</div>
+                                <div id="statsTLoseAmt" class="stats-t-split-value" style="color:#79e0a4">--</div>
+                            </div>
+                        </div>
+                        <div class="stats-t-metrics">
+                            <div class="stats-t-metric">
+                                <div class="stats-t-metric-label">做T股票</div>
+                                <div id="statsTStocks" class="stats-t-metric-value">0 只</div>
+                            </div>
+                            <div class="stats-t-metric">
+                                <div class="stats-t-metric-label">盈利只数</div>
+                                <div id="statsTWinCount" class="stats-t-metric-value">0 只</div>
+                            </div>
+                            <div class="stats-t-metric">
+                                <div class="stats-t-metric-label">亏损只数</div>
+                                <div id="statsTLoseCount" class="stats-t-metric-value">0 只</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-t-rank-box">
+                    <div class="stats-t-rank-head">
+                        <div class="min-w-0">
+                            <div class="stats-t-rank-title">做T贡献榜</div>
+                            <div class="stats-t-rank-sub">当期做T净收益 · 盈利前五 / 亏损前五</div>
+                        </div>
+                        <div id="statsTContribChip" class="stats-t-chip">--</div>
+                    </div>
+                    <div id="statsTContribList" class="px-2.5 pb-2.5">
+                        <div class="stats-t-empty">本期暂无已闭环的做T</div>
+                    </div>
+                </div>
+                <div class="stats-t-foot">按本期已闭环做T净收益排序；同一股票合并当前持仓与已清仓流水；买卖均按扣费后净价计算。</div>
             </div>
         </div>
         <!-- 全部交易 -->
@@ -8994,6 +9530,33 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return dd.getFullYear() + '-' + ('0' + (dd.getMonth() + 1)).slice(-2) + '-' + ('0' + dd.getDate()).slice(-2);
         }
 
+        // 做T统一费用口径：优先用流水里的实际总费用；旧流水没有 fee 时用分项合计；
+        // 两者都没有才按当前费率补算。显式 fee:0 视为免佣，不再补算。
+        function tTradeFeeOf(tr, market, price, qty){
+            const rec = tr || {};
+            const total = Number(rec.fee);
+            if(rec.fee != null && isFinite(total) && total > 0) return total;
+            const parts = (Number(rec.feeComm) || 0) + (Number(rec.feeStamp) || 0) + (Number(rec.feeTransfer) || 0);
+            if(parts > 0) return parts;
+            if(rec.fee != null && isFinite(total)) return 0;
+            const p = Number(price) || 0;
+            const q = Math.abs(Number(qty) || 0);
+            if(p > 0 && q > 0 && typeof calcTradeFee === 'function'){
+                const fee = calcTradeFee(market, Number(rec.delta) || 0, p, q);
+                return Number(fee && fee.total) || 0;
+            }
+            return 0;
+        }
+        // 做T配对池只接受净价：买入净价=成交价+费用/股数，卖出净价=成交价-费用/股数。
+        // 费用按整笔成交量分摊，未配对部分留在挂单池，后续配对时只承担其对应份额的费用。
+        function tNetTradePrice(type, price, qty, fee){
+            const p = Number(price) || 0;
+            const q = Math.abs(Number(qty) || 0);
+            const f = Number(fee) || 0;
+            if(!(q > 0) || !(f > 0)) return p;
+            return type === 'sell' ? p - f / q : p + f / q;
+        }
+
         class TPool {
             constructor(onlyIntraDay, initPosition){
                 this.onlyIntraDay = !!onlyIntraDay;
@@ -9006,12 +9569,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 this.totalTVolume = 0;
                 this.detail = [];
                 this.lastDayKey = null;
+                this.cashDivTotal = 0;
             }
             sortBuy(){
                 this.pendingBuy.sort(function(a, b){ return a.price - b.price; });
             }
             sortSell(){
                 this.pendingSell.sort(function(a, b){ return b.price - a.price; });
+            }
+            // 除权：只摊薄底仓 / 待买回买入池的成本与股数；待卖池价格是既有卖出价，不调整。
+            applyExRight(cashPerShare, shareRatio){
+                const cash = Number(cashPerShare) || 0;
+                const ratio = Number(shareRatio) || 1;
+                if(Math.abs(cash) < 1e-12 && Math.abs(ratio - 1) < 1e-12) return;
+                const adjust = function(item){
+                    item.price -= cash;
+                    if(Math.abs(ratio - 1) >= 1e-12){
+                        item.volume *= ratio;
+                        item.price /= ratio;
+                    }
+                };
+                this.basePosition.forEach(adjust);
+                this.pendingBuy.forEach(adjust);
+            }
+            // 分红金额由外部按实际到账金额直接传入，这里只累加，不再按持仓反推。
+            // 注意：分红金额是独立口径，不并入 totalTProfit；除权已通过 applyExRight 摊薄成本，
+            // 两者不能再次相加，否则会把同一笔分红重复计入。
+            addDivCashDirect(cashAmt){
+                const amt = Number(cashAmt);
+                if(isFinite(amt)) this.cashDivTotal += amt;
             }
             addTrade(type, price, volume, dayKey){
                 // 严格日内模式：跨天时清空两边的未闭环挂单（当天没接回/没卖出都不算T）
@@ -9103,6 +9689,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return {
                     tProfit: this.totalTProfit,
                     closedTVolume: this.totalTVolume,
+                    cashDiv: this.cashDivTotal,
                     detail: this.detail.slice(),
                     pendingBuyPool: this.pendingBuy.slice(),
                     basePosition: this.basePosition.slice(),
@@ -9113,15 +9700,76 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
 
+        // 从明细已有分红记录生成做T除权事件：金额/每股分红直接取记录，不再反推。
+        // 自动除权的 divKey 内含真实除权日；手工记录只有登记日，按登记日次日零点处理。
+        function tDivDateFromRecord(rec){
+            const key = String((rec && rec.divKey) || '');
+            const parts = key.split('|');
+            const isManual = parts[0] === 'manual';
+            const explicit = (!isManual && parts.length > 1) ? String(parts[1] || '') : '';
+            const base = explicit || String((rec && (rec.date || rec.exDate)) || '');
+            if(!/^\d{4}-\d{2}-\d{2}$/.test(base)) return null;
+            const p = base.split('-');
+            const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 0, 0, 0, 0);
+            if(!isFinite(d.getTime())) return null;
+            if(!explicit || isManual) d.setDate(d.getDate() + 1);
+            return d;
+        }
+        function buildTExDivEvents(item, fx){
+            if(!item) return [];
+            const code = String(item.code || '');
+            const now = Date.now();
+            const isHk = item.marketType === 'HK';
+            const rate = isHk ? (Number(fx) || Number(hkFxRate) || 1) : 1;
+            const out = [];
+            const seen = {};
+            const pushRec = function(rec){
+                if(!rec) return;
+                const recDate = String(rec.date || rec.exDate || '');
+                const perShare = Number(rec.perShare);
+                if(!isFinite(perShare) || perShare <= 0) return;
+                const key = recDate + '|' + perShare.toFixed(6);
+                if(seen[key]) return;
+                const evDate = tDivDateFromRecord(rec);
+                if(!evDate || evDate.getTime() > now) return; // 未来分红不提前摊薄
+                const amt = Number(rec.amount);
+                const ratio = Number(rec.shareRatio);
+                seen[key] = true;
+                const ev = {
+                    stock: code,
+                    exDate: evDate,
+                    // 港股明细的每股分红按人民币记录，做T成交价是港币，摊薄前先换算到成交币种
+                    cashPerShare: isHk ? perShare / rate : perShare,
+                    shareRatio: (isFinite(ratio) && ratio > 0) ? ratio : 1
+                };
+                if(isFinite(amt)) ev.divCashAmt = amt;
+                out.push(ev);
+            };
+            (item.exDivRecords || []).forEach(pushRec);
+            // 兼容只有 divPaidRecords 的旧数据；同一登记日+每股分红已被 exDivRecords 覆盖时跳过
+            (item.divPaidRecords || []).forEach(function(rec){
+                if(rec && rec.settled === false) return;
+                pushRec(rec);
+            });
+            return out.sort(function(a, b){ return a.exDate - b.exDate; });
+        }
+
         /**
-         * 任意区间做T统计（公用入口）
+
          * @param {Array} allTrades 全部交易：{stock, type:'buy'|'sell', price, volume, date}
          * @param {Date} rangeStart 区间起点
          * @param {Date} rangeEnd 区间终点
          * @param {Object} initBase 区间期初底仓：{stock:[{price,volume}]}
+         * @param {Array} allTrades 交易：{stock,type,price,volume,date}；price 必须是扣完该笔费用后的净价
+         * @param {Array} exDivEvents 除权/分红事件：{stock, exDate, cashPerShare, shareRatio, divCashAmt}
          * @param {boolean} onlyIntraDay true=严格日内T / false=允许跨日闭环T
          */
-        function calcRangeTProfit(allTrades, rangeStart, rangeEnd, initBase, onlyIntraDay){
+        function calcRangeTProfit(allTrades, rangeStart, rangeEnd, initBase, exDivEvents, onlyIntraDay){
+            // 兼容旧调用：第 5 个参数直接传布尔值时，仍按 onlyIntraDay 处理
+            if(typeof exDivEvents === 'boolean'){
+                onlyIntraDay = exDivEvents;
+                exDivEvents = [];
+            }
             const rs = new Date(rangeStart).getTime();
             const re = new Date(rangeEnd).getTime();
             const trades = (allTrades || []).filter(function(t){
@@ -9129,6 +9777,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return ts >= rs && ts <= re;
             }).map(function(t){
                 return {
+                    kind: 'trade',
                     stock: String(t.stock || ''),
                     type: t.type,
                     price: Number(t.price) || 0,
@@ -9136,34 +9785,62 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     date: new Date(t.date),
                     ts: new Date(t.date).getTime()
                 };
-            }).sort(function(a, b){ return a.ts - b.ts; });
+            });
+            const divEvents = (exDivEvents || []).filter(function(e){
+                const ts = new Date(e && e.exDate).getTime();
+                return isFinite(ts) && ts >= rs && ts <= re;
+            }).map(function(e){
+                return {
+                    kind: 'exdiv',
+                    stock: String(e.stock || ''),
+                    exDate: new Date(e.exDate),
+                    ts: new Date(e.exDate).getTime(),
+                    cashPerShare: Number(e.cashPerShare) || 0,
+                    shareRatio: (isFinite(Number(e.shareRatio)) && Number(e.shareRatio) > 0) ? Number(e.shareRatio) : 1,
+                    divCashAmt: (e.divCashAmt != null && isFinite(Number(e.divCashAmt))) ? Number(e.divCashAmt) : null
+                };
+            });
+            // 同一时间戳：先除权、再交易，避免除权日当天买入被误除权
+            const events = trades.concat(divEvents).sort(function(a, b){
+                if(a.ts !== b.ts) return a.ts - b.ts;
+                return (a.kind === 'exdiv' ? 0 : 1) - (b.kind === 'exdiv' ? 0 : 1);
+            });
             const baseMap = initBase || {};
             const poolMap = {};
-            trades.forEach(function(t){
-                if(!poolMap[t.stock]){
-                    const init = Object.prototype.hasOwnProperty.call(baseMap, t.stock) ? baseMap[t.stock] : [];
-                    poolMap[t.stock] = new TPool(onlyIntraDay, init);
+            events.forEach(function(ev){
+                if(!poolMap[ev.stock]){
+                    const init = Object.prototype.hasOwnProperty.call(baseMap, ev.stock) ? baseMap[ev.stock] : [];
+                    poolMap[ev.stock] = new TPool(onlyIntraDay, init);
                 }
-                poolMap[t.stock].addTrade(t.type, t.price, t.volume, tDayKey(t.date));
+                if(ev.kind === 'exdiv'){
+                    poolMap[ev.stock].applyExRight(ev.cashPerShare, ev.shareRatio);
+                    if(ev.divCashAmt != null) poolMap[ev.stock].addDivCashDirect(ev.divCashAmt);
+                } else {
+                    poolMap[ev.stock].addTrade(ev.type, ev.price, ev.volume, tDayKey(ev.date));
+                }
             });
             let totalAllTProfit = 0;
             let totalAllTVolume = 0;
+            let totalAllCashDiv = 0;
             const stockResult = {};
             Object.keys(poolMap).forEach(function(code){
                 const r = poolMap[code].getResult();
                 stockResult[code] = r;
                 totalAllTProfit += r.tProfit;
                 totalAllTVolume += r.closedTVolume;
+                totalAllCashDiv += r.cashDiv || 0;
             });
             return {
                 range: { start: rangeStart, end: rangeEnd },
                 totalTProfit: totalAllTProfit,
                 totalClosedTVolume: totalAllTVolume,
+                totalCashDiv: totalAllCashDiv,
                 stockDetail: stockResult
             };
         }
 
         // 当日单标的兼容入口：详情页固定 onlyIntraDay=true，保持“当日做T”口径；
+        // 传入的 price 必须是扣完该笔费用后的净价（买+费/股、卖-费/股），否则 tProfit 会虚高。
         // 当日没有区间期初底仓概念，initBase 传空对象，昨日底仓的当日卖出仍可与当日买入配对。
         function calcDayTProfitPair(trades){
             const stock = '__day__';
@@ -9176,7 +9853,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     date: new Date(2000, 0, 1, 0, 0, idx)
                 };
             });
-            const res = calcRangeTProfit(all, new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59, 999), {}, true);
+            const res = calcRangeTProfit(all, new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59, 999), {}, [], true);
             const r = res.stockDetail[stock] || { tProfit: 0, detail: [] };
             return { tProfit: r.tProfit, matchedCount: r.detail.length };
         }
@@ -9238,15 +9915,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(ts < dayStartTs) return;
                 const qty = Number(tr.delta) || 0;
                 if(!qty) return;
+                const tradePrice = Number(tr.price) || now;
+                const tradeType = qty > 0 ? 'buy' : 'sell';
+                const tradeQty = Math.abs(qty);
                 if(qty > 0){
                     buyQty += qty;
-                    buyAmt += qty * (Number(tr.price) || now);
+                    buyAmt += qty * tradePrice;
                 } else {
-                    const sq = -qty;
-                    sellQty += sq;
-                    sellAmt += sq * (Number(tr.price) || now);
+                    sellQty += tradeQty;
+                    sellAmt += tradeQty * tradePrice;
                 }
-                dayTrades.push({ type: qty > 0 ? 'buy' : 'sell', price: Number(tr.price) || now, volume: Math.abs(qty) });
+                // 做T配对池使用净价：买入含佣金/过户费，卖出扣佣金/印花税/过户费。
+                const tradeFee = tTradeFeeOf(tr, item.marketType, tradePrice, tradeQty);
+                dayTrades.push({
+                    type: tradeType,
+                    price: tNetTradePrice(tradeType, tradePrice, tradeQty, tradeFee),
+                    volume: tradeQty
+                });
             });
             const prevQty = holdQty - buyQty + sellQty;   // 昨日收盘持仓股数（今日净变动反推）
             if(prevClose == null || prevQty < 0) return { pnl: 0, tProfit: 0, prevMv: 0, hasBase: false, buyQty: buyQty, sellQty: sellQty, buyAmt: buyAmt * fx, sellAmt: sellAmt * fx, tradeCount: dayTrades.length, tMatchCount: 0 };
@@ -9254,6 +9939,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return {
                 pnl: (now * holdQty - prevClose * prevQty + sellAmt - buyAmt) * fx,
                 // 日内已兑现盈亏（做T利润）：买池低价优先 / 卖池高价优先配对闭环T（加仓/纯减仓不计入）
+                // 配对价已按买卖双边费用折算为净价，故此处直接为税后到手口径（不重复扣费）。
                 tProfit: tPair.tProfit * fx,
                 prevMv: prevClose * prevQty * fx,
                 hasBase: true,
@@ -9268,10 +9954,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             };
         }
         // 做T累计总盈利（按交易日存储的做T值累加，历史只读存储、不重算交易记录）：
-        // item.dayTByDate = { 'YYYY-MM-DD': 当日做T }；首次访问惰性回填一次（遍历交易按日归总 做T=卖出总额−买入总额），
+        // item.dayTByDate = { 'YYYY-MM-DD': 当日做T }；首次访问惰性回填一次（遍历交易按日归总），
         // 之后纯读存储累加；交易记录删除/缺失不影响累计。当日做T实时现算并覆盖归属日键，保证盘中每3秒刷新准确。
+        // dayTMethod 用于做T口径升级后的历史重算，避免旧的无费用结果继续被缓存沿用。
+        const T_PAIR_METHOD = 't-pair-net-fee-v1';
         function ensureDayTMap(item){
-            if(item.dayTByDate) return item.dayTByDate;
+            if(item.dayTByDate && item.dayTMethod === T_PAIR_METHOD) return item.dayTByDate;
             const map = {};
             const trs = item.transactions;
             if(trs && trs.length){
@@ -9285,13 +9973,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const dd = new Date(ts);
                     const key = dd.getFullYear() + '-' + ('0' + (dd.getMonth() + 1)).slice(-2) + '-' + ('0' + dd.getDate()).slice(-2);
                     if(!dayTrs[key]) dayTrs[key] = [];
-                    dayTrs[key].push({ type: qty > 0 ? 'buy' : 'sell', price: Number(tr.price) || 0, volume: Math.abs(qty) });
+                    const tradePrice = Number(tr.price) || 0;
+                    const tradeType = qty > 0 ? 'buy' : 'sell';
+                    const tradeQty = Math.abs(qty);
+                    const tradeFee = tTradeFeeOf(tr, item.marketType, tradePrice, tradeQty);
+                    dayTrs[key].push({
+                        type: tradeType,
+                        price: tNetTradePrice(tradeType, tradePrice, tradeQty, tradeFee),
+                        volume: tradeQty
+                    });
                 }
                 for(const k in dayTrs){
                     map[k] = calcDayTProfitPair(dayTrs[k]).tProfit;
                 }
             }
             item.dayTByDate = map;
+            item.dayTMethod = T_PAIR_METHOD;
             saveLocal(); // 首次回填后持久化一次，后续读存储不再触发
             return map;
         }
@@ -9303,7 +10000,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 写回后存储与显示一致，同一交易日无论打开几次只计入一次。
             const flow = calcDayFlow(item);
             let changed = false;
-            if(flow.dayKey && flow.buyQty > 0 && flow.sellQty > 0 && Math.abs(flow.tProfit) > 0.005){
+            if(flow.dayKey && flow.buyQty > 0 && flow.sellQty > 0){
                 const cur = Number(map[flow.dayKey]) || 0;
                 if(Math.abs(cur - flow.tProfit) > 0.005){
                     map[flow.dayKey] = flow.tProfit;
@@ -10931,6 +11628,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 existing.costPrice = costPrice;
                 existing.nowPrice = nowPrice;
                 existing.divPerShare = divPerShare;
+                // 覆盖更新属于人工成本修正：补写当日成本快照，避免成本走势回放与当前成本脱节
+                saveCostSnapshot(existing, todayStr());
                 // 覆盖更新是数据修正（不产生买卖流水）；若无交易流水则补一条原建仓流水，保证今年盈亏额按年初持仓计算
                 if(!existing.transactions || !existing.transactions.length){
                     const origCreated = existing.createdAt ? new Date(existing.createdAt).getTime() : Date.now();
@@ -11595,7 +12294,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         // ==================== 每月做T盈利（单股明细页） ====================
-        // 口径：按自然月取区间 [月初, 月末]；月初底仓 = 上月末收盘持仓股数（只取 volume，不参与 T 配对）；
+        // 底仓口径：统计区间第一天以前有持仓 → 这些持仓全部为底仓；
+        // 第一天以前没有持仓（区间开始时持仓为 0）→ 区间内最早的一笔买入视为建仓底仓。
+        // 底仓不参与 T 配对；区间内其余买卖才进入配对。月/年区间共用该规则。
         // 月内允许跨日闭环（onlyIntraDay=false），跨月不延续；只统计当月已经买回/卖出的闭环 T。
         // 金额与今日条一致：港股按当前汇率折算人民币。
         function tlMonthlyTDispose(){
@@ -11607,7 +12308,430 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(Math.abs(n) >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + '万';
             return Math.round(n).toString();
         }
+        // 区间配对输入（月度/年度通用）：
+        // - 区间开始前已有持仓 → 这些股数为底仓，区间内首笔买入仍属加仓；
+        // - 区间开始时持仓为 0 → 区间内最早一笔买入作为建仓底仓，不进入配对池。
+        // 返回 price 已折算为扣费后的净价。
+        function buildRangeTTrades(item, start, end){
+            const code = String(item && item.code || '');
+            const txList = (item && item.transactions) || [];
+            let baseQty = 0;
+            txList.forEach(function(tr){
+                const ts = Number(tr.t);
+                if(ts < start) baseQty += (Number(tr.delta) || 0);
+            });
+            const inRange = txList.filter(function(tr){
+                const ts = Number(tr.t);
+                return ts >= start && ts <= end;
+            }).sort(function(a, b){
+                return (Number(a.t) || 0) - (Number(b.t) || 0);
+            });
+            const hasBaseAtStart = baseQty > 1e-9;
+            let firstBuyTx = null;
+            // 只有区间开始时没有底仓，才把区间内最早买入认定为建仓底仓；
+            // 有月初/年初底仓时，区间内买入都是加仓，不能误当建仓。
+            if(!hasBaseAtStart){
+                let firstBuyTs = Infinity;
+                inRange.forEach(function(tr){
+                    const ts = Number(tr.t);
+                    if((Number(tr.delta) || 0) > 0 && ts < firstBuyTs){
+                        firstBuyTs = ts;
+                        firstBuyTx = tr;
+                    }
+                });
+            }
+            const rangeTrades = [];
+            inRange.forEach(function(tr){
+                const delta = Number(tr.delta) || 0;
+                if(!delta) return;
+                // 本区间内认定的建仓首笔买入：只增加底仓股数，不进入 T 配对
+                if(tr === firstBuyTx){
+                    baseQty += delta;
+                    return;
+                }
+                const price = Number(tr.price);
+                if(!(price > 0)) return;
+                const tradeType = delta > 0 ? 'buy' : 'sell';
+                const tradeQty = Math.abs(delta);
+                const tradeFee = tTradeFeeOf(tr, item.marketType, price, tradeQty);
+                rangeTrades.push({
+                    stock: code,
+                    type: tradeType,
+                    // 做T配对池用净价：买入含费用、卖出扣费用，避免月度柱状图虚高。
+                    price: tNetTradePrice(tradeType, price, tradeQty, tradeFee),
+                    volume: tradeQty,
+                    date: new Date(Number(tr.t))
+                });
+            });
+            return { baseQty: baseQty, rangeTrades: rangeTrades };
+        }
+        // ==================== 收盘成本走势（单股明细页） ====================
+        // 数据架构：不新增 IndexedDB 表。成本只在「建仓/买卖/除权/人工修正」时改变，
+        // 现有 item.transactions + item.exDivRecords + item.costSnapshots 足以按日回放；
+        // 无交易日成本不变，折线按事件日阶梯延展，最后一点用首页当前 costPrice 校准。
+        let tlCostChart = null;
+        let tlChartTab = 't';
+        function tlCostChartDispose(){
+            try{ if(tlCostChart && !tlCostChart.isDisposed()) tlCostChart.dispose(); }catch(e){}
+            tlCostChart = null;
+        }
+        function tlCostDateKey(ts){
+            const d = new Date(Number(ts));
+            if(isNaN(d.getTime())) return '';
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function tlCostNormalizeDate(v){
+            if(v instanceof Date && !isNaN(v.getTime())) return tlCostDateKey(v.getTime());
+            const s = String(v == null ? '' : v).trim();
+            if(!s) return '';
+            const m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+            if(m){
+                const y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]);
+                const d = new Date(y, mo - 1, da);
+                if(d.getFullYear() === y && d.getMonth() === mo - 1 && d.getDate() === da) return tlCostDateKey(d.getTime());
+                return '';
+            }
+            const d = new Date(s);
+            return isNaN(d.getTime()) ? '' : tlCostDateKey(d.getTime());
+        }
+        function tlCostPointTs(dateKey){
+            const p = String(dateKey || '').split('-');
+            if(p.length !== 3) return NaN;
+            return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 23, 59, 0, 0).getTime();
+        }
+        function tlCostSigned(v, digits){
+            const n = Number(v) || 0;
+            const body = Math.abs(n).toFixed(digits == null ? 4 : digits);
+            return (n > 0 ? '+' : (n < 0 ? '-' : '')) + body;
+        }
+        function tlCostEventText(ev){
+            if(!ev) return '';
+            if(ev.kind === 'buy') return '买入 ' + Math.round(ev.qty) + ' 股 @' + fmtCost(ev.price) + (ev.fee ? ' · 费 ' + fmtMoney(ev.fee) : '');
+            if(ev.kind === 'sell') return '卖出 ' + Math.round(ev.qty) + ' 股 @' + fmtCost(ev.price) + (ev.fee ? ' · 费 ' + fmtMoney(ev.fee) : '');
+            if(ev.kind === 'div') return '除权 -' + fmtCost(ev.per) + '/股';
+            return '';
+        }
+        function tlFindCurrentTradeLogItem(){
+            return (holdDataList || []).find(function(it){ return String(it.id) === String(tradeLogItemId); }) || null;
+        }
+        function tlSetChartHead(tab, item){
+            const isCost = tab === 'cost';
+            tlChartTab = isCost ? 'cost' : 't';
+            document.querySelectorAll('.tl-chart-tab').forEach(function(btn){
+                const on = btn.getAttribute('data-tab') === tlChartTab;
+                btn.classList.toggle('is-active', on);
+                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            const titleEl = document.querySelector('#tlChartTitle');
+            const subEl = document.querySelector('#tlChartSub');
+            const labelEl = document.querySelector('#tlChartTotalLabel');
+            const iconEl = document.querySelector('#tlChartIcon');
+            if(titleEl) titleEl.innerText = isCost ? '收盘成本走势' : '每月做T盈利';
+            if(subEl) subEl.innerText = isCost ? '逐日收盘 · 含手续费与除权' : '近 12 个月 · 月初底仓 / 月内建仓';
+            if(labelEl) labelEl.innerText = isCost ? '最新成本' : '近12月累计';
+            if(iconEl) iconEl.className = isCost ? 'fa fa-line-chart text-[12px] text-accent' : 'fa fa-bar-chart text-[12px] text-accent';
+            const mWrap = document.querySelector('#tlMonthlyTChartWrap');
+            const cWrap = document.querySelector('#tlCostChartWrap');
+            const mNote = document.querySelector('#tlMonthlyTNote');
+            const cNote = document.querySelector('#tlCostNote');
+            const cKpis = document.querySelector('#tlCostKpis');
+            const cLegend = document.querySelector('#tlCostLegend');
+            if(mWrap) mWrap.classList.toggle('hidden', isCost);
+            if(cWrap) cWrap.classList.toggle('hidden', !isCost);
+            if(mNote) mNote.classList.toggle('hidden', isCost);
+            if(cNote) cNote.classList.toggle('hidden', !isCost);
+            if(cKpis) cKpis.classList.toggle('hidden', !isCost);
+            if(cLegend) cLegend.classList.toggle('hidden', !isCost);
+        }
+        function buildCostTrendSeries(item){
+            const result = { points: [], hasData: false, latest: 0, first: 0, change: 0, changePct: null, min: 0, max: 0, divPer: 0, calibrated: false, currentPrice: 0, count: 0 };
+            if(!item) return result;
+            const today = todayStr();
+            const todayTs = tlCostPointTs(today);
+            const events = [];
+            const txList = item.transactions || [];
+            txList.forEach(function(tr, idx){
+                const ts = Number(tr.t);
+                if(!isFinite(ts) || ts <= 0) return;
+                const delta = Number(tr.delta) || 0;
+                if(!delta) return;
+                const price = Number(tr.price);
+                if(!isFinite(price)) return;
+                events.push({ kind: delta > 0 ? 'buy' : 'sell', ts: ts, qty: Math.abs(delta), price: price, fee: Number(txFee(tr)) || 0, seq: idx });
+            });
+            const exList = item.exDivRecords || [];
+            exList.forEach(function(r, idx){
+                const ds = tlCostNormalizeDate(r && (r.date || r.exDate || r.divDate));
+                if(!ds) return;
+                const per = Number(r.perShare);
+                if(!isFinite(per) || Math.abs(per) < 1e-10) return;
+                const p = ds.split('-');
+                const ts = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 18, 0, 0, 0).getTime();
+                events.push({ kind: 'div', ts: ts, per: per, seq: idx });
+            });
+            // 除权在 18:00 生效；与成交同一时刻时先除权，贴合应用内处理顺序。
+            events.sort(function(a, b){
+                if(a.ts !== b.ts) return a.ts - b.ts;
+                if(a.kind === 'div' && b.kind !== 'div') return -1;
+                if(b.kind === 'div' && a.kind !== 'div') return 1;
+                return a.seq - b.seq;
+            });
+            const dayMap = {};
+            let count = 0;
+            let cost = 0;
+            events.forEach(function(ev){
+                if(ev.ts > todayTs) return; // 不把未来事件画进当前轨迹
+                if(ev.kind === 'buy'){
+                    const newCount = count + ev.qty;
+                    if(newCount > 1e-9) cost = (cost * count + ev.qty * ev.price + ev.fee) / newCount;
+                    count = newCount;
+                } else if(ev.kind === 'sell'){
+                    const qty = Math.min(Math.max(ev.qty, 0), Math.max(count, 0));
+                    const newCount = count - qty;
+                    if(newCount > 1e-9){
+                        cost = (cost * count - (qty * ev.price - ev.fee)) / newCount;
+                    } else {
+                        cost = 0;
+                    }
+                    count = newCount;
+                } else if(ev.kind === 'div'){
+                    if(count > 1e-9) cost -= ev.per;
+                }
+                const dk = tlCostDateKey(ev.ts);
+                if(!dk) return;
+                if(!dayMap[dk]) dayMap[dk] = { date: dk, cost: 0, count: 0, events: [], calibrated: false };
+                dayMap[dk].cost = cost;
+                dayMap[dk].count = count;
+                dayMap[dk].events.push(ev);
+            });
+            // 成本快照是事件日的真实落盘值，优先于回放值；用于校准人工改成本/老数据缺流水。
+            const snaps = item.costSnapshots || {};
+            Object.keys(snaps).forEach(function(rawKey){
+                const dk = tlCostNormalizeDate(rawKey);
+                if(!dk || tlCostPointTs(dk) > todayTs) return;
+                const v = Number(snaps[rawKey]);
+                if(!isFinite(v)) return;
+                if(!dayMap[dk]) dayMap[dk] = { date: dk, cost: 0, count: 0, events: [], calibrated: false };
+                if(Math.abs((Number(dayMap[dk].cost) || 0) - v) > 1e-6) dayMap[dk].calibrated = true;
+                dayMap[dk].cost = v;
+            });
+            const currentCost = Number(item.costPrice) || 0;
+            const currentCount = Number(item.count) || 0;
+            if(!dayMap[today]){
+                dayMap[today] = { date: today, cost: currentCost, count: currentCount, events: [], calibrated: false, isCurrent: true };
+            } else {
+                if(Math.abs((Number(dayMap[today].cost) || 0) - currentCost) > 1e-6) dayMap[today].calibrated = true;
+                dayMap[today].cost = currentCost;
+                dayMap[today].count = currentCount;
+                dayMap[today].isCurrent = true;
+            }
+            // 完全没有流水/快照但仍有持仓：以建仓日到今天的平线呈现，不伪造中间变化。
+            if(!Object.keys(dayMap).length && currentCount > 0){
+                const start = tlCostNormalizeDate(item.createdAt) || today;
+                dayMap[start] = { date: start, cost: currentCost, count: currentCount, events: [], calibrated: false };
+            }
+            const points = Object.keys(dayMap).sort().map(function(dk){
+                const d = dayMap[dk];
+                return {
+                    date: dk,
+                    ts: tlCostPointTs(dk),
+                    cost: Number(d.cost) || 0,
+                    count: Number(d.count) || 0,
+                    events: (d.events || []).slice(),
+                    calibrated: !!d.calibrated,
+                    isCurrent: !!d.isCurrent
+                };
+            }).filter(function(d){ return isFinite(d.ts); });
+            if(!points.length) return result;
+            const costs = points.map(function(d){ return d.cost; });
+            const latest = Number(points[points.length - 1].cost) || 0;
+            const first = Number(points[0].cost) || 0;
+            result.points = points;
+            result.hasData = true;
+            result.latest = latest;
+            result.first = first;
+            result.change = latest - first;
+            result.changePct = Math.abs(first) > 1e-9 ? (latest - first) / Math.abs(first) * 100 : null;
+            result.min = Math.min.apply(null, costs);
+            result.max = Math.max.apply(null, costs);
+            result.divPer = events.reduce(function(sum, ev){ return sum + (ev.kind === 'div' ? ev.per : 0); }, 0);
+            result.calibrated = points.some(function(d){ return d.calibrated; });
+            result.currentPrice = Number(item.nowPrice) || 0;
+            result.count = currentCount;
+            return result;
+        }
+        function renderTradeLogCostChart(item){
+            tlCostChartDispose();
+            tlSetChartHead('cost', item);
+            const el = document.querySelector('#tlCostChart');
+            const wrapEl = document.querySelector('#tlCostChartWrap');
+            const emptyEl = document.querySelector('#tlCostEmpty');
+            const kpisEl = document.querySelector('#tlCostKpis');
+            const legendEl = document.querySelector('#tlCostLegend');
+            const totalEl = document.querySelector('#tlMonthlyTTotal');
+            const noteEl = document.querySelector('#tlCostNote');
+            if(!el || !wrapEl) return;
+            const data = buildCostTrendSeries(item);
+            const isHk = item && item.marketType === 'HK';
+            if(noteEl){
+                noteEl.innerText = '按交易流水回放每日收盘成本：买入含佣金与过户费，卖出按净回款冲减成本，除权按每股分红扣减；无交易日沿用上一收盘成本。'
+                    + (data.calibrated ? ' 已用成本快照校准人工修正。' : '')
+                    + (isHk ? ' 港股成本为港币原币，不折算人民币。' : '');
+            }
+            if(!data.hasData){
+                if(totalEl){ totalEl.innerText = '--'; totalEl.style.color = '#8a8175'; }
+                el.style.display = 'none';
+                if(emptyEl) emptyEl.classList.remove('hidden');
+                if(kpisEl) kpisEl.classList.add('hidden');
+                if(legendEl) legendEl.classList.add('hidden');
+                wrapEl.style.height = '150px';
+                return;
+            }
+            if(emptyEl) emptyEl.classList.add('hidden');
+            el.style.display = 'block';
+            wrapEl.style.height = '205px';
+            if(kpisEl) kpisEl.classList.remove('hidden');
+            if(legendEl) legendEl.classList.remove('hidden');
+            if(totalEl){
+                const prefix = isHk ? 'HK$' : '';
+                totalEl.innerText = prefix + fmtCost(data.latest);
+                const good = data.currentPrice > 0 && data.latest < data.currentPrice;
+                totalEl.style.color = data.currentPrice > 0 ? (good ? '#e03131' : '#00a05c') : '#8a8175';
+            }
+            const changeEl = document.querySelector('#tlCostChange');
+            const changeSubEl = document.querySelector('#tlCostChangeSub');
+            const rangeEl = document.querySelector('#tlCostRange');
+            const divEl = document.querySelector('#tlCostDiv');
+            if(changeEl){
+                changeEl.innerText = isHk && data.change ? 'HK$' + tlCostSigned(data.change, 4) : tlCostSigned(data.change, 4);
+                changeEl.style.color = Math.abs(data.change) < 0.00005 ? '#8a8175' : (data.change > 0 ? '#b3384a' : '#2f8f6b');
+            }
+            if(changeSubEl){
+                changeSubEl.innerText = data.changePct == null ? '较建仓成本' : fmtPctNum(data.changePct) + ' · 较建仓';
+            }
+            if(rangeEl){
+                rangeEl.innerText = fmtCost(data.min) + '~' + fmtCost(data.max);
+                rangeEl.title = '区间最高 ' + fmtCost(data.max) + ' / 最低 ' + fmtCost(data.min);
+            }
+            if(divEl){
+                const divAbs = Math.abs(data.divPer);
+                divEl.innerText = divAbs < 0.00005 ? '—' : '-' + fmtCost(divAbs);
+                divEl.style.color = divAbs < 0.00005 ? '#8a8175' : '#6d5138';
+            }
+            if(typeof echarts === 'undefined') return;
+            try{ tlCostChart = echarts.init(el); }catch(e){ return; }
+            const pointData = data.points.map(function(p){
+                const kinds = {};
+                p.events.forEach(function(ev){ kinds[ev.kind] = true; });
+                let marker = '#b06a3a';
+                if(kinds.sell) marker = '#00a05c';
+                else if(kinds.buy) marker = '#e03131';
+                else if(kinds.div) marker = '#c9a35c';
+                if(p.isCurrent) marker = '#8f3f2a';
+                return {
+                    value: p.cost,
+                    symbolSize: p.isCurrent ? 7 : (p.events.length ? 4.8 : 3),
+                    itemStyle: { color: marker, borderColor: '#fff', borderWidth: 1 }
+                };
+            });
+            const costs = data.points.map(function(p){ return p.cost; });
+            let cMin = Math.min.apply(null, costs);
+            let cMax = Math.max.apply(null, costs);
+            if(Math.abs(cMax - cMin) < 0.005){ cMin -= 0.02; cMax += 0.02; }
+            const pad = Math.max((cMax - cMin) * 0.12, 0.015);
+            const spanDays = (data.points[data.points.length - 1].ts - data.points[0].ts) / 86400000;
+            const xLabels = data.points.map(function(p){
+                const d = new Date(p.ts);
+                if(spanDays > 400) return String(d.getFullYear()).slice(2) + '/' + String(d.getMonth() + 1).padStart(2, '0');
+                return String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+            });
+            const lastIdx = data.points.length - 1;
+            tlCostChart.setOption({
+                animationDuration: 680,
+                animationEasing: 'cubicOut',
+                grid: { left: 5, right: 12, top: 28, bottom: 22, containLabel: true },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'line', lineStyle: { color: '#cbb18d', type: 'dashed', width: 1 } },
+                    backgroundColor: 'rgba(23,23,23,0.94)',
+                    borderWidth: 0,
+                    padding: [8, 10],
+                    textStyle: { color: '#fff', fontSize: 10 },
+                    extraCssText: 'border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.20);',
+                    formatter: function(ps){
+                        const p = (ps && ps[0]) || {};
+                        const d = data.points[p.dataIndex];
+                        if(!d) return '';
+                        const prev = p.dataIndex > 0 ? data.points[p.dataIndex - 1] : null;
+                        const delta = prev ? d.cost - prev.cost : null;
+                        let evText = d.events.length ? d.events.slice(0, 3).map(tlCostEventText).join('<br>') : (d.calibrated ? '成本快照校准' : '当日无成本事件');
+                        return '<div style="font-size:10px;color:#e8d9bc">' + d.date + '</div>'
+                            + '<div style="font-size:13px;font-weight:700;color:#ffd89a;margin-top:2px">收盘成本 ' + fmtCost(d.cost) + '</div>'
+                            + '<div style="font-size:9px;color:#b9aa93;margin-top:2px">持股 ' + Math.round(d.count) + ' 股'
+                            + (delta == null ? '' : ' · 较前 ' + tlCostSigned(delta, 4)) + '</div>'
+                            + '<div style="font-size:9px;color:#a89b84;margin-top:3px;line-height:1.5">' + evText + '</div>';
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: xLabels,
+                    boundaryGap: false,
+                    axisLine: { lineStyle: { color: '#efe7d9' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#a8987e', fontSize: 8.5, hideOverlap: true, interval: 'auto', margin: 9 },
+                    splitLine: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    scale: true,
+                    min: cMin - pad,
+                    max: cMax + pad,
+                    splitNumber: 3,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#b3a68f', fontSize: 8, formatter: function(v){ return fmtCost(v); } },
+                    splitLine: { lineStyle: { color: '#f4efe5', type: 'dashed' } }
+                },
+                series: [{
+                    type: 'line',
+                    step: 'end',
+                    smooth: false,
+                    showSymbol: true,
+                    symbol: 'circle',
+                    connectNulls: true,
+                    lineStyle: { width: 2.2, color: '#b06a3a', shadowColor: 'rgba(176,106,58,.16)', shadowBlur: 7, shadowOffsetY: 3 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(201,163,92,0.22)' },
+                            { offset: 0.72, color: 'rgba(201,163,92,0.07)' },
+                            { offset: 1, color: 'rgba(201,163,92,0.01)' }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 6,
+                        color: '#8f3f2a',
+                        fontSize: 8,
+                        fontWeight: 600,
+                        formatter: function(p){ return p.dataIndex === lastIdx ? fmtCost(p.value) : ''; }
+                    },
+                    emphasis: { focus: 'series', lineStyle: { width: 2.6 } },
+                    data: pointData
+                }]
+            });
+            setTimeout(function(){ try{ if(tlCostChart && !tlCostChart.isDisposed()) tlCostChart.resize(); }catch(e){} }, 60);
+        }
+        function setTradeLogChartTab(tab){
+            tab = tab === 'cost' ? 'cost' : 't';
+            const item = tlFindCurrentTradeLogItem();
+            if(!item) return;
+            tlSetChartHead(tab, item);
+            if(tab === 'cost') renderTradeLogCostChart(item);
+            else renderTradeLogMonthlyT(item);
+        }
         function renderTradeLogMonthlyT(item){
+            tlSetChartHead('t', item);
             const el = document.querySelector('#tlMonthlyTChart');
             if(!el) return;
             tlMonthlyTDispose();
@@ -11615,7 +12739,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const noteEl = document.querySelector('#tlMonthlyTNote');
             const isHk = item && item.marketType === 'HK';
             if(noteEl){
-                noteEl.innerText = '只计当月已闭环的做 T；卖出底仓不参与配对，月末未接回不计入。'
+                noteEl.innerText = '只计当月已闭环的做 T；月初有底仓则底仓不参与配对，月初无底仓则当月首笔买入视作底仓；月末未接回不计入；买卖已扣佣金、印花税、过户费。'
                     + (isHk ? ' 港股金额已按汇率折算人民币。' : '');
             }
             if(!item){ if(totalEl) totalEl.innerText = '--'; return; }
@@ -11623,6 +12747,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const txList = item.transactions || [];
             const now = new Date();
             const fx = isHk ? (Number(hkFxRate) || 1) : 1;
+            const divEvents = buildTExDivEvents(item, fx);
             const months = [];
             for(let i = 11; i >= 0; i--){
                 const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -11631,32 +12756,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const chartData = months.map(function(mm){
                 const start = new Date(mm.y, mm.m, 1, 0, 0, 0, 0).getTime();
                 const end = new Date(mm.y, mm.m + 1, 0, 23, 59, 59, 999).getTime();
-                // 月初底仓：上月末收盘时仍持有的股数（区间开始前的所有 delta 累计）
-                let baseQty = 0;
-                txList.forEach(function(tr){
-                    const ts = Number(tr.t);
-                    if(ts < start) baseQty += (Number(tr.delta) || 0);
-                });
-                const monthTrades = [];
-                txList.forEach(function(tr){
-                    const ts = Number(tr.t);
-                    if(ts < start || ts > end) return;
-                    const delta = Number(tr.delta) || 0;
-                    const price = Number(tr.price);
-                    if(!delta || !(price > 0)) return;
-                    monthTrades.push({
-                        stock: code,
-                        type: delta > 0 ? 'buy' : 'sell',
-                        price: price,
-                        volume: Math.abs(delta),
-                        date: new Date(ts)
-                    });
-                });
+                // 月初底仓：上月末收盘持仓；月初无持仓时，本月最早一笔买入视为建仓底仓
+                const built = buildRangeTTrades(item, start, end);
+                const baseQty = built.baseQty;
+                const monthTrades = built.rangeTrades;
                 let tProfit = 0, tVolume = 0;
                 if(monthTrades.length){
                     const initBase = {};
                     if(baseQty > 1e-9) initBase[code] = [{ price: 0, volume: baseQty }];
-                    const res = calcRangeTProfit(monthTrades, new Date(start), new Date(end), initBase, false);
+                    const res = calcRangeTProfit(monthTrades, new Date(start), new Date(end), initBase, divEvents, false);
                     tProfit = Number(res.totalTProfit) || 0;
                     tVolume = Number(res.totalClosedTVolume) || 0;
                 }
@@ -11906,6 +13014,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
             renderTradeLogList();
+            tlCostChartDispose();
+            tlChartTab = 't';
             renderTradeLogMonthlyT(item);
             // 进入明细页：立即刷新一次最新行情，行情返回后回调更新今日条；
             // 不在本页期间不轮询刷新（行情由全站增量更新维护），仅做T操作发生时联动刷新
@@ -11916,6 +13026,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeTradeLogPage(){
             tlMonthlyTDispose();
+            tlCostChartDispose();
             exitDetailPage(document.querySelector('#pageTradeLog'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
             // 恢复新增按钮（仅持仓页显示）
@@ -19309,7 +20420,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var activeStatsSection = null;
         // 隐藏所有图表 tooltip（页面收起/切换/重开前清理，避免残留挂到其他页面）
         function hideAllChartTips(){
-            const doms = document.querySelectorAll('#chartStatsDivMonth, #chartMonthlyDiv, #chartMonthly, #chartYearlyDiv, #chartYearlyNav, #chartYearlyAvgDiv, #chartYearlyReturn, #industryPieChart, #chartStatsPnlInd, #chartStatsDivRankInd, #bsNetTrendChart, #msChart, #industryCompareChart');
+            const doms = document.querySelectorAll('#chartStatsDivMonth, #chartMonthlyDiv, #chartMonthly, #chartYearlyDiv, #chartYearlyNav, #chartYearlyAvgDiv, #chartYearlyReturn, #industryPieChart, #chartStatsPnlInd, #chartStatsDivRankInd, #bsNetTrendChart, #msChart, #industryCompareChart, #divcmpChart, #tlMonthlyTChart, #tlCostChart');
             doms.forEach(function(el){
                 let inst = null;
                 try{
@@ -19334,7 +20445,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
             // 行业资产分布 / 资金流水：打开时即时构建渲染（本地数据，无需网络）
             // 本地数据轻渲染：同步执行，保证共享元素过渡动画开始时页面内容已就绪（避免"先壳后内容"的两次感）
-            if(key === 'compare'){ adjRows = []; }
+            if(key === 'compare'){
+                adjRows = [];
+                // 页面由隐藏切到可见后再初始化瀑布图，避免容器宽度为 0 时图表空白
+                setTimeout(function(){
+                    try{ divcmpRenderChart(window.__divcmpModel); }catch(e){}
+                }, 80);
+            }
             if(key === 'industry'){ renderIndustryMulti(); }
             if(key === 'cash'){ renderStatsCashFlow(); }
             if(key === 'trade'){ renderStatsTrade(); }
@@ -19854,6 +20971,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ============ 交易明细（统计页）：每笔买入/卖出 + 修改持仓事件，本地实时 ============
         let statsTradeFilter = 'all';
         let statsTradePageCount = 10;
+        let statsTPeriod = 'month'; // 交易统计页做T期间：day / month / half / year
         function updateStatsTradeFilterUI(){
             document.querySelectorAll('.stats-trade-filter').forEach(function(b){
                 const on = b.getAttribute('data-f') === statsTradeFilter;
@@ -19999,6 +21117,260 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             return { events: events, buy: buy, sell: sell, net: buy - sell };
         }
+        // ==================== 交易统计页 · 期间做T统计 ====================
+        // 复用持仓详情页同一套做T配对：当天用 calcDayTProfitPair（与日内已兑现同口径），
+        // 本月/近半年/今年用 buildRangeTTrades + calcRangeTProfit（与每月做T柱图同口径）。
+        // 不另写任何做T价差公式；费用净价、底仓规则、分红除权全部沿用现有通用方法。
+        function statsTPeriodRange(periodKey){
+            const now = new Date();
+            const end = new Date(now.getTime());
+            let start;
+            if(periodKey === 'day'){
+                start = new Date(now);
+                start.setHours(0, 0, 0, 0);
+            } else if(periodKey === 'month'){
+                start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+            } else if(periodKey === 'half'){
+                start = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate(), 0, 0, 0, 0);
+            } else {
+                start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+            }
+            return { start: start, end: end };
+        }
+        function statsTShortDate(d){
+            return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+        }
+        function statsTPeriodCaption(periodKey, range){
+            const end = range.end;
+            if(periodKey === 'day') return '当天 · ' + statsTShortDate(end);
+            if(periodKey === 'month') return '本月 · ' + end.getFullYear() + '年' + (end.getMonth() + 1) + '月';
+            if(periodKey === 'half') return '最近半年 · ' + statsTShortDate(range.start) + ' - ' + statsTShortDate(end);
+            return '今年 · ' + end.getFullYear() + '年';
+        }
+        // 合并当前持仓 + 已清仓归档流水（同一代码合并；已被当前持仓覆盖的重复流水按字段去重）。
+        function statsTTargets(){
+            const map = {};
+            function merge(src, isClosed){
+                if(!src) return;
+                const code = String(src.code || '').trim();
+                if(!code) return;
+                const market = String(src.marketType || 'A').toUpperCase() || 'A';
+                const key = code + '|' + market;
+                let target = map[key];
+                if(!target){
+                    target = {
+                        code: code,
+                        marketType: market,
+                        name: String(src.name || code),
+                        closed: true,
+                        transactions: [],
+                        exDivRecords: [],
+                        divPaidRecords: [],
+                        _txSeen: {},
+                        _divSeen: {}
+                    };
+                    map[key] = target;
+                }
+                if(!isClosed){
+                    target.closed = false;
+                    if(src.name) target.name = String(src.name);
+                } else if(!target.name){
+                    target.name = String(src.name || code);
+                }
+                (src.transactions || []).forEach(function(tr){
+                    if(!tr) return;
+                    const k = [tr.t, tr.delta, tr.price, tr.fee, tr.feeComm, tr.feeStamp, tr.feeTransfer, tr.note || ''].join('|');
+                    if(target._txSeen[k]) return;
+                    target._txSeen[k] = true;
+                    target.transactions.push(tr);
+                });
+                const addDiv = function(list, rec){
+                    if(!rec) return;
+                    const k = [rec.divKey, rec.date, rec.exDate, rec.perShare, rec.amount, rec.settled].join('|');
+                    if(target._divSeen[k]) return;
+                    target._divSeen[k] = true;
+                    list.push(rec);
+                };
+                (src.exDivRecords || []).forEach(function(rec){ addDiv(target.exDivRecords, rec); });
+                (src.divPaidRecords || []).forEach(function(rec){ addDiv(target.divPaidRecords, rec); });
+            }
+            (holdDataList || []).forEach(function(it){ merge(it, false); });
+            (historyData.closedStocks || []).forEach(function(r){ merge(r, true); });
+            return Object.keys(map).map(function(k){ return map[k]; }).filter(function(x){ return x.transactions.length > 0; });
+        }
+        // 当天：与持仓详情页“日内已兑现”同一个 calcDayTProfitPair；不受行情缺失影响。
+        function statsTDayItem(item, range){
+            const fx = item.marketType === 'HK' ? (Number(hkFxRate) || 1) : 1;
+            const dayTrades = [];
+            (item.transactions || []).forEach(function(tr){
+                const ts = Number(tr.t) || 0;
+                if(ts < range.start.getTime() || ts > range.end.getTime()) return;
+                const delta = Number(tr.delta) || 0;
+                if(!delta) return;
+                const price = Number(tr.price) || 0;
+                if(!(price > 0)) return;
+                const tradeType = delta > 0 ? 'buy' : 'sell';
+                const tradeQty = Math.abs(delta);
+                const tradeFee = tTradeFeeOf(tr, item.marketType, price, tradeQty);
+                dayTrades.push({
+                    type: tradeType,
+                    price: tNetTradePrice(tradeType, price, tradeQty, tradeFee),
+                    volume: tradeQty
+                });
+            });
+            const pair = calcDayTProfitPair(dayTrades);
+            return {
+                profit: (Number(pair.tProfit) || 0) * fx,
+                closedQty: 0,
+                pairCount: Number(pair.matchedCount) || 0,
+                participated: (Number(pair.matchedCount) || 0) > 0
+            };
+        }
+        // 多日区间：复用每月做T柱图的区间底仓规则与配对方法，跨日闭环只在本区间内完成。
+        function statsTRangeItem(item, range){
+            const fx = item.marketType === 'HK' ? (Number(hkFxRate) || 1) : 1;
+            const built = buildRangeTTrades(item, range.start, range.end);
+            const base = {};
+            if(built.baseQty > 1e-9){
+                base[item.code] = [{ price: 0, volume: built.baseQty }];
+            }
+            const res = calcRangeTProfit(built.rangeTrades, range.start, range.end, base, buildTExDivEvents(item, fx), false);
+            const detail = (res.stockDetail && res.stockDetail[String(item.code)]) || {};
+            const pairCount = (detail.detail || []).length;
+            const closedQty = Number(res.totalClosedTVolume) || 0;
+            return {
+                profit: (Number(res.totalTProfit) || 0) * fx,
+                closedQty: closedQty,
+                pairCount: pairCount,
+                participated: closedQty > 1e-9 || pairCount > 0
+            };
+        }
+        function calcStatsTData(periodKey){
+            const range = statsTPeriodRange(periodKey);
+            const rows = [];
+            statsTTargets().forEach(function(item){
+                const r = periodKey === 'day' ? statsTDayItem(item, range) : statsTRangeItem(item, range);
+                if(!r.participated) return;
+                rows.push({
+                    name: item.name || item.code,
+                    code: item.code,
+                    marketType: item.marketType,
+                    closed: !!item.closed,
+                    profit: Number(r.profit) || 0,
+                    closedQty: Number(r.closedQty) || 0,
+                    pairCount: Number(r.pairCount) || 0
+                });
+            });
+            let winCount = 0, loseCount = 0, stockCount = rows.length;
+            let winAmount = 0, loseAmount = 0, pairTotal = 0, closedQtyTotal = 0;
+            rows.forEach(function(x){
+                pairTotal += x.pairCount;
+                closedQtyTotal += x.closedQty;
+                if(x.profit > 0.01){ winCount++; winAmount += x.profit; }
+                else if(x.profit < -0.01){ loseCount++; loseAmount += x.profit; }
+            });
+            const total = rows.reduce(function(s, x){ return s + x.profit; }, 0);
+            return {
+                range: range,
+                rows: rows,
+                total: total,
+                stockCount: stockCount,
+                winCount: winCount,
+                loseCount: loseCount,
+                winAmount: winAmount,
+                loseAmount: loseAmount,
+                pairTotal: pairTotal,
+                closedQtyTotal: closedQtyTotal
+            };
+        }
+        function statsTEsc(s){
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+                return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+            });
+        }
+        function statsTRowHtml(x, idx, isWin){
+            const metaQty = x.closedQty > 0
+                ? '闭环 ' + Math.round(x.closedQty).toLocaleString('zh-CN') + ' 股'
+                : '闭环 ' + (Number(x.pairCount) || 0) + ' 笔';
+            return '<div class="stats-t-row ' + (isWin ? 'is-win' : 'is-loss') + '">'
+                + '<div class="stats-t-rank-badge' + (idx === 0 ? ' is-first' : '') + '">' + (idx + 1) + '</div>'
+                + '<div class="min-w-0 flex-1">'
+                + '<div class="stats-t-row-name" title="' + statsTEsc(x.name) + '">' + statsTEsc(x.name || x.code) + '</div>'
+                + '<div class="stats-t-row-meta"><span>' + statsTEsc(x.code) + '</span>'
+                + (x.closed ? '<span class="stats-t-closed">已清仓</span>' : '')
+                + '<span>' + metaQty + '</span></div>'
+                + '</div>'
+                + '<div class="stats-t-row-amt ' + (isWin ? 'is-win' : 'is-loss') + '">' + fmtPnlNum(x.profit) + '</div>'
+                + '</div>';
+        }
+        function statsTContribColumn(title, isWin, list, allCount, allSum, emptyText){
+            const panelCls = isWin ? 'is-win' : 'is-loss';
+            const countText = allCount > 5 ? '共 ' + allCount + ' 只' : allCount + ' 只';
+            return '<div class="stats-t-rank-panel ' + panelCls + '">'
+                + '<div class="stats-t-rank-panel-head">'
+                + '<span class="stats-t-rank-panel-title">' + title + '</span>'
+                + '<span class="stats-t-rank-count">' + countText + '</span>'
+                + '</div>'
+                + '<div class="stats-t-rank-list">'
+                + (list.length
+                    ? list.map(function(x, idx){ return statsTRowHtml(x, idx, isWin); }).join('')
+                    : '<div class="stats-t-empty">' + emptyText + '</div>')
+                + '</div>'
+                + '<div class="stats-t-rank-foot"><span>全部合计</span><strong class="' + (isWin ? 'text-[#e03131]' : 'text-[#00a05c]') + '">' + (allCount ? fmtPnlNum(allSum) : '--') + '</strong></div>'
+                + '</div>';
+        }
+        function renderStatsTStats(){
+            const card = document.querySelector('#statsTCard');
+            if(!card) return;
+            const data = calcStatsTData(statsTPeriod);
+            document.querySelectorAll('#statsTTabs [data-t-period]').forEach(function(b){
+                const on = b.getAttribute('data-t-period') === statsTPeriod;
+                b.className = 'stats-t-tab' + (on ? ' is-on' : '');
+            });
+            const subEl = document.querySelector('#statsTPeriodSub');
+            if(subEl) subEl.innerText = statsTPeriodCaption(statsTPeriod, data.range);
+            const pairChip = document.querySelector('#statsTParticipateChip');
+            if(pairChip) pairChip.innerText = '闭环 ' + (data.pairTotal || 0) + ' 笔';
+            const totalEl = document.querySelector('#statsTTotal');
+            if(totalEl){
+                totalEl.innerText = fmtPnlNum(data.total);
+                totalEl.style.color = data.total > 0.005 ? '#ff9b9b' : (data.total < -0.005 ? '#79e0a4' : '#f5e3c6');
+            }
+            const winAmtEl = document.querySelector('#statsTWinAmt');
+            if(winAmtEl) winAmtEl.innerText = data.winCount ? fmtPnlNum(data.winAmount) : '0.00';
+            const loseAmtEl = document.querySelector('#statsTLoseAmt');
+            if(loseAmtEl) loseAmtEl.innerText = data.loseCount ? fmtPnlNum(data.loseAmount) : '0.00';
+            const stocksEl = document.querySelector('#statsTStocks');
+            if(stocksEl) stocksEl.innerText = data.stockCount + ' 只';
+            const winCntEl = document.querySelector('#statsTWinCount');
+            if(winCntEl) winCntEl.innerText = data.winCount + ' 只';
+            const loseCntEl = document.querySelector('#statsTLoseCount');
+            if(loseCntEl) loseCntEl.innerText = data.loseCount + ' 只';
+            const contribChip = document.querySelector('#statsTContribChip');
+            if(contribChip) contribChip.innerText = data.stockCount ? (data.winCount + ' 盈 · ' + data.loseCount + ' 亏') : '--';
+            const listEl = document.querySelector('#statsTContribList');
+            if(!listEl) return;
+            if(!data.stockCount){
+                listEl.innerHTML = '<div class="stats-t-empty">本期暂无已闭环的做T<br><span style="font-size:8px;color:#b0a390">有买卖闭环后会自动汇总</span></div>';
+                return;
+            }
+            const winAll = data.rows.filter(function(x){ return x.profit > 0.01; }).sort(function(a, b){ return b.profit - a.profit; });
+            const loseAll = data.rows.filter(function(x){ return x.profit < -0.01; }).sort(function(a, b){ return a.profit - b.profit; });
+            const winTop = winAll.slice(0, 5);
+            const loseTop = loseAll.slice(0, 5);
+            const winSum = winAll.reduce(function(s, x){ return s + x.profit; }, 0);
+            const loseSum = loseAll.reduce(function(s, x){ return s + x.profit; }, 0);
+            listEl.innerHTML = '<div class="stats-t-rank-grid">'
+                + statsTContribColumn('盈利前五', true, winTop, winAll.length, winSum, '暂无盈利')
+                + statsTContribColumn('亏损前五', false, loseTop, loseAll.length, loseSum, '暂无亏损')
+                + '</div>';
+        }
+        function setStatsTPeriod(periodKey){
+            if(['day', 'month', 'half', 'year'].indexOf(periodKey) < 0) return;
+            if(statsTPeriod === periodKey) return;
+            statsTPeriod = periodKey;
+            renderStatsTStats();
+        }
         async function renderStatsTrade(){
             try{ await Ledger.init(); }catch(e){ console.error('trade ledger init failed', e); }
             const tEl = document.querySelector('#statsTradeTime');
@@ -20018,6 +21390,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window._statsTradeToken = (window._statsTradeToken || 0) + 1;
             updateStatsTradeFilterUI();
             await renderStatsTradeList(true);
+            renderStatsTStats();
         }
         async function renderStatsTradeList(reset){
             const token = reset ? (window._statsTradeToken = (window._statsTradeToken || 0) + 1) : (window._statsTradeToken || 0);
@@ -21421,6 +22794,309 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
         }
         loadCashBook();
+        // ==================== 资金流水统计：资金结构 / 近12个月瀑布 / 年度账单 ====================
+        const CASHSTAT_MONTHS = 12;
+        let cashstatStatsRoot = null;
+        let cashstatBillYear = '';
+        let cashstatWaterChart = null;
+        let cashstatResizeBound = false;
+
+        function cashstatBucket(){
+            return { count:0, in:0, out:0, div:0, buy:0, sell:0, fee:0, adj:0,
+                inflow:0, outflow:0, net:0, externalNet:0, tradeNet:0, sourceOther:0, useOther:0 };
+        }
+        function cashstatFinalize(b){
+            b.externalNet = b.in - b.out;
+            b.tradeNet = b.sell - b.buy - b.fee;
+            b.sourceOther = b.adj > 0 ? b.adj : 0;
+            b.useOther = b.adj < 0 ? -b.adj : 0;
+            return b;
+        }
+        function cashstatAdd(b, row){
+            const t = String(row.type || '');
+            const raw = Number(row.amount) || 0;
+            const a = Math.abs(raw);
+            b.count += 1;
+            if(t === 'in'){ b.in += a; b.inflow += a; b.net += a; return; }
+            if(t === 'out'){ b.out += a; b.outflow += a; b.net -= a; return; }
+            if(t === 'div'){ b.div += a; b.inflow += a; b.net += a; return; }
+            if(t === 'sell'){ b.sell += a; b.inflow += a; b.net += a; return; }
+            if(t === 'buy'){ b.buy += a; b.outflow += a; b.net -= a; return; }
+            if(t === 'fee'){ b.fee += a; b.outflow += a; b.net -= a; return; }
+            b.adj += raw;
+            b.net += raw;
+            if(raw >= 0) b.inflow += raw; else b.outflow += -raw;
+        }
+        function cashstatBuild(rows){
+            const root = cashstatBucket();
+            const months = {}, years = {};
+            (rows || []).forEach(function(row){
+                cashstatAdd(root, row);
+                const ds = String(row.dateStr || '').substring(0, 10);
+                const mk = ds.substring(0, 7);
+                if(/^\d{4}-\d{2}$/.test(mk)){
+                    if(!months[mk]) months[mk] = cashstatBucket();
+                    cashstatAdd(months[mk], row);
+                }
+                const yk = ds.substring(0, 4);
+                if(/^\d{4}$/.test(yk)){
+                    if(!years[yk]) years[yk] = cashstatBucket();
+                    cashstatAdd(years[yk], row);
+                }
+            });
+            cashstatFinalize(root);
+            Object.keys(months).forEach(function(k){ cashstatFinalize(months[k]); });
+            Object.keys(years).forEach(function(k){ cashstatFinalize(years[k]); });
+            root.months = months;
+            root.years = years;
+            return root;
+        }
+        function cashstatSigned(v){
+            const n = Number(v) || 0;
+            if(n > 0) return '+' + fmtMoney(n);
+            return fmtMoney(n);
+        }
+        function cashstatPct(v, total){
+            const n = Number(v) || 0;
+            if(!(total > 0)) return '0%';
+            return Math.round(n / total * 100) + '%';
+        }
+        function cashstatMonthKeys(n){
+            const out = [];
+            const now = new Date();
+            for(let i = n - 1; i >= 0; i--){
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                out.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+            }
+            return out;
+        }
+        function cashstatMonthSeries(stats, keys){
+            return keys.map(function(k){
+                const b = stats.months[k] || cashstatFinalize(cashstatBucket());
+                return Object.assign({}, b, { key:k, label:Number(k.substring(5, 7)) + '月' });
+            });
+        }
+        function cashstatBarItems(type, b){
+            if(type === 'source'){
+                return [
+                    { label:'外部转入', value:b.in, cls:'is-in1', dot:'#b3384a' },
+                    { label:'分红入账', value:b.div, cls:'is-in2', dot:'#d5a04b' },
+                    { label:'卖出回款', value:b.sell, cls:'is-in3', dot:'#7e5298' },
+                    { label:'其他调整', value:b.sourceOther, cls:'is-other', dot:'#aa9683' }
+                ].filter(function(x){ return x.value > 0; });
+            }
+            return [
+                { label:'外部取出', value:b.out, cls:'is-out1', dot:'#4d9a78' },
+                { label:'买入支出', value:b.buy, cls:'is-out2', dot:'#b47e65' },
+                { label:'交易费用', value:b.fee, cls:'is-out3', dot:'#8491a2' },
+                { label:'其他调整', value:b.useOther, cls:'is-other', dot:'#aa9683' }
+            ].filter(function(x){ return x.value > 0; });
+        }
+        function cashstatBarHtml(items){
+            if(!items.length) return '<span class="cashstat-seg is-other" style="flex:1;opacity:.2"></span>';
+            return items.map(function(x){
+                return '<span class="cashstat-seg ' + x.cls + '" style="flex:' + Math.max(0.001, x.value) + '" title="' + x.label + ' ' + cashstatSigned(x.value) + '"></span>';
+            }).join('');
+        }
+        function cashstatLegendHtml(items, total, mode, emptyText){
+            if(!items.length) return '<span class="cashstat-legend-item">' + (emptyText || '暂无流水') + '</span>';
+            return items.map(function(x){
+                const amountText = mode === 'out' ? fmtMoney(x.value) : cashstatSigned(x.value);
+                return '<span class="cashstat-legend-item"><i style="background:' + x.dot + '"></i>' + x.label + '<b>' + amountText + '</b><em>' + cashstatPct(x.value, total) + '</em></span>';
+            }).join('');
+        }
+        function cashstatSetText(id, text, cls){
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.textContent = text;
+            el.classList.remove('is-up', 'is-down');
+            if(cls) el.classList.add(cls);
+        }
+        function cashstatRenderStructure(stats){
+            const b = stats;
+            const netEl = document.getElementById('cashstatNet');
+            if(netEl){
+                netEl.innerHTML = cashstatSigned(b.net) + '<small>元</small>';
+                netEl.classList.toggle('is-down', b.net < 0);
+            }
+            cashstatSetText('cashstatExternal', cashstatSigned(b.externalNet), b.externalNet > 0 ? 'is-up' : (b.externalNet < 0 ? 'is-down' : ''));
+            cashstatSetText('cashstatTrade', cashstatSigned(b.tradeNet), b.tradeNet > 0 ? 'is-up' : (b.tradeNet < 0 ? 'is-down' : ''));
+            cashstatSetText('cashstatDividend', cashstatSigned(b.div), b.div > 0 ? 'is-up' : '');
+            cashstatSetText('cashstatNetSub', b.count ? '含转入、取出、分红、买卖与费用；负值代表现金净流出' : '暂无资金流水；发生转入、分红或交易后自动汇总');
+
+            const sourceItems = cashstatBarItems('source', b);
+            const useItems = cashstatBarItems('use', b);
+            const sourceTotal = b.in + b.div + b.sell + b.sourceOther;
+            const useTotal = b.out + b.buy + b.fee + b.useOther;
+            const sBar = document.getElementById('cashstatSourceBar');
+            const uBar = document.getElementById('cashstatUseBar');
+            const sLegend = document.getElementById('cashstatSourceLegend');
+            const uLegend = document.getElementById('cashstatUseLegend');
+            if(sBar) sBar.innerHTML = cashstatBarHtml(sourceItems);
+            if(uBar) uBar.innerHTML = cashstatBarHtml(useItems);
+            if(sLegend) sLegend.innerHTML = cashstatLegendHtml(sourceItems, sourceTotal, 'in', '暂无来源');
+            if(uLegend) uLegend.innerHTML = cashstatLegendHtml(useItems, useTotal, 'out', '暂无去向');
+            cashstatSetText('cashstatSourceTotal', cashstatSigned(sourceTotal), 'is-up');
+            cashstatSetText('cashstatUseTotal', fmtMoney(useTotal), 'is-out');
+            const note = document.getElementById('cashstatMapNote');
+            if(note){
+                note.innerText = '口径：现金净变动 = 转入 + 分红 + 卖出回款 − 取出 − 买入 − 交易费用；与「资金动向」同一账本。'
+                    + (Math.abs(b.adj) > 0.005 ? ' 其他调整 ' + cashstatSigned(b.adj) + '。' : '');
+            }
+        }
+        function cashstatAnnualBodyHtml(year, b){
+            if(!b || !b.count){
+                return '<div class="cashstat-annual-empty">该年度暂无资金流水</div>';
+            }
+            const cover = (b.externalNet > 0 && b.div > 0) ? Math.round(b.div / b.externalNet * 100) + '%' : '—';
+            return '<div class="cashstat-annual-hero">'
+                + '<div class="cashstat-annual-hero-label"><b>' + year + '</b> 年度现金净变动</div>'
+                + '<div class="cashstat-annual-net' + (b.net < 0 ? ' is-down' : '') + '">' + cashstatSigned(b.net) + '<small>元</small></div>'
+                + '</div>'
+                + '<div class="cashstat-annual-grid">'
+                + '<div class="cashstat-annual-cell"><div class="cashstat-annual-cell-label">外部净投入</div><div class="cashstat-annual-cell-value' + (b.externalNet > 0 ? ' is-up' : (b.externalNet < 0 ? ' is-down' : '')) + '">' + cashstatSigned(b.externalNet) + '</div></div>'
+                + '<div class="cashstat-annual-cell"><div class="cashstat-annual-cell-label">分红入账</div><div class="cashstat-annual-cell-value' + (b.div > 0 ? ' is-up' : '') + '">' + cashstatSigned(b.div) + '</div></div>'
+                + '<div class="cashstat-annual-cell"><div class="cashstat-annual-cell-label">交易净额</div><div class="cashstat-annual-cell-value' + (b.tradeNet > 0 ? ' is-up' : (b.tradeNet < 0 ? ' is-down' : '')) + '">' + cashstatSigned(b.tradeNet) + '</div></div>'
+                + '<div class="cashstat-annual-cell"><div class="cashstat-annual-cell-label">交易费用</div><div class="cashstat-annual-cell-value">' + fmtMoney(b.fee) + '</div></div>'
+                + '</div>'
+                + '<div class="cashstat-annual-foot">全年转入 ' + cashstatSigned(b.in) + ' · 取出 ' + fmtMoney(b.out) + ' · 分红覆盖外部投入 ' + cover + '</div>';
+        }
+        function cashstatRenderAnnual(stats){
+            const root = stats || cashstatStatsRoot;
+            if(!root) return;
+            const currentYear = String(new Date().getFullYear());
+            const dataYears = Object.keys(root.years || {}).sort();
+            const allYears = Array.from(new Set([currentYear].concat(dataYears))).sort().reverse();
+            if(!cashstatBillYear || !root.years[cashstatBillYear]){
+                cashstatBillYear = root.years[currentYear] ? currentYear : (dataYears.slice().reverse()[0] || currentYear);
+            }
+            const yearsEl = document.getElementById('cashstatAnnualYears');
+            if(yearsEl){
+                yearsEl.innerHTML = allYears.map(function(y){
+                    return '<button type="button" class="cashstat-year' + (String(y) === String(cashstatBillYear) ? ' is-on' : '') + '" onclick="setCashstatBillYear(\'' + y + '\')">' + y + '</button>';
+                }).join('');
+            }
+            const body = document.getElementById('cashstatAnnualBody');
+            if(body) body.innerHTML = cashstatAnnualBodyHtml(cashstatBillYear, root.years[cashstatBillYear]);
+        }
+        function setCashstatBillYear(y){
+            cashstatBillYear = String(y);
+            cashstatRenderAnnual(cashstatStatsRoot);
+        }
+        function cashstatChartLegend(hasAdj){
+            const items = [
+                ['转入', '#d95757'], ['分红', '#e0b35e'], ['卖出回款', '#9b73bd'],
+                ['取出', '#72b494'], ['买入', '#c48e72'], ['费用', '#96a4b5'], ['窗口累计', '#f4cf8c']
+            ];
+            if(hasAdj) items.push(['其他调整', '#bda48b']);
+            return items.map(function(x){
+                return '<span class="cashstat-legend-item"><i style="background:' + x[1] + '"></i>' + x[0] + '</span>';
+            }).join('');
+        }
+        function cashstatAxisShort(v){
+            const n = Number(v) || 0;
+            if(Math.abs(n) >= 10000) return (n / 10000).toFixed(0) + '万';
+            return String(Math.round(n));
+        }
+        function cashstatRenderWater(series){
+            const dom = document.getElementById('cashstatWaterChart');
+            const empty = document.getElementById('cashstatWaterEmpty');
+            const legend = document.getElementById('cashstatWaterLegend');
+            if(!dom) return;
+            const hasAdj = series.some(function(s){ return Math.abs(s.adj) > 0.005; });
+            if(legend) legend.innerHTML = cashstatChartLegend(hasAdj);
+            const active = series.some(function(s){ return s.count > 0; });
+            if(!active){
+                if(empty) empty.style.display = 'flex';
+                dom.style.display = 'none';
+                cashstatSetText('cashstatWaterFootNet', '0.00', '');
+                const footFlow = document.getElementById('cashstatWaterFootFlow');
+                if(footFlow) footFlow.innerText = '流入 0.00 · 流出 0.00';
+                return;
+            }
+            if(empty) empty.style.display = 'none';
+            dom.style.display = 'block';
+            if(typeof echarts === 'undefined') return;
+            if(!cashstatWaterChart) cashstatWaterChart = echarts.init(dom);
+            let acc = 0;
+            const cum = series.map(function(s){ acc += s.net; return acc; });
+            const inTotal = series.reduce(function(s, x){ return s + x.in + x.div + x.sell + Math.max(x.adj, 0); }, 0);
+            const outTotal = series.reduce(function(s, x){ return s + x.out + x.buy + x.fee + Math.max(-x.adj, 0); }, 0);
+            const option = {
+                animationDuration: 850,
+                animationEasing: 'cubicOut',
+                grid: { left: 37, right: 12, top: 16, bottom: 26 },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(255,228,190,.06)' } },
+                    backgroundColor: 'rgba(34,18,29,.96)',
+                    borderColor: 'rgba(226,184,125,.42)',
+                    borderWidth: 1,
+                    textStyle: { color: '#f4e3d3', fontSize: 10, lineHeight: 16 },
+                    formatter: function(params){
+                        const i = params[0].dataIndex;
+                        const s = series[i];
+                        const rows = [
+                            ['转入', s.in], ['分红', s.div], ['卖出回款', s.sell],
+                            ['取出', -s.out], ['买入', -s.buy], ['费用', -s.fee],
+                            ['当月净额', s.net], ['窗口累计', cum[i]]
+                        ];
+                        if(Math.abs(s.adj) > 0.005) rows.splice(6, 0, ['其他调整', s.adj]);
+                        return '<div style="min-width:112px"><strong style="color:#ffd99f">' + s.key + '</strong><br/>'
+                            + rows.map(function(r){ return r[0] + '：' + cashstatSigned(r[1]); }).join('<br/>') + '</div>';
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: series.map(function(s){ return s.label; }),
+                    axisLine: { lineStyle: { color: 'rgba(235,205,178,.20)' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#bca18f', fontSize: 7, interval: 0, margin: 7 }
+                },
+                yAxis: [
+                    { type: 'value', axisLine: { show: false }, axisTick: { show: false },
+                      axisLabel: { color: '#a98d7c', fontSize: 7, formatter: cashstatAxisShort },
+                      splitLine: { lineStyle: { color: 'rgba(255,235,210,.075)', type: 'dashed' } } },
+                    { type: 'value', show: false }
+                ],
+                series: [
+                    { name:'转入', type:'bar', stack:'source', barMaxWidth:16, data:series.map(function(s){ return s.in; }), itemStyle:{ color:'#d95757', borderRadius:3 } },
+                    { name:'分红', type:'bar', stack:'source', barMaxWidth:16, data:series.map(function(s){ return s.div; }), itemStyle:{ color:'#e0b35e' } },
+                    { name:'卖出回款', type:'bar', stack:'source', barMaxWidth:16, data:series.map(function(s){ return s.sell; }), itemStyle:{ color:'#9b73bd', borderRadius:[3,3,0,0] } },
+                    { name:'取出', type:'bar', stack:'use', barMaxWidth:16, data:series.map(function(s){ return -s.out; }), itemStyle:{ color:'#72b494', borderRadius:[0,0,3,3] } },
+                    { name:'买入', type:'bar', stack:'use', barMaxWidth:16, data:series.map(function(s){ return -s.buy; }), itemStyle:{ color:'#c48e72' } },
+                    { name:'费用', type:'bar', stack:'use', barMaxWidth:16, data:series.map(function(s){ return -s.fee; }), itemStyle:{ color:'#96a4b5', borderRadius:[0,0,3,3] } },
+                    { name:'其他流入', type:'bar', stack:'source', barMaxWidth:16, data:series.map(function(s){ return s.adj > 0 ? s.adj : 0; }), itemStyle:{ color:'#bda48b' } },
+                    { name:'其他流出', type:'bar', stack:'use', barMaxWidth:16, data:series.map(function(s){ return s.adj < 0 ? s.adj : 0; }), itemStyle:{ color:'#bda48b', borderRadius:[0,0,3,3] } },
+                    { name:'窗口累计净额', type:'line', yAxisIndex:1, data:cum, symbol:'circle', symbolSize:4,
+                      lineStyle:{ color:'#f4cf8c', width:1.5 }, itemStyle:{ color:'#f4cf8c' }, z:5 }
+                ]
+            };
+            cashstatWaterChart.setOption(option, true);
+            cashstatSetText('cashstatWaterFootNet', cashstatSigned(acc), acc < 0 ? 'is-down' : '');
+            const footFlow = document.getElementById('cashstatWaterFootFlow');
+            if(footFlow) footFlow.innerText = '流入 ' + cashstatSigned(inTotal) + ' · 流出 ' + fmtMoney(outTotal);
+            if(!cashstatResizeBound){
+                cashstatResizeBound = true;
+                window.addEventListener('resize', function(){
+                    if(cashstatWaterChart) cashstatWaterChart.resize();
+                });
+            }
+        }
+        function cashstatRenderOverview(rows){
+            const stats = cashstatBuild(rows || []);
+            cashstatStatsRoot = stats;
+            cashstatRenderStructure(stats);
+            const series = cashstatMonthSeries(stats, cashstatMonthKeys(CASHSTAT_MONTHS));
+            cashstatRenderWater(series);
+            cashstatRenderAnnual(stats);
+        }
+        async function cashstatLoadRows(){
+            const total = await AppDB.count(LEDGER_CF);
+            if(!total) return [];
+            const page = await Ledger.fetchCashPage('all', total, null);
+            return (page && page.rows) || [];
+        }
         async function renderStatsCashFlow(){
             try{ await Ledger.init(); }catch(e){ console.error('cash ledger init failed', e); }
             await syncCashFlowLog();
@@ -21454,6 +23130,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window._cfToken = (window._cfToken || 0) + 1;
             updateCashFlowFilterUI();
             await renderCashFlowList(true);
+            try{
+                const rows = await cashstatLoadRows();
+                cashstatRenderOverview(rows);
+            }catch(e){
+                console.error('cash flow stats failed', e);
+            }
         }
 
         // ===== 分红日历：登记/除权/到账 月视图（A股公告 + 手工到账，纯本地数据）=====
@@ -22298,6 +23980,242 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 contribColumn('盈利榜', true, winList, winAll.length, winSum, '暂无盈利') +
                 contribColumn('亏损榜', false, loseList, loseAll.length, loseSum, '暂无亏损') +
             '</div>';
+        }
+
+        // ===== 分红对比：增量总览 / 归因瀑布 / 贡献榜（2026-11-10） =====
+        let divcmpResizeBound = false;
+        function divcmpSetText(id, text){
+            const el = document.querySelector('#' + id);
+            if(el) el.textContent = text;
+        }
+        function divcmpSigned(v){
+            const n = Number(v) || 0;
+            if(Math.abs(n) < 0.005) return '0.00';
+            return (n > 0 ? '+' : '-') + fmtMoney(Math.abs(n));
+        }
+        function divcmpAxis(v){
+            const n = Number(v) || 0;
+            const a = Math.abs(n);
+            if(a >= 10000) return (n / 10000).toFixed(a >= 100000 ? 0 : 1).replace(/\.0$/, '') + '万';
+            if(a >= 1000) return (n / 1000).toFixed(a >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+            return String(Math.round(n));
+        }
+        function divcmpRenderAll(model){
+            window.__divcmpModel = model || null;
+            const m = model || {};
+            const hasData = !!m.hasData;
+            const tForecast = Number(m.tForecast) || 0;
+            const tLast = Number(m.tLast) || 0;
+            const tDiff = Number(m.tDiff) || 0;
+            const deltaEl = document.querySelector('#divcmpDelta');
+            if(deltaEl){
+                deltaEl.innerHTML = divcmpSigned(tDiff) + '<small>同比增量</small>';
+                deltaEl.classList.toggle('is-down', tDiff < -0.005);
+            }
+            const badgeEl = document.querySelector('#divcmpGrowthBadge');
+            if(badgeEl){
+                badgeEl.classList.remove('is-down');
+                if(!hasData){
+                    badgeEl.innerHTML = '暂无数据';
+                } else if(m.growthPct == null){
+                    badgeEl.innerHTML = tDiff > 0.005 ? '<i class="fa fa-arrow-up"></i> 新增现金流' : '<i class="fa fa-minus"></i> 持平';
+                } else if(Math.abs(Number(m.growthPct)) < 0.05){
+                    badgeEl.innerHTML = '<i class="fa fa-minus"></i> 同比持平';
+                } else {
+                    const up = tDiff >= 0;
+                    badgeEl.classList.toggle('is-down', !up);
+                    badgeEl.innerHTML = '<i class="fa ' + (up ? 'fa-arrow-up' : 'fa-arrow-down') + '"></i> 同比 ' + (up ? '+' : '-') + Math.abs(Number(m.growthPct)).toFixed(1) + '%';
+                }
+            }
+            const labelEl = document.querySelector('#divcmpDeltaLabel');
+            if(labelEl){
+                if(!hasData) labelEl.innerHTML = '今年暂无分红对比数据';
+                else if(tDiff > 0.005) labelEl.innerHTML = '今年比去年多收 · 由 <b>' + (m.upCount || 0) + '</b> 只股票贡献';
+                else if(tDiff < -0.005) labelEl.innerHTML = '今年较去年少收 · 主要受 <b>' + ((m.downCount || 0) + (m.closedCount || 0)) + '</b> 只拖累';
+                else labelEl.innerHTML = '今年与去年基本持平';
+            }
+            divcmpSetText('divcmpForecast', fmtMoney(tForecast));
+            divcmpSetText('divcmpLast', fmtMoney(tLast));
+            divcmpSetText('divcmpStockCount', (Number(m.stockCount) || 0) + ' 只');
+            const countsEl = document.querySelector('#divcmpCounts');
+            if(countsEl){
+                countsEl.innerHTML = hasData
+                    ? '<span class="up"><i class="fa fa-arrow-up"></i>' + (m.upCount || 0) + ' 只增加</span>'
+                        + '<span class="down"><i class="fa fa-arrow-down"></i>' + (m.downCount || 0) + ' 只减少</span>'
+                        + '<span class="muted"><i class="fa fa-minus"></i>' + (m.flatCount || 0) + ' 只持平</span>'
+                        + '<span class="muted"><i class="fa fa-sign-out"></i>' + (m.closedCount || 0) + ' 只清仓拖累</span>'
+                    : '<span class="muted">暂无分红记录</span>';
+            }
+            const noteEl = document.querySelector('#divcmpNote');
+            if(noteEl){
+                if(!hasData) noteEl.textContent = '暂无分红对比数据，先录入持仓或分红到账记录。';
+                else if((m.noLastCount || 0) > 0) noteEl.textContent = '其中 ' + m.noLastCount + ' 只去年无到账记录，已按今年预测计入；不把无记录直接视为下降。';
+                else noteEl.textContent = '口径：今年按当前持仓年化预测，去年按实际到账；逐只明细见下表。';
+            }
+            const footStart = document.querySelector('#divcmpFootStart');
+            if(footStart){
+                footStart.innerHTML = hasData
+                    ? '去年基数 <strong>' + fmtMoney(tLast) + '</strong> → 今年 <strong>' + fmtMoney(tForecast) + '</strong>'
+                    : '去年基数 --';
+            }
+            const concEl = document.querySelector('#divcmpConcentration');
+            if(concEl){
+                concEl.innerHTML = (m.posTotal > 0)
+                    ? 'Top3 占正贡献 <b>' + Math.min(100, Number(m.top3Share) || 0).toFixed(0) + '%</b><br>单只最高 <b>' + Math.min(100, Number(m.top1Share) || 0).toFixed(0) + '%</b>'
+                    : '集中度 --';
+            }
+            divcmpRenderChart(m);
+            divcmpRenderRank(m);
+        }
+        function divcmpRenderRank(model){
+            const body = document.querySelector('#divcmpRankBody');
+            if(!body) return;
+            const m = model || {};
+            const up = m.rankUp || [];
+            const down = m.rankDown || [];
+            if(!m.hasData || (!up.length && !down.length)){
+                body.innerHTML = '<div class="divcmp-rank-empty">暂无分红贡献数据</div>';
+                return;
+            }
+            function renderCol(title, cls, rows, total, count, isUp){
+                const titleHtml = '<div class="divcmp-rank-title"><span class="' + cls + '"><i class="fa ' + (isUp ? 'fa-arrow-up' : 'fa-arrow-down') + '"></i> ' + title + '</span><em>共 ' + (count || 0) + ' 只</em></div>';
+                if(!rows.length){
+                    return '<div class="divcmp-rank-col">' + titleHtml + '<div class="divcmp-rank-empty">暂无' + (isUp ? '明显增量' : '明显拖累') + '</div></div>';
+                }
+                return '<div class="divcmp-rank-col">' + titleHtml + rows.map(function(r, i){
+                    const share = total > 0 ? Math.min(100, Math.abs(r.impact) / total * 100) : 0;
+                    const bar = Math.min(100, Math.max(3, share));
+                    const green = !isUp;
+                    const tagsHtml = (r.tags || []).map(function(t){
+                        return '<span class="divcmp-rank-tag' + (green ? ' is-green' : '') + '">' + t + '</span>';
+                    }).join('');
+                    return '<div class="divcmp-rank-row">'
+                        + '<div class="divcmp-rank-no' + (i < 3 ? ' is-top' : '') + '">' + (i + 1) + '</div>'
+                        + '<div class="min-w-0">'
+                        + '<div class="divcmp-rank-name">' + r.name + '<span>' + r.code + '</span></div>'
+                        + '<div class="divcmp-rank-tags">' + tagsHtml + '</div>'
+                        + '<div class="divcmp-rank-bar' + (isUp ? '' : ' is-down') + '"><span style="width:' + bar.toFixed(1) + '%"></span></div>'
+                        + '</div>'
+                        + '<div class="divcmp-rank-amt ' + (isUp ? 'is-up' : 'is-down') + '">' + divcmpSigned(r.impact)
+                        + '<small>占' + (isUp ? '正贡献' : '拖累') + ' ' + share.toFixed(1) + '%</small></div>'
+                        + '</div>';
+                }).join('') + '</div>';
+            }
+            body.innerHTML = renderCol('增量 TOP5', 'is-up', up, Number(m.posTotal) || 0, Number(m.posCount) || up.length, true)
+                + renderCol('拖累 TOP5', 'is-down', down, Number(m.negTotal) || 0, Number(m.negCount) || down.length, false);
+        }
+        function divcmpRenderChart(model){
+            const el = document.querySelector('#divcmpChart');
+            const empty = document.querySelector('#divcmpChartEmpty');
+            if(!el) return;
+            const m = model || {};
+            if(!m.hasData){
+                if(el._chart){
+                    try{ el._chart.clear(); }catch(e){}
+                }
+                el.style.display = 'none';
+                if(empty) empty.style.display = 'flex';
+                return;
+            }
+            el.style.display = '';
+            if(empty) empty.style.display = 'none';
+            if(el.offsetWidth <= 0){ el._pending = true; return; }
+            if(typeof echarts === 'undefined') return;
+            let chart = el._chart;
+            if(!chart){ chart = echarts.init(el); el._chart = chart; }
+            const attrs = m.attrs || {};
+            const specs = [
+                { key: 'base', label: '去年基数', short: '去年', value: Number(m.tLast) || 0, color: '#d8c3a5', kind: 'base' },
+                { key: 'holding', label: '持仓变化', short: '持仓', value: Number(attrs.holding) || 0, color: '#b3384a', kind: 'change' },
+                { key: 'per', label: '派息变化', short: '派息', value: Number(attrs.per) || 0, color: '#c99a4b', kind: 'change' },
+                { key: 'new', label: '新进/无记录', short: '新进', value: Number(attrs.new) || 0, color: '#d06a4c', kind: 'change' },
+                { key: 'close', label: '清仓拖累', short: '清仓', value: Number(attrs.close) || 0, color: '#2f8f6b', kind: 'change' },
+                { key: 'other', label: '结构变化', short: '其他', value: Number(attrs.other) || 0, color: '#8b735c', kind: 'change' },
+                { key: 'final', label: '今年预测', short: '今年', value: Number(m.tForecast) || 0, color: '#7c2638', kind: 'final' }
+            ];
+            const segments = specs.filter(function(s){
+                return s.kind === 'base' || s.kind === 'final' || Math.abs(s.value) >= 0.005;
+            });
+            const labels = segments.map(function(s){ return s.short; });
+            const baseData = [], deltaData = [], lineData = [];
+            let cum = 0;
+            segments.forEach(function(s){
+                if(s.kind === 'base'){
+                    baseData.push(0);
+                    deltaData.push({ value: Math.max(0, s.value), itemStyle: { color: s.color, borderRadius: [4, 4, 0, 0] } });
+                    lineData.push(s.value);
+                    cum = s.value;
+                } else if(s.kind === 'final'){
+                    baseData.push(0);
+                    deltaData.push({ value: Math.max(0, s.value), itemStyle: { color: s.color, borderColor: '#f0c583', borderWidth: 1, borderRadius: [4, 4, 0, 0] } });
+                    lineData.push(s.value);
+                    cum = s.value;
+                } else {
+                    const next = cum + s.value;
+                    if(s.value >= 0){
+                        baseData.push(cum);
+                        deltaData.push({ value: s.value, itemStyle: { color: s.color, borderRadius: [4, 4, 0, 0] } });
+                    } else {
+                        baseData.push(next);
+                        deltaData.push({ value: -s.value, itemStyle: { color: s.color, borderRadius: [0, 0, 4, 4] } });
+                    }
+                    lineData.push(next);
+                    cum = next;
+                }
+            });
+            chart.setOption({
+                animationDuration: 520,
+                grid: { left: 42, right: 10, top: 16, bottom: 24 },
+                tooltip: {
+                    trigger: 'axis',
+                    confine: true,
+                    appendToBody: true,
+                    formatter: function(params){
+                        const p = (params || []).filter(function(x){ return x.seriesName === '变动'; })[0];
+                        if(!p) return '';
+                        const s = segments[p.dataIndex];
+                        if(!s) return '';
+                        const valueText = (s.kind === 'base' || s.kind === 'final') ? fmtMoney(s.value) : divcmpSigned(s.value);
+                        const valueLabel = (s.kind === 'base' || s.kind === 'final') ? '金额' : '变动';
+                        return '<div style="font-size:11px;line-height:1.6;color:#403126;">'
+                            + '<div style="font-weight:700;margin-bottom:2px;">' + s.label + '</div>'
+                            + '<div>' + valueLabel + ' <b style="color:' + (s.value < -0.005 ? '#2f8f6b' : '#b3384a') + ';">' + valueText + '</b></div>'
+                            + '<div style="color:#a18b74;">累计 ' + fmtMoney(lineData[p.dataIndex]) + '</div></div>';
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: labels,
+                    axisTick: { show: false },
+                    axisLine: { lineStyle: { color: '#e7d8c4' } },
+                    axisLabel: { interval: 0, fontSize: 7.5, color: '#9b7b55', margin: 8 }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitNumber: 4,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { fontSize: 7.5, color: '#a18b74', formatter: divcmpAxis },
+                    splitLine: { lineStyle: { color: '#f1e5d6', type: 'dashed' } }
+                },
+                series: [
+                    { name: '占位', type: 'bar', stack: 'wf', silent: true, barMaxWidth: 18, data: baseData, itemStyle: { color: 'transparent' } },
+                    { name: '变动', type: 'bar', stack: 'wf', barMaxWidth: 18, data: deltaData, emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(179,56,74,.18)' } } },
+                    { name: '累计', type: 'line', z: 5, data: lineData, symbol: 'circle', symbolSize: 5, smooth: false, lineStyle: { color: '#e0b06a', width: 1.4, type: 'dashed' }, itemStyle: { color: '#ffe2ae', borderColor: '#7c2638', borderWidth: 1 }, tooltip: { show: false } }
+                ]
+            }, true);
+            setTimeout(function(){
+                try{ if(el._chart && !el._chart.isDisposed()) el._chart.resize(); }catch(e){}
+            }, 80);
+            if(!divcmpResizeBound){
+                divcmpResizeBound = true;
+                window.addEventListener('resize', function(){
+                    const c = document.querySelector('#divcmpChart');
+                    if(c && c._chart && !c._chart.isDisposed()){
+                        try{ c._chart.resize(); }catch(e){}
+                    }
+                });
+            }
         }
 
         function renderStatsPage(){
@@ -23415,7 +25333,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(!code || seenCode[code]) return;
                 seenCode[code] = true;
                 const forecast = hasPos ? (Number(count) || 0) * perForecast : null;
-                compareItems.push({ name: name, code: code, marketType: marketType, hasPos: hasPos, count: Number(count) || 0, forecast: forecast, lastReceived: lastRec, marketVal: marketVal, diff: hasPos ? (forecast - lastRec) : null });
+                compareItems.push({ name: name, code: code, marketType: marketType, hasPos: hasPos, count: Number(count) || 0, forecast: forecast, perForecast: Number(perForecast) || 0, lastReceived: lastRec, marketVal: marketVal, diff: hasPos ? (forecast - lastRec) : null });
             }
             // 1) 当前持仓（含今年买入；去年无到账、今年仓位≤1% 的稍后筛除）
             holdDataList.forEach(function(it){
@@ -23450,9 +25368,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return it.lastReceived > 0 || (it.hasPos && totalMVNow > 0 && (it.marketVal / totalMVNow * 100) > 1);
             });
             filtered.sort(function(a, b){ return (b.marketVal || 0) - (a.marketVal || 0); });
+            // 汇总口径：今年预测只计今年有持仓的；去年收入全额计（含今年清仓股）
+            let tForecast = 0, tLast = 0;
+            filtered.forEach(function(it){
+                if(it.hasPos) tForecast += Number(it.forecast) || 0;
+                tLast += Number(it.lastReceived) || 0;
+            });
+            const tDiff = tForecast - tLast;
             if(!filtered.length){
                 compareList.innerHTML = '<div class="px-4 py-10 text-center text-gray-400 text-sm">暂无对比数据</div>';
                 if(compareTotalEl) compareTotalEl.classList.add('hidden');
+                divcmpRenderAll(null);
             } else {
                 const rowsHtml = filtered.map(function(it){
                     // 今年分红预测列：今年无持仓 → 无持仓（浅灰）；有持仓但无分红 → 0.00
@@ -23498,21 +25424,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         if(Math.abs(curEnd - lastEnd) >= 0.005) parts.push({ label: '年终分红', delta: curEnd - lastEnd, unit: ' 元/股' });
                         if(lastCount != null && (it.count - lastCount) !== 0) parts.push({ label: '持股数', delta: it.count - lastCount, unit: ' 股' });
                     }
-                    // 统一显示：前缀"分红变动原因："；有变化展示各项（圆点分隔），无变化显示"无"
-                    reasonHtml = '<div class="mt-1 pl-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px] leading-tight">'
-                        + '<span class="text-gray-400">分红变动原因：</span>'
-                        + (parts.length
-                            ? parts.map(function(p){
-                                const up = p.delta > 0;
-                                const cls = up ? 'text-[#e03131]' : 'text-[#00a05c]';
-                                const word = p.unit === ' 股' ? (up ? '增' : '减') : (up ? '升' : '降');
-                                const valText = p.unit === ' 股' ? String(Math.round(Math.abs(p.delta))) : Math.abs(p.delta).toFixed(2);
-                                return '<span class="text-gray-400">' + p.label + '</span>'
-                                    + '<span class="font-medium tabular-nums ' + cls + '">' + word + ' ' + valText + '</span>'
-                                    + '<span class="text-gray-400">' + p.unit.trim() + '</span>';
-                            }).join('<span class="text-gray-300 mx-0.5">·</span>')
-                            : '<span class="text-gray-400">无</span>')
-                        + '</div>';
+                    // 去年没有到账记录时，不拿“去年每股方案”硬算升降，避免把“无记录”误读成“去年没分红/今年下降”
+                    if(it.hasPos && it.lastReceived <= 0.005){
+                        reasonHtml = '<div class="mt-1 pl-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px] leading-tight">'
+                            + '<span class="text-gray-400">分红变动原因：</span>'
+                            + '<span class="font-medium text-[#a18b74]">去年无到账记录，今年按预测计入</span>'
+                            + '</div>';
+                    } else {
+                        // 统一显示：前缀"分红变动原因："；有变化展示各项（圆点分隔），无变化显示"无"
+                        reasonHtml = '<div class="mt-1 pl-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px] leading-tight">'
+                            + '<span class="text-gray-400">分红变动原因：</span>'
+                            + (parts.length
+                                ? parts.map(function(p){
+                                    const up = p.delta > 0;
+                                    const cls = up ? 'text-[#e03131]' : 'text-[#00a05c]';
+                                    const word = p.unit === ' 股' ? (up ? '增' : '减') : (up ? '升' : '降');
+                                    const valText = p.unit === ' 股' ? String(Math.round(Math.abs(p.delta))) : Math.abs(p.delta).toFixed(2);
+                                    return '<span class="text-gray-400">' + p.label + '</span>'
+                                        + '<span class="font-medium tabular-nums ' + cls + '">' + word + ' ' + valText + '</span>'
+                                        + '<span class="text-gray-400">' + p.unit.trim() + '</span>';
+                                }).join('<span class="text-gray-300 mx-0.5">·</span>')
+                                : '<span class="text-gray-400">无</span>')
+                            + '</div>';
+                    }
                     return '<div class="px-3 py-2.5 active:bg-gray-50">'
                         + '<div class="grid grid-cols-[1.3fr_1fr_1fr_1fr] items-center">'
                         + '<div class="pl-1 min-w-0">'
@@ -23527,13 +25461,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         + '</div>';
                 }).join('');
                 compareList.innerHTML = rowsHtml;
-                // 汇总行：今年分红预测只计今年有持仓的；去年收入全额计
-                let tForecast = 0, tLast = 0;
-                filtered.forEach(function(it){
-                    if(it.hasPos) tForecast += it.forecast;
-                    tLast += it.lastReceived;
-                });
-                const tDiff = tForecast - tLast;
+                // 汇总行：今年分红预测只计今年有持仓的；去年收入全额计（含今年清仓股）
                 let tDiffHtml;
                 if(Math.abs(tDiff) < 0.005){
                     tDiffHtml = '<span class="text-[17px] font-bold tabular-nums text-gray-800">0.00</span>';
@@ -23550,6 +25478,96 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="pr-1 text-right flex items-center justify-end gap-1">' + tDiffHtml + '</div>';
                 compareTotalEl.classList.remove('hidden');
             }
+            // ===== 分红增量总览模型：总量、归因、贡献榜统一口径 =====
+            const divcmpAttr = { holding: 0, per: 0, new: 0, close: 0, other: 0 };
+            const divcmpImpacts = [];
+            let divcmpUp = 0, divcmpDown = 0, divcmpFlat = 0, divcmpClosed = 0, divcmpNoLast = 0, divcmpStockCount = 0;
+            filtered.forEach(function(it){
+                const forecast = it.hasPos ? (Number(it.forecast) || 0) : 0;
+                const lastRec = Number(it.lastReceived) || 0;
+                const impact = forecast - lastRec;
+                let lastPer = 0, lastCount = null;
+                if(it.marketType === 'A'){
+                    lastPer = getYearPerByType(it.code, lastYearStr, 'mid', true)
+                        + getYearPerByType(it.code, lastYearStr, 'end', true);
+                    if(lastRec > 0.005 && lastPer > 0.005){
+                        const ratio = lastRec / lastPer;
+                        const rounded = Math.round(ratio);
+                        if(rounded > 0 && Math.abs(ratio - rounded) < 0.35) lastCount = rounded;
+                    }
+                }
+                let tags = [];
+                if(!it.hasPos){
+                    if(lastRec > 0.005){
+                        divcmpAttr.close -= lastRec;
+                        tags.push('清仓');
+                        divcmpClosed++;
+                    }
+                } else if(lastRec <= 0.005){
+                    if(forecast > 0.005){
+                        divcmpAttr.new += forecast;
+                        divcmpNoLast++;
+                    }
+                    tags.push(forecast > 0.005 ? '新进/无记录' : '无去年记录');
+                } else if(lastCount != null && Number(it.perForecast) > 0.005){
+                    const countEffect = (Number(it.count) - lastCount) * Number(it.perForecast);
+                    const perEffect = lastCount * (Number(it.perForecast) - lastRec / lastCount);
+                    const residual = impact - countEffect - perEffect;
+                    divcmpAttr.holding += countEffect;
+                    divcmpAttr.per += perEffect;
+                    divcmpAttr.other += residual;
+                    if(countEffect > 0.005) tags.push('加仓');
+                    else if(countEffect < -0.005) tags.push('减仓');
+                    if(perEffect > 0.005) tags.push('派息提升');
+                    else if(perEffect < -0.005) tags.push('派息下降');
+                } else {
+                    divcmpAttr.per += impact;
+                    tags.push(impact >= 0 ? '派息提升' : '派息下降');
+                }
+                if(it.hasPos && forecast > 0.005) divcmpStockCount++;
+                if(it.hasPos){
+                    if(impact > 0.005) divcmpUp++;
+                    else if(impact < -0.005) divcmpDown++;
+                    else divcmpFlat++;
+                }
+                if(Math.abs(impact) > 0.005){
+                    divcmpImpacts.push({ name: it.name, code: it.code, impact: impact, tags: tags, isClosed: !it.hasPos });
+                }
+            });
+            // 归因残差兜底：保证瀑布末端与总量严格对平
+            let divcmpAttrSum = divcmpAttr.holding + divcmpAttr.per + divcmpAttr.new + divcmpAttr.close + divcmpAttr.other;
+            const divcmpResidual = tDiff - divcmpAttrSum;
+            if(Math.abs(divcmpResidual) >= 0.01) divcmpAttr.other += divcmpResidual;
+            const divcmpPos = divcmpImpacts.filter(function(x){ return x.impact > 0.005; }).sort(function(a,b){ return b.impact - a.impact; });
+            const divcmpNeg = divcmpImpacts.filter(function(x){ return x.impact < -0.005; }).sort(function(a,b){ return a.impact - b.impact; });
+            const divcmpPosTotal = divcmpPos.reduce(function(s,x){ return s + x.impact; }, 0);
+            const divcmpNegTotal = Math.abs(divcmpNeg.reduce(function(s,x){ return s + x.impact; }, 0));
+            const divcmpTop3 = divcmpPos.slice(0, 3).reduce(function(s,x){ return s + x.impact; }, 0);
+            const divcmpTop1 = divcmpPos.length ? divcmpPos[0].impact : 0;
+            const divcmpModel = {
+                tForecast: tForecast,
+                tLast: tLast,
+                tDiff: tDiff,
+                growthPct: tLast > 0.005 ? (tDiff / tLast * 100) : null,
+                upCount: divcmpUp,
+                downCount: divcmpDown,
+                flatCount: divcmpFlat,
+                closedCount: divcmpClosed,
+                noLastCount: divcmpNoLast,
+                stockCount: divcmpStockCount,
+                filteredLength: filtered.length,
+                attrs: divcmpAttr,
+                rankUp: divcmpPos.slice(0, 5),
+                rankDown: divcmpNeg.slice(0, 5),
+                posCount: divcmpPos.length,
+                negCount: divcmpNeg.length,
+                posTotal: divcmpPosTotal,
+                negTotal: divcmpNegTotal,
+                top1Share: divcmpPosTotal > 0 ? (divcmpTop1 / divcmpPosTotal * 100) : 0,
+                top3Share: divcmpPosTotal > 0 ? (divcmpTop3 / divcmpPosTotal * 100) : 0,
+                hasData: (tLast > 0.005 || tForecast > 0.005)
+            };
+            divcmpRenderAll(divcmpModel);
             markStatsRefresh('compare', '#statsDivCompareRefreshTime', '每日更新');
             // 调仓分析对比：全持仓每股分红预测 map（与上方预测同口径）
             window.__adjPerMap = {};

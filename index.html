@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261110.221';</script>
+    <script>window.APP_VERSION = '20261111.224';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -730,7 +730,64 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .cashstat-net{ font-size:27px; }
             .cashstat-chart{ height:200px; }
             .cashstat-annual-net{ font-size:24px; }
+        }        /* 年度分红收入 · 统计层（仅年度分红收入模式） */
+        .divdd-sum-card{ position:relative; overflow:hidden; padding:13px 14px 11px; border-radius:18px; background:linear-gradient(180deg,#fffdf9 0%,#fff9ef 100%); border:1px solid #eedfc8; box-shadow:0 2px 8px rgba(88,55,24,.07); }
+        .divdd-sum-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,#7c2638,#c99a4b 45%,#f2d39a 58%,#a82d43); }
+        .divdd-sum-grid{ display:grid; grid-template-columns:1fr 1fr .94fr; gap:0; align-items:stretch; }
+        .divdd-sum-cell{ min-width:0; padding-right:10px; border-right:1px solid #f1e5d4; }
+        .divdd-sum-progress{ min-width:0; padding-left:10px; }
+        .divdd-sum-label{ display:flex; align-items:center; gap:4px; font-size:8.5px; color:#9d876d; line-height:1.3; white-space:nowrap; }
+        .divdd-dot{ width:5px; height:5px; border-radius:50%; display:inline-block; flex:0 0 auto; }
+        .divdd-dot.is-received{ background:#b3384a; box-shadow:0 0 0 2px rgba(179,56,74,.10); }
+        .divdd-dot.is-pending{ background:#c99a4b; box-shadow:0 0 0 2px rgba(201,154,75,.12); }
+        .divdd-sum-value{ margin-top:4px; font-size:18px; line-height:1.05; font-weight:750; color:#5a3a24; font-variant-numeric:tabular-nums; letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divdd-sum-value.is-received{ color:#a82d43; }
+        .divdd-sum-value.is-pending{ color:#a66a2e; }
+        .divdd-sum-sub{ margin-top:4px; font-size:8px; color:#ae9477; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divdd-progress-track{ height:5px; margin-top:6px; border-radius:6px; background:#efe2cf; overflow:hidden; }
+        .divdd-progress-track > div{ height:100%; width:0; border-radius:6px; background:linear-gradient(90deg,#7c2638,#b3384a 48%,#d99a5a 100%); transition:width .5s cubic-bezier(.22,.61,.36,1); }
+        .divdd-sum-foot{ margin-top:10px; padding-top:7px; border-top:1px solid #f1e5d4; font-size:8px; line-height:1.5; color:#a18b74; }
+        .divdd-rhythm-card, .divdd-contrib-card{ background:#fff; border:1px solid #efe2ce; border-radius:18px; box-shadow:0 2px 8px rgba(88,55,24,.055); overflow:hidden; }
+        .divdd-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:12px 14px 0; }
+        .divdd-card-title{ font-size:14px; line-height:1.2; font-weight:700; color:#403126; letter-spacing:.01em; }
+        .divdd-card-sub{ margin-top:3px; font-size:8.5px; line-height:1.3; color:#a18b74; }
+        .divdd-card-aside{ flex:0 0 auto; text-align:right; color:#9b6a3e; font-size:16px; line-height:1.1; font-weight:750; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .divdd-card-aside small{ display:block; margin-top:3px; font-size:7.5px; color:#b09a83; font-weight:500; letter-spacing:.04em; }
+        .divdd-card-aside.is-plain{ color:#7a5c3f; }
+        .divdd-chart-wrap{ position:relative; padding:1px 8px 0; }
+        .divdd-chart{ width:100%; height:188px; }
+        .divdd-empty{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; color:#b2a08d; background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.96)); }
+        .divdd-empty.hidden{ display:none !important; }
+        .divdd-legend{ display:flex; align-items:center; gap:12px; padding:0 14px 5px; font-size:8px; color:#a18b74; }
+        .divdd-legend span{ display:flex; align-items:center; gap:4px; }
+        .divdd-legend i{ width:6px; height:6px; border-radius:50%; display:inline-block; }
+        .divdd-legend i.is-received{ background:linear-gradient(135deg,#a82d43,#d46e58); }
+        .divdd-legend i.is-pending{ background:linear-gradient(135deg,#e2b56c,#f2d9ac); }
+        .divdd-card-note{ padding:0 14px 11px; font-size:8px; line-height:1.55; color:#a18b74; }
+        .divdd-contrib-list{ padding:0 0 3px; }
+        .divdd-contrib-row{ display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:8px; align-items:center; padding:9px 14px 8px; border-top:1px solid #f6edde; }
+        .divdd-contrib-row:nth-child(1){ border-top:0; }
+        .divdd-rank{ font-size:9px; line-height:1; font-weight:750; color:#c39a5d; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+        .divdd-rank.is-top{ color:#a82d43; }
+        .divdd-contrib-name{ display:flex; align-items:baseline; gap:6px; min-width:0; }
+        .divdd-contrib-name b{ font-size:11.5px; line-height:1.2; font-weight:650; color:#4a3526; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divdd-contrib-name span{ font-size:8px; color:#ad9378; white-space:nowrap; }
+        .divdd-contrib-bar{ height:4px; margin-top:5px; border-radius:4px; background:#f1e6d6; overflow:hidden; }
+        .divdd-contrib-bar > div{ height:100%; border-radius:4px; background:linear-gradient(90deg,#8d2b3e,#c1534b 60%,#dba165 100%); }
+        .divdd-contrib-amt{ text-align:right; font-size:11px; line-height:1.15; font-weight:700; color:#a82d43; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .divdd-contrib-amt small{ display:block; margin-top:3px; font-size:7.5px; color:#ac9275; font-weight:500; }
+        .divdd-contrib-empty{ padding:16px 14px 14px; text-align:center; font-size:9px; color:#b2a08d; }
+        @media (max-width:420px){
+            .divdd-sum-grid{ grid-template-columns:1fr 1fr; row-gap:9px; }
+            .divdd-sum-cell:nth-child(2){ border-right:0; padding-right:0; }
+            .divdd-sum-progress{ grid-column:1 / -1; padding-left:0; padding-top:8px; border-top:1px solid #f1e5d4; }
+            .divdd-sum-value{ font-size:16px; }
+            .divdd-chart{ height:170px; }
+            .divdd-card-title{ font-size:13px; }
+            .divdd-contrib-row{ grid-template-columns:18px minmax(0,1fr) auto; gap:6px; padding-left:12px; padding-right:12px; }
+            .divdd-contrib-name b{ font-size:11px; }
         }
+
 </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
@@ -761,61 +818,64 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="relative rounded-3xl px-4 py-2.5 mb-4 overflow-hidden" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62), 0 1px 3px rgba(0,0,0,0.50), 0 0 5px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06);">
 
             <div class="relative z-10">
-                <!-- 第一层：年度分红收入（预测）｜预计回本（复投） -->
+                <!-- 第一层：总资产（主数字）｜今日盈亏（金额与百分比同行） -->
                 <div class="px-4 pt-3 pb-2.5 flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="relative flex items-center gap-1.5 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform">
-                            <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#e6d2a3;"></span>
-                            <span class="tracking-wide font-serif">年度分红收入</span>
+                    <div class="min-w-0 flex-1">
+                        <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform">
+                            <span class="tracking-wide font-serif">总资产</span>
                             <i class="fa fa-chevron-right text-[9px]"></i>
                             <span class="absolute rounded-lg" style="inset:-8px;"></span>
                         </button>
-                        <div class="flex items-baseline gap-1.5 mt-1.5">
-                            <span class="text-[21px] font-semibold tabular-nums tracking-tight num-transition text-[#ffffff] leading-none" id="totalYearDiv">0.00</span>
-                            <span class="text-[10.5px] text-[#e8c88a] tabular-nums leading-none" id="yearDivYield" title="年度分红收入 ÷ 总资产">--</span>
+                        <div class="mt-1.5 flex items-baseline gap-1.5">
+                            <span class="text-[27px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span id="totalMarket">0.00</span></span>
                         </div>
                     </div>
-                    <button type="button" onclick="openBreakEvenPage()" title="查看回本分析（资金流水口径分红回收）" class="shrink-0 text-right active:scale-95 transition-transform">
-                        <div class="flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6]">
-                            <span class="tracking-wide font-serif">预计回本(复投)</span><i class="fa fa-chevron-right text-[9px]"></i>
+                    <div class="shrink-0 text-right max-w-[50%]">
+                        <button type="button" onclick="openStatsFromHold()" title="查看今日盈亏详情" class="ml-auto relative flex items-center justify-end gap-1.5 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform">
+                            <span class="tracking-wide font-serif">今日盈亏</span>
+                            <i class="fa fa-chevron-right text-[9px]"></i>
+                            <span class="absolute rounded-lg" style="inset:-8px;"></span>
+                        </button>
+                        <div class="mt-1.5 flex items-baseline justify-end gap-1.5 whitespace-nowrap">
+                            <span class="text-[19px] font-semibold tabular-nums num-transition text-gray-400 leading-none" id="todayPnl">--</span>
+                            <span class="text-[10.5px] font-medium tabular-nums num-transition text-gray-400 leading-none" id="todayPnlPct">--</span>
                         </div>
-                        <div class="mt-1.5 text-[16px] font-semibold tabular-nums tracking-tight text-[#ffffff] leading-none" id="sumBeRe">--</div>
-                    </button>
+                    </div>
                 </div>
 
                 <div class="mx-4" style="height:1px;background:rgba(230,210,163,0.16);transform:scaleY(0.6);"></div>
 
-                <!-- 第二层：六格矩阵（左列左对齐 / 中列居中 / 右列右对齐） -->
+                <!-- 第二层：两行三列（第一行 年度分红收入 / 累计分红 / 预计回本；第二行 总市值 / 持仓盈亏 / 现金） -->
                 <div class="px-4 pt-3 pb-3">
                     <div class="grid items-start" style="grid-template-columns:1.4fr 1.04fr 1.4fr; row-gap:15px;">
-                        <!-- 第一行：今年已收 / 累计分红 / 现金 -->
+                        <!-- 第一行：年度分红收入 / 累计分红 / 预计回本 -->
                         <div class="text-left min-w-0 pr-2">
-                            <button type="button" onclick="openDivDetail()" title="查看今年分红明细" class="h-4 flex items-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">今年已收</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="incomeNowWrap"><span id="incomeNow">0.00</span></div>
+                            <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="h-4 flex items-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">年度分红收入</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-1.5 flex items-baseline gap-1.5 whitespace-nowrap">
+                                <span class="text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none" id="totalYearDiv">0.00</span>
+                                <span class="text-[9.5px] text-[#e8c88a] tabular-nums leading-none" id="yearDivYield" title="年度分红收入 ÷ 总资产">--</span>
+                            </div>
                         </div>
                         <div class="text-center min-w-0 px-0.5">
                             <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="h-4 mx-auto flex items-center justify-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">累计分红</span><i class="fa fa-chevron-right text-[9px]"></i></button>
                             <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition whitespace-nowrap leading-none" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-[#ffffff]">0.00</span></div>
                         </div>
                         <div class="text-right min-w-0 pl-2">
-                            <button type="button" onclick="openCashFlowFromHold()" title="查看现金变动历史" class="h-4 ml-auto flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">现金</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="cashVal">0.00</span></div>
+                            <button type="button" onclick="openBreakEvenPage()" title="查看回本分析（复投口径）" class="h-4 ml-auto flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">预计回本</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums text-[#ffffff] leading-none whitespace-nowrap" id="sumBeRe">--</div>
                         </div>
-                        <!-- 第二行：总资产 / 总市值 / 今日盈亏 -->
+                        <!-- 第二行：总市值 / 持仓盈亏 / 现金 -->
                         <div class="text-left min-w-0 pr-2">
-                            <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="h-4 flex items-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">总资产</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-2 text-[27px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span id="totalMarket">0.00</span></div>
-                        </div>
-                        <div class="text-center min-w-0 px-1">
                             <div class="h-4 text-[10.5px] text-[#cfc0a6] leading-[16px] tracking-wide">总市值</div>
-                            <div class="mt-2 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="mktVal">0.00</span></div>
+                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="mktVal">0.00</span></div>
+                        </div>
+                        <div class="text-center min-w-0 px-0.5">
+                            <div class="h-4 text-[10.5px] text-[#cfc0a6] leading-[16px] tracking-wide">持仓盈亏</div>
+                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition leading-none whitespace-nowrap"><span id="totalPnl">0.00</span></div>
                         </div>
                         <div class="text-right min-w-0 pl-2">
-                            <button type="button" onclick="openStatsFromHold()" title="查看今日盈亏详情" class="h-4 ml-auto flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">今日盈亏</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-2 flex items-baseline justify-end whitespace-nowrap">
-                                <span class="text-[16px] font-bold tabular-nums num-transition text-gray-400 leading-none" id="todayPnl">--</span>
-                            </div>
-                            <div class="mt-1 text-[10px] font-medium tabular-nums num-transition text-gray-400 leading-none" id="todayPnlPct">--</div>
+                            <button type="button" onclick="openCashFlowFromHold()" title="查看现金变动历史" class="h-4 ml-auto flex items-center justify-end gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">现金</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <div class="mt-1.5 text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="cashVal">0.00</span></div>
                         </div>
                     </div>
                 </div>
@@ -863,10 +923,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         </div>
                         <div class="py-1.5 px-2 text-center">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
-                                <i class="fa fa-balance-scale text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>持仓盈亏</span>
+                                <i class="fa fa-briefcase text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>总投入</span>
                             </div>
-                            <div class="text-[13px] font-bold tabular-nums num-transition" id="totalPnl">0.00</div>
+                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" id="totalInvested">0.00</div>
                         </div>
                         <div class="py-1.5 pl-2 text-right">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
@@ -3786,6 +3846,61 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                 </div>
                 <div id="divDetailHint" class="text-[10px] text-amber-100/40 mt-2">每笔 = 每股分红 × 持股数 · 仅统计已实施并发放到账的分红</div>
+            </div>
+        </div>
+
+        <!-- 年度分红统计（仅年度分红收入模式显示） -->
+        <div id="divDetailStats" class="hidden mb-3 space-y-3">
+            <div class="divdd-sum-card">
+                <div class="divdd-sum-grid">
+                    <div class="divdd-sum-cell">
+                        <div class="divdd-sum-label"><span class="divdd-dot is-received"></span>已到账</div>
+                        <div class="divdd-sum-value is-received" id="divddReceived">¥0.00</div>
+                        <div class="divdd-sum-sub" id="divddReceivedSub">0 笔 · 0 只</div>
+                    </div>
+                    <div class="divdd-sum-cell">
+                        <div class="divdd-sum-label"><span class="divdd-dot is-pending"></span>待入账</div>
+                        <div class="divdd-sum-value is-pending" id="divddPending">¥0.00</div>
+                        <div class="divdd-sum-sub" id="divddPendingSub">0 笔 · 0 只</div>
+                    </div>
+                    <div class="divdd-sum-progress">
+                        <div class="divdd-sum-label">到账进度</div>
+                        <div class="divdd-sum-value" id="divddProgress">0%</div>
+                        <div class="divdd-progress-track"><div id="divddProgressBar"></div></div>
+                        <div class="divdd-sum-sub" id="divddProgressSub">今年累计 0 笔</div>
+                    </div>
+                </div>
+                <div class="divdd-sum-foot" id="divddStatsFoot">按已到账记录与未到账预测汇总，明细见下方列表</div>
+            </div>
+
+            <div class="divdd-rhythm-card">
+                <div class="divdd-card-head">
+                    <div class="min-w-0">
+                        <div class="divdd-card-title">全年分红节奏</div>
+                        <div class="divdd-card-sub">按月分布 · 已到账 / 待入账</div>
+                    </div>
+                    <div class="divdd-card-aside">
+                        <span id="divddPeakMonth">—</span>
+                        <small>峰值月份</small>
+                    </div>
+                </div>
+                <div class="divdd-chart-wrap">
+                    <div id="chartDivDetailRhythm" class="divdd-chart"></div>
+                    <div id="divDetailRhythmEmpty" class="divdd-empty hidden">暂无月度分红数据</div>
+                </div>
+                <div class="divdd-legend"><span><i class="is-received"></i>已到账</span><span><i class="is-pending"></i>待入账</span></div>
+                <div class="divdd-card-note" id="divddMonthNote">录入分红到账或刷新公告后，这里会显示全年节奏</div>
+            </div>
+
+            <div class="divdd-contrib-card">
+                <div class="divdd-card-head">
+                    <div class="min-w-0">
+                        <div class="divdd-card-title">分红贡献 TOP5</div>
+                        <div class="divdd-card-sub">按年度分红合计排序 · 已收 + 待入</div>
+                    </div>
+                    <div class="divdd-card-aside is-plain"><span id="divddContribCount">0</span><small>只股票</small></div>
+                </div>
+                <div id="divddContribList" class="divdd-contrib-list"></div>
             </div>
         </div>
 
@@ -12511,7 +12626,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(!dk || tlCostPointTs(dk) > todayTs) return;
                 const v = Number(snaps[rawKey]);
                 if(!isFinite(v)) return;
-                if(!dayMap[dk]) dayMap[dk] = { date: dk, cost: 0, count: 0, events: [], calibrated: false };
+                if(!dayMap[dk]) dayMap[dk] = { date: dk, cost: 0, count: null, events: [], calibrated: false };
                 if(Math.abs((Number(dayMap[dk].cost) || 0) - v) > 1e-6) dayMap[dk].calibrated = true;
                 dayMap[dk].cost = v;
             });
@@ -12536,12 +12651,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     date: dk,
                     ts: tlCostPointTs(dk),
                     cost: Number(d.cost) || 0,
-                    count: Number(d.count) || 0,
+                    count: d.count == null ? null : Number(d.count),
                     events: (d.events || []).slice(),
                     calibrated: !!d.calibrated,
                     isCurrent: !!d.isCurrent
                 };
             }).filter(function(d){ return isFinite(d.ts); });
+            // 快照只校准成本，不覆盖持股数；缺失时沿用最近一个交易日的持股数。
+            let runningCount = 0;
+            points.forEach(function(p){
+                if(p.count != null) runningCount = p.count;
+                p.count = runningCount;
+            });
             if(!points.length) return result;
             const costs = points.map(function(d){ return d.cost; });
             const latest = Number(points[points.length - 1].cost) || 0;
@@ -14916,6 +15037,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             deferRender(renderDivDetail);
         }
         function closeDivDetail(){
+            divDetailRhythmDispose();
             exitDetailPage(document.querySelector('#pageDivDetail'), function(){
             const pageEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : divDetailReturnTab === 'watch' ? 'pageWatchSel' : 'pageMine'));
             if(pageEl) pageEl.classList.remove('hidden');
@@ -15121,9 +15243,222 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(chevron) chevron.style.transform = open ? '' : 'rotate(-90deg)';
         }
 
+        // 年度分红收入统计：从同一份年度明细 entries 派生，保证卡片、图表和下方列表口径完全一致
+        let divDetailRhythmChart = null;
+        function divDetailRhythmDispose(){
+            if(divDetailRhythmChart){
+                try{ divDetailRhythmChart.dispose(); }catch(e){}
+                divDetailRhythmChart = null;
+            }
+        }
+        function renderDivDetailStats(entries, total){
+            const statsEl = document.querySelector('#divDetailStats');
+            if(!statsEl) return;
+            statsEl.classList.remove('hidden');
+            const receivedEl = document.querySelector('#divddReceived');
+            const pendingEl = document.querySelector('#divddPending');
+            const progressEl = document.querySelector('#divddProgress');
+            const progressBar = document.querySelector('#divddProgressBar');
+            const receivedSubEl = document.querySelector('#divddReceivedSub');
+            const pendingSubEl = document.querySelector('#divddPendingSub');
+            const progressSubEl = document.querySelector('#divddProgressSub');
+            const footEl = document.querySelector('#divddStatsFoot');
+            const peakEl = document.querySelector('#divddPeakMonth');
+            const noteEl = document.querySelector('#divddMonthNote');
+            const chartEl = document.querySelector('#chartDivDetailRhythm');
+            const emptyEl = document.querySelector('#divDetailRhythmEmpty');
+            const contribEl = document.querySelector('#divddContribList');
+            const contribCountEl = document.querySelector('#divddContribCount');
+
+            const monthRec = new Array(12).fill(0);
+            const monthPend = new Array(12).fill(0);
+            const monthRecCount = new Array(12).fill(0);
+            const monthPendCount = new Array(12).fill(0);
+            const recStocks = {};
+            const pendStocks = {};
+            let received = 0, pending = 0, manual = 0;
+            let unknown = 0, unknownCount = 0;
+            const stockMap = {};
+
+            entries.forEach(function(e){
+                const amount = Number(e.amount) || 0;
+                if(!amount) return;
+                const isManual = e.kind === 'manual';
+                const isPending = !isManual && /^预测/.test(String(e.sub || ''));
+                let m = 0;
+                const dateStr = String(e.date || '').substring(0, 10);
+                if(/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){
+                    const mm = parseInt(dateStr.substring(5, 7), 10);
+                    if(mm >= 1 && mm <= 12) m = mm;
+                }
+                if(isManual){
+                    received += amount;
+                    manual += amount;
+                    if(m){ monthRec[m - 1] += amount; monthRecCount[m - 1] += 1; }
+                    else { unknown += amount; unknownCount += 1; }
+                } else {
+                    const sk = (e.market || '') + '|' + (e.code || e.title || '');
+                    if(isPending){
+                        pending += amount;
+                        if(e.code) pendStocks[sk] = true;
+                        if(m){ monthPend[m - 1] += amount; monthPendCount[m - 1] += 1; }
+                        else { unknown += amount; unknownCount += 1; }
+                    } else {
+                        received += amount;
+                        if(e.code) recStocks[sk] = true;
+                        if(m){ monthRec[m - 1] += amount; monthRecCount[m - 1] += 1; }
+                        else { unknown += amount; unknownCount += 1; }
+                    }
+                    if(e.code){
+                        if(!stockMap[sk]) stockMap[sk] = { name: e.title || e.code, code: e.code, market: e.market || '', total: 0, rec: 0, pend: 0 };
+                        stockMap[sk].total += amount;
+                        if(isPending) stockMap[sk].pend += amount; else stockMap[sk].rec += amount;
+                    }
+                }
+            });
+
+            const grandTotal = received + pending;
+            const progress = grandTotal > 0 ? Math.min(100, Math.max(0, received / grandTotal * 100)) : 0;
+            const recCount = entries.filter(function(e){ return e.kind === 'manual' || !/^预测/.test(String(e.sub || '')); }).length;
+            const pendCount = entries.filter(function(e){ return e.kind !== 'manual' && /^预测/.test(String(e.sub || '')); }).length;
+            const statsStockCount = Object.keys(stockMap).length;
+            const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+            if(receivedEl) receivedEl.innerText = '¥' + fmtMoney(received);
+            if(pendingEl) pendingEl.innerText = '¥' + fmtMoney(pending);
+            if(progressEl) progressEl.innerText = progress.toFixed(received > 0 ? 1 : 0) + '%';
+            if(progressBar) progressBar.style.width = progress.toFixed(1) + '%';
+            if(receivedSubEl) receivedSubEl.innerText = recCount + ' 笔 · ' + Object.keys(recStocks).length + ' 只';
+            if(pendingSubEl) pendingSubEl.innerText = pendCount + ' 笔 · ' + Object.keys(pendStocks).length + ' 只';
+            if(progressSubEl) progressSubEl.innerText = recCount + ' 笔已到账 · ' + pendCount + ' 笔待入账';
+            if(footEl) footEl.innerText = '共 ' + entries.length + ' 笔 · 已到账 ' + recCount + ' 笔 / 待入账 ' + pendCount + ' 笔' + (manual > 0 ? ' · 手动基准 ¥' + fmtMoney(manual) : '') + (unknown > 0 ? ' · 日期待定 ¥' + fmtMoney(unknown) : '');
+
+            // 峰值月份：按已收 + 待入合计
+            let peakIdx = -1, peakVal = -1;
+            for(let i = 0; i < 12; i++){
+                const v = monthRec[i] + monthPend[i];
+                if(v > peakVal){ peakVal = v; peakIdx = v > 0 ? i : -1; }
+            }
+            if(peakEl) peakEl.innerText = peakIdx >= 0 ? monthNames[peakIdx] : (unknown > 0 ? '待定' : '—');
+
+            const activeMonths = [];
+            for(let i = 0; i < 12; i++){
+                const v = monthRec[i] + monthPend[i];
+                if(v > 0) activeMonths.push({ i: i, v: v, name: monthNames[i] });
+            }
+            activeMonths.sort(function(a, b){ return b.v - a.v; });
+            if(noteEl){
+                if(!activeMonths.length){
+                    noteEl.innerText = entries.length ? '暂无可归集到月份的分红记录' : '录入分红到账或刷新公告后，这里会显示全年节奏';
+                } else {
+                    const topNames = activeMonths.slice(0, 3).map(function(x){ return x.name; }).join('、');
+                    noteEl.innerText = '金额主要落在 ' + topNames + '；柱高为当月已收 + 待入合计' + (unknownCount > 0 ? '，另有 ' + unknownCount + ' 笔日期待定' : '');
+                }
+            }
+
+            if(chartEl){ chartEl.style.display = (grandTotal > 0 ? 'block' : 'none'); }
+            if(emptyEl) emptyEl.classList.toggle('hidden', grandTotal > 0);
+            divDetailRhythmDispose();
+            if(grandTotal > 0 && chartEl && typeof echarts !== 'undefined'){
+                divDetailRhythmChart = echarts.init(chartEl);
+                const recData = monthRec.map(function(v){ return Number(v.toFixed(2)); });
+                const pendData = monthPend.map(function(v){ return Number(v.toFixed(2)); });
+                divDetailRhythmChart.setOption({
+                    animationDuration: 480,
+                    grid: { left: 6, right: 6, top: 14, bottom: 22, containLabel: false },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(176,106,58,.05)' } },
+                        backgroundColor: 'rgba(47,37,26,.94)',
+                        borderWidth: 0,
+                        padding: [7, 9],
+                        textStyle: { color: '#fff', fontSize: 9.5 },
+                        formatter: function(params){
+                            const idx = params && params.length ? params[0].dataIndex : 0;
+                            const rv = monthRec[idx] || 0, pv = monthPend[idx] || 0;
+                            let html = '<div style="font-weight:700;margin-bottom:4px">' + monthNames[idx] + ' · 合计 ¥' + fmtMoney(rv + pv) + '</div>';
+                            html += '<div style="display:flex;justify-content:space-between;gap:14px"><span>已到账</span><b>¥' + fmtMoney(rv) + '</b></div>';
+                            html += '<div style="display:flex;justify-content:space-between;gap:14px"><span>待入账</span><b>¥' + fmtMoney(pv) + '</b></div>';
+                            const rc = monthRecCount[idx] || 0, pc = monthPendCount[idx] || 0;
+                            if(rc || pc) html += '<div style="margin-top:3px;font-size:8px;color:#d7c8b1">' + rc + ' 笔已收 / ' + pc + ' 笔待入</div>';
+                            return html;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: monthNames,
+                        axisLine: { lineStyle: { color: '#eee4d6' } },
+                        axisTick: { show: false },
+                        axisLabel: { color: '#a8987e', fontSize: 8, interval: 0, margin: 8 }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: { show: false },
+                        splitLine: { lineStyle: { color: '#f5ece1', type: 'dashed' } }
+                    },
+                    series: [
+                        {
+                            name: '已到账', type: 'bar', stack: 'div', barMaxWidth: 14,
+                            data: recData,
+                            itemStyle: {
+                                borderRadius: [3, 3, 0, 0],
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#a82d43' },
+                                    { offset: 1, color: '#d46e58' }
+                                ])
+                            },
+                            emphasis: { itemStyle: { color: '#8f2035' } }
+                        },
+                        {
+                            name: '待入账', type: 'bar', stack: 'div', barMaxWidth: 14,
+                            data: pendData,
+                            itemStyle: {
+                                borderRadius: [3, 3, 0, 0],
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#e2b56c' },
+                                    { offset: 1, color: '#f2d9ac' }
+                                ])
+                            },
+                            emphasis: { itemStyle: { color: '#d9a452' } }
+                        }
+                    ]
+                });
+            }
+
+            // 贡献榜：同一股票合并，按年度合计（已收 + 待入）排序
+            if(contribCountEl) contribCountEl.innerText = statsStockCount;
+            if(contribEl){
+                const list = Object.keys(stockMap).map(function(k){ return stockMap[k]; }).filter(function(x){ return x.total > 0; });
+                list.sort(function(a, b){ return b.total - a.total; });
+                const top = list.slice(0, 5);
+                if(!top.length){
+                    contribEl.innerHTML = '<div class="divdd-contrib-empty">暂无股票分红数据</div>';
+                } else {
+                    const max = top[0].total || 1;
+                    contribEl.innerHTML = top.map(function(x, i){
+                        const w = Math.max(1, x.total / max * 100);
+                        const sub = '已收 ¥' + fmtMoney(x.rec) + (x.pend > 0 ? ' · 待入 ¥' + fmtMoney(x.pend) : '');
+                        return '<div class="divdd-contrib-row">'
+                            + '<div class="divdd-rank' + (i === 0 ? ' is-top' : '') + '">' + String(i + 1).padStart(2, '0') + '</div>'
+                            + '<div class="min-w-0"><div class="divdd-contrib-name"><b>' + (x.name || x.code) + '</b><span>' + (x.code || '') + '</span></div><div class="divdd-contrib-bar"><div style="width:' + w.toFixed(1) + '%"></div></div></div>'
+                            + '<div class="divdd-contrib-amt">¥' + fmtMoney(x.total) + '<small>' + sub + '</small></div>'
+                            + '</div>';
+                    }).join('');
+                }
+            }
+
+            // 到账进度条：无数据时保持 0，不做假进度
+            if(!total && !grandTotal && progressBar) progressBar.style.width = '0%';
+        }
+
         // 渲染分红明细：received=今年已收 / year=年度分红收入 / total=累计分红总额（历年）
         function renderDivDetail(){
             const mode = divDetailMode;
+            const statsRoot = document.querySelector('#divDetailStats');
+            if(statsRoot) statsRoot.classList.add('hidden');
+            divDetailRhythmDispose();
             if(mode === 'total'){
                 // ===== 累计分红总额：按年份列出历年已收到分红 =====
                 document.querySelector('#divDetailTag').innerText = '累计分红总额';
@@ -15295,6 +15630,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const na = (a.title === '手动录入基准') ? 1 : 0;
                     const nb = (b.title === '手动录入基准') ? 1 : 0;
                     if(na !== nb) return na - nb;
+                    // 预测类型置顶；已收、预测组内仍按原股票分组和日期排序
+                    const pa = /^预测/.test(String(a.sub || '')) ? 0 : 1;
+                    const pb = /^预测/.test(String(b.sub || '')) ? 0 : 1;
+                    if(pa !== pb) return pa - pb;
                     const gA = groupMaxY[a.title] || '';
                     const gB = groupMaxY[b.title] || '';
                     if(gA && gB && gA !== gB) return gB.localeCompare(gA);
@@ -15315,6 +15654,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const stockCountY = {};
                 entries.forEach(function(e){ if(e.kind !== 'manual') stockCountY[(e.market || '') + '|' + (e.code || '')] = 1; });
                 document.querySelector('#divDetailStocks').innerText = Object.keys(stockCountY).length;
+                renderDivDetailStats(entries, sum);
                 if(!entries.length){
                     listElY.innerHTML = '<div class="text-center py-12 text-gray-400"><span class="w-12 h-12 rounded-full bg-[#faf3e3] border border-[#eedfc0] flex items-center justify-center mx-auto mb-3"><i class="fa fa-money text-accent text-xl"></i></span><div class="text-[13px]">暂无年度分红收入</div><div class="text-[11px] mt-1 opacity-70">持仓股无分红数据时显示 0</div></div>';
                     return;
@@ -15336,9 +15676,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const tagHtml = e.market === 'HK'
                         ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">港</span>'
                         : '<span class="text-[10px] text-accent bg-[#faf3e3] px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
+                    const isRecv = /^已收/.test(String(e.sub || ''));
+                    const rowAccent = isRecv
+                        ? 'linear-gradient(180deg,#7b4bb8,#4c2579)'
+                        : 'linear-gradient(180deg,#f59e0b,#d97706)';
+                    const rowIcon = isRecv
+                        ? '<div class="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0" style="background:linear-gradient(135deg,#7b4bb8 0%,#4c2579 100%);box-shadow:0 3px 8px rgba(76,37,121,.28);"><span style="font-size:10px;font-weight:700;letter-spacing:.02em;line-height:1;">已收</span></div>'
+                        : '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-md"><i class="fa fa-line-chart text-[13px]"></i></div>';
                     htmlY += '<div class="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 overflow-hidden relative">'
-                        + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg,#f59e0b,#d97706);"></div>'
-                        + '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-md"><i class="fa fa-line-chart text-[13px]"></i></div>'
+                        + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background:' + rowAccent + ';"></div>'
+                        + rowIcon
                         + '<div class="flex-1 min-w-0">'
                         + '<div class="flex items-center gap-1.5"><span class="text-[14px] font-semibold text-gray-800 truncate">' + e.title + '</span>' + tagHtml + (e.closed ? '<span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full ml-1 flex-shrink-0 whitespace-nowrap">已清仓</span>' : '') + '</div>'
                         + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + e.sub + '</div>'
@@ -20420,7 +20767,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var activeStatsSection = null;
         // 隐藏所有图表 tooltip（页面收起/切换/重开前清理，避免残留挂到其他页面）
         function hideAllChartTips(){
-            const doms = document.querySelectorAll('#chartStatsDivMonth, #chartMonthlyDiv, #chartMonthly, #chartYearlyDiv, #chartYearlyNav, #chartYearlyAvgDiv, #chartYearlyReturn, #industryPieChart, #chartStatsPnlInd, #chartStatsDivRankInd, #bsNetTrendChart, #msChart, #industryCompareChart, #divcmpChart, #tlMonthlyTChart, #tlCostChart');
+            const doms = document.querySelectorAll('#chartStatsDivMonth, #chartMonthlyDiv, #chartMonthly, #chartYearlyDiv, #chartYearlyNav, #chartYearlyAvgDiv, #chartYearlyReturn, #industryPieChart, #chartStatsPnlInd, #chartStatsDivRankInd, #bsNetTrendChart, #msChart, #industryCompareChart, #divcmpChart, #tlMonthlyTChart, #tlCostChart, #chartDivDetailRhythm');
             doms.forEach(function(el){
                 let inst = null;
                 try{
@@ -27581,11 +27928,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             }
             numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
-            numTween(document.querySelector('#incomeNow'), sum.totalReceived, fmtMoney);
+            const incomeNowEl = document.querySelector('#incomeNow');
+            if(incomeNowEl) numTween(incomeNowEl, sum.totalReceived, fmtMoney);
             const totalPnlEl = document.querySelector('#totalPnl');
             const pnlVal = Number(sum.totalPnl);
             numTween(totalPnlEl, pnlVal, fmtPnlNum);
-            totalPnlEl.className = 'text-[13px] font-bold tabular-nums num-transition ' + pnlLightClass(pnlVal);
+            totalPnlEl.className = 'text-[15px] font-semibold tabular-nums num-transition ' + pnlLightClass(pnlVal);
             const taWrapEl = document.querySelector('#totalMarketWrap');
             if(taWrapEl){
                 const taTxt = fmtMoney(sum.totalAsset);
@@ -27596,6 +27944,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cashValEl = document.querySelector('#cashVal');
             if(mktValEl) mktValEl.innerText = fmtMoney(sum.totalMarket);
             if(cashValEl) cashValEl.innerText = fmtMoney(sum.cash);
+            const totalInvestedEl = document.querySelector('#totalInvested');
+            if(totalInvestedEl) numTween(totalInvestedEl, getTotalInvested(), fmtMoney);
             // 回本分析（顶部右侧，资金流水口径）：预计回本（不复投）/ 复投 / 缺口
             const beA = calcAccountBreakEven();
             const setBe = function(id, txt, base, colorCls){
@@ -27606,7 +27956,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             };
             setBe('sumBeNo', fmtBeYears(beA.beNo), 'text-[11px] font-semibold tabular-nums', (beA.beNo != null && beA.beNo <= 0) ? 'text-purple-300' : 'text-white');
-            setBe('sumBeRe', fmtBeYears(beA.beRe), 'text-[16px] font-semibold tabular-nums tracking-tight', (beA.beRe != null && beA.beRe <= 0) ? 'text-purple-300' : 'text-white');
+            setBe('sumBeRe', fmtBeYears(beA.beRe), 'text-[15px] font-semibold tabular-nums', (beA.beRe != null && beA.beRe <= 0) ? 'text-purple-300' : 'text-white');
             setBe('sumBeGap', beA.gap != null ? fmtMoney(beA.gap) : '--', 'text-[11px] font-semibold tabular-nums', '');
             renderNextDivCountdown();
             const trrEl = document.querySelector('#totalReturnRate');
@@ -27641,7 +27991,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             numTween(document.querySelector('#costYield'), sum.costYield, fmtNum2);
             numTween(document.querySelector('#marketYield'), sum.marketYield, fmtNum2);
             numTween(document.querySelector('#monthDiv'), sum.monthDiv, fmtMoney);
-            // 今日盈亏：金额为主（20px 加粗，涨红跌绿）+ 百分比为副（11px 金色小字，同行基线对齐）；
+            // 今日盈亏：金额为主（19px 半粗，涨红跌绿）+ 百分比为副（10.5px 金色小字，同行基线对齐）；
             // 当日盈亏金额 = Σ 市值 × 涨跌%/（100+涨跌%），百分比 = 当日盈亏 ÷ 昨日总市值（口径与统计详情页一致）
             const todayPnlEl = document.querySelector('#todayPnl');
             const todayPnlPctEl = document.querySelector('#todayPnlPct');
@@ -27651,21 +28001,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const hasValidDayPct = todaySnap.hasValidDayPct;
                 if(!hasValidDayPct){
                     todayPnlEl.innerText = '--';
-                    todayPnlEl.className = 'text-[16px] font-bold tabular-nums num-transition text-gray-400';
+                    todayPnlEl.className = 'text-[19px] font-semibold tabular-nums num-transition text-gray-400 leading-none';
                     todayPnlPctEl.innerText = '--';
-                    todayPnlPctEl.className = 'text-[10px] font-medium tabular-nums num-transition text-gray-400';
+                    todayPnlPctEl.className = 'text-[10.5px] font-medium tabular-nums num-transition text-gray-400 leading-none';
                 } else {
                     const hasPct = todaySnap.dayPnlPct != null && !isNaN(Number(todaySnap.dayPnlPct));
                     const dayPnlPct = hasPct ? Number(todaySnap.dayPnlPct) : null;
                     // 金额主色：涨红跌绿
                     const amtCls = totalDayPnl > 0.005 ? 'text-[#e03131]' : (totalDayPnl < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
                     todayPnlEl.innerText = fmtPnlNum(totalDayPnl);
-                    todayPnlEl.className = 'text-[16px] font-bold tabular-nums num-transition ' + amtCls;
+                    todayPnlEl.className = 'text-[19px] font-semibold tabular-nums num-transition leading-none ' + amtCls;
                     // 百分比副色：与金额一致涨红跌绿；无昨日市值基准时显示 --，避免 0.00% 误导
                     const pctText = hasPct ? ((dayPnlPct > 0.005 ? '+' : '') + dayPnlPct.toFixed(2) + '%') : '--';
                     const pctCls = !hasPct ? 'text-[#cfc0a6]/70' : (dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]'));
                     todayPnlPctEl.innerText = pctText;
-                    todayPnlPctEl.className = 'text-[10px] font-medium tabular-nums num-transition ' + pctCls;
+                    todayPnlPctEl.className = 'text-[10.5px] font-medium tabular-nums num-transition leading-none ' + pctCls;
                 }
             }
         }

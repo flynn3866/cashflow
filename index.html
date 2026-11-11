@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261111.224';</script>
+    <script>window.APP_VERSION = '20261111.228';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -826,8 +826,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <i class="fa fa-chevron-right text-[9px]"></i>
                             <span class="absolute rounded-lg" style="inset:-8px;"></span>
                         </button>
-                        <div class="mt-1.5 flex items-baseline gap-1.5">
+                        <div class="mt-1.5 flex items-end gap-2 min-w-0">
                             <span class="text-[27px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span id="totalMarket">0.00</span></span>
+                            <span id="positionPctBadge" class="inline-flex items-center gap-1 rounded-[6px] border border-[#e8c88a]/20 px-1.5 py-0.5 whitespace-nowrap" style="background:rgba(232,200,138,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);" title="总市值 ÷ 总资产（含现金）">
+                                <span class="text-[8px] tracking-[.06em] text-[#bfae94] leading-none">仓位</span>
+                                <span class="text-[10px] font-semibold tabular-nums text-[#e8c88a] leading-none" id="positionPct">--</span>
+                            </span>
                         </div>
                     </div>
                     <div class="shrink-0 text-right max-w-[50%]">
@@ -853,7 +857,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="h-4 flex items-center gap-1 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-wide">年度分红收入</span><i class="fa fa-chevron-right text-[9px]"></i></button>
                             <div class="mt-1.5 flex items-baseline gap-1.5 whitespace-nowrap">
                                 <span class="text-[15px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none" id="totalYearDiv">0.00</span>
-                                <span class="text-[9.5px] text-[#e8c88a] tabular-nums leading-none" id="yearDivYield" title="年度分红收入 ÷ 总资产">--</span>
                             </div>
                         </div>
                         <div class="text-center min-w-0 px-0.5">
@@ -3838,7 +3841,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="flex items-center justify-between">
                     <div>
                         <div id="divDetailTitle" class="text-[11px] text-amber-100/60 mb-1"><i class="fa fa-coins mr-1"></i>今年已收分红</div>
-                        <div class="text-[26px] font-bold text-white tabular-nums" id="divDetailTotal">0.00</div>
+                        <div class="flex items-baseline gap-2 min-w-0">
+                            <div class="text-[26px] font-bold text-white tabular-nums" id="divDetailTotal">0.00</div>
+                            <span id="divDetailYieldBadge" class="hidden inline-flex items-baseline gap-1 text-[9.5px] font-medium text-amber-200/85 border border-amber-200/25 rounded-full px-2 py-0.5 leading-none whitespace-nowrap" style="background:rgba(255,255,255,.07);" title="年度分红收入 ÷ 总资产">股息率 <b id="divDetailYield" class="text-amber-200 font-semibold tabular-nums">--</b></span>
+                        </div>
                     </div>
                     <div class="text-right space-y-1">
                         <div class="text-[11px] text-amber-100/60" id="divDetailCountLine">分红笔数 <span class="text-amber-200 font-semibold" id="divDetailCount">0</span></div>
@@ -15263,6 +15269,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pendingSubEl = document.querySelector('#divddPendingSub');
             const progressSubEl = document.querySelector('#divddProgressSub');
             const footEl = document.querySelector('#divddStatsFoot');
+            const yieldBadgeEl = document.querySelector('#divDetailYieldBadge');
+            const yieldEl = document.querySelector('#divDetailYield');
             const peakEl = document.querySelector('#divddPeakMonth');
             const noteEl = document.querySelector('#divddMonthNote');
             const chartEl = document.querySelector('#chartDivDetailRhythm');
@@ -15319,6 +15327,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             const grandTotal = received + pending;
             const progress = grandTotal > 0 ? Math.min(100, Math.max(0, received / grandTotal * 100)) : 0;
+            // 股息率：年度分红收入 ÷ 总资产，与首页原口径同源，但只在年度详情中展示
+            const totalAssetForYield = Number(calcSummary().totalAsset) || 0;
+            const yieldPct = (grandTotal > 0 && totalAssetForYield > 0) ? (grandTotal / totalAssetForYield * 100) : null;
+            if(yieldEl) yieldEl.innerText = yieldPct != null ? yieldPct.toFixed(2) + '%' : '--';
+            if(yieldBadgeEl) yieldBadgeEl.classList.toggle('hidden', yieldPct == null);
             const recCount = entries.filter(function(e){ return e.kind === 'manual' || !/^预测/.test(String(e.sub || '')); }).length;
             const pendCount = entries.filter(function(e){ return e.kind !== 'manual' && /^预测/.test(String(e.sub || '')); }).length;
             const statsStockCount = Object.keys(stockMap).length;
@@ -15458,6 +15471,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const mode = divDetailMode;
             const statsRoot = document.querySelector('#divDetailStats');
             if(statsRoot) statsRoot.classList.add('hidden');
+            const yieldBadgeRoot = document.querySelector('#divDetailYieldBadge');
+            if(yieldBadgeRoot) yieldBadgeRoot.classList.add('hidden');
             divDetailRhythmDispose();
             if(mode === 'total'){
                 // ===== 累计分红总额：按年份列出历年已收到分红 =====
@@ -27914,19 +27929,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#aCount').innerText = sum.aShareNum;
             document.querySelector('#hkCount').innerText = sum.hkShareNum;
             numTween(document.querySelector('#totalYearDiv'), sum.totalYearDiv, fmtMoney);
-            // 年度分红股息率 = 年度分红收入 ÷ 总资产（总资产为 0 显示 --）
-            const yydEl = document.querySelector('#yearDivYield');
-            if(yydEl){
-                const yyA = Number(sum.totalAsset);
-                const yyD = Number(sum.totalYearDiv);
-                if(yyA > 0 && yyD > 0){
-                    yydEl.innerText = (yyD / yyA * 100).toFixed(1) + '%';
-                    yydEl.classList.remove('hidden');
-                } else {
-                    yydEl.innerText = '--';
-                    yydEl.classList.add('hidden');
-                }
-            }
             numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
             const incomeNowEl = document.querySelector('#incomeNow');
             if(incomeNowEl) numTween(incomeNowEl, sum.totalReceived, fmtMoney);
@@ -27940,6 +27942,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 taWrapEl.style.fontSize = (taTxt.length >= 9 ? '18px' : (taTxt.length >= 8 ? '20px' : (taTxt.length >= 7 ? '23px' : '27px')));
             }
             numTween(document.querySelector('#totalMarket'), sum.totalAsset, fmtMoney);
+            // 仓位百分比：总市值 ÷ 总资产（含现金）；总资产为 0 时显示 --，不影响金额渲染
+            const positionPctEl = document.querySelector('#positionPct');
+            if(positionPctEl){
+                const taVal = Number(sum.totalAsset) || 0;
+                const mvVal = Number(sum.totalMarket) || 0;
+                positionPctEl.innerText = taVal > 0 ? (mvVal / taVal * 100).toFixed(1) + '%' : '--';
+            }
             const mktValEl = document.querySelector('#mktVal');
             const cashValEl = document.querySelector('#cashVal');
             if(mktValEl) mktValEl.innerText = fmtMoney(sum.totalMarket);

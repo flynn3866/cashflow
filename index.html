@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261111.235';</script>
+    <script>window.APP_VERSION = '20261111.237';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1615,29 +1615,50 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 汇总卡：与首页同款纯黑（资产快照） -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62), 0 1px 3px rgba(0,0,0,0.50), 0 0 5px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06);">
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-2.5">
-                    <span class="text-[9px] text-[#cfc0a6] tracking-[0.16em]">资产快照</span>
-                    <span class="text-[9px] text-[#a8987e]">市值 + 现金</span>
+        <!-- 汇总卡：账户快照 Hero（总资产独占一行 + 总盈利/净投入/回撤三列） -->
+        <div class="card-rise relative overflow-hidden rounded-[22px] p-4 text-white mb-4" style="background:linear-gradient(135deg,#241d18 0%,#392c22 42%,#4a3038 72%,#53323f 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55),0 1px 3px rgba(26,20,12,0.45),0 0 4px rgba(26,20,12,0.40),inset 0 1px 0 rgba(255,255,255,0.08);">
+            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.62),rgba(255,255,255,.12),transparent);"></div>
+            <div class="absolute -top-12 -right-12 w-44 h-44 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(190,90,110,.20),transparent 68%)"></div>
+            <div class="absolute -bottom-16 -left-12 w-40 h-40 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(247,207,143,.10),transparent 70%);"></div>
+            <div class="absolute top-2 right-4 w-24 h-24 rounded-full pointer-events-none" style="border:1px solid rgba(247,207,143,.14)"></div>
+            <div class="absolute top-7 right-9 w-16 h-16 rounded-full pointer-events-none" style="border:1px solid rgba(247,207,143,.08)"></div>
+
+            <div class="relative z-10 flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <div class="text-[9px] tracking-[0.2em] text-amber-100/45 mb-1.5">资产快照</div>
+                    <div class="text-[11px] text-amber-100/70 mb-1">当前总资产</div>
+                    <div id="ahTotalAsset" class="text-[32px] leading-none font-bold tabular-nums tracking-tight" style="color:#f7cf8f">--</div>
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2.5">
+                        <span class="text-[9px] font-semibold rounded-full px-2 py-0.5" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#ffd7a4">市值 + 现金</span>
+                    </div>
                 </div>
-                <div class="grid" style="grid-template-columns:1.55fr 1.05fr 0.8fr;">
-                    <div class="text-center px-1">
-                        <div class="text-[10.5px] text-[#cfc0a6] mb-1">总资产</div>
-                        <div id="ahTotalAsset" class="text-[19px] font-bold tabular-nums whitespace-nowrap" style="color:#ffffff">--</div>
-                        <div class="text-[9px] text-[#a8987e] mt-0.5 leading-[14px]">实时快照</div>
+                <div class="flex-shrink-0 text-right pt-1">
+                    <div class="text-[9px] tracking-[0.16em] text-amber-100/45">账户</div>
+                    <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)">
+                        <span class="w-1 h-1 rounded-full" style="background:#d9a441;box-shadow:0 0 0 3px rgba(217,164,65,.10)"></span>
+                        <span class="text-[9px] text-[#e8bd7c]">实时</span>
                     </div>
-                    <div class="text-center px-1 border-l border-r" style="border-color:rgba(230,210,163,0.14);">
-                        <div class="text-[10.5px] text-[#cfc0a6] mb-1">总盈利</div>
-                        <div id="ahPnl" class="text-[19px] font-bold tabular-nums whitespace-nowrap" style="color:#f04b3f">--</div>
-                        <div class="mt-0.5 leading-[14px] whitespace-nowrap"><span class="text-[9px] text-[#a8987e]">总收益率</span><span id="ahRet" class="font-semibold tabular-nums ml-1" style="font-size:11px;color:#e8c88a">--</span></div>
+                </div>
+            </div>
+
+            <div class="relative z-10 grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top:1px solid rgba(255,255,255,.10)">
+                <div class="min-w-0">
+                    <div class="text-[9px] text-amber-100/55 mb-1">总盈利</div>
+                    <div id="ahPnl" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#ffd0b0">--</div>
+                    <div class="mt-0.5 flex items-baseline gap-1 whitespace-nowrap">
+                        <span class="text-[8px] text-amber-100/45">收益率</span>
+                        <span id="ahRet" class="text-[10px] font-semibold tabular-nums" style="color:#e8bd7c">--</span>
                     </div>
-                    <div class="text-center px-1">
-                        <div class="text-[10.5px] text-[#cfc0a6] mb-1">最大回撤</div>
-                        <div id="ahMaxDD" class="text-[16px] font-bold tabular-nums whitespace-nowrap" style="color:#ffb08a">--</div>
-                        <div id="ahMaxDDSub" class="text-[9px] text-[#a8987e] mt-0.5 leading-[14px]">峰值 → 谷底</div>
-                    </div>
+                </div>
+                <div class="min-w-0 pl-2.5" style="border-left:1px solid rgba(255,255,255,.08)">
+                    <div class="text-[9px] text-amber-100/55 mb-1">累计净投入</div>
+                    <div id="ahNetInvest" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#f5e6d0">--</div>
+                    <div class="mt-0.5 text-[8px] text-amber-100/40 whitespace-nowrap">初始 + 转入 − 转出</div>
+                </div>
+                <div class="min-w-0 pl-2.5" style="border-left:1px solid rgba(255,255,255,.08)">
+                    <div class="text-[9px] text-amber-100/55 mb-1">最大回撤</div>
+                    <div id="ahMaxDD" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#ffb08a">--</div>
+                    <div id="ahMaxDDSub" class="mt-0.5 text-[8px] text-amber-100/40 whitespace-nowrap">峰值 → 谷底</div>
                 </div>
             </div>
         </div>
@@ -8706,20 +8727,28 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             const pr = calcPnlRet();
             const setTxt = function(id, v, color){ const el = document.querySelector('#' + id); if(!el) return; el.innerText = v; if(color) el.style.color = color; };
-            // 总资产按真实金额展示（不用"万"），保留两位小数；位数多时自动缩字号，避免窄屏溢出
-            setTxt('ahTotalAsset', Number(pr.totalAsset).toFixed(2));
+            // 总资产 Hero：用“万”单位保持大字可读，完整金额放在 title 里兜底
+            setTxt('ahTotalAsset', fmtMoney(pr.totalAsset));
             const __taEl = document.querySelector('#ahTotalAsset');
             if(__taEl){
                 const __taLen = __taEl.innerText.length;
-                __taEl.style.fontSize = __taLen >= 13 ? '12px' : (__taLen >= 10 ? '16px' : '19px');
+                __taEl.style.fontSize = __taLen >= 9 ? '28px' : '32px';
+                __taEl.title = Number(pr.totalAsset).toFixed(2);
             }
-            setTxt('ahPnl', fmtPnlNum(pr.pnl), pr.pnl >= 0 ? '#f04b3f' : '#3fd35b');
+            setTxt('ahPnl', fmtPnlNum(pr.pnl), pr.pnl >= 0 ? '#ffd0b0' : '#3fd35b');
             const __pnlEl = document.querySelector('#ahPnl');
             if(__pnlEl){
                 const __pnlLen = __pnlEl.innerText.length;
-                __pnlEl.style.fontSize = __pnlLen >= 10 ? '16px' : '19px';
+                __pnlEl.style.fontSize = __pnlLen >= 9 ? '13px' : '15px';
             }
-            setTxt('ahRet', pr.ret == null ? '--' : fmtPctNum(pr.ret), pr.ret == null ? '#a8987e' : (pr.ret >= 0 ? '#f04b3f' : '#3fd35b'));
+            setTxt('ahRet', pr.ret == null ? '--' : fmtPctNum(pr.ret), pr.ret == null ? '#a8987e' : (pr.ret >= 0 ? '#e8bd7c' : '#3fd35b'));
+            setTxt('ahNetInvest', fmtMoney(pr.invested));
+            const __niEl = document.querySelector('#ahNetInvest');
+            if(__niEl){
+                const __niLen = __niEl.innerText.length;
+                __niEl.style.fontSize = __niLen >= 10 ? '12px' : '15px';
+                __niEl.title = Number(pr.invested).toFixed(2);
+            }
 
             const dd = ensureMaxDrawdown(false);
             // 与统计页资产分析卡同一函数、同一缓存：无有效回撤（不足两个年末快照）时统一显示 --
@@ -8727,7 +8756,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const ddPct = ddValid ? Number(dd.pct) : null;
             setTxt('ahMaxDD', !ddValid ? '--' : (ddPct > 0 ? ('-' + ddPct.toFixed(2) + '%') : '0.00%'), (ddPct != null && ddPct > 0) ? '#ffb08a' : '#cfc0a6');
             const __ddEl = document.querySelector('#ahMaxDD');
-            if(__ddEl){ __ddEl.style.fontSize = __ddEl.innerText.length >= 8 ? '14px' : '16px'; }
+            if(__ddEl){ __ddEl.style.fontSize = __ddEl.innerText.length >= 8 ? '13px' : '15px'; }
             const ddSub = document.querySelector('#ahMaxDDSub');
             if(ddSub){
                 if(!ddValid) ddSub.innerText = '峰值 → 谷底';

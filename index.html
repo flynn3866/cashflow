@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261111.231';</script>
+    <script>window.APP_VERSION = '20261111.233';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -7010,11 +7010,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const ASSET_DAILY_START_DATE = '2020-01-01';
         const AssetDaily = {
             // rate = 总收益率（累计，口径同"我的"页 / 总资产趋势页顶部卡 = calcPnlRet()）
-            put: function(date, total, rate){
+            put: function(date, total, rate, opts){
                 if(_allDataClearing) return Promise.resolve(false);
                 if(!AppDB.ok || !AppDB.db) return Promise.resolve(false);
                 const hasRate = !(rate === null || rate === undefined || rate === '' || !isFinite(Number(rate)));
                 const row = { date: String(date), total: Number(total), rate: hasRate ? Number(rate) : null, ts: Date.now() };
+                if(opts && opts.seed) row.seed = 1;
                 return AppDB.putObj(ASSET_DAILY, row).then(function(){ return true; }).catch(function(){ return false; });
             },
             get: function(date){
@@ -7329,6 +7330,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     historyData.initialCostDate = parsed.initialCostDate || '2020-01-01';
                     historyData.yearlyNav = parsed.yearlyNav || {};
                     historyData.yearSnapshots = parsed.yearSnapshots || {};
+                    // 历史年末补录签名：记录已经写入 assetDaily 的年末资产与收益率，避免重复计算/落库
+                    historyData.assetDailyYearEndSeed = parsed.assetDailyYearEndSeed || {};
                     // 年度收益账本：每年收益额/收益率算一次即固化，历史展示直接读取，不再每次重算
                     historyData.yearlyStats = parsed.yearlyStats || {};
                     // v231 一次性修复：旧版把“年度收益率手动锁定”的布尔标记当成 1% 读入，并可能回写进年度账本。
@@ -8365,6 +8368,127 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return ys.profits;
         }
 
+        // ===== 历史年末补录：只写 assetDaily 的 YYYY-12-31 一行，一次写入、后续只比对签名 =====
+        let _historicalYearEndSeedPromise = null;
+        let _historicalYearEndSeedSig = null;
+
+        // 与 calcPnlRet 同口径：只用截至年末的初始投入/资金流水，计算年末累计总收益率。
+        // 这样补录行的 rate 仍代表“总收益率”，不会把年度收益率混进 assetDaily。
+        function calcHistoricalPnlRetAt(total, endDate){
+            const dateStr = String(endDate || '');
+            const initCost = Number(historyData.initialCost) || 0;
+            const initDate = historyData.initialCostDate || '2020-01-01';
+            let invested = 0, gross = 0;
+            if(initCost !== 0 && initDate <= dateStr){
+                invested += initCost;
+                gross += initCost;
+            }
+            (historyData.fundInflows || []).forEach(function(f){
+                const d = String(f.date || '');
+                const amt = Number(f.amount) || 0;
+                if(!(d <= dateStr) || amt === 0) return;
+                invested += amt;
+                if(amt > 0) gross += amt;
+            });
+            const pnl = (Number(total) || 0) - invested;
+            return gross > 0 ? Number((pnl / gross * 100).toFixed(4)) : null;
+        }
+
+        // 没有 2020 年前成本记录时，用首个历史年末资产作为累计收益的起点。
+        // 只用起点之后的资金流水，避免把 2026 年才录入的初始成本错误地套到 2020 年。
+        function calcHistoricalPnlRetFromBase(total, endDate, baseDate, baseTotal){
+            let invested = Number(baseTotal) || 0;
+            let gross = Number(baseTotal) || 0;
+            (historyData.fundInflows || []).forEach(function(f){
+                const d = String(f.date || '');
+                const amt = Number(f.amount) || 0;
+                if(!(d > baseDate) || !(d <= String(endDate)) || amt === 0) return;
+                invested += amt;
+                if(amt > 0) gross += amt;
+            });
+            const pnl = (Number(total) || 0) - invested;
+            return gross > 0 ? Number((pnl / gross * 100).toFixed(4)) : null;
+        }
+
+        // 从年度明细的年末资产生成目标签名；只取历史年份，当前年不提前生成年末记录。
+        function buildHistoricalYearEndAssetSeed(){
+            const ys = buildYearlyAssetSeries();
+            const map = {};
+            let base = null;
+            ys.years.forEach(function(y){
+                if(String(y) === String(ys.currentYear)) return;
+                if(!/^\d{4}$/.test(String(y))) return;
+                const date = String(y) + '-12-31';
+                if(date < ASSET_DAILY_START_DATE) return;
+                const v = Number(ys.yearSet[y].value);
+                if(!isFinite(v) || v <= 0) return;
+                if(!base) base = { date: date, total: Number(v.toFixed(2)) };
+                let rate = calcHistoricalPnlRetAt(v, date);
+                if(rate == null && base){
+                    // 首个历史年末是累计起点，收益率就是 0；后续年份从该起点计算。
+                    rate = date === base.date ? 0
+                        : calcHistoricalPnlRetFromBase(v, date, base.date, base.total);
+                }
+                map[y] = { total: Number(v.toFixed(2)), rate: rate };
+            });
+            return map;
+        }
+
+        // 读取图表前调用。已有相同签名时只比较内存，不读写数据库；
+        // 只有历史年末资产/收益率变化时才按日期主键 put，天然不会重复落多条。
+        function ensureHistoricalYearEndAssetDaily(){
+            if(_historicalYearEndSeedPromise) return _historicalYearEndSeedPromise;
+            if(!AppDB.ok || !AppDB.db) return Promise.resolve(false);
+            const map = buildHistoricalYearEndAssetSeed();
+            const sig = JSON.stringify(map);
+            const oldMap = historyData.assetDailyYearEndSeed || {};
+            if(_historicalYearEndSeedSig === sig && JSON.stringify(oldMap) === sig){
+                return Promise.resolve(false);
+            }
+            const writes = [];
+            Object.keys(map).forEach(function(y){
+                const next = map[y];
+                const old = oldMap[y];
+                const date = y + '-12-31';
+                if(!old || Math.abs(Number(old.total) - next.total) >= 0.005
+                    || (old.rate == null ? next.rate != null : (next.rate == null || Math.abs(Number(old.rate) - Number(next.rate)) >= 0.0001))){
+                    writes.push({ date: date, total: next.total, rate: next.rate });
+                }
+            });
+            if(!writes.length){
+                // 年份被移除时不删任何历史行，只更新签名，避免误删用户数据。
+                if(JSON.stringify(oldMap) !== sig){
+                    historyData.assetDailyYearEndSeed = map;
+                    _historicalYearEndSeedSig = sig;
+                    saveHistory();
+                } else {
+                    _historicalYearEndSeedSig = sig;
+                }
+                return Promise.resolve(false);
+            }
+            _historicalYearEndSeedPromise = Promise.all(writes.map(async function(w){
+                // 已存在的真实 12-31 快照不覆盖；只更新本功能自己写入的行。
+                let existing = null;
+                try{ existing = await AssetDaily.get(w.date); }catch(e){ existing = null; }
+                if(existing && Number(existing.seed) !== 1) return { skipped: true };
+                const ok = await AssetDaily.put(w.date, w.total, w.rate, { seed: 1 });
+                return { ok: !!ok };
+            })).then(function(results){
+                _historicalYearEndSeedPromise = null;
+                if(results.every(function(r){ return !!(r && (r.ok || r.skipped)); })){
+                    historyData.assetDailyYearEndSeed = map;
+                    _historicalYearEndSeedSig = sig;
+                    saveHistory();
+                    return true;
+                }
+                return false;
+            }, function(){
+                _historicalYearEndSeedPromise = null;
+                return false;
+            });
+            return _historicalYearEndSeedPromise;
+        }
+
         function renderYearStats(ys){
             const lastEl = document.querySelector('#ahYearLast');
             const cagrEl = document.querySelector('#ahYearCagr');
@@ -8740,6 +8864,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         async function loadAssetTrackRows(range){
+            // 首次/年末资产变更时补录历史年末；同签名后续调用只比较内存，不重复写库。
+            try{ await ensureHistoricalYearEndAssetDaily(); }catch(e){}
             const today = todayStr();
             const rawStart = range === 'all' ? '1900-01-01' : assetTrackStartDate(range);
             // 两张趋势图的历史从 2020-01-01 基线起读；更早的旧行即使清理失败也不会画出来。
@@ -8767,7 +8893,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     && String(r.date) < today
                     && Number(r.total) > 0
                     // 周末不是交易日：即使旧版本/异常路径留下过周末行，也绝不画进趋势图。
-                    && isTradingDayStr(r.date);
+                    // 但历史年末补录是年度口径的最后一天，可能是周末，必须保留这一个年末点。
+                    && (isTradingDayStr(r.date) || String(r.date).substring(5) === '12-31');
             }).map(function(r){
                 return {
                     date: String(r.date),

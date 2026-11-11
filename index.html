@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261111.228';</script>
+    <script>window.APP_VERSION = '20261111.231';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -788,6 +788,39 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .divdd-contrib-name b{ font-size:11px; }
         }
 
+        /* 累计分红成就卡（仅累计模式） */
+        .divcum-card{ position:relative; overflow:hidden; padding:14px 15px 11px; border-radius:18px; background:linear-gradient(135deg,#2a1118 0%,#3c1721 52%,#522033 100%); border:1px solid rgba(232,200,138,.20); box-shadow:0 3px 12px rgba(46,18,26,.24), inset 0 1px 0 rgba(255,255,255,.06); }
+        .divcum-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(245,201,123,.7),rgba(208,145,89,.35),transparent); }
+        .divcum-card::after{ content:''; position:absolute; top:-64px; right:-42px; width:190px; height:190px; border-radius:50%; background:radial-gradient(circle,rgba(140,76,139,.24),transparent 64%); pointer-events:none; }
+        .divcum-head{ position:relative; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+        .divcum-kicker{ display:flex; align-items:center; gap:5px; font-size:8px; line-height:1; letter-spacing:.12em; color:#d8b88e; }
+        .divcum-kicker::before{ content:''; width:12px; height:1px; background:linear-gradient(90deg,#e8c88a,transparent); }
+        .divcum-title{ margin-top:5px; font-size:16px; line-height:1.1; font-weight:750; color:#fff8ec; letter-spacing:.03em; }
+        .divcum-sub{ margin-top:4px; font-size:8.5px; line-height:1.35; color:#c9a990; }
+        .divcum-streak{ display:inline-flex; align-items:center; gap:4px; flex:0 0 auto; padding:4px 7px; border-radius:999px; border:1px solid rgba(232,200,138,.22); background:rgba(255,255,255,.065); color:#f0d49a; font-size:8px; line-height:1; white-space:nowrap; }
+        .divcum-streak.hidden{ display:none !important; }
+        .divcum-grid{ position:relative; z-index:1; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:12px; border-top:1px solid rgba(232,200,138,.15); border-bottom:1px solid rgba(232,200,138,.15); }
+        .divcum-cell{ min-width:0; padding:9px 8px 8px; border-right:1px solid rgba(232,200,138,.12); }
+        .divcum-cell:first-child{ padding-left:0; }
+        .divcum-cell:last-child{ border-right:0; padding-right:0; }
+        .divcum-label{ font-size:8px; line-height:1.2; color:#c2a48b; white-space:nowrap; }
+        .divcum-value{ margin-top:4px; font-size:18px; line-height:1.05; font-weight:750; color:#f1d49a; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divcum-subvalue{ margin-top:3px; font-size:7.5px; line-height:1.2; color:#c6a58c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divcum-foot{ position:relative; z-index:1; display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; padding-top:8px; font-size:8.5px; line-height:1.2; color:#c9ab91; }
+        .divcum-foot b{ color:#f2d59c; font-weight:650; font-variant-numeric:tabular-nums; }
+        .divcum-share{ color:#d9b89f; }
+        .divcum-since{ margin-left:auto; color:#bea18a; }
+        .divcum-track{ position:relative; z-index:1; height:3px; margin-top:7px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden; }
+        .divcum-track > div{ height:100%; width:0; border-radius:4px; background:linear-gradient(90deg,#8e3d53,#c27c4b 58%,#f2d59c); transition:width .55s cubic-bezier(.22,.61,.36,1); }
+        @media (max-width:420px){
+            .divcum-card{ padding:13px 13px 10px; }
+            .divcum-grid{ grid-template-columns:1fr 1fr; }
+            .divcum-cell:nth-child(2){ border-right:0; padding-right:0; }
+            .divcum-cell:nth-child(-n+2){ border-bottom:1px solid rgba(232,200,138,.12); }
+            .divcum-value{ font-size:17px; }
+            .divcum-since{ margin-left:0; }
+        }
+
 </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
@@ -823,15 +856,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="min-w-0 flex-1">
                         <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 text-[10.5px] text-[#cfc0a6] active:scale-95 transition-transform">
                             <span class="tracking-wide font-serif">总资产</span>
-                            <i class="fa fa-chevron-right text-[9px]"></i>
-                            <span class="absolute rounded-lg" style="inset:-8px;"></span>
-                        </button>
-                        <div class="mt-1.5 flex items-end gap-2 min-w-0">
-                            <span class="text-[27px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span id="totalMarket">0.00</span></span>
                             <span id="positionPctBadge" class="inline-flex items-center gap-1 rounded-[6px] border border-[#e8c88a]/20 px-1.5 py-0.5 whitespace-nowrap" style="background:rgba(232,200,138,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);" title="总市值 ÷ 总资产（含现金）">
                                 <span class="text-[8px] tracking-[.06em] text-[#bfae94] leading-none">仓位</span>
                                 <span class="text-[10px] font-semibold tabular-nums text-[#e8c88a] leading-none" id="positionPct">--</span>
                             </span>
+                            <i class="fa fa-chevron-right text-[9px]"></i>
+                            <span class="absolute rounded-lg" style="inset:-8px;"></span>
+                        </button>
+                        <div class="mt-1.5 flex items-baseline min-w-0">
+                            <span class="text-[27px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span id="totalMarket">0.00</span></span>
                         </div>
                     </div>
                     <div class="shrink-0 text-right max-w-[50%]">
@@ -1707,7 +1740,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div id="ahYearCum" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
                     </div>
                 </div>
-                <div class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">历史年份按「年末资产 − 上年末资产 − 当年净流入」自动补算并固化；今年实时，已记录年度不再重算</div>
+                <div class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">历史年份按「年末资产 − 上年末资产 − 当年净流入」自动补算并写入年度收益账本；今年实时，改年末资产后整表重算</div>
             </div>
         </div>
 
@@ -3907,6 +3940,48 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="divdd-card-aside is-plain"><span id="divddContribCount">0</span><small>只股票</small></div>
                 </div>
                 <div id="divddContribList" class="divdd-contrib-list"></div>
+            </div>
+        </div>
+
+        <!-- 累计分红成就（仅累计模式） -->
+        <div id="divDetailCumulativeCard" class="hidden mb-3">
+            <div class="divcum-card">
+                <div class="divcum-head">
+                    <div class="min-w-0">
+                        <div class="divcum-kicker">分红里程碑</div>
+                        <div class="divcum-title">累计分红成就</div>
+                        <div class="divcum-sub">从第一笔到今年，分红在替你积累</div>
+                    </div>
+                    <span id="divcumStreak" class="divcum-streak hidden"><i class="fa fa-arrow-trend-up text-[7px]"></i><b id="divcumStreakText">连续 0 年增长</b></span>
+                </div>
+                <div class="divcum-grid">
+                    <div class="divcum-cell">
+                        <div class="divcum-label">覆盖年度</div>
+                        <div class="divcum-value" id="divcumYears">--</div>
+                        <div class="divcum-subvalue">个年度</div>
+                    </div>
+                    <div class="divcum-cell">
+                        <div class="divcum-label">年均分红</div>
+                        <div class="divcum-value" id="divcumAvg">--</div>
+                        <div class="divcum-subvalue">历史年度</div>
+                    </div>
+                    <div class="divcum-cell">
+                        <div class="divcum-label">复合增速</div>
+                        <div class="divcum-value" id="divcumCagr">--</div>
+                        <div class="divcum-subvalue">历史年化</div>
+                    </div>
+                    <div class="divcum-cell">
+                        <div class="divcum-label">最佳年份</div>
+                        <div class="divcum-value" id="divcumBest">--</div>
+                        <div class="divcum-subvalue" id="divcumBestAmount">--</div>
+                    </div>
+                </div>
+                <div class="divcum-foot">
+                    <span>今年已收 <b id="divcumCurrent">¥0.00</b></span>
+                    <span class="divcum-share">占累计 <b id="divcumCurrentShare">--</b></span>
+                    <span class="divcum-since" id="divcumSince">始于 --</span>
+                </div>
+                <div class="divcum-track"><div id="divcumShareBar"></div></div>
             </div>
         </div>
 
@@ -7256,6 +7331,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     historyData.yearSnapshots = parsed.yearSnapshots || {};
                     // 年度收益账本：每年收益额/收益率算一次即固化，历史展示直接读取，不再每次重算
                     historyData.yearlyStats = parsed.yearlyStats || {};
+                    // v231 一次性修复：旧版把“年度收益率手动锁定”的布尔标记当成 1% 读入，并可能回写进年度账本。
+                    // 只清理历史年份的年度收益/收益率派生记录，保留年末资产、分红、手动收益率、年度快照和当年记录；
+                    // 下一次打开总资产趋势页时，按正确口径重新补算并写回账本。
+                    const __yearRateFixVer = Number(parsed.yearRateFixVer) || 0;
+                    if(__yearRateFixVer < 2){
+                        const __curYearForRateFix = String(new Date().getFullYear());
+                        Object.keys(historyData.yearlyStats).forEach(function(y){
+                            if(String(y) !== __curYearForRateFix) delete historyData.yearlyStats[y];
+                        });
+                        historyData.yearRateFixVer = 2;
+                        saveHistory();
+                    } else {
+                        historyData.yearRateFixVer = __yearRateFixVer;
+                    }
                     historyData.navAlgoVer = Number(parsed.navAlgoVer) || 0;
                     if(Array.isArray(parsed.fundInflows)){
                         historyData.fundInflows = parsed.fundInflows;
@@ -15471,6 +15560,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const mode = divDetailMode;
             const statsRoot = document.querySelector('#divDetailStats');
             if(statsRoot) statsRoot.classList.add('hidden');
+            const cumulativeCardRoot = document.querySelector('#divDetailCumulativeCard');
+            if(cumulativeCardRoot) cumulativeCardRoot.classList.add('hidden');
             const yieldBadgeRoot = document.querySelector('#divDetailYieldBadge');
             if(yieldBadgeRoot) yieldBadgeRoot.classList.add('hidden');
             divDetailRhythmDispose();
@@ -15509,6 +15600,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(trendCardT) trendCardT.classList.remove('hidden');
                 if(yearCardT) yearCardT.classList.remove('hidden');
                 if(listElT) listElT.classList.add('hidden');
+                renderDivCumulativeStats(entries, sumT);
                 renderDivDetailTrend();
                 return;
             }
@@ -18939,11 +19031,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     src = 'legacy';
                 }
             }
-            // 设置页手动编辑的年度收益率优先；同步回写账本，保证唯一表里的 rate 与展示一致
-            if(historyData.manualYearlyReturn && historyData.manualYearlyReturn[y] != null){
-                const mv = Number(historyData.manualYearlyReturn[y]);
-                if(isFinite(mv)) rate = mv;
-            }
+            // 手动收益率只作为“锁定”开关；真正的百分比在 yearlyReturn 中，不能把 true 当成 1%。
+            // 旧账本里的错误 1% 会在 v231 启动时一次性清理，这里只读取正确的账本/手填值。
             if(rate == null && historyData.yearlyReturn && historyData.yearlyReturn[y] != null && isFinite(Number(historyData.yearlyReturn[y]))){
                 rate = Number(historyData.yearlyReturn[y]);
             }
@@ -20481,6 +20570,69 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             var rec = pts.slice(-3);
             var avg3 = rec.length ? rec.reduce(function(s, p){ return s + p.g; }, 0) / rec.length : null;
             return { last: last, avg3: avg3, pts: pts };
+        }
+
+        // 累计分红成就：全部历史年度口径，独立于趋势图最近 8 年的展示范围
+        function renderDivCumulativeStats(entries, total){
+            const card = document.querySelector('#divDetailCumulativeCard');
+            if(!card) return;
+            const positive = (entries || []).filter(function(e){ return Number(e.amount) > 0; })
+                .map(function(e){ return { y: String(e.y), amount: Number(e.amount) }; })
+                .sort(function(a, b){ return Number(a.y) - Number(b.y); });
+            if(!positive.length){
+                card.classList.add('hidden');
+                return;
+            }
+            card.classList.remove('hidden');
+
+            const curY = new Date().getFullYear();
+            const current = positive.find(function(e){ return Number(e.y) === curY; }) || null;
+            const history = positive.filter(function(e){ return Number(e.y) < curY; });
+            const avgBase = history.length ? history : positive;
+            const totalPositive = positive.reduce(function(s, e){ return s + e.amount; }, 0);
+            const avg = avgBase.reduce(function(s, e){ return s + e.amount; }, 0) / Math.max(1, avgBase.length);
+            const totalForShare = Number(total) > 0 ? Number(total) : totalPositive;
+
+            let best = positive[0];
+            positive.forEach(function(e){ if(e.amount > best.amount) best = e; });
+
+            let cagr = null;
+            if(history.length >= 2){
+                const first = history[0], last = history[history.length - 1];
+                const span = Number(last.y) - Number(first.y);
+                if(span > 0 && first.amount > 0) cagr = (Math.pow(last.amount / first.amount, 1 / span) - 1) * 100;
+            }
+
+            let streak = 0;
+            for(let i = positive.length - 1; i > 0; i--){
+                if(positive[i].amount > positive[i - 1].amount) streak++;
+                else break;
+            }
+
+            const currentShare = current && totalForShare > 0 ? (current.amount / totalForShare * 100) : 0;
+            const yearsEl = document.querySelector('#divcumYears');
+            const avgEl = document.querySelector('#divcumAvg');
+            const cagrEl = document.querySelector('#divcumCagr');
+            const bestEl = document.querySelector('#divcumBest');
+            const bestAmountEl = document.querySelector('#divcumBestAmount');
+            const currentEl = document.querySelector('#divcumCurrent');
+            const currentShareEl = document.querySelector('#divcumCurrentShare');
+            const sinceEl = document.querySelector('#divcumSince');
+            const shareBar = document.querySelector('#divcumShareBar');
+            const streakWrap = document.querySelector('#divcumStreak');
+            const streakText = document.querySelector('#divcumStreakText');
+
+            if(yearsEl) yearsEl.innerText = positive.length;
+            if(avgEl) avgEl.innerText = '¥' + fmtMoney(avg);
+            if(cagrEl) cagrEl.innerText = cagr == null ? '--' : ((cagr >= 0 ? '+' : '') + cagr.toFixed(1) + '%');
+            if(bestEl) bestEl.innerText = best.y;
+            if(bestAmountEl) bestAmountEl.innerText = '¥' + fmtMoney(best.amount);
+            if(currentEl) currentEl.innerText = '¥' + fmtMoney(current ? current.amount : 0);
+            if(currentShareEl) currentShareEl.innerText = totalForShare > 0 ? currentShare.toFixed(1) + '%' : '--';
+            if(sinceEl) sinceEl.innerText = '始于 ' + positive[0].y;
+            if(shareBar) shareBar.style.width = Math.min(100, Math.max(0, currentShare)).toFixed(1) + '%';
+            if(streakWrap) streakWrap.classList.toggle('hidden', streak < 2);
+            if(streakText) streakText.innerText = '连续 ' + streak + ' 年增长';
         }
 
         // ============ 累计分红详情：趋势图 + 年度明细 ============
@@ -26342,8 +26494,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const retCurY = String(new Date().getFullYear());
             let retCurVal = null;
             // 手动录入的当年值优先（设置页可编辑）
-            if(historyData.manualYearlyReturn && historyData.manualYearlyReturn[retCurY] != null){
-                retCurVal = Number(historyData.manualYearlyReturn[retCurY]);
+            if(historyData.manualYearlyReturn && historyData.manualYearlyReturn[retCurY]
+                && historyData.yearlyReturn && historyData.yearlyReturn[retCurY] != null
+                && isFinite(Number(historyData.yearlyReturn[retCurY]))){
+                retCurVal = Number(historyData.yearlyReturn[retCurY]);
             } else {
                 const retStat = calcYearStats(retCurY, curTotal);
                 if(retStat.rate != null && isFinite(retStat.rate)) retCurVal = Number(retStat.rate.toFixed(2));

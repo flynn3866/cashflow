@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261111.237';</script>
+    <script>window.APP_VERSION = '20261111.238';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -2721,14 +2721,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="px-4 pt-3.5 pb-2 flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <div class="text-[13px] font-semibold text-gray-800">盈亏贡献榜</div>
-                    <div class="mt-1 text-[9.5px] text-gray-400">谁赚得最多，谁拖累最大 · 各取前五 · 含已清仓</div>
+                    <div id="pnlContribSub" class="mt-1 text-[9.5px] text-gray-400">今年至今 · 当前持仓 · 各取前五</div>
+                    <div class="mt-2 inline-flex items-center rounded-full p-0.5" style="background:#f6eee0;border:1px solid #efe4d2;">
+                        <button id="pnlContribTabYear" type="button" onclick="setPnlContribPeriod('year')" class="px-2.5 py-1 rounded-full text-[9.5px] font-semibold bg-white text-[#7a4a20] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors">今年</button>
+                        <button id="pnlContribTabAll" type="button" onclick="setPnlContribPeriod('all')" class="px-2.5 py-1 rounded-full text-[9.5px] font-semibold text-[#9a8a73] transition-colors">累计</button>
+                    </div>
                 </div>
                 <div id="pnlContribChip" class="rounded-full px-2 py-1 text-[9px] text-gray-500 bg-gray-50 whitespace-nowrap">--</div>
             </div>
             <div id="statsPnlContribList" class="px-3 pb-3">
-                <div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>
+                <div id="pnlContribYearBody" data-win="0" data-lose="0">
+                    <div class="py-7 text-center text-gray-400 text-[11px]">年初基础价未获取</div>
+                </div>
+                <div id="pnlContribAllBody" class="hidden" data-win="0" data-lose="0">
+                    <div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>
+                </div>
             </div>
-            <div class="px-4 pb-3 pt-2 border-t border-gray-50 text-[8.5px] text-gray-400 leading-relaxed">按累计盈亏金额排序，盈利榜取正贡献前五，亏损榜取拖累前五；完整名单见下方排行</div>
+            <div id="pnlContribFoot" class="px-4 pb-3 pt-2 border-t border-gray-50 text-[8.5px] text-gray-400 leading-relaxed">今年至今：按今年盈亏额排序，盈利/亏损各取前五；今年为当前持仓口径，年初基础价未获取的标的暂不计入</div>
         </div>
         <!-- 盈亏排行：按累计盈亏额降序（收盘后更新一次，其他时间延用） -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
@@ -6302,6 +6311,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             Promise.all(tasks).then(function(){
                 saveYtdBase();
+                // 年初基础价到位后，让统计页盈亏快照失效一次，避免“今年贡献榜”继续显示空数据
+                try{
+                    const snapYtd = loadStatsDaily();
+                    if(snapYtd && snapYtd.pnl){ snapYtd.pnl.stale = true; saveStatsDaily(snapYtd); }
+                }catch(e){}
                 // 基础价就绪后立即刷新页面（YTD 需要显示）
                 if(document.visibilityState !== 'hidden') renderPage();
             });
@@ -24415,6 +24429,38 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             applyPnlRankVisibility();
         }
 
+        // 盈亏贡献榜：今年 / 累计双档；只切换已渲染的 DOM，不重算、不重存
+        let pnlContribPeriod = 'year';
+        function setPnlContribPeriod(period){
+            pnlContribPeriod = (period === 'all') ? 'all' : 'year';
+            const yearBody = document.querySelector('#pnlContribYearBody');
+            const allBody = document.querySelector('#pnlContribAllBody');
+            const yearBtn = document.querySelector('#pnlContribTabYear');
+            const allBtn = document.querySelector('#pnlContribTabAll');
+            const subEl = document.querySelector('#pnlContribSub');
+            const footEl = document.querySelector('#pnlContribFoot');
+            const chipEl = document.querySelector('#pnlContribChip');
+            if(yearBody) yearBody.classList.toggle('hidden', pnlContribPeriod !== 'year');
+            if(allBody) allBody.classList.toggle('hidden', pnlContribPeriod !== 'all');
+            const activeCls = 'px-2.5 py-1 rounded-full text-[9.5px] font-semibold bg-white text-[#7a4a20] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors';
+            const idleCls = 'px-2.5 py-1 rounded-full text-[9.5px] font-semibold text-[#9a8a73] transition-colors';
+            if(yearBtn) yearBtn.className = (pnlContribPeriod === 'year') ? activeCls : idleCls;
+            if(allBtn) allBtn.className = (pnlContribPeriod === 'all') ? activeCls : idleCls;
+            if(subEl) subEl.innerText = (pnlContribPeriod === 'year')
+                ? '今年至今 · 当前持仓 · 各取前五'
+                : '成立以来 · 含已清仓 · 各取前五';
+            if(footEl) footEl.innerText = (pnlContribPeriod === 'year')
+                ? '今年至今：按今年盈亏额排序，盈利/亏损各取前五；今年为当前持仓口径，年初基础价未获取的标的暂不计入'
+                : '成立以来：按累计盈亏金额排序，盈利/亏损各取前五；完整名单见下方排行';
+            const body = (pnlContribPeriod === 'year') ? yearBody : allBody;
+            if(chipEl && body){
+                const w = body.getAttribute('data-win') || '0';
+                const l = body.getAttribute('data-lose') || '0';
+                chipEl.innerText = '盈利 ' + w + ' · 亏损 ' + l;
+                chipEl.className = 'rounded-full px-2 py-1 text-[9px] text-[#8a6a3f] bg-[#faf3e3] whitespace-nowrap';
+            }
+        }
+
         let divRankVisibleCount = 10;
         function divRankRowEls(){
             return Array.prototype.slice.call(document.querySelectorAll('#statsDivRankList .div-rank-row'));
@@ -25063,7 +25109,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 避免手机上继续展示旧版无logo的缓存HTML；同版本内仍按 6:00/20:00 双刷新点 + 其余读存储
             const STATS_SNAP_VERSION = 3;
             // 盈亏排行列表结构版本：仅该列表/贡献榜改版时递增，避免旧快照继续渲染已删除的进度条
-            const PNL_RANK_LAYOUT_VERSION = 9;
+            const PNL_RANK_LAYOUT_VERSION = 10;
             // 分红排行列表结构版本：独立于盈亏排行，新增分页/分隔线时递增
             const DIV_RANK_LAYOUT_VERSION = 2;
             // 仓位分布页结构版本：总览指标/行业配置/个股明细改版时递增
@@ -25351,20 +25397,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
                         });
                     }
-                    // 贡献榜与完整排行共用 pnlRanks，不另算一套；盈利/亏损各取前五
-                    const contribWinAll = pnlRanks.filter(function(x){ return Number(x.pnl) > 0.01; });
-                    const contribLoseAll = pnlRanks.filter(function(x){ return Number(x.pnl) < -0.01; });
-                    const contribWin = contribWinAll.slice().sort(function(a, b){ return (Number(b.pnl) || 0) - (Number(a.pnl) || 0); }).slice(0, 5);
-                    const contribLose = contribLoseAll.slice().sort(function(a, b){ return (Number(a.pnl) || 0) - (Number(b.pnl) || 0); }).slice(0, 5);
-                    const contribWinSum = contribWinAll.reduce(function(s, x){ return s + (Number(x.pnl) || 0); }, 0);
-                    const contribLoseSum = contribLoseAll.reduce(function(s, x){ return s + (Number(x.pnl) || 0); }, 0);
+                    // 今年贡献榜：复用年度报告“今年贡献”的同一口径（getYtdPnl），仅当前持仓；
+                    // 没有年初基础价的持仓不计入，避免用累计盈亏冒充今年盈亏
+                    const ytdRanks = holdDataList.map(function(it){
+                        const ytd = getYtdPnl(it);
+                        if(ytd == null || isNaN(ytd)) return null;
+                        return { item: it, rec: null, pnl: Number(ytd), pnlPct: getYtdPct(it), closed: false };
+                    }).filter(function(x){ return !!x; }).sort(function(a, b){ return b.pnl - a.pnl; });
+                    // 贡献榜双档共用同一套渲染，不另算一套；盈利/亏损各取前五
+                    function buildContrib(ranks){
+                        const winAll = ranks.filter(function(x){ return Number(x.pnl) > 0.01; });
+                        const loseAll = ranks.filter(function(x){ return Number(x.pnl) < -0.01; });
+                        const win = winAll.slice().sort(function(a, b){ return (Number(b.pnl) || 0) - (Number(a.pnl) || 0); }).slice(0, 5);
+                        const lose = loseAll.slice().sort(function(a, b){ return (Number(a.pnl) || 0) - (Number(b.pnl) || 0); }).slice(0, 5);
+                        const winSum = winAll.reduce(function(s, x){ return s + (Number(x.pnl) || 0); }, 0);
+                        const loseSum = loseAll.reduce(function(s, x){ return s + (Number(x.pnl) || 0); }, 0);
+                        const html = '<div class="grid grid-cols-2 gap-2 items-stretch">'
+                            + contribColumn('盈利榜', true, win, winAll.length, winSum, '暂无盈利')
+                            + contribColumn('亏损榜', false, lose, loseAll.length, loseSum, '暂无亏损')
+                            + '</div>';
+                        return { html: html, win: winAll.length, lose: loseAll.length, winSum: winSum, loseSum: loseSum };
+                    }
                     function contribRow(x, idx, isWin){
                         const it = x.item, rec = x.rec;
                         const rawName = String(x.closed ? (rec.name || rec.code || '') : (it.name || it.code || ''));
                         const codeStr = String(x.closed ? (rec.code || '') : (it.code || ''));
                         const pnl = Number(x.pnl) || 0;
-                        const pct = Number(x.pnlPct) || 0;
-                        const pctText = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+                        const pctNum = (x.pnlPct == null || isNaN(Number(x.pnlPct))) ? null : Number(x.pnlPct);
+                        const pctText = pctNum == null ? '--' : ((pctNum >= 0 ? '+' : '') + pctNum.toFixed(2) + '%');
                         const badgeCls = idx === 0
                             ? (isWin ? 'bg-[#e03131] text-white' : 'bg-[#00a05c] text-white')
                             : (isWin ? 'bg-[#fdecec] text-[#e03131]' : 'bg-[#e7f6ee] text-[#00a05c]');
@@ -25401,21 +25461,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             + '</div>'
                             + '</div>';
                     }
-                    const contribHtml = '<div class="grid grid-cols-2 gap-2 items-stretch">'
-                        + contribColumn('盈利榜', true, contribWin, contribWinAll.length, contribWinSum, '暂无盈利')
-                        + contribColumn('亏损榜', false, contribLose, contribLoseAll.length, contribLoseSum, '暂无亏损')
-                        + '</div>';
+                    const yearContrib = buildContrib(ytdRanks);
+                    const allContrib = buildContrib(pnlRanks);
                     // 有累计盈亏数据就展示；空账本由下方空态分支隐藏
                     const contribShow = true;
                     const contribCardEl = document.querySelector('#pnlContribCard');
                     if(contribCardEl) contribCardEl.style.display = contribShow ? '' : 'none';
-                    const contribChipEl = document.querySelector('#pnlContribChip');
-                    if(contribChipEl){
-                        contribChipEl.innerText = '盈利 ' + winCount + ' · 亏损 ' + loseCount;
-                        contribChipEl.className = 'rounded-full px-2 py-1 text-[9px] text-[#8a6a3f] bg-[#faf3e3] whitespace-nowrap';
-                    }
                     const contribListEl = document.querySelector('#statsPnlContribList');
-                    if(contribListEl) contribListEl.innerHTML = contribHtml;
+                    if(contribListEl){
+                        contribListEl.innerHTML = '<div id="pnlContribYearBody" data-win="' + yearContrib.win + '" data-lose="' + yearContrib.lose + '">' + yearContrib.html + '</div>'
+                            + '<div id="pnlContribAllBody" class="hidden" data-win="' + allContrib.win + '" data-lose="' + allContrib.lose + '">' + allContrib.html + '</div>';
+                    }
+                    setPnlContribPeriod(pnlContribPeriod);
                     pnlRanks.forEach(function(x, idx){
                         const it = x.item;
                         const rec = x.rec;
@@ -25465,7 +25522,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
                     // 行情未就绪标记 stale=true：下次渲染自动重建重试
                     const snapF = loadStatsDaily();
-                    snapF.pnl = { v: STATS_SNAP_VERSION, key: pnlPeriodKey, layout: PNL_RANK_LAYOUT_VERSION, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, fp: statsSnapFingerprint(), listHtml: rankHtml, contribHtml: contribHtml, contribShow: contribShow, totalText: totalText, totalClass: totalClass, winText: String(winCount), loseText: String(loseCount) };
+                    snapF.pnl = { v: STATS_SNAP_VERSION, key: pnlPeriodKey, layout: PNL_RANK_LAYOUT_VERSION, date: pnlRankTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, fp: statsSnapFingerprint(), listHtml: rankHtml, contribHtmlYear: yearContrib.html, contribHtmlAll: allContrib.html, contribWinYear: String(yearContrib.win), contribLoseYear: String(yearContrib.lose), contribWinAll: String(allContrib.win), contribLoseAll: String(allContrib.lose), contribShow: contribShow, totalText: totalText, totalClass: totalClass, winText: String(winCount), loseText: String(loseCount) };
                     saveStatsDaily(snapF);
                 }
             } else if(pnlSnapC.hasData){
@@ -25473,14 +25530,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 document.querySelector('#statsPnlRankList').innerHTML = pnlSnapC.listHtml;
                 applyPnlRankVisibility();
                 const contribEl = document.querySelector('#statsPnlContribList');
-                if(contribEl) contribEl.innerHTML = pnlSnapC.contribHtml || '<div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>';
+                if(contribEl){
+                    const yearHtml = pnlSnapC.contribHtmlYear || '<div class="py-7 text-center text-gray-400 text-[11px]">年初基础价未获取</div>';
+                    const allHtml = pnlSnapC.contribHtmlAll || pnlSnapC.contribHtml || '<div class="py-7 text-center text-gray-400 text-[11px]">暂无持仓数据</div>';
+                    contribEl.innerHTML = '<div id="pnlContribYearBody" data-win="' + (pnlSnapC.contribWinYear || '0') + '" data-lose="' + (pnlSnapC.contribLoseYear || '0') + '">' + yearHtml + '</div>'
+                        + '<div id="pnlContribAllBody" class="hidden" data-win="' + (pnlSnapC.contribWinAll || '0') + '" data-lose="' + (pnlSnapC.contribLoseAll || '0') + '">' + allHtml + '</div>';
+                }
                 const contribCard = document.querySelector('#pnlContribCard');
                 if(contribCard) contribCard.style.display = pnlSnapC.contribShow === true ? '' : 'none';
-                const contribChip = document.querySelector('#pnlContribChip');
-                if(contribChip){
-                    contribChip.innerText = '盈利 ' + pnlSnapC.winText + ' · 亏损 ' + pnlSnapC.loseText;
-                    contribChip.className = 'rounded-full px-2 py-1 text-[9px] text-[#8a6a3f] bg-[#faf3e3] whitespace-nowrap';
-                }
+                setPnlContribPeriod(pnlContribPeriod);
                 const tEl = document.querySelector('#pnlRankTotal');
                 tEl.innerText = pnlSnapC.totalText;
                 tEl.className = 'text-[12px] font-bold tabular-nums ' + pnlSnapC.totalClass;

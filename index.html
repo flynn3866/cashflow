@@ -328,9 +328,7 @@
             from{ opacity:0; transform:scale(.92) translateY(10px); }
             to{ opacity:1; transform:scale(1) translateY(0); }
         }
-        html, body{ -webkit-tap-highlight-color:transparent; overscroll-behavior-y:none; }
-        /* 弹层/建议列表自身可滚动，但不把到顶/到底后的手势继续传给页面，避免背景被拉动 */
-        #stockSuggestList, #watchSuggestList, #msModalList, #targetEditorSheet, #targetOverviewSheet{ overscroll-behavior:contain; }
+        html, body{ -webkit-tap-highlight-color:transparent; overscroll-behavior:none; overscroll-behavior-y:none; }
         /* 触摸设备：财务表原生横向滚动禁用（避免 iOS 横向橡皮筋），横向由方向分流手势 JS 驱动 scrollLeft；桌面保留原生横向滚动与滚动条 */
         @media (hover:none) and (pointer:coarse){ #sdFinBody{ overflow-x:hidden; } }
         .no-spinner::-webkit-inner-spin-button,.no-spinner::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
@@ -397,7 +395,7 @@
            纵向触摸直接由外层整页滚动容器原生处理，保证上下滚动始终可用 */
 
         /* 全局背景：纯 CSS 高级羊皮纸——双颗粒噪点（深浅层次）+ 横/竖/斜三层纤维 + 淡香槟暖光聚拢 + 边缘暗角；底色 #f5efe3 */
-        html, body{
+        body{
             background-color: #f5efe3;
             background-image:
 url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'120'%20height%3D'120'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.85'%20numOctaves%3D'2'%20stitchTiles%3D'stitch'/%3E%3C/filter%3E%3Crect%20width%3D'120'%20height%3D'120'%20filter%3D'url(%23n)'%20opacity%3D'0.05'/%3E%3C/svg%3E"),

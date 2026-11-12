@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261112.245';</script>
+    <script>window.APP_VERSION = '20261112.248';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -15537,16 +15537,38 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!rows.length){ el.classList.add('hidden'); el.innerHTML = ''; return; }
             const done = rows.filter(function(r){ return r.achieved; }).length;
             const pending = rows.length - done;
-            const sub = pending ? (pending + ' 只待完成 · 每天提醒') : '全部达成 · 不再提醒';
+            const allDone = pending === 0;
+            const accent = allDone ? '#2f7d5a' : '#a9642a';
+            const accentSoft = allDone ? '#6fb894' : '#d8b07a';
+            const border = allDone ? '#c8dfd2' : '#e6d1a8';
+            const rail = allDone ? '#4f8a6e' : '#b07a3a';
+            const iconBg = allDone ? '#2f5d49' : '#3a2a1c';
+            const iconColor = allDone ? '#d9eee1' : '#f2d49b';
+            const muted = allDone ? '#6f8f7d' : '#9b7b54';
+            const ratioSub = allDone ? '#9ab7a7' : '#b0946b';
+            const chevron = allDone ? '#547a65' : '#9a7550';
+            const track = allDone ? '#e1eee7' : '#efe3cd';
+            const shadow = allDone ? 'rgba(47,125,90,0.08)' : 'rgba(169,100,42,0.10)';
+            const chip = allDone
+                ? '<span class="text-[9.5px] font-semibold text-[#2f7d5a] bg-[#e8f5ee] ring-1 ring-[#cde7db] rounded-full px-2 py-0.5 flex-shrink-0">全部达成</span>'
+                : '<span class="text-[9.5px] font-semibold text-[#9a6a2f] bg-[#fff7e6] ring-1 ring-[#e8cf9c] rounded-full px-2 py-0.5 flex-shrink-0">待完成 ' + pending + '</span>';
+            const sub = allDone ? '提醒已停止 · 目标状态保留' : '每天提醒 · 达标后自动停止';
             el.classList.remove('hidden');
-            el.innerHTML = '<div class="relative flex items-center gap-2.5 rounded-xl bg-white border border-[#eadfcf] px-3.5 py-2.5 card-shadow cursor-pointer active:scale-[0.99] transition-transform" onclick="openTargetOverview()">'
-                + '<div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[11px] text-accent"></i></div>'
+            el.innerHTML = '<div class="relative overflow-hidden rounded-2xl border px-4 py-3 cursor-pointer active:scale-[0.99] transition-transform" style="background:linear-gradient(135deg,#fffdf8 0%,#f7ecd8 100%);border-color:' + border + ';border-left:3px solid ' + rail + ';box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 4px 14px ' + shadow + ';" onclick="openTargetOverview()">'
+                + '<div class="flex items-center gap-3">'
+                + '<div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:' + iconBg + ';box-shadow:0 3px 8px ' + (allDone ? 'rgba(47,93,73,0.20)' : 'rgba(58,42,28,0.18)') + ';">'
+                + '<i class="fa fa-bullseye text-[14px]" style="color:' + iconColor + ';"></i></div>'
                 + '<div class="min-w-0 flex-1">'
-                + '<div class="flex items-center gap-1.5"><span class="text-[12px] font-semibold text-gray-700">目标持仓</span><span class="text-[10px] font-semibold text-accent tabular-nums">' + done + '/' + rows.length + ' 已达成</span></div>'
-                + '<div class="text-[10px] text-gray-400 mt-0.5 truncate">' + sub + '</div>'
+                + '<div class="flex items-center gap-2 min-w-0"><span class="text-[13px] font-semibold text-[#5b4126] truncate">目标持仓</span>' + chip + '</div>'
+                + '<div class="text-[10.5px] mt-1 truncate" style="color:' + muted + ';">' + sub + '</div>'
+                + '<div class="mt-2 h-[3px] rounded-full overflow-hidden" style="background:' + track + ';"><div style="width:' + (done / rows.length * 100).toFixed(1) + '%;height:100%;border-radius:3px;background:linear-gradient(90deg,' + accentSoft + ',' + accent + ');"></div></div>'
                 + '</div>'
-                + '<div class="w-12 h-[2px] rounded-full bg-[#f0e4cf] overflow-hidden flex-shrink-0"><div style="width:' + (done / rows.length * 100).toFixed(1) + '%;height:100%;background:linear-gradient(90deg,#d8b07a,#a9642a);"></div></div>'
-                + '<i class="fa fa-chevron-right text-[9px] text-gray-300 flex-shrink-0"></i>'
+                + '<div class="flex-shrink-0 text-right pl-0.5">'
+                + '<div class="text-[21px] font-bold leading-none tabular-nums" style="color:' + accent + ';">' + done + '<span class="text-[12px] font-semibold" style="color:' + ratioSub + ';">/' + rows.length + '</span></div>'
+                + '<div class="text-[9.5px] mt-1" style="color:' + muted + ';">已达成</div>'
+                + '</div>'
+                + '<svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
+                + '</div>'
                 + '</div>';
         }
         function renderStockTargetCard(){

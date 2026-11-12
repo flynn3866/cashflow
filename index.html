@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261112.243';</script>
+    <script>window.APP_VERSION = '20261112.245';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1003,6 +1003,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
+        <!-- 目标持仓摘要：只在设置过目标后出现，点击打开全部目标抽屉；无目标时完全隐藏 -->
+        <div id="targetSummaryStrip" class="hidden mb-3"></div>
 
         <!-- 我的持仓头部 -->
         <!-- 全部/A股/港股筛选标签 + 卡片/列表模式切换 -->
@@ -2266,6 +2268,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-[0.08] pointer-events-none" style="background:radial-gradient(circle,#f0c987,transparent 70%)"></div>
             <div id="sdQuoteBody" class="relative z-10"></div>
         </div>
+        <!-- 持仓目标：仅从持仓进入且该股票仍在持仓时显示；目标只做计划，不参与成本/盈亏计算 -->
+        <div id="sdTargetCard" class="hidden mb-4"></div>
         <!-- K线走势：日/周/月K，前复权（东方财富） -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
@@ -4040,13 +4044,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="text-right space-y-1">
                     <div class="text-[11px] text-amber-100/60">除权动态 <span class="text-amber-200 font-semibold" id="notifExdivCount">0</span></div>
                     <div class="text-[11px] text-amber-100/60">股息率提醒 <span class="text-amber-200 font-semibold" id="notifYieldCount">0</span></div>
+                    <div class="text-[11px] text-amber-100/60">目标持仓 <span class="text-amber-200 font-semibold" id="notifTargetCount">0</span></div>
                 </div>
             </div>
         </div>
 
         <!-- 消息列表 -->
         <div id="notifList" class="space-y-3"></div>
-        <div class="text-center text-[11px] text-gray-400 mt-6">除权提醒随分红数据每日更新 · 关注股息率突破 4%/5%/6% 各提醒一次</div>
+        <div class="text-center text-[11px] text-gray-400 mt-6">目标持仓达标前每日提醒一次 · 除权提醒随分红数据每日更新 · 关注股息率突破 4%/5%/6% 各提醒一次</div>
     </div>
 
     <!-- 分红明细页面：今年已收分红的每一笔来源（设置基准 + 各股票除权到账） -->
@@ -5466,6 +5471,70 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
+    <!-- 目标持仓设置：底部抽屉，聚焦单只股票；目标只做计划，不改变股数/成本/现金 -->
+    <div id="targetEditorModal" class="fixed inset-0 z-[95] hidden items-end justify-center bg-black/50">
+        <div id="targetEditorSheet" class="relative w-full max-w-xl mx-auto bg-white rounded-t-3xl px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="mx-auto w-9 h-1 rounded-full bg-gray-200 mb-3"></div>
+            <div class="flex items-center gap-2.5 mb-4">
+                <div class="w-9 h-9 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[14px] text-accent"></i></div>
+                <div class="min-w-0">
+                    <div class="text-[16px] font-semibold text-gray-800">设置目标持仓</div>
+                    <div id="targetEditStockLine" class="text-[11px] text-gray-400 mt-0.5 truncate">--</div>
+                </div>
+                <button id="targetEditorCloseBtn" type="button" class="ml-auto w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times text-[13px]"></i></button>
+            </div>
+
+            <div class="rounded-xl bg-[#faf5e9] ring-1 ring-[#eedfc0] px-3.5 py-3 mb-4">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[11px] text-gray-500">当前持仓</span>
+                    <span id="targetEditCurrent" class="text-[15px] font-semibold text-gray-800 tabular-nums">-- 股</span>
+                </div>
+            </div>
+
+            <label class="block text-[12px] font-medium text-gray-600 mb-1.5">目标股数</label>
+            <div class="flex items-center rounded-xl bg-white ring-1 ring-[#eedfc0] px-3 focus-within:ring-accent transition-all">
+                <input id="targetSharesInput" type="number" inputmode="numeric" min="1" step="1" placeholder="例如 60000" class="w-full py-3 text-[20px] font-semibold tabular-nums text-gray-800 bg-transparent outline-none placeholder:text-gray-300">
+                <span class="text-[12px] text-gray-400 flex-shrink-0">股</span>
+            </div>
+            <div class="flex items-center gap-2 mt-2.5">
+                <button type="button" onclick="targetQuickPct(10)" class="flex-1 py-1.5 rounded-lg bg-[#faf5e9] text-[11px] font-medium text-accent active:scale-95 transition-transform">+10%</button>
+                <button type="button" onclick="targetQuickPct(25)" class="flex-1 py-1.5 rounded-lg bg-[#faf5e9] text-[11px] font-medium text-accent active:scale-95 transition-transform">+25%</button>
+                <button type="button" onclick="targetQuickPct(50)" class="flex-1 py-1.5 rounded-lg bg-[#faf5e9] text-[11px] font-medium text-accent active:scale-95 transition-transform">+50%</button>
+            </div>
+            <div id="targetEditorHint" class="text-[10.5px] text-gray-400 mt-2 leading-relaxed">目标股数按整数设置；未达标时每天在消息中心提醒一次。</div>
+
+            <button id="targetRemindBtn" type="button" onclick="targetToggleRemind()" class="w-full flex items-center gap-2.5 mt-4 py-2.5 text-left active:opacity-80 transition-opacity">
+                <span id="targetRemindTrack" class="relative w-9 h-5 rounded-full bg-accent flex-shrink-0 transition-colors"><span id="targetRemindKnob" class="absolute top-0.5 left-[18px] w-4 h-4 rounded-full bg-white shadow-sm transition-all"></span></span>
+                <span class="text-[12px] font-medium text-gray-700">达标前每日提醒</span>
+                <span id="targetRemindState" class="ml-auto text-[10.5px] text-accent">已开启</span>
+            </button>
+
+            <div class="flex gap-2.5 mt-4">
+                <button id="targetClearBtn" type="button" class="hidden flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 text-[13px] font-medium active:bg-gray-50 transition-colors">清除目标</button>
+                <button id="targetSaveBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-accent to-[#a9642a] text-white text-[13px] font-semibold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform">保存目标</button>
+            </div>
+            <div class="text-center text-[10px] text-gray-400 mt-2.5">目标仅用于进度和提醒，不影响成本、盈亏、现金或交易流水</div>
+        </div>
+    </div>
+
+    <!-- 目标持仓总览：只在已设置目标时从首页摘要打开 -->
+    <div id="targetOverviewModal" class="fixed inset-0 z-[94] hidden items-end justify-center bg-black/50">
+        <div id="targetOverviewSheet" class="relative w-full max-w-xl mx-auto bg-[#fbf8f1] rounded-t-3xl px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[88vh] overflow-y-auto">
+            <div class="mx-auto w-9 h-1 rounded-full bg-gray-200 mb-3"></div>
+            <div class="flex items-center gap-2.5 mb-1">
+                <div class="w-9 h-9 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[14px] text-accent"></i></div>
+                <div>
+                    <div class="text-[16px] font-semibold text-gray-800">目标持仓</div>
+                    <div id="targetOverviewSummary" class="text-[11px] text-gray-400 mt-0.5">--</div>
+                </div>
+                <button id="targetOverviewCloseBtn" type="button" class="ml-auto w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times text-[13px]"></i></button>
+            </div>
+            <div class="text-[10.5px] text-gray-400 mb-3 mt-2">未达成目标会每天提醒；达标后自动停止，并保留“已达成”状态。</div>
+            <div id="targetOverviewList" class="space-y-2.5"></div>
+            <div class="text-center text-[10px] text-gray-400 mt-4">点击任意股票可调整目标，或从个股详情页进入设置</div>
+        </div>
+    </div>
+
     <script>
         // 统一空态组件：金叶幼苗线性插画（品牌金铜系）
         window.emptyTipHTML = function(opts){
@@ -5505,7 +5574,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const EXPORT_KEYS = ['holdViewMode','dividendHkFx','dividendWatchList','dividendNotifFired',
             'dividendNotifications','hcSellCheckLog','dividendIndustryMapping','dividendHkIndustryMap',
             'settingsCollapseState','statsCollapseState','statsSubCollapse','dividendMilestones',
-            'divCashFlow','dividendFeeCfg','dividendGoalCfg'];
+            'divCashFlow','dividendFeeCfg','dividendGoalCfg','holdingTargetGoals','holdingTargetNotifs'];
+        // 个股目标持仓：与交易/持仓主数据分离，避免目标字段进入成本、快照和历史计算。
+        const HOLDING_GOALS_KEY = 'holdingTargetGoals';
+        const HOLDING_TARGET_NOTIF_KEY = 'holdingTargetNotifs';
         let holdDataList = [];
         // 主数据加载完成闸门：init 解析完已存持仓（或确认本来无数据）前，禁止 saveLocal 把空数组/半成品写回
         let _holdDataLoaded = false;
@@ -6684,6 +6756,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     saveHistory();
                     // 行情刷新后：更新关注股息率阶梯提醒（突破 4%/5%/6% 各提醒一次）
                     updateYieldNotif();
+                    // 跨天/重新可见时补齐目标提醒（同一天同一股票不重复）
+                    ensureHoldingTargetNotifs();
                     // 耗电优化：持仓页不可见时不渲染持仓 DOM（切回时 switchTab 立即渲染一次）
                     // A：持仓页可见 → 增量更新数字（不重建列表 DOM）；滚动中跳过，滚动停止后补一次
                     if(activeTab === 'hold'){
@@ -6932,6 +7006,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 saveHistory();
             }
             renderPage();
+            ensureHoldingTargetNotifs();
             initMilestoneEvents();
             // 自动补全缺失的行业信息：对industry为"其他"的A股股票，自动从东方财富获取
             // 行业信息基本不变，获取成功后保存，不再重复获取（参考券商行业分类刷新机制）
@@ -12586,6 +12661,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(item){
                     const dFx = item.marketType === 'HK' ? hkFxRate : 1;
                     adjustCash((Number(item.count) || 0) * (Number(item.nowPrice) || 0) * dFx);
+                    targetForgetHolding(item.code, item.marketType);
                 }
                 holdDataList = holdDataList.filter(item=>item.id !== id);
                 saveLocal();
@@ -12767,6 +12843,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         recordClosedStock(item, price, sellFee);
                         adjustCash(sellProceeds);
                         item.transactions[item.transactions.length - 1].cashAfter = historyData.cashBalance;
+                        targetForgetHolding(item.code, item.marketType);
                         holdDataList = holdDataList.filter(it => it.id !== tradeItemId);
                         saveLocal();
                         renderPage();
@@ -12804,6 +12881,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 tItem.tCum = null;
                 saveLocal();
             }
+            // 交易改变持股数：立即重算目标进度、生成/关闭当日提醒，并刷新详情页目标卡
+            ensureHoldingTargetNotifs();
+            updateTargetSummaryStrip();
+            if(sdCurrentStock) renderStockTargetCard();
             // 交易明细页开着：当日买卖（做T）数据已变化，立即刷新今日条
             const dayWrapEl = document.querySelector('#tradeLogDayWrap');
             if(dayWrapEl && !dayWrapEl.classList.contains('hidden')){
@@ -15245,6 +15326,519 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const d = new Date();
             return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
         }
+
+        // ==================== 个股目标持仓（计划字段，与交易/成本/盈亏完全分离） ====================
+        function targetEsc(v){
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+        function targetKey(market, code){
+            return String(market || 'A') + '|' + String(code || '');
+        }
+        function targetLoadGoals(){
+            try{
+                const o = JSON.parse(lsGet(HOLDING_GOALS_KEY) || '{}');
+                return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+            }catch(e){ return {}; }
+        }
+        function targetSaveGoals(o){
+            try{ lsSet(HOLDING_GOALS_KEY, JSON.stringify(o || {})); }catch(e){}
+        }
+        function targetGetGoal(code, market){
+            const g = targetLoadGoals()[targetKey(market, code)];
+            if(!g) return null;
+            const n = Number(g.targetShares);
+            if(!isFinite(n) || n <= 0) return null;
+            return {
+                targetShares: Math.max(1, Math.round(n)),
+                remind: g.remind !== false,
+                updatedAt: Number(g.updatedAt) || 0,
+                lastNotified: String(g.lastNotified || ''),
+                reachedAt: String(g.reachedAt || '')
+            };
+        }
+        function targetGetHolding(code, market){
+            return (holdDataList || []).find(function(it){
+                return String(it.code) === String(code) && String(it.marketType) === String(market || 'A');
+            }) || null;
+        }
+        function targetFmtShares(v){
+            const n = Math.round(Number(v) || 0);
+            return n.toLocaleString('en-US');
+        }
+        function targetRows(){
+            const rows = [];
+            (holdDataList || []).forEach(function(it){
+                const g = targetGetGoal(it.code, it.marketType);
+                if(!g) return;
+                const current = Math.max(0, Math.round(Number(it.count) || 0));
+                const target = Math.max(1, Math.round(Number(g.targetShares) || 1));
+                const pct = Math.min(100, current / target * 100);
+                rows.push({
+                    item: it, goal: g, current: current, target: target,
+                    achieved: current >= target, gap: Math.max(0, target - current), pct: pct
+                });
+            });
+            rows.sort(function(a, b){
+                if(a.achieved !== b.achieved) return a.achieved ? 1 : -1;
+                if(a.gap !== b.gap) return b.gap - a.gap;
+                return a.item.name.localeCompare(b.item.name, 'zh-CN');
+            });
+            return rows;
+        }
+        function targetMoneyText(row){
+            const price = Number(row.item.nowPrice) || 0;
+            if(!(price > 0) || !(row.gap > 0)) return '';
+            const fx = row.item.marketType === 'HK' ? hkFxRate : 1;
+            return '按现价约 ¥' + fmtMoney(row.gap * price * fx);
+        }
+        function targetRemoveTodayItems(code, market){
+            const store = getTargetNotifStore();
+            const k = targetKey(market, code);
+            const before = store.items.length;
+            store.items = store.items.filter(function(x){
+                return !(String(x.code) === String(code) && String(x.market) === String(market) &&
+                    (x.type === 'target' || x.type === 'targetDone'));
+            });
+            if(store.items.length !== before){
+                saveTargetNotifStore(store);
+                updateNotifBadge();
+            }
+        }
+        function targetForgetHolding(code, market){
+            const map = targetLoadGoals();
+            delete map[targetKey(market, code)];
+            targetSaveGoals(map);
+            targetRemoveTodayItems(code, market);
+            ensureHoldingTargetNotifs();
+        }
+        // 清理“目标还在、持仓已不存在”的脏记录（导入/删除后可能出现），避免重新添加同名股票时旧目标复活
+        function targetPruneGoals(){
+            const map = targetLoadGoals();
+            let changed = false;
+            Object.keys(map).forEach(function(k){
+                const parts = k.split('|');
+                const market = parts[0], code = parts.slice(1).join('|');
+                if(!targetGetHolding(code, market)){
+                    delete map[k];
+                    changed = true;
+                }
+            });
+            if(changed) targetSaveGoals(map);
+            return map;
+        }
+        function getTargetNotifStore(){
+            let s = null;
+            try{ s = JSON.parse(lsGet(HOLDING_TARGET_NOTIF_KEY) || 'null'); }catch(e){ s = null; }
+            const today = todayStr();
+            if(!s || s.date !== today || !Array.isArray(s.items)){
+                s = { date: today, items: [] };
+                try{ lsSet(HOLDING_TARGET_NOTIF_KEY, JSON.stringify(s)); }catch(e){}
+            }
+            return s;
+        }
+        function saveTargetNotifStore(s){
+            try{ lsSet(HOLDING_TARGET_NOTIF_KEY, JSON.stringify(s)); }catch(e){}
+        }
+        function ensureHoldingTargetNotifs(){
+            if(!_holdDataLoaded || _allDataClearing) return;
+            const goals = targetPruneGoals();
+            const store = getTargetNotifStore();
+            const today = todayStr();
+            let changed = false;
+            (holdDataList || []).forEach(function(it){
+                const key = targetKey(it.marketType, it.code);
+                const g = goals[key];
+                if(!g) return;
+                const target = Math.max(1, Math.round(Number(g.targetShares) || 0));
+                if(!isFinite(target) || target <= 0) return;
+                const current = Math.max(0, Math.round(Number(it.count) || 0));
+                const achieved = current >= target;
+                const hasTodayTarget = store.items.some(function(x){
+                    return x.type === 'target' && String(x.code) === String(it.code) && String(x.market) === String(it.marketType);
+                });
+                const hasDone = store.items.some(function(x){
+                    return x.type === 'targetDone' && String(x.code) === String(it.code) && String(x.market) === String(it.marketType);
+                });
+                const hadReminder = hasTodayTarget || String(g.lastNotified || '') === today;
+                if(achieved){
+                    // 首次达成只留状态；如果此前确实提醒过，再补一条“已达成”消息（每天最多一条）
+                    if(!g.reachedAt){
+                        g.reachedAt = today;
+                        changed = true;
+                    }
+                    if(hadReminder && g.remind !== false && !hasDone){
+                        store.items.push({
+                            key: 'targetdone|' + key + '|' + today, type: 'targetDone',
+                            code: it.code, market: it.marketType, name: it.name,
+                            current: current, target: target, gap: 0, pct: 100, time: notifNowTime()
+                        });
+                        changed = true;
+                    }
+                    const before = store.items.length;
+                    store.items = store.items.filter(function(x){
+                        return !(x.type === 'target' && String(x.code) === String(it.code) && String(x.market) === String(it.marketType));
+                    });
+                    if(store.items.length !== before) changed = true;
+                    if(g.lastNotified) { g.lastNotified = ''; changed = true; }
+                } else {
+                    if(g.reachedAt){ g.reachedAt = ''; changed = true; }
+                    if(g.remind === false){
+                        const before = store.items.length;
+                        store.items = store.items.filter(function(x){
+                            return !((x.type === 'target' || x.type === 'targetDone') && String(x.code) === String(it.code) && String(x.market) === String(it.marketType));
+                        });
+                        if(store.items.length !== before) changed = true;
+                    } else {
+                        // 同一天同一股票只保留一条，刷新时只更新数字，不重复追加
+                        let item = store.items.find(function(x){
+                            return x.type === 'target' && String(x.code) === String(it.code) && String(x.market) === String(it.marketType);
+                        });
+                        if(!item){
+                            store.items.push({
+                                key: 'target|' + key + '|' + today, type: 'target',
+                                code: it.code, market: it.marketType, name: it.name,
+                                current: current, target: target, gap: target - current,
+                                pct: current / target * 100, price: Number(it.nowPrice) || 0, time: notifNowTime()
+                            });
+                            g.lastNotified = today;
+                            changed = true;
+                        } else {
+                            const nextPct = current / target * 100;
+                            if(item.current !== current || item.target !== target || item.name !== it.name || item.pct !== nextPct){
+                                item.current = current; item.target = target; item.name = it.name;
+                                item.gap = target - current; item.pct = nextPct;
+                                item.price = Number(it.nowPrice) || 0;
+                                changed = true;
+                            }
+                        }
+                    }
+                    const beforeDone = store.items.length;
+                    store.items = store.items.filter(function(x){
+                        return !(x.type === 'targetDone' && String(x.code) === String(it.code) && String(x.market) === String(it.marketType));
+                    });
+                    if(store.items.length !== beforeDone) changed = true;
+                }
+            });
+            if(changed){
+                targetSaveGoals(goals);
+                saveTargetNotifStore(store);
+                updateNotifBadge();
+                const page = document.querySelector('#pageNotifCenter');
+                if(page && !page.classList.contains('hidden')) renderNotifCenter();
+            }
+        }
+
+        function updateTargetSummaryStrip(){
+            const el = document.querySelector('#targetSummaryStrip');
+            if(!el) return;
+            const rows = targetRows();
+            if(!rows.length){ el.classList.add('hidden'); el.innerHTML = ''; return; }
+            const done = rows.filter(function(r){ return r.achieved; }).length;
+            const pending = rows.length - done;
+            const sub = pending ? (pending + ' 只待完成 · 每天提醒') : '全部达成 · 不再提醒';
+            el.classList.remove('hidden');
+            el.innerHTML = '<div class="relative flex items-center gap-2.5 rounded-xl bg-white border border-[#eadfcf] px-3.5 py-2.5 card-shadow cursor-pointer active:scale-[0.99] transition-transform" onclick="openTargetOverview()">'
+                + '<div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[11px] text-accent"></i></div>'
+                + '<div class="min-w-0 flex-1">'
+                + '<div class="flex items-center gap-1.5"><span class="text-[12px] font-semibold text-gray-700">目标持仓</span><span class="text-[10px] font-semibold text-accent tabular-nums">' + done + '/' + rows.length + ' 已达成</span></div>'
+                + '<div class="text-[10px] text-gray-400 mt-0.5 truncate">' + sub + '</div>'
+                + '</div>'
+                + '<div class="w-12 h-[2px] rounded-full bg-[#f0e4cf] overflow-hidden flex-shrink-0"><div style="width:' + (done / rows.length * 100).toFixed(1) + '%;height:100%;background:linear-gradient(90deg,#d8b07a,#a9642a);"></div></div>'
+                + '<i class="fa fa-chevron-right text-[9px] text-gray-300 flex-shrink-0"></i>'
+                + '</div>';
+        }
+        function renderStockTargetCard(){
+            const box = document.querySelector('#sdTargetCard');
+            if(!box) return;
+            const stock = sdCurrentStock;
+            if(!stock || sdDetailOrigin !== 'hold'){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+            const item = targetGetHolding(stock.code, stock.market);
+            if(!item){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+            const g = targetGetGoal(item.code, item.marketType);
+            const current = Math.max(0, Math.round(Number(item.count) || 0));
+            if(!g){
+                box.classList.remove('hidden');
+                box.innerHTML = '<div class="bg-white rounded-2xl card-shadow px-4 py-3 flex items-center gap-2.5">'
+                    + '<div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[12px] text-accent"></i></div>'
+                    + '<div class="min-w-0 flex-1"><div class="text-[13px] font-semibold text-gray-800">目标持仓</div><div class="text-[10px] text-gray-400 mt-0.5">设一个目标股数，未达标时每天提醒</div></div>'
+                    + '<button type="button" onclick="openTargetEditorByCode(\'' + String(item.code) + '\',\'' + String(item.marketType) + '\',false)" class="text-[11px] font-semibold text-accent bg-[#faf3e3] border border-[#eedfc0] rounded-full px-3 py-1.5 flex-shrink-0 active:scale-95 transition-transform">设置</button>'
+                    + '</div>';
+                return;
+            }
+            const target = Math.max(1, Math.round(Number(g.targetShares) || 0));
+            const achieved = current >= target;
+            const gap = Math.max(0, target - current);
+            const pct = Math.min(100, current / target * 100);
+            const money = achieved ? '' : targetMoneyText({ item: item, gap: gap });
+            const sub = achieved
+                ? '目标已达成'
+                : ('还差 ' + targetFmtShares(gap) + ' 股' + (money ? ' · ' + money : ''));
+            const note = g.remind === false ? ' · 提醒已关闭' : '';
+            box.classList.remove('hidden');
+            box.innerHTML = '<div class="bg-white rounded-2xl card-shadow px-4 py-3.5">'
+                + '<div class="flex items-center gap-2.5">'
+                + '<div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[11px] text-accent"></i></div>'
+                + '<span class="text-[13px] font-semibold text-gray-800">目标持仓</span>'
+                + '<span class="text-[9px] text-gray-400">' + (achieved ? '' : '进度 ' + pct.toFixed(1) + '%') + '</span>'
+                + '<button type="button" onclick="openTargetEditorByCode(\'' + String(item.code) + '\',\'' + String(item.marketType) + '\',false)" class="ml-auto text-[11px] font-semibold text-accent active:scale-95 transition-transform">' + (achieved ? '调整目标' : '调整') + '</button>'
+                + '</div>'
+                + '<div class="flex items-baseline gap-1.5 mt-2.5">'
+                + '<span class="text-[19px] font-bold text-gray-800 tabular-nums leading-none">' + targetFmtShares(current) + '</span>'
+                + '<span class="text-[10px] text-gray-400">/ ' + targetFmtShares(target) + ' 股</span>'
+                + '<span class="ml-auto text-[11px] font-semibold tabular-nums ' + (achieved ? 'text-[#8a6a44]' : 'text-accent') + '">' + (achieved ? '100.0%' : pct.toFixed(1) + '%') + '</span>'
+                + '</div>'
+                + '<div class="mt-2 h-[4px] rounded-full bg-[#f0e4cf] overflow-hidden"><div style="width:' + pct.toFixed(1) + '%;height:100%;border-radius:4px;background:' + (achieved ? '#8a6a44' : 'linear-gradient(90deg,#d8b07a,#a9642a)') + ';transition:width .5s cubic-bezier(.22,.61,.36,1);"></div></div>'
+                + '<div class="flex items-center gap-1.5 mt-2 text-[10px] ' + (achieved ? 'text-[#8a6a44]' : 'text-gray-500') + '">'
+                + (achieved ? '<i class="fa fa-check-circle text-[10px]"></i>' : '<i class="fa fa-circle-o text-[9px] text-accent"></i>')
+                + '<span class="truncate">' + sub + note + '</span></div>'
+                + '</div>';
+        }
+
+        let targetEditStock = null;
+        let targetRemindOn = true;
+        let targetReturnOverview = false;
+        let _targetBodyPrev = null;
+        let _targetHtmlPrev = null;
+        function targetLockBody(){
+            if(_targetBodyPrev !== null) return;
+            _targetBodyPrev = document.body.style.overflow;
+            _targetHtmlPrev = document.documentElement.style.overflow;
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        }
+        function targetUnlockBody(){
+            if(_targetBodyPrev === null) return;
+            document.body.style.overflow = _targetBodyPrev;
+            document.documentElement.style.overflow = _targetHtmlPrev || '';
+            _targetBodyPrev = null;
+            _targetHtmlPrev = null;
+        }
+        function targetUpdateRemindUI(){
+            const track = document.querySelector('#targetRemindTrack');
+            const knob = document.querySelector('#targetRemindKnob');
+            const state = document.querySelector('#targetRemindState');
+            if(!track || !knob || !state) return;
+            track.classList.toggle('bg-accent', targetRemindOn);
+            track.classList.toggle('bg-gray-300', !targetRemindOn);
+            knob.style.left = targetRemindOn ? '18px' : '2px';
+            state.innerText = targetRemindOn ? '已开启' : '已关闭';
+            state.classList.toggle('text-accent', targetRemindOn);
+            state.classList.toggle('text-gray-400', !targetRemindOn);
+        }
+        function targetToggleRemind(){
+            targetRemindOn = !targetRemindOn;
+            targetUpdateRemindUI();
+        }
+        function targetUpdateHint(){
+            const hint = document.querySelector('#targetEditorHint');
+            const input = document.querySelector('#targetSharesInput');
+            if(!hint || !input || !targetEditStock) return;
+            const raw = String(input.value || '').trim();
+            const n = Number(raw);
+            const current = Math.max(0, Math.round(Number(targetEditStock.count) || 0));
+            hint.className = 'text-[10.5px] text-gray-400 mt-2 leading-relaxed';
+            if(!raw){
+                hint.innerText = '目标股数按整数设置；未达标时每天在消息中心提醒一次。';
+            } else if(!isFinite(n) || !Number.isInteger(n) || n <= 0){
+                hint.innerText = '请输入正整数（股）。';
+                hint.className = 'text-[10.5px] text-amber-600 mt-2 leading-relaxed';
+            } else if(n <= current){
+                hint.innerText = '目标不高于当前持仓，保存后将直接视为已达成，不再提醒。';
+                hint.className = 'text-[10.5px] text-amber-600 mt-2 leading-relaxed';
+            } else {
+                const price = Number(targetEditStock.nowPrice) || 0;
+                const fx = targetEditStock.marketType === 'HK' ? hkFxRate : 1;
+                const money = price > 0 ? fmtMoney((n - current) * price * fx) : '';
+                hint.innerText = money ? ('按现价约需 ¥' + money + '；未达标时每天提醒一次。') : '未达标时每天在消息中心提醒一次。';
+            }
+        }
+        function targetQuickPct(pct){
+            if(!targetEditStock) return;
+            const input = document.querySelector('#targetSharesInput');
+            if(!input) return;
+            const current = Math.max(1, Math.round(Number(targetEditStock.count) || 0));
+            input.value = String(Math.max(1, Math.round(current * (1 + pct / 100))));
+            targetUpdateHint();
+        }
+        function openTargetEditorById(id){
+            const item = (holdDataList || []).find(function(it){ return String(it.id) === String(id); });
+            if(!item){ showToast('未找到该持仓'); return; }
+            openTargetEditorFor(item, false);
+        }
+        function openTargetEditorByCode(code, market, fromOverview){
+            const item = targetGetHolding(code, market);
+            if(!item){ showToast('该股票已不在持仓'); return; }
+            openTargetEditorFor(item, !!fromOverview);
+        }
+        function openTargetEditorFor(item, fromOverview){
+            if(fromOverview && document.querySelector('#targetOverviewModal') && !document.querySelector('#targetOverviewModal').classList.contains('hidden')){
+                closeTargetOverview();
+            }
+            targetReturnOverview = !!fromOverview;
+            targetEditStock = {
+                id: item.id, code: item.code, marketType: item.marketType,
+                name: item.name, count: Number(item.count) || 0, nowPrice: Number(item.nowPrice) || 0
+            };
+            const g = targetGetGoal(item.code, item.marketType);
+            targetRemindOn = g ? g.remind !== false : true;
+            document.querySelector('#targetEditStockLine').innerText = item.name + ' · ' + item.code + ' · ' + (item.marketType === 'HK' ? '港股' : 'A股');
+            document.querySelector('#targetEditCurrent').innerText = targetFmtShares(item.count) + ' 股';
+            document.querySelector('#targetSharesInput').value = g ? String(g.targetShares) : '';
+            document.querySelector('#targetClearBtn').classList.toggle('hidden', !g);
+            targetUpdateRemindUI();
+            targetUpdateHint();
+            const modal = document.querySelector('#targetEditorModal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            targetLockBody();
+            setTimeout(function(){ const input = document.querySelector('#targetSharesInput'); if(input){ input.focus(); input.select(); } }, 80);
+        }
+        function closeTargetEditor(){
+            const modal = document.querySelector('#targetEditorModal');
+            if(modal){ modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            targetUnlockBody();
+            targetEditStock = null;
+            targetReturnOverview = false;
+        }
+        function targetRefreshUI(){
+            updateTargetSummaryStrip();
+            renderStockTargetCard();
+            const overview = document.querySelector('#targetOverviewModal');
+            if(overview && !overview.classList.contains('hidden')) renderTargetOverview();
+            const notif = document.querySelector('#pageNotifCenter');
+            if(notif && !notif.classList.contains('hidden')) renderNotifCenter();
+        }
+        function targetSave(){
+            if(!targetEditStock) return;
+            const input = document.querySelector('#targetSharesInput');
+            const n = Number(String(input.value || '').trim());
+            if(!isFinite(n) || !Number.isInteger(n) || n <= 0){
+                showToast('请输入正整数目标股数');
+                input.focus();
+                return;
+            }
+            const map = targetLoadGoals();
+            const key = targetKey(targetEditStock.marketType, targetEditStock.code);
+            const old = map[key] || {};
+            const changed = !old.targetShares || Number(old.targetShares) !== n || (old.remind !== false) !== targetRemindOn;
+            map[key] = {
+                targetShares: n,
+                remind: targetRemindOn,
+                updatedAt: Date.now(),
+                lastNotified: changed ? '' : String(old.lastNotified || ''),
+                reachedAt: changed ? '' : String(old.reachedAt || '')
+            };
+            targetSaveGoals(map);
+            if(!targetRemindOn) targetRemoveTodayItems(targetEditStock.code, targetEditStock.marketType);
+            ensureHoldingTargetNotifs();
+            targetRefreshUI();
+            const back = targetReturnOverview;
+            closeTargetEditor();
+            if(back) setTimeout(function(){ openTargetOverview(); }, 260);
+            showToast('目标已保存');
+        }
+        function targetClear(){
+            const stock = targetEditStock;
+            if(!stock) return;
+            const code = stock.code, market = stock.marketType, name = stock.name;
+            closeTargetEditor();
+            showConfirm('确定清除「' + name + '」的目标持仓吗？清除后不再提醒，但持仓和交易数据不受影响。', function(){
+                const map = targetLoadGoals();
+                delete map[targetKey(market, code)];
+                targetSaveGoals(map);
+                targetRemoveTodayItems(code, market);
+                ensureHoldingTargetNotifs();
+                targetRefreshUI();
+                showToast('已清除目标');
+            });
+        }
+        function openTargetOverview(){
+            if(!targetRows().length){ showToast('还没有设置目标持仓'); return; }
+            const modal = document.querySelector('#targetOverviewModal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            targetLockBody();
+            renderTargetOverview();
+        }
+        function closeTargetOverview(){
+            const modal = document.querySelector('#targetOverviewModal');
+            if(modal){ modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            targetUnlockBody();
+        }
+        function renderTargetOverview(){
+            const rows = targetRows();
+            const summary = document.querySelector('#targetOverviewSummary');
+            const list = document.querySelector('#targetOverviewList');
+            if(!list) return;
+            const done = rows.filter(function(r){ return r.achieved; }).length;
+            const pending = rows.length - done;
+            if(summary){
+                summary.innerHTML = rows.length
+                    ? (done === rows.length
+                        ? '<span class="text-[#2f7d5a] font-medium">全部达成</span><span class="text-gray-400"> · 共 ' + rows.length + ' 只</span>'
+                        : '<span class="text-[#2f7d5a] font-medium">已达成 ' + done + '</span><span class="text-gray-300 mx-1">·</span><span class="text-accent font-medium">待完成 ' + pending + '</span><span class="text-gray-400"> · 共 ' + rows.length + ' 只</span>')
+                    : '暂无目标';
+            }
+            if(!rows.length){
+                list.innerHTML = '<div class="bg-white rounded-2xl border border-[#eadfcf] px-4 py-8 text-center text-[12px] text-gray-400">还没有设置目标持仓</div>';
+                return;
+            }
+            list.innerHTML = rows.map(function(r){
+                const it = r.item, g = r.goal;
+                const tag = it.marketType === 'HK'
+                    ? '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] text-white bg-blue-500 flex-shrink-0">HK</span>'
+                    : '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] text-white bg-[#e03131] flex-shrink-0">A</span>';
+                const status = r.achieved
+                    ? '<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#2f7d5a] bg-[#e8f5ee] ring-1 ring-[#cde7db] rounded-full px-2 py-0.5 flex-shrink-0"><i class="fa fa-check text-[9px]"></i>已达成</span>'
+                    : '<span class="text-[10px] font-semibold text-accent bg-[#faf3e3] ring-1 ring-[#f0dfbf] rounded-full px-2 py-0.5 flex-shrink-0">待完成</span>';
+                const cardStyle = r.achieved ? ' style="border-left:3px solid #4f9c78"' : '';
+                const cardClass = r.achieved
+                    ? 'rounded-2xl bg-[#f7fcf9] border border-[#cfe7db] px-3.5 py-3 shadow-[0_2px_10px_rgba(47,125,90,0.06)] active:bg-[#f0f8f3]'
+                    : 'rounded-2xl bg-white border border-[#eadfcf] px-3.5 py-3 shadow-sm active:bg-gray-50';
+                return '<div class="' + cardClass + '"' + cardStyle + ' onclick="openTargetEditorByCode(\'' + String(it.code) + '\',\'' + String(it.marketType) + '\',true)">'
+                    + '<div class="flex items-center gap-1.5 min-w-0">'
+                    + '<span class="text-[14px] font-semibold text-gray-800 truncate">' + targetEsc(it.name) + '</span>' + tag + status
+                    + '<span class="ml-auto text-[14px] font-bold tabular-nums ' + (r.achieved ? 'text-[#2f7d5a]' : 'text-accent') + '">' + r.pct.toFixed(1) + '%</span>'
+                    + '</div>'
+                    + '<div class="text-[10px] text-gray-400 mt-1 tabular-nums">' + String(it.code) + ' · 当前 ' + targetFmtShares(r.current) + ' / 目标 ' + targetFmtShares(r.target) + ' 股</div>'
+                    + '<div class="mt-2 h-[4px] rounded-full ' + (r.achieved ? 'bg-[#e3f1e9]' : 'bg-[#f0e4cf]') + ' overflow-hidden"><div style="width:' + r.pct.toFixed(1) + '%;height:100%;border-radius:4px;background:' + (r.achieved ? 'linear-gradient(90deg,#6fb894,#2f7d5a)' : 'linear-gradient(90deg,#d8b07a,#a9642a)') + ';"></div></div>'
+                    + '<div class="flex items-center justify-between mt-1.5 text-[10px]">'
+                    + (r.achieved
+                        ? '<span class="inline-flex items-center gap-1 text-[#2f7d5a]/80"><i class="fa fa-check-circle text-[9px]"></i>提醒已停止</span><span class="text-[#2f7d5a] font-medium">调整 ›</span>'
+                        : '<span class="text-gray-400">还差 <span class="text-accent font-medium tabular-nums">' + targetFmtShares(r.gap) + '</span> 股</span><span class="text-accent">调整 ›</span>')
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+        function openTargetNotifDetail(code, market){
+            const item = targetGetHolding(code, market);
+            if(!item){ showToast('该股票已不在持仓'); return; }
+            closeNotifCenter();
+            setTimeout(function(){ openHoldStockDetail(item.id); }, 280);
+        }
+
+        // 目标设置/总览弹层：点击遮罩关闭；关闭时恢复打开前的 body 滚动状态（详情页可能本来已锁定）
+        (function(){
+            const editor = document.querySelector('#targetEditorModal');
+            const overview = document.querySelector('#targetOverviewModal');
+            if(editor){
+                editor.addEventListener('click', function(e){ if(e.target === editor) closeTargetEditor(); });
+                const close = document.querySelector('#targetEditorCloseBtn');
+                if(close) close.addEventListener('click', closeTargetEditor);
+                const save = document.querySelector('#targetSaveBtn');
+                if(save) save.addEventListener('click', targetSave);
+                const clear = document.querySelector('#targetClearBtn');
+                if(clear) clear.addEventListener('click', targetClear);
+                const input = document.querySelector('#targetSharesInput');
+                if(input) input.addEventListener('input', targetUpdateHint);
+            }
+            if(overview){
+                overview.addEventListener('click', function(e){ if(e.target === overview) closeTargetOverview(); });
+                const close = document.querySelector('#targetOverviewCloseBtn');
+                if(close) close.addEventListener('click', closeTargetOverview);
+            }
+        })();
+
         // 除权提醒：扫描分红缓存，今天股权登记 / 今天除权除息 的股票生成提醒（每日更新，同日去重）
         function collectExdivNotif(){
             if(!holdDataList || !holdDataList.length) return;
@@ -15349,14 +15943,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const store = getNotifStore();
             const today = todayStr();
             const unread = (store.date === today) ? store.items.filter(function(x){ return !x.read; }).length : 0;
-            const badgeText = unread > 99 ? '99+' : String(unread);
+            const targetStore = getTargetNotifStore();
+            const targetUnread = targetStore.items.filter(function(x){
+                return (x.type === 'target' || x.type === 'targetDone') && !x.read;
+            }).length;
+            const totalUnread = unread + targetUnread;
+            const badgeText = totalUnread > 99 ? '99+' : String(totalUnread);
             document.querySelectorAll('.notif-badge').forEach(function(b){
-                b.classList.toggle('hidden', unread <= 0);
+                b.classList.toggle('hidden', totalUnread <= 0);
                 b.innerText = badgeText;
             });
             const mineBadge = document.querySelector('#mineNotifBadge');
             if(mineBadge){
-                mineBadge.classList.toggle('hidden', unread <= 0);
+                mineBadge.classList.toggle('hidden', totalUnread <= 0);
                 mineBadge.innerText = badgeText;
             }
         }
@@ -15370,6 +15969,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 saveNotifStore(store);
             }
             const items = store.items;
+            const targetStore = getTargetNotifStore();
+            const goalItems = targetStore.items.filter(function(x){ return x.type === 'target' || x.type === 'targetDone'; });
+            const targetPending = goalItems.filter(function(x){ return x.type === 'target'; }).length;
             const exdivItems = items.filter(function(x){ return x.type === 'exdiv'; });
             // 同一关注股同一天的多档股息率提醒只显示最高档一条（兼容此前生成的重复数据）
             const yieldMap = {};
@@ -15382,9 +15984,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const yieldItems = Object.keys(yieldMap).map(function(k){ return yieldMap[k]; });
             document.querySelector('#notifExdivCount').innerText = String(exdivItems.length);
             document.querySelector('#notifYieldCount').innerText = String(yieldItems.length);
-            document.querySelector('#notifTodayCount').innerText = items.length + ' 条';
+            const targetCountEl = document.querySelector('#notifTargetCount');
+            if(targetCountEl) targetCountEl.innerText = String(targetPending);
+            document.querySelector('#notifTodayCount').innerText = (items.length + goalItems.length) + ' 条';
             const listEl = document.querySelector('#notifList');
-            if(!items.length){
+            if(!items.length && !goalItems.length){
                 listEl.innerHTML = '<div class="bg-white rounded-2xl card-shadow px-5 py-10 text-center">'
                     + '<div class="w-14 h-14 rounded-full bg-[#faf3e3] flex items-center justify-center mx-auto mb-3"><i class="fa fa-bell-slash-o text-accent/60 text-xl"></i></div>'
                     + '<div class="text-gray-500 text-sm font-medium">今日暂无重要消息</div>'
@@ -15393,6 +15997,43 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return;
             }
             let html = '';
+            // 目标持仓分组：每日最多一条，达标后自动切为已达成
+            if(goalItems.length){
+                const doneCount = goalItems.filter(function(x){ return x.type === 'targetDone'; }).length;
+                html += '<div class="flex items-center gap-1.5 mb-2 mt-1">'
+                    + '<div class="w-1 h-3.5 bg-gradient-to-b from-[#d8b07a] to-[#a9642a] rounded-full"></div>'
+                    + '<span class="text-[12px] font-semibold text-gray-600">目标持仓</span>'
+                    + '<span class="text-[10px] text-gray-400">' + (targetPending ? targetPending + ' 只未达成 · 每天提醒' : '全部达成 · 不再提醒') + '</span>'
+                    + '</div>';
+                goalItems.forEach(function(m){
+                    const isDone = m.type === 'targetDone';
+                    const pct = isDone ? 100 : Math.min(100, Math.max(0, (Number(m.current) || 0) / Math.max(1, Number(m.target) || 1) * 100));
+                    const pctText = isDone ? '已达成' : (pct >= 10 ? Math.round(pct) + '%' : pct.toFixed(1) + '%');
+                    const tagHtml = m.market === 'HK'
+                        ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">港</span>'
+                        : '<span class="text-[10px] text-accent bg-[#faf3e3] px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
+                    const statusClass = isDone ? 'bg-[#faf3e3] text-[#8a6a44]' : 'bg-amber-50 text-amber-600';
+                    const dotColor = isDone ? '#8a6a44' : '#b8864a';
+                    const foot = isDone
+                        ? '<span class="text-[11px] text-[#8a6a44]"><i class="fa fa-check-circle mr-1"></i>目标已达成，提醒自动停止</span>'
+                        : '<span class="text-[11px] text-gray-500">还差 <span class="text-[15px] font-bold text-accent tabular-nums">' + targetFmtShares(Math.max(0, (Number(m.target) || 0) - (Number(m.current) || 0))) + '</span> 股</span>';
+                    html += '<div class="relative bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 overflow-hidden active:bg-gray-50" onclick="openTargetNotifDetail(\'' + String(m.code) + '\',\'' + String(m.market) + '\')">'
+                        + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background:linear-gradient(180deg,#e0c08f,#a9642a);"></div>'
+                        + '<div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:conic-gradient(' + dotColor + ' 0 ' + pct.toFixed(1) + '%, #f2e6d4 ' + pct.toFixed(1) + '% 100%);">'
+                        + '<div class="w-9 h-9 rounded-full bg-white flex items-center justify-center">' + (isDone ? '<i class="fa fa-check text-[#8a6a44] text-[13px]"></i>' : '<span class="text-[10px] font-bold text-[#8a6a44] tabular-nums">' + pctText + '</span>') + '</div>'
+                        + '</div>'
+                        + '<div class="flex-1 min-w-0">'
+                        + '<div class="flex items-center gap-1.5 min-w-0">'
+                        + '<span class="text-[15px] font-semibold text-gray-800 truncate">' + targetEsc(m.name) + '</span>' + tagHtml
+                        + '<span class="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ' + statusClass + '">' + (isDone ? '已达成' : '未达成') + '</span>'
+                        + '</div>'
+                        + '<div class="text-[11px] text-gray-400 mt-0.5 truncate">' + String(m.code) + ' · 当前 <span class="text-gray-600 font-medium tabular-nums">' + targetFmtShares(m.current) + '</span> / 目标 <span class="text-gray-600 font-medium tabular-nums">' + targetFmtShares(m.target) + '</span> 股</div>'
+                        + '<div class="mt-1.5 h-[3px] rounded-full bg-[#f2e6d4] overflow-hidden"><div style="width:' + pct.toFixed(1) + '%;height:100%;border-radius:3px;background:' + (isDone ? '#8a6a44' : 'linear-gradient(90deg,#d8b07a,#a9642a)') + ';"></div></div>'
+                        + '<div class="flex items-center justify-between mt-1.5 gap-2">' + foot + '<span class="text-[10px] text-gray-300 flex-shrink-0">' + (m.time || '') + '</span></div>'
+                        + '</div>'
+                        + '</div>';
+                });
+            }
             // 除权动态分组
             if(exdivItems.length){
                 html += '<div class="flex items-center gap-1.5 mb-2 mt-1">'
@@ -15479,6 +16120,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 store.items.forEach(function(x){ x.read = true; });
                 saveNotifStore(store);
             }
+            const targetStore = getTargetNotifStore();
+            targetStore.items.forEach(function(x){ x.read = true; });
+            saveTargetNotifStore(targetStore);
             updateNotifBadge();
             // 若当前在消息中心页面，刷新未读视觉（红点提示已消失）
             const page = document.querySelector('#pageNotifCenter');
@@ -15495,6 +16139,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#pageNotifCenter').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
+            // 进入消息中心前先补齐当天目标提醒（每只每日最多一条）
+            ensureHoldingTargetNotifs();
             renderNotifCenter();
             // 进入即已读（券商惯例）
             markAllNotifRead();
@@ -18131,8 +18777,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.body.classList.remove('sd-detail-open');
         }
         let sdDetailOrigin = 'watch';
+        let sdCurrentStock = null;
         function openStockDetail(code, market, name, fromTab){
             sdDetailOrigin = fromTab === 'hold' ? 'hold' : 'watch';
+            sdCurrentStock = { code: code, market: market, name: name };
             rememberScroll();
             // 详情页为 fixed 容器内部滚动（与自选页同款防橡皮筋方案）：锁死 body，滚动全部发生在容器内
             document.body.style.overflow = 'hidden';
@@ -18151,12 +18799,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#sdCode').innerText = code + (market === 'HK' ? '.HK' : '.SH');
             document.querySelector('#sdTime').innerText = '加载中…';
             document.querySelector('#sdQuoteBody').innerHTML = sdSkeletonDark();
+            document.querySelector('#sdTargetCard').classList.add('hidden');
             document.querySelector('#sdMoatCard').classList.add('hidden');
             document.querySelector('#sdFinBody').innerHTML = sdSkeletonLight();
             document.querySelector('#sdRankBody').innerHTML = sdSkeletonLight();
             document.querySelector('#sdHolderBody').innerHTML = sdSkeletonLight();
             document.querySelector('#sdRankTag').innerText = '--';
             page.scrollTop = 0;
+            renderStockTargetCard();
             try{ sdKlineInit(code, market, name); }catch(e){}
             loadStockDetailData(code, market, name);
             try{ sdLiveStart(code, market); }catch(e){}
@@ -18184,6 +18834,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 sdRestoreHostChrome();
                 sdDetailOrigin = 'watch';
+                sdCurrentStock = null;
             });
         }
         function openHoldStockDetail(id){
@@ -28042,6 +28693,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const stNumEl = document.querySelector('#stockNum');
             if(stNumEl) stNumEl.innerText = sum.holdLen;
             updateSummaryCard(sum);
+            // 目标持仓摘要：有目标才显示；空仓/无目标时隐藏
+            updateTargetSummaryStrip();
             // 回本里程碑（成本为负的股票汇总统计，并入成本回收进度条副文字）
             renderRecoverMilestone();
 
@@ -29254,10 +29907,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 <div class="text-[11px] font-medium mt-0.5 ${dayChangeClass} tabular-nums hq-chgpct">${dayChangePctText}</div>
                             </div>
                         </div>
-                        <!-- 折叠区底部：低频管理操作（流水 / 编辑）左对齐，与右侧主操作（买入/卖出）分居两侧 -->
+                        <!-- 折叠区底部：低频管理操作（明细 / 编辑 / 目标）左对齐，与右侧主操作（买入/卖出）分居两侧 -->
                         <div class="flex justify-start items-center gap-4 px-3 py-2 border-t border-[#F0EDE7]">
                             <button onclick="openTradeLogPage(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>明细</button>
                             <button onclick="editItem(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>编辑</button>
+                            <button onclick="openTargetEditorById(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><i class="fa fa-bullseye text-[11px]"></i>目标</button>
                         </div>
                     </div>
                     <div class="flex justify-end items-center gap-2.5 px-2 py-2">

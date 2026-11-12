@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261112.260';</script>
+    <script>window.APP_VERSION = '20261113.264';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1438,6 +1438,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="tl-chart-tabs" role="tablist" aria-label="走势图表切换">
                     <button type="button" class="tl-chart-tab is-active" data-tab="t" onclick="setTradeLogChartTab('t')" role="tab" aria-selected="true"><span class="tl-chart-tab-dot"></span>每月做T</button>
                     <button type="button" class="tl-chart-tab" data-tab="cost" onclick="setTradeLogChartTab('cost')" role="tab" aria-selected="false"><span class="tl-chart-tab-dot"></span>收盘成本</button>
+                    <button type="button" class="tl-chart-tab" data-tab="hold" onclick="setTradeLogChartTab('hold')" role="tab" aria-selected="false"><span class="tl-chart-tab-dot"></span>持仓目标</button>
+                    <button type="button" id="tlChartTabMarket" class="tl-chart-tab" data-tab="market" onclick="setTradeLogChartTab('market')" role="tab" aria-selected="false"><span class="tl-chart-tab-dot"></span>持仓市值</button>
                 </div>
             </div>
             <div id="tlMonthlyTChartWrap" class="relative tl-chart-wrap" style="height:190px">
@@ -1452,6 +1454,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="tlCostEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <div class="text-[10.5px] font-medium text-gray-500">暂无收盘成本轨迹</div>
                     <div class="text-[9px] text-gray-400 mt-1">录入建仓、买卖或除权记录后自动生成</div>
+                </div>
+            </div>
+            <div id="tlHoldChartWrap" class="relative tl-chart-wrap hidden" style="height:205px">
+                <div id="tlHoldChart" class="w-full h-full"></div>
+                <div id="tlHoldEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div class="text-[10.5px] font-medium text-gray-500">暂无持股轨迹</div>
+                    <div class="text-[9px] text-gray-400 mt-1">录入建仓或买卖流水后自动生成</div>
+                </div>
+            </div>
+            <div id="tlMarketChartWrap" class="relative tl-chart-wrap hidden" style="height:205px">
+                <div id="tlMarketChart" class="w-full h-full"></div>
+                <div id="tlMarketEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center">
+                    <div id="tlMarketEmptyTitle" class="text-[10.5px] font-medium text-gray-500">正在获取历史收盘价…</div>
+                    <div id="tlMarketEmptySub" class="text-[9px] text-gray-400 mt-1">首次打开需联网加载</div>
+                    <button id="tlMarketRetry" type="button" onclick="retryTradeLogMarketChart()" class="hidden mt-2.5 px-3 py-1.5 rounded-lg text-[9.5px] font-semibold text-[#7c2638] bg-[#fff8ef] border border-[#e8d2b7] active:scale-95 transition-transform">重新加载</button>
                 </div>
             </div>
             <div id="tlCostKpis" class="tl-cost-kpis hidden">
@@ -1471,14 +1488,60 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="tl-cost-kpi-sub">每股累计扣减</div>
                 </div>
             </div>
+            <div id="tlHoldKpis" class="tl-cost-kpis hidden">
+                <div class="tl-cost-kpi">
+                    <div class="tl-cost-kpi-label">当前持股</div>
+                    <div id="tlHoldCurrent" class="tl-cost-kpi-value">--</div>
+                    <div class="tl-cost-kpi-sub">最新持仓数</div>
+                </div>
+                <div class="tl-cost-kpi">
+                    <div class="tl-cost-kpi-label">目标股数</div>
+                    <div id="tlHoldTarget" class="tl-cost-kpi-value">--</div>
+                    <div class="tl-cost-kpi-sub">计划目标</div>
+                </div>
+                <div class="tl-cost-kpi">
+                    <div class="tl-cost-kpi-label">距目标</div>
+                    <div id="tlHoldGap" class="tl-cost-kpi-value">--</div>
+                    <div class="tl-cost-kpi-sub">还差 / 已达成</div>
+                </div>
+            </div>
+            <div id="tlMarketKpis" class="tl-cost-kpis hidden">
+                <div class="tl-cost-kpi">
+                    <div id="tlMarketCurrentLabel" class="tl-cost-kpi-label">当前市值</div>
+                    <div id="tlMarketCurrent" class="tl-cost-kpi-value">--</div>
+                    <div id="tlMarketCurrentSub" class="tl-cost-kpi-sub">持股 × 最新价</div>
+                </div>
+                <div class="tl-cost-kpi">
+                    <div class="tl-cost-kpi-label">区间最高</div>
+                    <div id="tlMarketHigh" class="tl-cost-kpi-value">--</div>
+                    <div class="tl-cost-kpi-sub">历史市值峰值</div>
+                </div>
+                <div class="tl-cost-kpi">
+                    <div id="tlMarketPnlLabel" class="tl-cost-kpi-label">当前浮盈</div>
+                    <div id="tlMarketPnl" class="tl-cost-kpi-value">--</div>
+                    <div id="tlMarketPnlSub" class="tl-cost-kpi-sub">市值 − 持仓成本</div>
+                </div>
+            </div>
             <div id="tlCostLegend" class="tl-cost-legend hidden">
                 <span><i style="background:#e03131"></i>买入</span>
                 <span><i style="background:#00a05c"></i>卖出</span>
                 <span><i style="background:#c9a35c"></i>除权</span>
                 <span><i style="background:#b06a3a"></i>收盘成本</span>
             </div>
+            <div id="tlHoldLegend" class="tl-cost-legend hidden">
+                <span><i style="background:#e03131"></i>买入</span>
+                <span><i style="background:#00a05c"></i>卖出</span>
+                <span><i style="background:#2f7d5a"></i>持股数</span>
+                <span id="tlHoldLegendTarget"><i style="background:#c9a35c"></i>目标线</span>
+            </div>
+            <div id="tlMarketLegend" class="tl-cost-legend hidden">
+                <span><i style="background:#7c2638"></i>持仓市值</span>
+                <span><i style="background:#c9a35c"></i><b id="tlMarketLegendCurrent" class="font-normal">今日现价</b></span>
+            </div>
             <div id="tlMonthlyTNote" class="px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">只计当月已闭环的做 T；月初有底仓则底仓不参与配对，月初无底仓则当月首笔买入视作底仓；月末未接回不计入；买卖已扣佣金、印花税、过户费。</div>
             <div id="tlCostNote" class="hidden px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">按交易流水回放每日收盘成本：买入含佣金与过户费，卖出按净回款冲减成本，除权按每股分红扣减；无交易日沿用上一收盘成本。成本快照用于校准人工修正，最新值以首页持仓成本为准。</div>
+            <div id="tlHoldNote" class="hidden px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">按交易流水回放每日持股：买入增加、卖出减少，无交易日沿用上一持股数；目标股数只作计划参考，不参与成本、盈亏、现金与快照计算。</div>
+            <div id="tlMarketNote" class="hidden px-4 pb-3 text-[8.5px] text-gray-400 leading-relaxed">区间随本段持仓：建仓日至清仓日，未清仓到今天；按不复权收盘价 × 当日持股数估算，今日按最新价；港股按当前汇率；仅展示，不改成本、盈亏、现金与快照。</div>
         </div>
 
         <!-- 资金与分红流水：标题 + 过滤 + 时间线 合并大卡片（参考今日涨跌幅详情页列表卡片风格） -->
@@ -5469,7 +5532,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 目标持仓设置：底部抽屉，聚焦单只股票；目标只做计划，不改变股数/成本/现金 -->
     <div id="targetEditorModal" class="fixed inset-0 z-[95] hidden items-end justify-center bg-black/50">
-        <div id="targetEditorSheet" class="relative w-full max-w-xl mx-auto bg-white rounded-t-3xl px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div id="targetEditorSheet" class="relative w-full max-w-xl mx-auto bg-white rounded-t-3xl px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[90vh] overflow-y-auto" style="overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
             <div class="mx-auto w-9 h-1 rounded-full bg-gray-200 mb-3"></div>
             <div class="flex items-center gap-2.5 mb-4">
                 <div class="w-9 h-9 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[14px] text-accent"></i></div>
@@ -5525,7 +5588,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 目标持仓总览：只在已设置目标时从首页摘要打开 -->
     <div id="targetOverviewModal" class="fixed inset-0 z-[94] hidden items-end justify-center bg-black/50">
-        <div id="targetOverviewSheet" class="relative w-full max-w-xl mx-auto bg-[#fbf8f1] rounded-t-3xl px-4 pt-0 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[88vh] overflow-y-auto">
+        <div id="targetOverviewSheet" class="relative w-full max-w-xl mx-auto bg-[#fbf8f1] rounded-t-3xl px-4 pt-0 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[88vh] overflow-y-auto" style="overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
             <div id="targetOverviewStickyHeader" class="sticky top-0 z-10 -mx-4 rounded-t-3xl px-4 pt-3 pb-2" style="background:#fbf8f1;box-shadow:0 1px 0 rgba(230,209,168,.7);">
                 <div class="mx-auto w-9 h-1 rounded-full bg-gray-200 mb-3"></div>
                 <div class="flex items-center gap-2.5 mb-1">
@@ -13067,10 +13130,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 现有 item.transactions + item.exDivRecords + item.costSnapshots 足以按日回放；
         // 无交易日成本不变，折线按事件日阶梯延展，最后一点用首页当前 costPrice 校准。
         let tlCostChart = null;
+        let tlHoldChart = null;
+        let tlMarketChart = null;
+        // 市值图不新增任何表：历史日线收盘价按需从东财 K 线接口拉取，fqt=0 不复权，
+        // 只在内存里按「市场|代码」缓存；今日仍用 item.nowPrice，避免盘中数据滞后。
+        let tlMarketPriceCache = {};
+        let tlMarketReqToken = 0;
         let tlChartTab = 't';
         function tlCostChartDispose(){
             try{ if(tlCostChart && !tlCostChart.isDisposed()) tlCostChart.dispose(); }catch(e){}
             tlCostChart = null;
+        }
+        function tlHoldChartDispose(){
+            try{ if(tlHoldChart && !tlHoldChart.isDisposed()) tlHoldChart.dispose(); }catch(e){}
+            tlHoldChart = null;
+        }
+        function tlMarketChartDispose(){
+            tlMarketReqToken++;
+            try{ if(tlMarketChart && !tlMarketChart.isDisposed()) tlMarketChart.dispose(); }catch(e){}
+            tlMarketChart = null;
         }
         function tlCostDateKey(ts){
             const d = new Date(Number(ts));
@@ -13112,8 +13190,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return (holdDataList || []).find(function(it){ return String(it.id) === String(tradeLogItemId); }) || null;
         }
         function tlSetChartHead(tab, item){
+            if(tab !== 'cost' && tab !== 'hold' && tab !== 'market') tab = 't';
+            const isT = tab === 't';
             const isCost = tab === 'cost';
-            tlChartTab = isCost ? 'cost' : 't';
+            const isHold = tab === 'hold';
+            const isMarket = tab === 'market';
+            tlChartTab = tab;
             document.querySelectorAll('.tl-chart-tab').forEach(function(btn){
                 const on = btn.getAttribute('data-tab') === tlChartTab;
                 btn.classList.toggle('is-active', on);
@@ -13123,22 +13205,38 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const subEl = document.querySelector('#tlChartSub');
             const labelEl = document.querySelector('#tlChartTotalLabel');
             const iconEl = document.querySelector('#tlChartIcon');
-            if(titleEl) titleEl.innerText = isCost ? '收盘成本走势' : '每月做T盈利';
-            if(subEl) subEl.innerText = isCost ? '逐日收盘 · 含手续费与除权' : '近 12 个月 · 月初底仓 / 月内建仓';
-            if(labelEl) labelEl.innerText = isCost ? '最新成本' : '近12月累计';
-            if(iconEl) iconEl.className = isCost ? 'fa fa-line-chart text-[12px] text-accent' : 'fa fa-bar-chart text-[12px] text-accent';
+            if(titleEl) titleEl.innerText = isMarket ? '持仓市值走势' : (isHold ? '持仓目标走势' : (isCost ? '收盘成本走势' : '每月做T盈利'));
+            if(subEl) subEl.innerText = isMarket ? '逐日收盘 · 持股 × 收盘价' : (isHold ? '逐日持股 · 目标参考线' : (isCost ? '逐日收盘 · 含手续费与除权' : '近 12 个月 · 月初底仓 / 月内建仓'));
+            if(labelEl) labelEl.innerText = isMarket ? '当前市值' : (isHold ? '当前持股' : (isCost ? '最新成本' : '近12月累计'));
+            if(iconEl) iconEl.className = isMarket ? 'fa fa-area-chart text-[12px] text-accent' : (isHold ? 'fa fa-bullseye text-[12px] text-accent' : (isCost ? 'fa fa-line-chart text-[12px] text-accent' : 'fa fa-bar-chart text-[12px] text-accent'));
             const mWrap = document.querySelector('#tlMonthlyTChartWrap');
             const cWrap = document.querySelector('#tlCostChartWrap');
+            const hWrap = document.querySelector('#tlHoldChartWrap');
+            const vWrap = document.querySelector('#tlMarketChartWrap');
             const mNote = document.querySelector('#tlMonthlyTNote');
             const cNote = document.querySelector('#tlCostNote');
+            const hNote = document.querySelector('#tlHoldNote');
+            const vNote = document.querySelector('#tlMarketNote');
             const cKpis = document.querySelector('#tlCostKpis');
+            const hKpis = document.querySelector('#tlHoldKpis');
+            const vKpis = document.querySelector('#tlMarketKpis');
             const cLegend = document.querySelector('#tlCostLegend');
-            if(mWrap) mWrap.classList.toggle('hidden', isCost);
+            const hLegend = document.querySelector('#tlHoldLegend');
+            const vLegend = document.querySelector('#tlMarketLegend');
+            if(mWrap) mWrap.classList.toggle('hidden', !isT);
             if(cWrap) cWrap.classList.toggle('hidden', !isCost);
-            if(mNote) mNote.classList.toggle('hidden', isCost);
+            if(hWrap) hWrap.classList.toggle('hidden', !isHold);
+            if(vWrap) vWrap.classList.toggle('hidden', !isMarket);
+            if(mNote) mNote.classList.toggle('hidden', !isT);
             if(cNote) cNote.classList.toggle('hidden', !isCost);
+            if(hNote) hNote.classList.toggle('hidden', !isHold);
+            if(vNote) vNote.classList.toggle('hidden', !isMarket);
             if(cKpis) cKpis.classList.toggle('hidden', !isCost);
+            if(hKpis) hKpis.classList.toggle('hidden', !isHold);
+            if(vKpis) vKpis.classList.toggle('hidden', !isMarket);
             if(cLegend) cLegend.classList.toggle('hidden', !isCost);
+            if(hLegend) hLegend.classList.toggle('hidden', !isHold);
+            if(vLegend) vLegend.classList.toggle('hidden', !isMarket);
         }
         function buildCostTrendSeries(item){
             const result = { points: [], hasData: false, latest: 0, first: 0, change: 0, changePct: null, min: 0, max: 0, divPer: 0, calibrated: false, currentPrice: 0, count: 0 };
@@ -13425,12 +13523,734 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             setTimeout(function(){ try{ if(tlCostChart && !tlCostChart.isDisposed()) tlCostChart.resize(); }catch(e){} }, 60);
         }
+        function buildHoldingTrendSeries(item){
+            const base = buildCostTrendSeries(item);
+            const goal = item ? targetGetGoal(item.code, item.marketType) : null;
+            const target = goal ? Math.max(0, Math.round(Number(goal.targetShares) || 0)) : 0;
+            const current = Math.max(0, Math.round(Number(item && item.count) || 0));
+            const rawPoints = (base.points || []).map(function(p){
+                return {
+                    date: p.date,
+                    ts: p.ts,
+                    count: Math.max(0, Math.round(Number(p.count) || 0)),
+                    events: (p.events || []).slice(),
+                    isCurrent: !!p.isCurrent
+                };
+            });
+            // 持仓图只保留真正改变持股数的节点；分红/成本快照等不改变股数的日期折叠掉，避免横轴被无效节点挤满。
+            const points = [];
+            rawPoints.forEach(function(p, idx){
+                const prev = idx > 0 ? rawPoints[idx - 1] : null;
+                const hasShareEvent = p.events.some(function(ev){ return ev.kind === 'buy' || ev.kind === 'sell'; });
+                if(idx === 0 || (prev && p.count !== prev.count) || hasShareEvent || p.isCurrent) points.push(p);
+            });
+            if(rawPoints.length && points.length && points[points.length - 1].date !== rawPoints[rawPoints.length - 1].date){
+                points.push(rawPoints[rawPoints.length - 1]);
+            }
+            return {
+                points: points,
+                hasData: points.length > 0 && (points.some(function(p){ return p.count > 0; }) || target > 0),
+                current: current,
+                target: target,
+                gap: target > 0 ? Math.max(0, target - current) : null,
+                achieved: target > 0 && current >= target
+            };
+        }
+        function renderTradeLogHoldingChart(item){
+            tlHoldChartDispose();
+            tlSetChartHead('hold', item);
+            const el = document.querySelector('#tlHoldChart');
+            const wrapEl = document.querySelector('#tlHoldChartWrap');
+            const emptyEl = document.querySelector('#tlHoldEmpty');
+            const kpisEl = document.querySelector('#tlHoldKpis');
+            const legendEl = document.querySelector('#tlHoldLegend');
+            const totalEl = document.querySelector('#tlMonthlyTTotal');
+            const noteEl = document.querySelector('#tlHoldNote');
+            if(!el || !wrapEl) return;
+            const data = buildHoldingTrendSeries(item);
+            if(!data.hasData){
+                if(totalEl){ totalEl.innerText = '--'; totalEl.style.color = '#8a8175'; }
+                el.style.display = 'none';
+                if(emptyEl) emptyEl.classList.remove('hidden');
+                if(kpisEl) kpisEl.classList.add('hidden');
+                if(legendEl) legendEl.classList.add('hidden');
+                if(noteEl) noteEl.innerText = '按交易流水回放每日持股：买入增加、卖出减少，无交易日沿用上一持股数。暂无持股流水，录入建仓或买入后自动生成。';
+                wrapEl.style.height = '150px';
+                return;
+            }
+            if(emptyEl) emptyEl.classList.add('hidden');
+            el.style.display = 'block';
+            wrapEl.style.height = '205px';
+            if(kpisEl) kpisEl.classList.remove('hidden');
+            if(legendEl) legendEl.classList.remove('hidden');
+            const targetLegendEl = document.querySelector('#tlHoldLegendTarget');
+            if(targetLegendEl) targetLegendEl.style.display = data.target > 0 ? '' : 'none';
+            const isHk = item && item.marketType === 'HK';
+            if(noteEl){
+                noteEl.innerText = '按交易流水回放每日持股：买入增加、卖出减少，无交易日沿用上一持股数。'
+                    + (data.target > 0 ? ' 目标股数只作计划参考，不参与成本、盈亏、现金与快照计算。' : ' 当前未设置目标股数，可到设置抽屉里添加。')
+                    + ' 手工覆盖改仓以最新持仓为准。'
+                    + (isHk ? ' 港股持股按股数展示。' : '');
+            }
+            if(totalEl){
+                totalEl.innerText = targetFmtShares(data.current) + ' 股';
+                totalEl.style.color = '#2f7d5a';
+            }
+            const currentEl = document.querySelector('#tlHoldCurrent');
+            const targetEl = document.querySelector('#tlHoldTarget');
+            const gapEl = document.querySelector('#tlHoldGap');
+            if(currentEl){ currentEl.innerText = targetFmtShares(data.current) + ' 股'; currentEl.style.color = '#2f7d5a'; }
+            if(targetEl){ targetEl.innerText = data.target > 0 ? targetFmtShares(data.target) + ' 股' : '未设置'; targetEl.style.color = data.target > 0 ? '#6d5138' : '#a3917c'; }
+            if(gapEl){
+                gapEl.innerText = !data.target ? '—' : (data.achieved ? '已达成' : '还差 ' + targetFmtShares(data.gap) + ' 股');
+                gapEl.style.color = !data.target ? '#a3917c' : (data.achieved ? '#2f7d5a' : '#a9642a');
+            }
+            if(typeof echarts === 'undefined') return;
+            try{ tlHoldChart = echarts.init(el); }catch(e){ return; }
+            const counts = data.points.map(function(p){ return p.count; });
+            const maxV = Math.max(data.current, data.target, Math.max.apply(null, counts), 1);
+            const yMax = Math.max(1, Math.ceil(maxV * 1.14));
+            const spanDays = (data.points[data.points.length - 1].ts - data.points[0].ts) / 86400000;
+            const isNarrow = (el.clientWidth || 0) > 0 && el.clientWidth < 430;
+            const lastIdx = data.points.length - 1;
+            const pointData = data.points.map(function(p){
+                const kinds = {};
+                p.events.forEach(function(ev){ kinds[ev.kind] = true; });
+                let marker = '#2f7d5a';
+                if(kinds.sell) marker = '#00a05c';
+                else if(kinds.buy) marker = '#e03131';
+                else if(kinds.div) marker = '#c9a35c';
+                if(p.isCurrent) marker = '#2f7d5a';
+                return {
+                    value: [p.ts, p.count],
+                    symbolSize: p.isCurrent ? 7 : (p.events.length ? 4.8 : 3),
+                    itemStyle: { color: marker, borderColor: '#fff', borderWidth: 1 }
+                };
+            });
+            const targetLine = data.target > 0 ? {
+                silent: true,
+                symbol: 'none',
+                lineStyle: { color: '#c9a35c', type: 'dashed', width: 1.2, opacity: 0.95 },
+                label: {
+                    show: true,
+                    position: 'insideEndTop',
+                    formatter: '目标 ' + targetFmtShares(data.target),
+                    color: '#8a6a43',
+                    fontSize: 8,
+                    backgroundColor: 'rgba(255,247,230,.92)',
+                    padding: [2, 4],
+                    borderRadius: 4
+                },
+                data: [{ yAxis: data.target }]
+            } : null;
+            tlHoldChart.setOption({
+                animationDuration: 680,
+                animationEasing: 'cubicOut',
+                grid: { left: 5, right: 12, top: 28, bottom: 22, containLabel: true },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'line', lineStyle: { color: '#cbb18d', type: 'dashed', width: 1 } },
+                    backgroundColor: 'rgba(23,23,23,0.94)',
+                    borderWidth: 0,
+                    padding: [8, 10],
+                    textStyle: { color: '#fff', fontSize: 10 },
+                    extraCssText: 'border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.20);',
+                    formatter: function(ps){
+                        const p = (ps && ps[0]) || {};
+                        const d = data.points[p.dataIndex];
+                        if(!d) return '';
+                        const prev = p.dataIndex > 0 ? data.points[p.dataIndex - 1] : null;
+                        const delta = prev ? d.count - prev.count : null;
+                        let evText = d.events.length ? d.events.slice(0, 3).map(tlCostEventText).join('<br>') : '当日无持股事件';
+                        return '<div style="font-size:10px;color:#e8d9bc">' + d.date + '</div>'
+                            + '<div style="font-size:13px;font-weight:700;color:#c9e6d4;margin-top:2px">持股 ' + targetFmtShares(d.count) + ' 股</div>'
+                            + '<div style="font-size:9px;color:#b9aa93;margin-top:2px">'
+                            + (delta == null ? '起始持仓' : '较前 ' + tlCostSigned(delta, 0) + ' 股')
+                            + (data.target > 0 ? ' · ' + (d.count >= data.target ? '已达目标' : '距目标 ' + targetFmtShares(Math.max(0, data.target - d.count)) + ' 股') : '')
+                            + '</div>'
+                            + (evText ? '<div style="font-size:9px;color:#a89b84;margin-top:3px;line-height:1.5">' + evText + '</div>' : '');
+                    }
+                },
+                xAxis: {
+                    type: 'time',
+                    boundaryGap: false,
+                    splitNumber: isNarrow ? 4 : 7,
+                    axisLine: { lineStyle: { color: '#efe7d9' } },
+                    axisTick: { show: false },
+                    axisLabel: {
+                        color: '#a8987e',
+                        fontSize: 8.5,
+                        hideOverlap: true,
+                        margin: 9,
+                        formatter: function(v){
+                            const d = new Date(v);
+                            if(spanDays > 400) return String(d.getFullYear()).slice(2) + '/' + String(d.getMonth() + 1).padStart(2, '0');
+                            return String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+                        }
+                    },
+                    splitLine: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: yMax,
+                    splitNumber: 4,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: {
+                        color: '#b3a68f',
+                        fontSize: 8,
+                        formatter: function(v){
+                            const n = Number(v) || 0;
+                            if(n >= 10000) return String(Math.round(n / 1000) / 10).replace(/\.0$/, '') + '万';
+                            return targetFmtShares(n);
+                        }
+                    },
+                    splitLine: { lineStyle: { color: '#f4efe5', type: 'dashed' } }
+                },
+                series: [{
+                    type: 'line',
+                    step: 'end',
+                    smooth: false,
+                    showSymbol: true,
+                    symbol: 'circle',
+                    connectNulls: true,
+                    lineStyle: { width: 2.2, color: '#2f7d5a', shadowColor: 'rgba(47,125,90,.14)', shadowBlur: 7, shadowOffsetY: 3 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(47,125,90,0.18)' },
+                            { offset: 0.72, color: 'rgba(47,125,90,0.06)' },
+                            { offset: 1, color: 'rgba(47,125,90,0.01)' }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        distance: 6,
+                        color: '#2f7d5a',
+                        fontSize: 8,
+                        fontWeight: 600,
+                        formatter: function(p){ return p.dataIndex === lastIdx ? targetFmtShares(Array.isArray(p.value) ? p.value[1] : p.value) : ''; }
+                    },
+                    markLine: targetLine || undefined,
+                    emphasis: { focus: 'series', lineStyle: { width: 2.6 } },
+                    data: pointData
+                }]
+            });
+            setTimeout(function(){ try{ if(tlHoldChart && !tlHoldChart.isDisposed()) tlHoldChart.resize(); }catch(e){} }, 60);
+        }
+        function tlMarketFmtMoney(v){
+            v = Number(v) || 0;
+            return '¥' + fmtMoney(v);
+        }
+        function tlMarketAxisMoney(v){
+            v = Number(v) || 0;
+            const abs = Math.abs(v);
+            if(abs >= 10000) return '¥' + String(Math.round(abs / 1000) / 10).replace(/\.0$/, '') + '万';
+            return '¥' + Math.round(abs);
+        }
+        function tlMarketLabelMoney(v){
+            return '¥' + fmtMoney(Number(v) || 0);
+        }
+        function tlMarketPriceKey(item){
+            return String((item && item.marketType) || 'A') + '|' + String((item && item.code) || '');
+        }
+        // 市值图只覆盖“当前持仓周期”：从最近一次 0→正 的建仓日开始，到本次清仓日结束；
+        // 仍在持仓时终点为今天。历史更早的持仓周期不混在一起，避免把几十年的空仓期画进图里。
+        function getTradeLogMarketWindow(item){
+            if(!item) return null;
+            const today = todayStr();
+            const txList = (item.transactions || []).map(function(tr, idx){
+                return { tr: tr, idx: idx, ts: Number(tr && tr.t) };
+            }).filter(function(x){
+                return isFinite(x.ts) && x.ts > 0 && (Number(x.tr.delta) || 0) !== 0;
+            }).sort(function(a, b){
+                if(a.ts !== b.ts) return a.ts - b.ts;
+                return a.idx - b.idx;
+            });
+            let count = 0;
+            let start = '';
+            const periods = [];
+            txList.forEach(function(x){
+                const dk = tlCostDateKey(x.ts);
+                if(!dk || dk > today) return;
+                const delta = Number(x.tr.delta) || 0;
+                if(delta > 0){
+                    if(count <= 1e-9) start = dk;
+                    count += delta;
+                }else{
+                    if(count <= 1e-9) return;
+                    count = Math.max(0, count - Math.abs(delta));
+                    if(count <= 1e-9 && start){
+                        periods.push({ start: start, end: dk, open: false });
+                        start = '';
+                    }
+                }
+            });
+            if(count > 1e-9 && start) periods.push({ start: start, end: today, open: true });
+            const currentCount = Math.max(0, Math.round(Number(item.count) || 0));
+            let win = periods.length ? periods[periods.length - 1] : null;
+            if(!win && currentCount > 0){
+                const fallback = tlCostNormalizeDate(item.createdAt) || (txList.length ? tlCostDateKey(txList[0].ts) : '') || today;
+                win = { start: fallback, end: today, open: true };
+            }
+            if(!win) return null;
+            if(currentCount > 0 && !win.open) win = { start: win.start, end: today, open: true };
+            if(win.open) win.end = today;
+            if(!win.start || !win.end || win.start > win.end) return null;
+            return { start: win.start, end: win.end, open: !!win.open };
+        }
+        function tlMarketCacheKey(item, win){
+            return tlMarketPriceKey(item) + '|' + win.start + '|' + (win.open ? 'open' : win.end);
+        }
+        function tlMarketCachePut(key, rows){
+            tlMarketPriceCache[key] = { rows: rows, at: Date.now() };
+            const keys = Object.keys(tlMarketPriceCache);
+            if(keys.length > 20){
+                keys.sort(function(a, b){
+                    return (tlMarketPriceCache[a].at || 0) - (tlMarketPriceCache[b].at || 0);
+                });
+                keys.slice(0, keys.length - 20).forEach(function(k){ delete tlMarketPriceCache[k]; });
+            }
+        }
+        // 三十年以上日线在 390/967 宽度下会糊成一条带；只抽稀“图上节点”，
+        // 区间最高、当前市值等 KPI 仍用未抽稀的完整日线计算。
+        function tlDownsampleMarketPoints(points, maxPoints){
+            const n = points.length;
+            if(n <= maxPoints){
+                for(let i = 0; i < n; i++){
+                    points[i].prevValue = i > 0 ? points[i - 1].value : null;
+                    points[i].delta = i > 0 ? points[i].value - points[i - 1].value : null;
+                }
+                return points.slice();
+            }
+            const sampled = [points[0]];
+            const bucket = (n - 2) / (maxPoints - 2);
+            let a = 0;
+            for(let i = 0; i < maxPoints - 2; i++){
+                const avgStart = Math.floor((i + 1) * bucket) + 1;
+                const avgEnd = Math.min(Math.floor((i + 2) * bucket) + 1, n - 1);
+                let avgX = 0, avgY = 0, avgN = 0;
+                for(let j = avgStart; j < avgEnd; j++){
+                    avgX += points[j].ts;
+                    avgY += points[j].value;
+                    avgN++;
+                }
+                if(avgN){
+                    avgX /= avgN;
+                    avgY /= avgN;
+                }else{
+                    avgX = points[Math.min(avgEnd, n - 1)].ts;
+                    avgY = points[Math.min(avgEnd, n - 1)].value;
+                }
+                const curStart = Math.floor(i * bucket) + 1;
+                const curEnd = Math.min(Math.floor((i + 1) * bucket) + 1, n - 1);
+                let chosen = curStart;
+                let maxArea = -1;
+                for(let j = curStart; j < curEnd; j++){
+                    const area = Math.abs(
+                        (points[a].ts - avgX) * (points[j].value - points[a].value) -
+                        (points[a].ts - points[j].ts) * (avgY - points[a].value)
+                    );
+                    if(area > maxArea){ maxArea = area; chosen = j; }
+                }
+                sampled.push(points[chosen]);
+                a = chosen;
+            }
+            sampled.push(points[n - 1]);
+            for(let i = 0; i < sampled.length; i++){
+                sampled[i].prevValue = i > 0 ? sampled[i - 1].value : null;
+                sampled[i].delta = i > 0 ? sampled[i].value - sampled[i - 1].value : null;
+            }
+            return sampled;
+        }
+        function syncTradeLogMarketTab(item){
+            const btn = document.querySelector('#tlChartTabMarket');
+            if(!btn) return;
+            const goal = item ? targetGetGoal(item.code, item.marketType) : null;
+            btn.classList.toggle('hidden', !goal);
+            btn.style.display = goal ? '' : 'none';
+            if(!goal && tlChartTab === 'market'){
+                try{ tlMarketReqToken++; tlMarketChartDispose(); }catch(e){}
+            }
+        }
+        function tlFetchTradeLogMarketPrices(item, force, done){
+            const win = getTradeLogMarketWindow(item);
+            if(!win){ done('no-holding', []); return; }
+            const key = tlMarketCacheKey(item, win);
+            if(!force && tlMarketPriceCache[key]){
+                done(null, tlMarketPriceCache[key].rows || []);
+                return;
+            }
+            const code = String((item && item.code) || '').replace(/[^0-9A-Za-z]/g, '');
+            const secid = code ? getSecid({ code: code, marketType: item.marketType }) : '';
+            if(!secid){ done('no-secid', []); return; }
+            const cbName = '__tlMarketPrice' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+            let finished = false;
+            let sc = null;
+            const cleanup = function(){
+                try{ delete window[cbName]; }catch(e){}
+                try{ if(sc && sc.parentNode) sc.parentNode.removeChild(sc); }catch(e){}
+            };
+            const finish = function(err, rows){
+                if(finished) return;
+                finished = true;
+                clearTimeout(timer);
+                cleanup();
+                if(err || !rows || !rows.length){ done(err || 'empty', []); return; }
+                tlMarketCachePut(key, rows);
+                done(null, rows);
+            };
+            const timer = setTimeout(function(){ finish('timeout', []); }, 15000);
+            window[cbName] = function(data){
+                try{
+                    if(!data || Number(data.rc) !== 0 || !data.data || !data.data.klines){
+                        finish('empty', []); return;
+                    }
+                    const rows = [];
+                    const kl = data.data.klines;
+                    for(let i = 0; i < kl.length; i++){
+                        const p = String(kl[i]).split(',');
+                        const ds = p[0];
+                        const close = Number(p[1]);
+                        if(!/^\d{4}-\d{2}-\d{2}$/.test(ds) || !(close > 0)) continue;
+                        rows.push({ date: ds, close: close });
+                    }
+                    if(!rows.length){ finish('empty', []); return; }
+                    finish(null, rows);
+                }catch(e){ finish('parse', []); }
+            };
+            sc = document.createElement('script');
+            // 起点跟随本次持仓周期，终点：仍在持仓取到今天，已清仓取到清仓日。
+            // fqt=0 保证历史市值不被前复权扭曲；lmt=10000 覆盖 30 年以上日线。
+            const beg = win.start.replace(/-/g, '');
+            const end = win.open ? '20500101' : win.end.replace(/-/g, '');
+            sc.src = 'https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=' + secid
+                + '&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f53&klt=101&fqt=0&beg=' + beg + '&end=' + end + '&lmt=10000&cb=' + cbName;
+            sc.onerror = function(){ finish('network', []); };
+            document.head.appendChild(sc);
+        }
+        function buildTradeLogMarketSeries(item, priceRows, window){
+            const result = {
+                points: [], hasData: false, latest: 0, max: 0, maxDate: '', min: 0,
+                current: null, currentPrice: 0, currentCount: 0, pnl: null, fx: 1, first: 0,
+                open: false, rangeStart: '', rangeEnd: '', sampled: false, rawLen: 0
+            };
+            const win = window || getTradeLogMarketWindow(item);
+            if(!item || !win || !priceRows || !priceRows.length) return result;
+            const hold = buildHoldingTrendSeries(item);
+            const hPoints = hold.points || [];
+            if(!hPoints.some(function(p){ return Number(p.count) > 0; })) return result;
+            const fx = item.marketType === 'HK' ? (Number(hkFxRate) || 1) : 1;
+            const currentCount = win.open ? Math.max(0, Math.round(Number(item.count) || 0)) : 0;
+            const currentPrice = Number(item.nowPrice) > 0 ? Number(item.nowPrice) : 0;
+            let hIdx = 0;
+            let running = 0;
+            const rows = [];
+            priceRows.forEach(function(pr){
+                if(!pr || !(Number(pr.close) > 0) || !pr.date) return;
+                if(pr.date < win.start || pr.date > win.end) return;
+                const ts = new Date(pr.date + 'T15:00:00').getTime();
+                if(!isFinite(ts)) return;
+                // 按“日期”对齐持股数，避免 18:00 的成交事件被 15:00 的收盘价误判为“未持仓”。
+                while(hIdx < hPoints.length && String(hPoints[hIdx].date) <= String(pr.date)){
+                    running = Math.max(0, Math.round(Number(hPoints[hIdx].count) || 0));
+                    hIdx++;
+                }
+                if(running <= 0) return;
+                rows.push({
+                    date: pr.date,
+                    ts: ts,
+                    count: running,
+                    close: Number(pr.close),
+                    value: running * Number(pr.close) * fx,
+                    isCurrent: false,
+                    isClear: false
+                });
+            });
+            if(win.open && currentCount > 0){
+                const price = currentPrice || (rows.length ? rows[rows.length - 1].close : 0);
+                if(price > 0){
+                    const ts = new Date(win.end + 'T15:00:00').getTime();
+                    const cur = {
+                        date: win.end,
+                        ts: ts,
+                        count: currentCount,
+                        close: price,
+                        value: currentCount * price * fx,
+                        isCurrent: true,
+                        isClear: false
+                    };
+                    const at = rows.findIndex(function(r){ return r.date === win.end; });
+                    if(at >= 0) rows[at] = cur;
+                    else rows.push(cur);
+                }
+            }else if(!win.open){
+                // 已清仓：补一个清仓日 0 点，让曲线明确停在清仓结束，而不是延伸到今天。
+                const lastClose = rows.length ? rows[rows.length - 1].close : 0;
+                const ts = new Date(win.end + 'T15:00:00').getTime();
+                const clear = {
+                    date: win.end,
+                    ts: ts,
+                    count: 0,
+                    close: lastClose,
+                    value: 0,
+                    isCurrent: false,
+                    isClear: true
+                };
+                const at = rows.findIndex(function(r){ return r.date === win.end; });
+                if(at >= 0) rows[at] = clear;
+                else rows.push(clear);
+            }
+            if(!rows.length) return result;
+            rows.sort(function(a, b){ return a.ts - b.ts; });
+            let max = 0;
+            let maxDate = '';
+            let min = Infinity;
+            rows.forEach(function(r){
+                if(r.value > max){ max = r.value; maxDate = r.date; }
+                if(r.value < min) min = r.value;
+            });
+            const current = rows[rows.length - 1];
+            const cost = Number(item.costPrice) || 0;
+            const pnl = (win.open && currentCount > 0 && currentPrice > 0 && cost > 0)
+                ? (currentPrice - cost) * currentCount * fx
+                : null;
+            result.hasData = max > 0;
+            result.latest = current ? current.value : 0;
+            result.current = current;
+            result.currentPrice = win.open && currentCount > 0 ? currentPrice : 0;
+            result.currentCount = win.open ? currentCount : 0;
+            result.max = max;
+            result.maxDate = maxDate;
+            result.min = min === Infinity ? 0 : min;
+            result.first = rows.length ? rows[0].value : 0;
+            result.pnl = pnl;
+            result.fx = fx;
+            result.open = !!win.open;
+            result.rangeStart = win.start;
+            result.rangeEnd = win.end;
+            result.rawLen = rows.length;
+            const chartRows = tlDownsampleMarketPoints(rows, 1600);
+            result.sampled = chartRows.length < rows.length;
+            // KPI 用完整日线；图上节点用抽稀后的序列，避免几十年日线糊成色带。
+            result.points = chartRows;
+            return result;
+        }
+        function tlMarketSetLabels(open){
+            const totalLabel = document.querySelector('#tlChartTotalLabel');
+            const curLabel = document.querySelector('#tlMarketCurrentLabel');
+            const curSub = document.querySelector('#tlMarketCurrentSub');
+            const pnlSub = document.querySelector('#tlMarketPnlSub');
+            const legendCurrent = document.querySelector('#tlMarketLegendCurrent');
+            if(totalLabel) totalLabel.innerText = open ? '当前市值' : '期末市值';
+            if(curLabel) curLabel.innerText = open ? '当前市值' : '期末市值';
+            if(curSub) curSub.innerText = open ? '持股 × 最新价' : '清仓日市值';
+            if(pnlSub) pnlSub.innerText = open ? '市值 − 持仓成本' : '已清仓';
+            if(legendCurrent) legendCurrent.innerText = open ? '今日现价' : '清仓点';
+        }
+        function tlMarketSetEmpty(title, sub, retry, height){
+            const wrap = document.querySelector('#tlMarketChartWrap');
+            const chartEl = document.querySelector('#tlMarketChart');
+            const emptyEl = document.querySelector('#tlMarketEmpty');
+            const titleEl = document.querySelector('#tlMarketEmptyTitle');
+            const subEl = document.querySelector('#tlMarketEmptySub');
+            const retryEl = document.querySelector('#tlMarketRetry');
+            const totalEl = document.querySelector('#tlMonthlyTTotal');
+            if(wrap) wrap.style.height = (height || 150) + 'px';
+            if(chartEl) chartEl.style.display = 'none';
+            if(emptyEl) emptyEl.classList.remove('hidden');
+            if(titleEl) titleEl.innerText = title || '暂无持仓市值轨迹';
+            if(subEl) subEl.innerText = sub || '';
+            if(retryEl) retryEl.classList.toggle('hidden', !retry);
+            if(totalEl) totalEl.innerText = '--';
+            tlMarketSetLabels(true);
+            const kpis = document.querySelector('#tlMarketKpis');
+            const legend = document.querySelector('#tlMarketLegend');
+            if(kpis) kpis.classList.add('hidden');
+            if(legend) legend.classList.add('hidden');
+        }
+            function paintTradeLogMarketChart(item, priceRows, window){
+            const data = buildTradeLogMarketSeries(item, priceRows, window);
+            const wrap = document.querySelector('#tlMarketChartWrap');
+            const chartEl = document.querySelector('#tlMarketChart');
+            const emptyEl = document.querySelector('#tlMarketEmpty');
+            const totalEl = document.querySelector('#tlMonthlyTTotal');
+            if(!data.hasData || !data.points.length){
+                tlMarketSetEmpty('暂无持仓市值轨迹', '当前无持股或暂无可用收盘价', false, 150);
+                return;
+            }
+            if(wrap) wrap.style.height = '205px';
+            if(emptyEl) emptyEl.classList.add('hidden');
+            if(chartEl) chartEl.style.display = 'block';
+            tlMarketSetLabels(!!data.open);
+            const subEl = document.querySelector('#tlChartSub');
+            if(subEl) subEl.innerText = (data.open ? '逐日收盘 · 持股 × 收盘价' : '本段持仓 · 清仓结束') + (data.sampled ? ' · 抽样显示' : '');
+            const noteEl = document.querySelector('#tlMarketNote');
+            if(noteEl){
+                noteEl.innerText = '区间 ' + data.rangeStart + ' 至 ' + data.rangeEnd
+                    + ' · 不复权收盘 × 持股；'
+                    + (data.open ? '今日按最新价' : '清仓日按 0')
+                    + (data.sampled ? ' · 长区间抽样，KPI 按完整日线' : '')
+                    + '；港股按当前汇率；仅展示，不改成本/盈亏/现金/快照。';
+            }
+            if(totalEl){
+                totalEl.innerText = tlMarketFmtMoney(data.latest);
+                totalEl.style.color = '#7c2638';
+            }
+            const kpis = document.querySelector('#tlMarketKpis');
+            const legend = document.querySelector('#tlMarketLegend');
+            if(kpis) kpis.classList.remove('hidden');
+            if(legend) legend.classList.remove('hidden');
+            const curEl = document.querySelector('#tlMarketCurrent');
+            const highEl = document.querySelector('#tlMarketHigh');
+            const pnlEl = document.querySelector('#tlMarketPnl');
+            if(curEl) curEl.innerText = tlMarketFmtMoney(data.latest);
+            if(highEl) highEl.innerText = tlMarketFmtMoney(data.max);
+            if(pnlEl){
+                pnlEl.innerText = data.pnl == null ? '--' : ((data.pnl > 0 ? '+' : (data.pnl < 0 ? '-' : '')) + '¥' + fmtMoney(Math.abs(data.pnl)));
+                pnlEl.style.color = data.pnl == null ? '' : (data.pnl > 0 ? '#d84a3a' : (data.pnl < 0 ? '#2f8f5b' : '#8f7a5e'));
+            }
+            tlMarketChartDispose();
+            if(!chartEl) return;
+            try{ tlMarketChart = echarts.init(chartEl); }catch(e){ return; }
+            const isNarrow = (chartEl.clientWidth || 0) > 0 && chartEl.clientWidth < 430;
+            const spanDays = (data.points[data.points.length - 1].ts - data.points[0].ts) / 86400000;
+            const lastIdx = data.points.length - 1;
+            const yMax = Math.max(1, Math.ceil(data.max * 1.14));
+            const pointData = data.points.map(function(p, i){
+                return {
+                    value: [p.ts, p.value],
+                    symbolSize: p.isCurrent ? 6 : (data.sampled ? 0 : (i === 0 ? 3 : 2)),
+                    itemStyle: { color: p.isCurrent ? '#c9a35c' : '#a17a63', borderColor: '#fff', borderWidth: 1 }
+                };
+            });
+            tlMarketChart.setOption({
+                animationDuration: 420,
+                grid: { left: 38, right: 13, top: 15, bottom: 30 },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(44,32,24,.94)',
+                    borderColor: 'rgba(201,163,92,.45)',
+                    borderWidth: 1,
+                    textStyle: { color: '#f6ead6', fontSize: 10 },
+                    padding: [7, 9],
+                    extraCssText: 'border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.20);',
+                    formatter: function(ps){
+                        const p = (ps && ps[0]) || {};
+                        const d = data.points[p.dataIndex];
+                        if(!d) return '';
+                        const delta = d.delta;
+                        return '<div style="font-size:10px;color:#e8d9bc">' + d.date + (d.isCurrent ? ' · 今日' : '') + '</div>'
+                            + '<div style="font-size:13px;font-weight:700;color:#f0cdb0;margin-top:2px">市值 ' + tlMarketFmtMoney(d.value) + '</div>'
+                            + '<div style="font-size:9px;color:#c9b79d;margin-top:2px">持股 ' + targetFmtShares(d.count) + ' 股'
+                            + (d.close > 0 ? ' · 收盘 ¥' + Number(d.close).toFixed(2) : '') + '</div>'
+                            + '<div style="font-size:9px;color:#a89b84;margin-top:2px">'
+                            + (delta == null ? '起点' : '较前 ' + (delta >= 0 ? '+' : '-') + tlMarketFmtMoney(Math.abs(delta)))
+                            + (d.isCurrent ? ' · 按最新价' : '')
+                            + '</div>';
+                    }
+                },
+                xAxis: {
+                    type: 'time',
+                    boundaryGap: false,
+                    splitNumber: isNarrow ? 4 : 7,
+                    axisLine: { lineStyle: { color: '#efe7d9' } },
+                    axisTick: { show: false },
+                    axisLabel: {
+                        color: '#a8987e',
+                        fontSize: 8.5,
+                        hideOverlap: true,
+                        margin: 9,
+                        formatter: function(v){
+                            const d = new Date(v);
+                            if(spanDays > 400) return String(d.getFullYear()).slice(2) + '/' + String(d.getMonth() + 1).padStart(2, '0');
+                            return String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+                        }
+                    },
+                    splitLine: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: yMax,
+                    splitNumber: 4,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#b3a68f', fontSize: 8, formatter: function(v){ return tlMarketAxisMoney(v); } },
+                    splitLine: { lineStyle: { color: '#f4efe5', type: 'dashed' } }
+                },
+                series: [{
+                    type: 'line',
+                    smooth: 0.12,
+                    showSymbol: true,
+                    symbol: 'circle',
+                    connectNulls: true,
+                    lineStyle: { width: 2.2, color: '#7c2638', shadowColor: 'rgba(124,38,56,.16)', shadowBlur: 7, shadowOffsetY: 3 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(124,38,56,0.20)' },
+                            { offset: 0.72, color: 'rgba(124,38,56,0.07)' },
+                            { offset: 1, color: 'rgba(124,38,56,0.01)' }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: 'left',
+                        distance: 5,
+                        color: '#7c2638',
+                        fontSize: 8,
+                        fontWeight: 600,
+                        formatter: function(p){ return p.dataIndex === lastIdx ? tlMarketLabelMoney(Array.isArray(p.value) ? p.value[1] : p.value) : ''; }
+                    },
+                    emphasis: { focus: 'series', lineStyle: { width: 2.6 } },
+                    data: pointData
+                }]
+            });
+            setTimeout(function(){ try{ if(tlMarketChart && !tlMarketChart.isDisposed()) tlMarketChart.resize(); }catch(e){} }, 60);
+        }
+        function renderTradeLogMarketChart(item, force){
+            tlMarketChartDispose();
+            const token = ++tlMarketReqToken;
+            tlSetChartHead('market', item);
+            if(!item || !targetGetGoal(item.code, item.marketType)){
+                tlMarketSetEmpty('未设置持仓目标', '设置持仓目标后显示本段持仓市值轨迹', false, 150);
+                return;
+            }
+            const win = getTradeLogMarketWindow(item);
+            if(!win){
+                tlMarketSetEmpty('暂无持仓市值轨迹', '录入建仓或买入流水后自动生成', false, 150);
+                return;
+            }
+            const hold = buildHoldingTrendSeries(item);
+            if(!hold.points || !hold.points.some(function(p){ return Number(p.count) > 0; })){
+                tlMarketSetEmpty('暂无持仓市值轨迹', '录入建仓或买入流水后自动生成', false, 150);
+                return;
+            }
+            tlMarketSetEmpty('正在获取历史收盘价…', '区间 ' + win.start + ' 至 ' + win.end + ' · 首次打开需联网，之后本次会话内复用', false, 150);
+            tlFetchTradeLogMarketPrices(item, !!force, function(err, rows){
+                if(token !== tlMarketReqToken || tlChartTab !== 'market') return;
+                if(err || !rows || !rows.length){
+                    tlMarketSetEmpty('行情加载失败', '请检查网络后重试；不会影响成本、盈亏和快照', true, 150);
+                    return;
+                }
+                paintTradeLogMarketChart(item, rows, win);
+            });
+        }
+        function retryTradeLogMarketChart(){
+            const item = tlFindCurrentTradeLogItem();
+            if(item) renderTradeLogMarketChart(item, true);
+        }
         function setTradeLogChartTab(tab){
-            tab = tab === 'cost' ? 'cost' : 't';
+            tab = tab === 'cost' ? 'cost' : (tab === 'hold' ? 'hold' : (tab === 'market' ? 'market' : 't'));
             const item = tlFindCurrentTradeLogItem();
             if(!item) return;
+            if(tab === 'market' && !targetGetGoal(item.code, item.marketType)) tab = 't';
+            if(tab !== 'market') tlMarketReqToken++;
             tlSetChartHead(tab, item);
             if(tab === 'cost') renderTradeLogCostChart(item);
+            else if(tab === 'hold') renderTradeLogHoldingChart(item);
+            else if(tab === 'market') renderTradeLogMarketChart(item);
             else renderTradeLogMonthlyT(item);
         }
         function renderTradeLogMonthlyT(item){
@@ -13718,7 +14538,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
             renderTradeLogList();
             tlCostChartDispose();
+            tlHoldChartDispose();
+            tlMarketChartDispose();
             tlChartTab = 't';
+            syncTradeLogMarketTab(item);
             renderTradeLogMonthlyT(item);
             // 进入明细页：立即刷新一次最新行情，行情返回后回调更新今日条；
             // 不在本页期间不轮询刷新（行情由全站增量更新维护），仅做T操作发生时联动刷新
@@ -13730,6 +14553,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closeTradeLogPage(){
             tlMonthlyTDispose();
             tlCostChartDispose();
+            tlHoldChartDispose();
+            tlMarketChartDispose();
             exitDetailPage(document.querySelector('#pageTradeLog'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
             // 恢复新增按钮（仅持仓页显示）
@@ -15678,21 +16503,44 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let targetRemindOn = true;
         let targetPriorityOn = false;
         let targetReturnOverview = false;
-        let _targetBodyPrev = null;
-        let _targetHtmlPrev = null;
+        let _targetLockPrev = null;
         function targetLockBody(){
-            if(_targetBodyPrev !== null) return;
-            _targetBodyPrev = document.body.style.overflow;
-            _targetHtmlPrev = document.documentElement.style.overflow;
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
+            if(_targetLockPrev) return;
+            const body = document.body;
+            const html = document.documentElement;
+            const y = window.pageYOffset || html.scrollTop || 0;
+            _targetLockPrev = {
+                bodyOverflow: body.style.overflow,
+                htmlOverflow: html.style.overflow,
+                bodyPosition: body.style.position,
+                bodyTop: body.style.top,
+                bodyLeft: body.style.left,
+                bodyRight: body.style.right,
+                bodyWidth: body.style.width,
+                scrollY: y
+            };
+            body.style.overflow = 'hidden';
+            html.style.overflow = 'hidden';
+            body.style.position = 'fixed';
+            body.style.top = '-' + y + 'px';
+            body.style.left = '0';
+            body.style.right = '0';
+            body.style.width = '100%';
         }
         function targetUnlockBody(){
-            if(_targetBodyPrev === null) return;
-            document.body.style.overflow = _targetBodyPrev;
-            document.documentElement.style.overflow = _targetHtmlPrev || '';
-            _targetBodyPrev = null;
-            _targetHtmlPrev = null;
+            if(!_targetLockPrev) return;
+            const prev = _targetLockPrev;
+            _targetLockPrev = null;
+            const body = document.body;
+            const html = document.documentElement;
+            body.style.overflow = prev.bodyOverflow;
+            html.style.overflow = prev.htmlOverflow;
+            body.style.position = prev.bodyPosition;
+            body.style.top = prev.bodyTop;
+            body.style.left = prev.bodyLeft;
+            body.style.right = prev.bodyRight;
+            body.style.width = prev.bodyWidth;
+            window.scrollTo(0, prev.scrollY);
         }
         function targetUpdateRemindUI(){
             const track = document.querySelector('#targetRemindTrack');

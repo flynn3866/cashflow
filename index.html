@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261112.261';</script>
+    <script>window.APP_VERSION = '20261112.262';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -329,6 +329,10 @@
             to{ opacity:1; transform:scale(1) translateY(0); }
         }
         html, body{ -webkit-tap-highlight-color:transparent; overscroll-behavior:none; overscroll-behavior-y:none; }
+        /* 内层独立滚动容器：阻止滚动链传到页面根，避免列表/面板到边界后带动整页回弹 */
+        #stockSuggestList, #watchSuggestList, #msModalList, #targetEditorSheet, #targetOverviewSheet, #sdFinBody{
+            overscroll-behavior: contain;
+        }
         /* 触摸设备：财务表原生横向滚动禁用（避免 iOS 横向橡皮筋），横向由方向分流手势 JS 驱动 scrollLeft；桌面保留原生横向滚动与滚动条 */
         @media (hover:none) and (pointer:coarse){ #sdFinBody{ overflow-x:hidden; } }
         .no-spinner::-webkit-inner-spin-button,.no-spinner::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
@@ -31909,7 +31913,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '</div>'
                     + '<div class="fund-year-detail hidden px-4 pb-3 pt-1" style="background:#fafaf8">'
                     + (d.items.length > 4 ? '<div class="text-[10px] text-gray-400 pb-1.5 flex items-center justify-between"><span>共 ' + d.items.length + ' 笔记录</span><i class="fa fa-chevron-up text-[9px] text-gray-300"></i></div>' : '')
-                    + '<div class="space-y-1.5" style="max-height:260px;overflow-y:auto;">'
+                    + '<div class="space-y-1.5" style="max-height:260px;overflow-y:auto;overscroll-behavior:contain;">'
                     + (itemsH || '<div class="text-center py-3 text-[11px] text-gray-300">本年无记录</div>')
                     + '</div>'
                     + '</div>'
@@ -33179,6 +33183,61 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         })(map[i][0], map[i][1]);
     }
+})();
+
+// 页面根滚动到顶端/底端时，仅拦截继续向外拉的手势；内部可滚动的列表/输入框不被接管
+(function(){
+    var startX = 0, startY = 0, touchId = null, boundary = '', armed = false;
+
+    function isEditable(el){
+        return !!(el && el.closest && el.closest('input, textarea, select, [contenteditable="true"]'));
+    }
+    function innerCanScroll(el, dy){
+        var node = el;
+        while(node && node.nodeType === 1 && node !== document.body && node !== document.documentElement){
+            var oy = window.getComputedStyle(node).overflowY;
+            if((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && node.scrollHeight > node.clientHeight + 1){
+                if(dy > 0 && node.scrollTop > 0) return true;
+                if(dy < 0 && node.scrollTop + node.clientHeight < node.scrollHeight - 1) return true;
+            }
+            node = node.parentElement;
+        }
+        return false;
+    }
+    function onMove(e){
+        if(!armed || e.touches.length !== 1) return;
+        var t = e.touches[0];
+        if(touchId !== null && t.identifier !== touchId) return;
+        var dy = t.clientY - startY, dx = t.clientX - startX;
+        if(Math.abs(dy) < 6 || Math.abs(dy) <= Math.abs(dx)) return;
+        if(innerCanScroll(e.target, dy)) return;
+        if(((boundary === 'top' || boundary === 'both') && dy > 0) || ((boundary === 'bottom' || boundary === 'both') && dy < 0)){
+            if(e.cancelable) e.preventDefault();
+        }
+    }
+    function cleanup(){
+        document.removeEventListener('touchmove', onMove, true);
+        document.removeEventListener('touchend', cleanup, true);
+        document.removeEventListener('touchcancel', cleanup, true);
+        armed = false; touchId = null; boundary = '';
+    }
+    document.addEventListener('touchstart', function(e){
+        cleanup();
+        if(e.touches.length !== 1 || isEditable(e.target)) return;
+        var root = document.scrollingElement || document.documentElement;
+        var max = root.scrollHeight - window.innerHeight;
+        var y = window.scrollY || root.scrollTop || 0;
+        if(max <= 2) boundary = 'both';
+        else if(y <= 2) boundary = 'top';
+        else if(y >= max - 2) boundary = 'bottom';
+        else return;
+        var t = e.touches[0];
+        startX = t.clientX; startY = t.clientY; touchId = t.identifier;
+        armed = true;
+        document.addEventListener('touchmove', onMove, {passive:false, capture:true});
+        document.addEventListener('touchend', cleanup, {passive:true, capture:true});
+        document.addEventListener('touchcancel', cleanup, {passive:true, capture:true});
+    }, {passive:true, capture:true});
 })();
 </script>
 

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261112.252';</script>
+    <script>window.APP_VERSION = '20261112.253';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5485,9 +5485,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <div class="rounded-xl bg-[#faf5e9] ring-1 ring-[#eedfc0] px-3.5 py-3 mb-4">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-[11px] text-gray-500">当前持仓</span>
-                    <span id="targetEditCurrent" class="text-[15px] font-semibold text-gray-800 tabular-nums">-- 股</span>
+                <div class="text-[12px] font-medium text-[#6b5a42]">当前持仓</div>
+                <div class="mt-1 flex items-baseline gap-1">
+                    <span id="targetEditCurrent" class="text-[20px] font-semibold text-gray-800 tabular-nums">--</span>
+                    <span class="text-[12px] text-gray-400">股</span>
                 </div>
             </div>
 
@@ -15709,7 +15710,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const g = targetGetGoal(item.code, item.marketType);
             targetRemindOn = g ? g.remind !== false : true;
             document.querySelector('#targetEditStockLine').innerText = item.name + ' · ' + item.code + ' · ' + (item.marketType === 'HK' ? '港股' : 'A股');
-            document.querySelector('#targetEditCurrent').innerText = targetFmtShares(item.count) + ' 股';
+            document.querySelector('#targetEditCurrent').innerText = targetFmtShares(item.count);
             document.querySelector('#targetSharesInput').value = g ? String(g.targetShares) : '';
             document.querySelector('#targetClearBtn').classList.toggle('hidden', !g);
             targetUpdateRemindUI();

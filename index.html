@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261112.248';</script>
+    <script>window.APP_VERSION = '20261112.251';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5529,6 +5529,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
                 <button id="targetOverviewCloseBtn" type="button" class="ml-auto w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times text-[13px]"></i></button>
             </div>
+            <div id="targetOverviewRail" class="mt-3"></div>
             <div class="text-[10.5px] text-gray-400 mb-3 mt-2">未达成目标会每天提醒；达标后自动停止，并保留“已达成”状态。</div>
             <div id="targetOverviewList" class="space-y-2.5"></div>
             <div class="text-center text-[10px] text-gray-400 mt-4">点击任意股票可调整目标，或从个股详情页进入设置</div>
@@ -15801,6 +15802,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         : '<span class="text-[#2f7d5a] font-medium">已达成 ' + done + '</span><span class="text-gray-300 mx-1">·</span><span class="text-accent font-medium">待完成 ' + pending + '</span><span class="text-gray-400"> · 共 ' + rows.length + ' 只</span>')
                     : '暂无目标';
             }
+            const rail = document.querySelector('#targetOverviewRail');
+            if(rail){
+                if(!rows.length){
+                    rail.innerHTML = '';
+                }else{
+                    const donePct = done / rows.length * 100;
+                    rail.innerHTML = '<div class="flex items-center justify-between mb-1.5">'
+                        + '<span class="text-[10px] font-medium tracking-wide text-[#8a6a43]">达成进度</span>'
+                        + '<span class="text-[10.5px] tabular-nums"><b style="color:#2f7d5a;">' + done + '</b><span style="color:#b0946b;"> / ' + rows.length + '</span></span>'
+                        + '</div>'
+                        + '<div class="h-[4px] rounded-full overflow-hidden flex" style="background:#efe3cd;">'
+                        + '<div style="width:' + donePct.toFixed(1) + '%;height:100%;background:linear-gradient(90deg,#6fb894,#2f7d5a);"></div>'
+                        + '<div style="width:' + (100 - donePct).toFixed(1) + '%;height:100%;background:linear-gradient(90deg,#e6c28e,#b07a3a);"></div>'
+                        + '</div>';
+                }
+            }
             if(!rows.length){
                 list.innerHTML = '<div class="bg-white rounded-2xl border border-[#eadfcf] px-4 py-8 text-center text-[12px] text-gray-400">还没有设置目标持仓</div>';
                 return;
@@ -15817,17 +15834,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const cardClass = r.achieved
                     ? 'rounded-2xl bg-[#f7fcf9] border border-[#cfe7db] px-3.5 py-3 shadow-[0_2px_10px_rgba(47,125,90,0.06)] active:bg-[#f0f8f3]'
                     : 'rounded-2xl bg-white border border-[#eadfcf] px-3.5 py-3 shadow-sm active:bg-gray-50';
+                const valuePanelBg = r.achieved
+                    ? 'linear-gradient(135deg,#fbfefc 0%,#eef8f2 100%)'
+                    : 'linear-gradient(135deg,#fffdf8 0%,#f8ecd6 100%)';
+                const valuePanelBorder = r.achieved ? '#d8ebe1' : '#f0dfc2';
+                const valueLabel = r.achieved ? '#6b8f7d' : '#9b7b54';
+                const valueCurrent = r.achieved ? '#2f6b52' : '#4a3520';
+                const valueDivider = r.achieved ? '#cfe4d9' : '#ead8bd';
                 return '<div class="' + cardClass + '"' + cardStyle + ' onclick="openTargetEditorByCode(\'' + String(it.code) + '\',\'' + String(it.marketType) + '\',true)">'
                     + '<div class="flex items-center gap-1.5 min-w-0">'
-                    + '<span class="text-[14px] font-semibold text-gray-800 truncate">' + targetEsc(it.name) + '</span>' + tag + status
-                    + '<span class="ml-auto text-[14px] font-bold tabular-nums ' + (r.achieved ? 'text-[#2f7d5a]' : 'text-accent') + '">' + r.pct.toFixed(1) + '%</span>'
+                    + '<span class="text-[16px] font-semibold text-gray-800 truncate">' + targetEsc(it.name) + '</span>' + tag + status
+                    + '<span class="ml-auto text-[15px] font-bold tabular-nums ' + (r.achieved ? 'text-[#2f7d5a]' : 'text-accent') + '">' + r.pct.toFixed(1) + '%</span>'
                     + '</div>'
-                    + '<div class="text-[10px] text-gray-400 mt-1 tabular-nums">' + String(it.code) + ' · 当前 ' + targetFmtShares(r.current) + ' / 目标 ' + targetFmtShares(r.target) + ' 股</div>'
+                    + '<div class="text-[9.5px] text-gray-400 mt-0.5 tabular-nums">' + String(it.code) + '</div>'
+                    + '<div class="mt-2.5 flex items-stretch rounded-xl px-3 py-2" style="background:' + valuePanelBg + ';border:1px solid ' + valuePanelBorder + ';">'
+                    + '<div class="flex-1 min-w-0">'
+                    + '<div class="text-[10.5px]" style="color:' + valueLabel + ';">当前持仓</div>'
+                    + '<div class="mt-1 flex items-baseline gap-1"><span class="text-[18px] font-bold leading-none tabular-nums" style="color:' + valueCurrent + ';">' + targetFmtShares(r.current) + '</span><span class="text-[9.5px]" style="color:' + valueLabel + ';">股</span></div>'
+                    + '</div>'
+                    + '<div class="w-px flex-shrink-0 mx-3" style="background:' + valueDivider + ';"></div>'
+                    + '<div class="flex-1 min-w-0 text-right">'
+                    + '<div class="text-[10.5px]" style="color:' + valueLabel + ';">目标股数</div>'
+                    + '<div class="mt-1 flex items-baseline justify-end gap-1"><span class="text-[18px] font-bold leading-none tabular-nums" style="color:' + (r.achieved ? '#2f7d5a' : '#a9642a') + ';">' + targetFmtShares(r.target) + '</span><span class="text-[9.5px]" style="color:' + valueLabel + ';">股</span></div>'
+                    + '</div>'
+                    + '</div>'
                     + '<div class="mt-2 h-[4px] rounded-full ' + (r.achieved ? 'bg-[#e3f1e9]' : 'bg-[#f0e4cf]') + ' overflow-hidden"><div style="width:' + r.pct.toFixed(1) + '%;height:100%;border-radius:4px;background:' + (r.achieved ? 'linear-gradient(90deg,#6fb894,#2f7d5a)' : 'linear-gradient(90deg,#d8b07a,#a9642a)') + ';"></div></div>'
-                    + '<div class="flex items-center justify-between mt-1.5 text-[10px]">'
+                    + '<div class="flex items-center justify-between mt-2 text-[10px]">'
                     + (r.achieved
-                        ? '<span class="inline-flex items-center gap-1 text-[#2f7d5a]/80"><i class="fa fa-check-circle text-[9px]"></i>提醒已停止</span><span class="text-[#2f7d5a] font-medium">调整 ›</span>'
-                        : '<span class="text-gray-400">还差 <span class="text-accent font-medium tabular-nums">' + targetFmtShares(r.gap) + '</span> 股</span><span class="text-accent">调整 ›</span>')
+                        ? '<span class="inline-flex items-center gap-1 text-[#2f7d5a]/80"><i class="fa fa-check-circle text-[9px]"></i>提醒已停止</span><span class="text-[#2f7d5a] font-medium">调整目标 ›</span>'
+                        : '<span class="text-gray-400">还差 <span class="text-accent font-semibold text-[12px] tabular-nums">' + targetFmtShares(r.gap) + '</span> 股</span><span class="text-accent font-medium">调整目标 ›</span>')
                     + '</div>'
                     + '</div>';
             }).join('');

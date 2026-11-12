@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261111.238';</script>
+    <script>window.APP_VERSION = '20261112.243';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1394,12 +1394,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 今日盈亏条（券商总账口径）：今日盈亏 / 日内已兑现（做T） / 做T累计总盈利 -->
+        <!-- 今日盈亏条（券商总账口径）：做T累计总盈利置顶；第二行今日盈亏 / 日内已兑现（做T） / 成本变动 -->
         <div id="tradeLogDayWrap" class="hidden relative overflow-hidden rounded-2xl p-3.5 mb-5" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62), 0 1px 3px rgba(0,0,0,0.50), 0 0 5px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06);">
-            <div class="relative z-10 mb-2 px-0.5">
-                <span id="logTodayLabel" class="text-[10.5px] font-semibold text-amber-100/80">今日</span>
+            <div class="relative z-10 flex items-end justify-between gap-3 mb-3">
+                <div class="min-w-0">
+                    <div class="text-[10px] text-amber-100/60 mb-1">做T累计总盈利</div>
+                    <div id="logTodayFloat" class="text-[22px] leading-7 font-bold tabular-nums" style="color:#ffffff">--</div>
+                </div>
+                <div class="text-[9px] text-amber-100/45 pb-1 whitespace-nowrap">成立以来</div>
             </div>
-            <div class="relative z-10 grid grid-cols-3">
+            <div class="relative z-10 grid grid-cols-3 border-t border-white/10 pt-3">
                 <div class="text-center px-1">
                     <div class="text-[10px] text-amber-100/60 mb-1">今日盈亏</div>
                     <div id="logTodayPnl" class="text-[16px] font-bold tabular-nums" style="color:#fff">--</div>
@@ -1409,8 +1413,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div id="logTodayT" class="text-[16px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
                 </div>
                 <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[10px] text-amber-100/60 mb-1">做T累计总盈利</div>
-                    <div id="logTodayFloat" class="text-[16px] font-bold tabular-nums" style="color:#ffffff">--</div>
+                    <div class="text-[10px] text-amber-100/60 mb-1">成本变动 <span class="text-[8px] text-amber-100/40">每股</span></div>
+                    <div id="logCostChange" class="text-[16px] font-bold tabular-nums" style="color:#ffffff">--</div>
                 </div>
             </div>
         </div>
@@ -10508,64 +10512,79 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 dayKey: refDay.getFullYear() + '-' + ('0' + (refDay.getMonth() + 1)).slice(-2) + '-' + ('0' + refDay.getDate()).slice(-2)
             };
         }
-        // 做T累计总盈利（按交易日存储的做T值累加，历史只读存储、不重算交易记录）：
-        // item.dayTByDate = { 'YYYY-MM-DD': 当日做T }；首次访问惰性回填一次（遍历交易按日归总），
-        // 之后纯读存储累加；交易记录删除/缺失不影响累计。当日做T实时现算并覆盖归属日键，保证盘中每3秒刷新准确。
-        // dayTMethod 用于做T口径升级后的历史重算，避免旧的无费用结果继续被缓存沿用。
-        const T_PAIR_METHOD = 't-pair-net-fee-v1';
-        function ensureDayTMap(item){
-            if(item.dayTByDate && item.dayTMethod === T_PAIR_METHOD) return item.dayTByDate;
-            const map = {};
-            const trs = item.transactions;
-            if(trs && trs.length){
-                const dayTrs = {}; // 按自然日分组：'YYYY-MM-DD' -> [{type,price,volume}]，每组低价优先配对闭环
-                for(let i = 0; i < trs.length; i++){
-                    const tr = trs[i];
-                    const ts = Number(tr.t) || 0;
-                    if(!ts) continue;
-                    const qty = Number(tr.delta) || 0;
-                    if(!qty) continue;
-                    const dd = new Date(ts);
-                    const key = dd.getFullYear() + '-' + ('0' + (dd.getMonth() + 1)).slice(-2) + '-' + ('0' + dd.getDate()).slice(-2);
-                    if(!dayTrs[key]) dayTrs[key] = [];
-                    const tradePrice = Number(tr.price) || 0;
-                    const tradeType = qty > 0 ? 'buy' : 'sell';
-                    const tradeQty = Math.abs(qty);
-                    const tradeFee = tTradeFeeOf(tr, item.marketType, tradePrice, tradeQty);
-                    dayTrs[key].push({
-                        type: tradeType,
-                        price: tNetTradePrice(tradeType, tradePrice, tradeQty, tradeFee),
-                        volume: tradeQty
-                    });
-                }
-                for(const k in dayTrs){
-                    map[k] = calcDayTProfitPair(dayTrs[k]).tProfit;
-                }
+        // 做T累计总盈利：与“每月做T柱图”同一套区间配对口径（允许月内/跨日闭环），
+        // 只把全部历史当成一个区间算一次，然后缓存；交易/分红/汇率变化才失效重算。
+        // 这样不会出现“累计只算当日闭环、月度算跨日闭环”导致累计反而更小的问题。
+        const T_CUM_METHOD = 't-range-net-fee-v2';
+        function tCumHashAdd(h, v){
+            const s = String(v == null ? '' : v);
+            for(let i = 0; i < s.length; i++){
+                h ^= s.charCodeAt(i);
+                h = Math.imul(h, 16777619);
             }
-            item.dayTByDate = map;
-            item.dayTMethod = T_PAIR_METHOD;
-            saveLocal(); // 首次回填后持久化一次，后续读存储不再触发
-            return map;
+            return h;
+        }
+        function tCumSignature(item){
+            let h = 2166136261;
+            h = tCumHashAdd(h, item.code || '');
+            h = tCumHashAdd(h, item.marketType || 'A');
+            if(item.marketType === 'HK') h = tCumHashAdd(h, hkFxRate);
+            const trs = item.transactions || [];
+            h = tCumHashAdd(h, trs.length);
+            for(let i = 0; i < trs.length; i++){
+                const tr = trs[i] || {};
+                h = tCumHashAdd(h, [tr.t, tr.delta, tr.price, tr.fee, tr.feeComm, tr.feeStamp, tr.feeTransfer, tr.note || ''].join('|'));
+            }
+            const exds = item.exDivRecords || [];
+            h = tCumHashAdd(h, exds.length);
+            for(let i = 0; i < exds.length; i++){
+                const r = exds[i] || {};
+                h = tCumHashAdd(h, [r.divKey, r.date, r.exDate, r.perShare, r.amount, r.settled].join('|'));
+            }
+            const divs = item.divPaidRecords || [];
+            h = tCumHashAdd(h, divs.length);
+            for(let i = 0; i < divs.length; i++){
+                const r = divs[i] || {};
+                h = tCumHashAdd(h, [r.divKey, r.date, r.exDate, r.perShare, r.amount, r.settled].join('|'));
+            }
+            return T_CUM_METHOD + '|' + trs.length + '|' + (h >>> 0);
+        }
+        function calcLifetimeTProfit(item){
+            const trs = item.transactions || [];
+            if(!trs.length) return 0;
+            let firstTs = Infinity, lastTs = 0;
+            for(let i = 0; i < trs.length; i++){
+                const ts = Number(trs[i] && trs[i].t) || 0;
+                if(!ts) continue;
+                if(ts < firstTs) firstTs = ts;
+                if(ts > lastTs) lastTs = ts;
+            }
+            if(!isFinite(firstTs)) return 0;
+            const start = new Date(firstTs);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(Math.max(lastTs, Date.now()));
+            end.setHours(23, 59, 59, 999);
+            const built = buildRangeTTrades(item, start.getTime(), end.getTime());
+            const base = {};
+            if(built.baseQty > 1e-9){
+                base[String(item.code)] = [{ price: 0, volume: built.baseQty }];
+            }
+            const fx = item.marketType === 'HK' ? (Number(hkFxRate) || 1) : 1;
+            const res = calcRangeTProfit(built.rangeTrades, start, end, base, buildTExDivEvents(item, fx), false);
+            return (Number(res.totalTProfit) || 0) * fx;
+        }
+        function ensureTCumulative(item){
+            const sig = tCumSignature(item);
+            if(item.tCum && item.tCum.method === T_CUM_METHOD && item.tCum.sig === sig && isFinite(Number(item.tCum.value))){
+                return Number(item.tCum.value) || 0;
+            }
+            const value = calcLifetimeTProfit(item);
+            item.tCum = { method: T_CUM_METHOD, sig: sig, value: value, at: Date.now() };
+            saveLocal(); // 只在交易/分红/汇率变化后落库一次，日常打开不重算
+            return value;
         }
         function getDayTTotal(item){
-            const map = ensureDayTMap(item);
-            // 归属日做T现算：与存储不一致时写回并保存。
-            // 关键：非交易日（周末/节假日）归属上一交易日、以及收盘后才补录的交易，
-            // 若只做显示层覆盖不写回，下次打开又会把同一交易日做T再加一遍（重复累加）。
-            // 写回后存储与显示一致，同一交易日无论打开几次只计入一次。
-            const flow = calcDayFlow(item);
-            let changed = false;
-            if(flow.dayKey && flow.buyQty > 0 && flow.sellQty > 0){
-                const cur = Number(map[flow.dayKey]) || 0;
-                if(Math.abs(cur - flow.tProfit) > 0.005){
-                    map[flow.dayKey] = flow.tProfit;
-                    changed = true;
-                }
-            }
-            if(changed) saveLocal(); // 有做T更新立即落库（交易结束后录入/补录/非交易日打开均触发）
-            let total = 0;
-            for(const k in map) total += Number(map[k]) || 0;
-            return total;
+            return ensureTCumulative(item);
         }
         function calcDayPnl(item){
             return calcDayFlow(item).pnl;
@@ -12778,15 +12797,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 recordDailyAssets();
                 renderAnalysisCharts();
             }
-            // 做T累计持久化：以归属交易日为键存储当日做T值（增量累计，历史只读存储，交易记录缺失不影响）
+            // 交易后做T累计缓存失效：下次读取时按全部历史重算一次并落库，
+            // 避免每日增量缓存与“月内跨日闭环”口径不一致。
             const tItem = holdDataList.find(function(it){ return it.id === tradeItemId; });
             if(tItem){
-                const tFlow = calcDayFlow(tItem);
-                if(tFlow.dayKey && tFlow.buyQty > 0 && tFlow.sellQty > 0){
-                    ensureDayTMap(tItem);
-                    tItem.dayTByDate[tFlow.dayKey] = tFlow.tProfit;
-                    saveLocal();
-                }
+                tItem.tCum = null;
+                saveLocal();
             }
             // 交易明细页开着：当日买卖（做T）数据已变化，立即刷新今日条
             const dayWrapEl = document.querySelector('#tradeLogDayWrap');
@@ -12803,10 +12819,43 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 Promise.resolve(syncCashFlowLog()).catch(function(e){ console.error('cash ledger sync failed', e); });
             }catch(e){ console.error('ledger sync trigger failed', e); }
         }
-        // 交易明细页"今日条"填充与刷新：
+        // 上一个交易日收盘成本：优先读成本快照中今天之前最近的一条；
+        // 老数据没有快照时，回退到收盘成本轨迹的最后一个历史点。
+        function tradeLogPrevCloseCost(item){
+            const today = todayStr();
+            const snaps = (item && item.costSnapshots) || {};
+            let bestDate = '';
+            Object.keys(snaps).forEach(function(rawKey){
+                const dk = tlCostNormalizeDate(rawKey);
+                if(!dk || dk >= today) return;
+                if(!bestDate || dk > bestDate) bestDate = dk;
+            });
+            if(bestDate){
+                const v = Number(snaps[bestDate]);
+                if(isFinite(v) && Math.abs(v) > 1e-9) return v;
+            }
+            const series = buildCostTrendSeries(item);
+            let prev = null;
+            (series.points || []).forEach(function(p){
+                if(p && p.date < today && (!prev || p.date > prev.date)) prev = p;
+            });
+            if(prev){
+                const v = Number(prev.cost);
+                if(isFinite(v) && Math.abs(v) > 1e-9) return v;
+            }
+            return null;
+        }
+        function fmtCostDelta(v){
+            const n = Number(v);
+            if(!isFinite(n)) return '--';
+            if(Math.abs(n) < 0.00005) return '0.00';
+            return (n > 0 ? '+' : '-') + fmtCost(Math.abs(n));
+        }
+        // 交易明细页“今日条”填充与刷新：
         // 今日盈亏 = 收盘市值 − 昨日市值 + 卖出总额 − 买入总额（总账口径，含昨日归属）
         // 日内已兑现（做T）= 当日卖出总额 − 当日买入总额
-        // 做T累计总盈利 = 历史按交易日存储的做T值累加 + 当日现算（无行情/空窗也照常显示，不依赖当日基准）
+        // 做T累计总盈利 = 全部历史区间配对缓存（成立以来，含跨日闭环）
+        // 成本变动 = 最新成本 − 上一交易日收盘成本（每股，成本下降为绿色）
         function refreshTradeLogDayBar(){
             const wrap = document.querySelector('#tradeLogDayWrap');
             if(!wrap) return;
@@ -12815,25 +12864,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 wrap.classList.add('hidden');
                 return;
             }
-            // 标签：9 点前/周末/节假日归属上一交易日 → 显示"昨日"；交易日 9:15 后显示"今日"
-            const nowRef = new Date();
-            const _dowL = nowRef.getDay();
-            const _isTradingL = !(_dowL === 0 || _dowL === 6);
-            const _minsL = nowRef.getHours() * 60 + nowRef.getMinutes();
-            const _startedL = _isTradingL && _minsL >= 9 * 60;
-            const isPrevDay = !_startedL; // 9点前/周末/节假日 → 昨日；交易日9:00起(含9-9:15空窗) → 今日
-            const labelEl = document.querySelector('#logTodayLabel');
-            if(labelEl) labelEl.innerText = isPrevDay ? '昨日' : '今日';
             const flow = calcDayFlow(item);
             const pnlEl = document.querySelector('#logTodayPnl');
             const tEl = document.querySelector('#logTodayT');
             const fEl = document.querySelector('#logTodayFloat');
+            const costEl = document.querySelector('#logCostChange');
             wrap.classList.remove('hidden');
-            // 做T累计总盈利：历史按日存储累加 + 当日现算覆盖；无行情/空窗/昨日归属均照常显示
+            // 做T累计总盈利：全部历史区间配对缓存；无行情/空窗/昨日归属均照常显示
             const dayTTotal = getDayTTotal(item);
             const dayTNum = Number(dayTTotal) || 0;
             fEl.style.color = dayTNum > 0.005 ? '#f04b3f' : (dayTNum < -0.005 ? '#3fd35b' : '#ffffff');
             fEl.innerText = fmtPnlNum(dayTTotal);
+            // 成本变动：成本下降为绿色（好），上升为红色（差）
+            const prevCost = tradeLogPrevCloseCost(item);
+            const curCost = Number(item.costPrice);
+            const costDelta = (prevCost == null || !isFinite(curCost)) ? null : (curCost - prevCost);
+            if(costEl){
+                costEl.innerText = costDelta == null ? '--' : fmtCostDelta(costDelta);
+                costEl.style.color = (costDelta == null || Math.abs(costDelta) < 0.00005) ? '#ffffff' : (costDelta < 0 ? '#3fd35b' : '#f04b3f');
+            }
             if(!flow.hasBase){
                 pnlEl.style.color = '#ffffff'; pnlEl.innerText = '--';
                 tEl.style.color = '#f7cf8f'; tEl.innerText = '--';
@@ -24499,17 +24548,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!holdDataList.length){
                 changeList.innerHTML = '<div class="px-5 py-8 text-center text-gray-400 text-sm">暂无持仓数据</div>';
             } else {
-                // 三级重仓标识（按持仓占比，人民币口径）：≥10% 星仓（紫）/ 5%~10% 重仓（金）/ 2.5%~5% 观察（蓝）
+                // 仓位超过 10% 的股票，仅用紫色名字标记，不再挂重仓图标。
                 const heavyCodes = {};
-                const heavyL2 = {};
-                const heavyL3 = {};
                 const totalMVAll = Number(calcSummary().totalMarket) || 1;
                 holdDataList.forEach(function(it){
                     const mvIt = (Number(it.count)||0) * (Number(it.nowPrice)||0) * (it.marketType === 'HK' ? hkFxRate : 1);
                     const pctIt = totalMVAll > 0 ? (mvIt / totalMVAll * 100) : 0;
                     if(pctIt >= 10) heavyCodes[it.code] = true;
-                    else if(pctIt >= 5) heavyL2[it.code] = true;
-                    else if(pctIt >= 2.5) heavyL3[it.code] = true;
                 });
                 const sorted = holdDataList.slice().sort(function(a, b){
                     // 排序用原始涨跌幅（9点前/竞价前无当日数据时按上一交易日收盘涨跌幅排，显示仍为 --）
@@ -24547,39 +24592,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     else if(idx === 1) rankClass = 'bg-gradient-to-br from-orange-400 to-orange-500 text-white';
                     else if(idx === 2) rankClass = 'bg-gradient-to-br from-amber-400 to-amber-500 text-white';
                     const marketTag = it.marketType === 'HK'
-                        ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded flex-shrink-0">港</span>'
-                        : '<span class="text-[10px] text-accent bg-[#faf3e3] px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
-                    // 三级重仓徽章（放在股票代码右边，顶级质感设计）：
-                    // 内联 SVG 五角星跨设备渲染一致且锐利；对角渐变 + 顶部内高光（玻璃质感）+ 极细白描边 + 同色系柔光，
-                    // 层次一眼可辨：第一层 ★★★★★（≥10%，紫）、第二层 ★★★（5%~10%，金）、第三层 ★（2.5%~5%，天蓝）。
-                    // 纯星星不带文字；title 提供长按/悬停说明，不影响显示。
-                    const starPath = 'M12 2l2.4 4.86 5.36.78-3.88 3.78.92 5.34L12 15.4 7.2 19.76l.92-5.34-3.88-3.78 5.36-.78z';
-                    // 星级评级组件式设计（统一紫色系，顶级同色系层次）：
-                    // 固定 5 星槽位等长、紧凑不超过四字股票名宽度；亮星数表层级（5/3/1），
-                    // 未点亮星以半透明白星补齐；三档用同色系深浅渐变区分（深紫/中紫/浅紫），
-                    // 与页面紫色辅助风格统一，简洁优雅、层次一眼可辨
-                    function heavyStarBadge(lightN, tierCls, tip){
-                        let stars = '';
-                        for(let si = 0; si < 5; si++){
-                            if(si < lightN){
-                                // 点亮星：纯白心 + 白色描边——星形饱满发亮、边缘清晰圆润，
-                                // 在任何紫底上都明亮醒目，三档亮度统一
-                                stars += '<svg width="10" height="10" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" shape-rendering="geometricPrecision" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
-                            } else {
-                                // 未点亮槽位：背景同色系淡紫描边 + 极淡白填充——暗淡融入底色、隐约可辨不抢眼
-                                stars += '<svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,0.15)" stroke="rgba(139,92,246,0.5)" stroke-width="1.2" stroke-linejoin="round" class="flex-shrink-0"><path d="' + starPath + '"/></svg>';
-                            }
-                        }
-                        return '<span title="' + tip + '" class="inline-flex items-center justify-center px-1 py-0.5 rounded-full text-white ' + tierCls + ' ml-1.5 align-middle">' + stars + '</span>';
-                    }
-                    let heavyBadge = '';
-                    if(heavyCodes[it.code]){
-                        heavyBadge = heavyStarBadge(5, 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] shadow-purple-300/50 ring-1 ring-white/25', '重仓层级1 · 仓位占比≥10%');
-                    } else if(heavyL2[it.code]){
-                        heavyBadge = heavyStarBadge(3, 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] shadow-purple-300/40 ring-1 ring-white/25', '重仓层级2 · 仓位占比5%~10%');
-                    } else if(heavyL3[it.code]){
-                        heavyBadge = heavyStarBadge(1, 'bg-gradient-to-br from-purple-400 to-purple-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] shadow-purple-300/40 ring-1 ring-white/25', '重仓层级3 · 仓位占比2.5%~5%');
-                    }
+                        ? '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none bg-blue-500 flex-shrink-0">HK</span>'
+                        : '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none bg-[#e03131] flex-shrink-0">A</span>';
                     // 当日盈亏金额（券商标准）
                     let dayPnl = 0;
                     let dayPnlText = '--';
@@ -24633,15 +24647,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                     const isLongName = statsNameW > 130;
                     const statsShowName = isLongName ? it.name.substring(0, 6) + '…' : it.name;
+                    const heavyNameCls = heavyCodes[it.code] ? 'text-[#7c3aed]' : 'text-gray-800';
+                    const heavyNameWeight = heavyCodes[it.code] ? 'font-semibold' : 'font-medium';
                     const statsNameCls = isLongName
-                        ? 'text-sm font-medium text-gray-800 truncate'
-                        : 'text-sm font-medium text-gray-800 whitespace-nowrap flex-shrink-0';
+                        ? 'text-sm ' + heavyNameWeight + ' ' + heavyNameCls + ' truncate'
+                        : 'text-sm ' + heavyNameWeight + ' ' + heavyNameCls + ' whitespace-nowrap flex-shrink-0';
                     // 列宽分配：序号24px + 名字列flex弹性占满剩余 + 现价列76px + 盈亏列88px（中间列靠右、名字列约一半以上）
                     html += '<div class="px-5 py-3 flex items-center gap-2 active:bg-gray-50 stock-row" data-code="' + it.code + '">'
                         + '<div class="w-5 h-5 rounded-full ' + rankClass + ' flex items-center justify-center text-[10px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
-                        + '<div class="flex items-center gap-1 min-w-0">' + stockLogoHtml(it, 16) + '<span class="' + statsNameCls + '">' + statsShowName + '</span>' + marketTag + '</div>'
-                        + '<div class="text-[11px] text-gray-400 mt-0.5">' + it.code + heavyBadge + '</div>'
+                        + '<div class="flex items-center gap-1 min-w-0">' + stockLogoHtml(it, 16) + '<span class="' + statsNameCls + '">' + statsShowName + '</span></div>'
+                        + '<div class="flex items-center gap-1 mt-0.5 min-w-0" style="padding-left:22px;">' + marketTag + '<span class="text-[10px] leading-4 text-gray-400 tabular-nums truncate flex-shrink-0">' + it.code + '</span></div>'
                         + '</div>'
                         + '<div class="w-[76px] text-right flex-shrink-0">'
                         + '<div class="text-[14px] font-semibold ' + priceColorClass + ' tabular-nums whitespace-nowrap">' + pricePrefix2 + (it.nowPrice ? fmtPrice(it.nowPrice, it.code, it.marketType === 'HK') : '--') + '</div>'

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261113.281';</script>
+    <script>window.APP_VERSION = '20261113.298';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -285,6 +285,55 @@
             50% { box-shadow: 0 2px 16px rgba(224,49,49,0.60); }
         }
         .today-reg-pulse { animation: todayRegPulse 2.2s ease-in-out infinite; }
+        /* 二级页统一汇总卡：浅暖纸底 + 细酒红顶线，深色只保留给首页与行情卡 */
+        .surface-hero{
+            position:relative;
+            overflow:hidden;
+            border-radius:20px;
+            border:1px solid #eadfce;
+            background:linear-gradient(180deg,#fffdf8 0%,#fffaf3 100%);
+            box-shadow:0 3px 12px rgba(82,55,32,.06),inset 0 1px 0 rgba(255,255,255,.86);
+            color:#1f2937;
+        }
+        .surface-hero::before{
+            content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:2;
+            background:linear-gradient(90deg,transparent,#8f2437 22%,#a82d43 50%,#8f2437 78%,transparent);
+            pointer-events:none;
+        }
+        .surface-hero::after{
+            content:'';position:absolute;top:-74px;right:-52px;width:180px;height:180px;border-radius:50%;
+            background:radial-gradient(circle,rgba(168,45,67,.07),transparent 68%);
+            pointer-events:none;
+        }
+        /* 交易明细页：做T经营结果卡，沿用年度分红 hero 的「主数字 + 三白格」结构 */
+        #tradeLogDayWrap .tl-sum-grid{
+            display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; align-items:stretch;
+            margin-top:14px; padding-top:13px; border-top:1px dashed rgba(201,154,75,.26);
+        }
+        #tradeLogDayWrap .tl-sum-cell{
+            min-width:0; padding:9px 10px; border:1px solid #efe2ca; border-radius:12px;
+            background:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.92);
+        }
+        #tradeLogDayWrap .tl-sum-label{
+            font-size:8.5px; line-height:1.35; color:#8a7354; letter-spacing:.01em;
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        #tradeLogDayWrap .tl-sum-label .tl-sum-unit{ font-size:7px; color:#a4937e; margin-left:2px; letter-spacing:0; }
+        #tradeLogDayWrap .tl-sum-value{
+            margin-top:5px; font-size:13px; line-height:1.08; font-weight:700;
+            font-variant-numeric:tabular-nums; white-space:nowrap;
+        }
+        #tradeLogDayWrap .tl-since-pill{
+            display:inline-flex; align-items:center; flex-shrink:0;
+            padding:3px 8px; border-radius:999px; border:1px solid #e8cdd4; background:#f8ecef;
+            color:#742034; font-size:8.5px; line-height:1; font-weight:500; white-space:nowrap;
+        }
+        @media (max-width:420px){
+            #tradeLogDayWrap .tl-sum-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+            #tradeLogDayWrap .tl-sum-cell{ padding:8px; border-radius:11px; }
+            #tradeLogDayWrap .tl-sum-label{ font-size:8px; }
+            #tradeLogDayWrap .tl-sum-value{ font-size:12px; }
+        }
         /* 个股仓位预警条：显示时页面内容下移让位，隐藏时不占版面 */
         body.has-position-warn { padding-top: calc(env(safe-area-inset-top, 0px) + 38px); }
         /* 详情页打开期间，预警条即使被异步刷新重新显示也不能压在详情页上 */
@@ -469,21 +518,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .stats-t-tabs{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; padding:4px; margin-top:12px; background:#f4eee2; border:1px solid #eee4d2; border-radius:12px; }
         .stats-t-tab{ border:0; background:transparent; border-radius:9px; padding:7px 3px; color:#8e8375; font-size:10px; font-weight:600; line-height:1.2; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
         .stats-t-tab.is-on{ background:linear-gradient(135deg,#8f2437 0%,#742034 100%); color:#fff3dd; box-shadow:0 3px 9px rgba(116,32,52,.22), inset 0 1px 0 rgba(255,255,255,.10); }
-        .stats-t-hero{ position:relative; overflow:hidden; margin-top:10px; border-radius:14px; padding:14px 14px 13px; color:#fff; background:linear-gradient(135deg,#3a1420 0%,#5b1828 58%,#742034 100%); box-shadow:0 8px 22px rgba(58,20,32,.20), inset 0 1px 0 rgba(255,255,255,.07); }
-        .stats-t-hero::before{ content:''; position:absolute; width:190px; height:190px; right:-72px; top:-104px; border-radius:50%; background:radial-gradient(circle,rgba(255,229,187,.18),transparent 68%); pointer-events:none; }
-        .stats-t-hero::after{ content:''; position:absolute; width:150px; height:150px; left:-86px; bottom:-104px; border-radius:50%; background:radial-gradient(circle,rgba(168,45,67,.24),transparent 70%); pointer-events:none; }
-        .stats-t-kicker{ font-size:9px; letter-spacing:.14em; color:rgba(232,214,181,.62); }
-        .stats-t-amount{ font-size:29px; line-height:1; font-weight:700; letter-spacing:-.03em; color:#f5e3c6; font-variant-numeric:tabular-nums; }
-        .stats-t-hero .stats-t-badge{ display:inline-flex; align-items:center; padding:3px 7px; border-radius:999px; border:1px solid rgba(242,212,146,.22); background:rgba(242,212,146,.08); color:rgba(242,212,146,.82); font-size:8px; line-height:1; white-space:nowrap; }
+        .stats-t-hero{ position:relative; overflow:hidden; margin-top:10px; border-radius:18px; padding:14px 14px 13px; color:#1f2937; background:linear-gradient(180deg,#fffdf8 0%,#fffaf3 100%); border:1px solid #eadfce; box-shadow:0 3px 12px rgba(82,55,32,.06), inset 0 1px 0 rgba(255,255,255,.86); }
+        .stats-t-hero::before{ content:''; position:absolute; width:190px; height:190px; right:-72px; top:-104px; border-radius:50%; background:radial-gradient(circle,rgba(168,45,67,.07),transparent 68%); pointer-events:none; }
+        .stats-t-hero::after{ content:''; position:absolute; width:150px; height:150px; left:-86px; bottom:-104px; border-radius:50%; background:radial-gradient(circle,rgba(227,180,107,.06),transparent 70%); pointer-events:none; }
+        .stats-t-kicker{ font-size:9px; letter-spacing:.14em; color:rgba(143,36,55,.55); }
+        .stats-t-amount{ font-size:29px; line-height:1; font-weight:700; letter-spacing:-.03em; color:#1f2937; font-variant-numeric:tabular-nums; }
+        .stats-t-hero .stats-t-badge{ display:inline-flex; align-items:center; padding:3px 7px; border-radius:999px; border:1px solid #e8cdd4; background:#f8ecef; color:#742034; font-size:8px; line-height:1; white-space:nowrap; }
         .stats-t-split{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:12px; }
-        .stats-t-split-item{ border-radius:9px; padding:7px 9px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.08); }
-        .stats-t-split-label{ font-size:8px; color:rgba(232,214,181,.54); }
+        .stats-t-split-item{ border-radius:9px; padding:7px 9px; background:#fff; border:1px solid #efe2ca; }
+        .stats-t-split-label{ font-size:8px; color:#8a7354; }
         .stats-t-split-value{ margin-top:3px; font-size:11px; line-height:1.1; font-weight:650; font-variant-numeric:tabular-nums; }
         .stats-t-metrics{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:9px; }
-        .stats-t-metric{ border-left:1px solid rgba(255,255,255,.10); padding-left:9px; min-width:0; }
+        .stats-t-metric{ border-left:1px solid #efe2ca; padding-left:9px; min-width:0; }
         .stats-t-metric:first-child{ border-left:0; padding-left:0; }
-        .stats-t-metric-label{ font-size:8px; color:rgba(232,214,181,.54); white-space:nowrap; }
-        .stats-t-metric-value{ margin-top:3px; font-size:11px; font-weight:650; color:#f7ead4; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .stats-t-metric-label{ font-size:8px; color:#8a7354; white-space:nowrap; }
+        .stats-t-metric-value{ margin-top:3px; font-size:11px; font-weight:650; color:#1f2937; font-variant-numeric:tabular-nums; white-space:nowrap; }
         .stats-t-rank-box{ margin-top:8px; border:1px solid #eee4d2; border-radius:13px; background:rgba(255,255,255,.62); overflow:hidden; }
         .stats-t-rank-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:10px 11px 7px; }
         .stats-t-rank-title{ font-size:12px; font-weight:600; color:#3d352b; line-height:1.25; }
@@ -606,34 +655,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .cashstat-annual-foot{ margin-top:8px; padding-top:7px; border-top:1px solid #f0e2cf; font-size:7.5px; line-height:1.55; color:#a18b74; }
         .cashstat-annual-empty{ padding:15px 8px 13px; text-align:center; font-size:9px; color:#aa9278; }
         /* ===== 分红对比：增量总览 / 归因瀑布 / 贡献榜 ===== */
-        .divcmp-hero{ position:relative; overflow:hidden; margin-bottom:12px; padding:15px 16px 13px; border-radius:20px; background:linear-gradient(135deg,#3a1420 0%,#5b1828 51%,#742034 100%); border:1px solid rgba(255,229,187,.22); box-shadow:0 10px 24px rgba(58,20,32,.24),inset 0 1px 0 rgba(255,235,200,.16); color:#fff4df; }
-        .divcmp-hero::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#7c2638,#e0b06a 42%,#ffe2ae 55%,#a82d43 100%); }
-        .divcmp-hero::after{ content:''; position:absolute; right:-46px; top:-56px; width:190px; height:190px; border-radius:50%; background:radial-gradient(circle,rgba(255,211,143,.22),transparent 66%); pointer-events:none; }
+        .divcmp-hero{ position:relative; overflow:hidden; margin-bottom:12px; padding:15px 16px 13px; border-radius:20px; background:linear-gradient(180deg,#fffdf8 0%,#fffaf3 100%); border:1px solid #eadfce; box-shadow:0 3px 12px rgba(82,55,32,.06),inset 0 1px 0 rgba(255,255,255,.86); color:#1f2937; }
+        .divcmp-hero::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#8f2437 22%,#a82d43 50%,#8f2437 78%,transparent); }
+        .divcmp-hero::after{ content:''; position:absolute; right:-46px; top:-56px; width:190px; height:190px; border-radius:50%; background:radial-gradient(circle,rgba(168,45,67,.07),transparent 66%); pointer-events:none; }
         .divcmp-hero-top{ position:relative; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-        .divcmp-eyebrow{ font-size:7.5px; letter-spacing:.18em; font-weight:600; color:#d8ae78; }
-        .divcmp-hero-title{ margin-top:4px; font-size:17px; line-height:1.2; font-weight:750; color:#fff4df; letter-spacing:.02em; }
-        .divcmp-badge{ display:inline-flex; align-items:center; gap:3px; flex-shrink:0; margin-top:1px; padding:3px 7px; border-radius:999px; border:1px solid rgba(255,220,170,.26); background:rgba(255,229,187,.10); color:#ffe2ae; font-size:8px; font-weight:700; white-space:nowrap; }
-        .divcmp-badge.is-down{ border-color:rgba(143,209,177,.24); background:rgba(143,209,177,.10); color:#9dd8b8; }
+        .divcmp-eyebrow{ font-size:7.5px; letter-spacing:.18em; font-weight:600; color:rgba(143,36,55,.55); }
+        .divcmp-hero-title{ margin-top:4px; font-size:17px; line-height:1.2; font-weight:750; color:#5b1828; letter-spacing:.02em; }
+        .divcmp-badge{ display:inline-flex; align-items:center; gap:3px; flex-shrink:0; margin-top:1px; padding:3px 7px; border-radius:999px; border:1px solid #e8cdd4; background:#f8ecef; color:#742034; font-size:8px; font-weight:700; white-space:nowrap; }
+        .divcmp-badge.is-down{ border-color:#dcefe4; background:#f1faf5; color:#008c50; }
         .divcmp-hero-main{ position:relative; z-index:1; margin-top:9px; }
-        .divcmp-hero-value{ display:flex; align-items:baseline; gap:4px; font-size:33px; line-height:1.05; font-weight:800; color:#ffd89a; letter-spacing:-.035em; font-variant-numeric:tabular-nums; text-shadow:0 2px 10px rgba(255,184,101,.14); }
-        .divcmp-hero-value.is-down{ color:#9dd8b8; text-shadow:none; }
-        .divcmp-hero-value small{ font-size:10px; font-weight:500; letter-spacing:0; color:#d3b391; }
-        .divcmp-hero-label{ position:relative; z-index:1; margin-top:3px; font-size:9px; color:#d5bca2; }
-        .divcmp-hero-label b{ color:#ffd89a; font-weight:700; }
-        .divcmp-kpis{ position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,225,187,.16); }
-        .divcmp-kpi{ min-width:0; padding:0 10px; }
-        .divcmp-kpi:first-child{ padding-left:0; }
-        .divcmp-kpi:last-child{ padding-right:0; }
-        .divcmp-kpi + .divcmp-kpi{ border-left:1px solid rgba(255,225,187,.17); }
-        .divcmp-kpi-label{ font-size:8px; color:#c8ab8f; line-height:1.2; white-space:nowrap; }
-        .divcmp-kpi-value{ margin-top:3px; font-size:14px; font-weight:700; color:#f7dfbf; line-height:1.2; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .divcmp-kpi-value small{ margin-left:2px; font-size:8px; font-weight:500; color:#c8ab8f; }
-        .divcmp-counts{ position:relative; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:5px 11px; margin-top:9px; font-size:8px; color:#d6bc9f; }
+        .divcmp-hero-value{ display:flex; align-items:baseline; gap:4px; font-size:33px; line-height:1.05; font-weight:800; color:#742034; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+        .divcmp-hero-value.is-down{ color:#00a05c; }
+        .divcmp-hero-value small{ font-size:10px; font-weight:500; letter-spacing:0; color:#9a8b76; }
+        .divcmp-hero-label{ position:relative; z-index:1; margin-top:3px; font-size:9px; color:#8a7354; }
+        .divcmp-hero-label b{ color:#742034; font-weight:700; }
+        .divcmp-kpis{ position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; align-items:stretch; margin-top:14px; padding-top:13px; border-top:1px dashed rgba(201,154,75,.26); }
+        .divcmp-kpi{ min-width:0; padding:9px 10px; border:1px solid #efe2ca; border-radius:12px; background:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.92); }
+        .divcmp-kpi:first-child{ padding-left:10px; }
+        .divcmp-kpi:last-child{ padding-right:10px; }
+        .divcmp-kpi + .divcmp-kpi{ border-left:1px solid #efe2ca; }
+        .divcmp-kpi-label{ font-size:8.5px; color:#8a7354; line-height:1.2; white-space:nowrap; }
+        .divcmp-kpi-value{ margin-top:4px; font-size:13px; font-weight:700; color:#1f2937; line-height:1.2; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .divcmp-kpi-value small{ margin-left:2px; font-size:7.5px; font-weight:500; color:#9a8b76; }
+        .divcmp-counts{ position:relative; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:5px 11px; margin-top:9px; font-size:8px; color:#8a7354; }
         .divcmp-counts i{ font-size:8px; margin-right:2px; }
-        .divcmp-counts .up{ color:#ffb59a; }
-        .divcmp-counts .down{ color:#9dd8b8; }
-        .divcmp-counts .muted{ color:#a98f78; }
-        .divcmp-hero-note{ position:relative; z-index:1; margin-top:7px; font-size:7.5px; line-height:1.5; color:#af9278; }
+        .divcmp-counts .up{ color:#e03131; }
+        .divcmp-counts .down{ color:#00a05c; }
+        .divcmp-counts .muted{ color:#9a8b76; }
+        .divcmp-hero-note{ position:relative; z-index:1; margin-top:7px; font-size:7.5px; line-height:1.5; color:#9a8b76; }
         .divcmp-card{ position:relative; overflow:hidden; margin-bottom:12px; border-radius:18px; background:#fffaf3; border:1px solid #efe0c9; box-shadow:0 3px 10px rgba(87,54,23,.07); }
         .divcmp-card-head{ display:flex; align-items:center; gap:9px; padding:13px 14px 9px; }
         .divcmp-icon{ width:27px; height:27px; border-radius:9px; background:linear-gradient(135deg,#5b1828,#a82d43); color:#ffe2ae; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 7px rgba(91,24,40,.18); }
@@ -654,11 +703,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .divcmp-chart-foot strong{ color:#7c2638; font-size:10px; font-weight:700; font-variant-numeric:tabular-nums; }
         .divcmp-chart-foot .divcmp-conc{ flex-shrink:0; text-align:right; color:#9b7b55; }
         .divcmp-chart-foot .divcmp-conc b{ color:#b3384a; font-weight:700; }
-        .divcmp-rank-card{ padding-bottom:2px; }
-        .divcmp-rank-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 14px; padding:0 12px 7px; }
-        .divcmp-rank-col{ min-width:0; }
-        .divcmp-rank-col + .divcmp-rank-col{ border-left:1px solid #f0e2cf; padding-left:14px; }
-        .divcmp-rank-title{ display:flex; align-items:center; justify-content:space-between; gap:5px; padding:4px 1px 7px; font-size:9px; font-weight:700; }
+        .divcmp-rank-card{ padding-bottom:0; }
+        .divcmp-rank-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:stretch; padding:0 12px 12px; background:transparent; }
+        .divcmp-rank-col{ min-width:0; padding:10px 10px 8px; border-radius:12px; }
+        .divcmp-rank-col.is-up{ background:#fff; border:1px solid #efe2ca; box-shadow:inset 0 1px 0 rgba(255,255,255,.72); }
+        .divcmp-rank-col.is-down{ background:#fff; border:1px solid #efe2ca; box-shadow:inset 0 1px 0 rgba(255,255,255,.72); }
+        .divcmp-rank-col + .divcmp-rank-col{ padding-left:10px; }
+        .divcmp-rank-title{ display:flex; align-items:center; justify-content:space-between; gap:5px; padding:2px 2px 8px; font-size:9px; font-weight:700; }
         .divcmp-rank-title .is-up{ color:#b3384a; }
         .divcmp-rank-title .is-down{ color:#2f8f6b; }
         .divcmp-rank-title em{ font-style:normal; font-size:7px; font-weight:500; color:#a18b74; }
@@ -702,11 +753,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .divcmp-hero{ padding:14px 14px 12px; }
             .divcmp-hero-value{ font-size:29px; }
             .divcmp-hero-title{ font-size:15px; }
-            .divcmp-kpi{ padding:0 7px; }
+            .divcmp-kpis{ gap:6px; }
+            .divcmp-kpi{ padding:8px; }
             .divcmp-kpi-value{ font-size:12px; }
             .divcmp-chart{ height:190px; }
-            .divcmp-rank-grid{ grid-template-columns:1fr; gap:4px; }
-            .divcmp-rank-col + .divcmp-rank-col{ border-left:0; padding-left:0; border-top:1px solid #f0e2cf; margin-top:4px; padding-top:4px; }
+            .divcmp-rank-grid{ grid-template-columns:1fr; gap:8px; }
+            .divcmp-rank-col + .divcmp-rank-col{ border-left:1px solid #efe2ca; padding-left:10px; border-top:1px solid #efe2ca; margin-top:0; padding-top:10px; }
             .tl-chart-tab{ font-size:9.5px; padding:7px 3px; }
             .tl-cost-kpis{ padding:8px 7px 9px; }
             .tl-cost-kpi{ padding:0 5px; }
@@ -716,11 +768,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .divcmp-hero{ padding:14px 14px 12px; }
             .divcmp-hero-value{ font-size:29px; }
             .divcmp-hero-title{ font-size:15px; }
-            .divcmp-kpi{ padding:0 7px; }
+            .divcmp-kpis{ gap:6px; }
+            .divcmp-kpi{ padding:8px; }
             .divcmp-kpi-value{ font-size:12px; }
             .divcmp-chart{ height:190px; }
-            .divcmp-rank-grid{ grid-template-columns:1fr; gap:4px; }
-            .divcmp-rank-col + .divcmp-rank-col{ border-left:0; padding-left:0; border-top:1px solid #f0e2cf; margin-top:4px; padding-top:4px; }
+            .divcmp-rank-grid{ grid-template-columns:1fr; gap:8px; }
+            .divcmp-rank-col + .divcmp-rank-col{ border-left:1px solid #efe2ca; padding-left:10px; border-top:1px solid #efe2ca; margin-top:0; padding-top:10px; }
         }
         @media (max-width:420px){
             .cashstat-flow-grid{ grid-template-columns:1fr; gap:10px; }
@@ -748,6 +801,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .divdd-progress-track{ height:5px; margin-top:6px; border-radius:6px; background:#efe2cf; overflow:hidden; }
         .divdd-progress-track > div{ height:100%; width:0; border-radius:6px; background:linear-gradient(90deg,#7c2638,#b3384a 48%,#d99a5a 100%); transition:width .5s cubic-bezier(.22,.61,.36,1); }
         .divdd-sum-foot{ margin-top:10px; padding-top:7px; border-top:1px solid #f1e5d4; font-size:8px; line-height:1.5; color:#a18b74; }
+        /* 年度模式：三列总览并入顶部 hero，白色格子与今日盈亏汇总卡统一 */
+        #divDetailYearSummary{ margin-top:14px; padding-top:13px; border-top:1px dashed rgba(201,154,75,.26); }
+        #divDetailYearSummary .divdd-sum-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; align-items:stretch; }
+        #divDetailYearSummary .divdd-sum-cell,
+        #divDetailYearSummary .divdd-sum-progress{ min-width:0; padding:9px 10px; border:1px solid #efe2ca; border-radius:12px; background:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.92); }
+        #divDetailYearSummary .divdd-sum-cell + .divdd-sum-cell{ padding-left:10px; border-left:1px solid #efe2ca; }
+        #divDetailYearSummary .divdd-sum-label{ font-size:8.5px; color:#8a7354; letter-spacing:.02em; }
+        #divDetailYearSummary .divdd-sum-value{ margin-top:5px; font-size:13px; line-height:1.05; }
+        #divDetailYearSummary .divdd-sum-value.is-received{ color:#8f2437; }
+        #divDetailYearSummary .divdd-sum-value.is-pending{ color:#a66a2e; }
+        #divDetailYearSummary .divdd-sum-progress .divdd-sum-value{ color:#742034; }
+        #divDetailYearSummary .divdd-sum-sub{ margin-top:4px; font-size:7.5px; color:#9a8b76; }
+        #divDetailYearSummary .divdd-progress-track{ height:3px; margin-top:6px; border-radius:999px; background:#f3e7d8; }
+        #divDetailYearSummary .divdd-progress-track > div{ border-radius:999px; background:linear-gradient(90deg,#a82d43,#742034); }
+        #divDetailYearSummary .divdd-sum-foot{ margin-top:8px; padding-top:0; border-top:0; font-size:7.5px; line-height:1.5; color:#a18b74; }
+        @media (max-width:420px){
+            #divDetailYearSummary .divdd-sum-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+            #divDetailYearSummary .divdd-sum-cell,
+            #divDetailYearSummary .divdd-sum-progress{ padding:8px; border-radius:11px; }
+            #divDetailYearSummary .divdd-sum-value{ font-size:12px; }
+            #divDetailYearSummary .divdd-sum-label{ font-size:8px; }
+            #divDetailYearSummary .divdd-sum-sub{ font-size:7px; }
+        }
         .divdd-rhythm-card, .divdd-contrib-card{ background:#fff; border:1px solid #efe2ce; border-radius:18px; box-shadow:0 2px 8px rgba(88,55,24,.055); overflow:hidden; }
         .divdd-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:12px 14px 0; }
         .divdd-card-title{ font-size:14px; line-height:1.2; font-weight:700; color:#403126; letter-spacing:.01em; }
@@ -1375,49 +1451,51 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 汇总卡：首页同款纯黑底 -->
-        <div class="card-rise relative overflow-hidden rounded-2xl p-4 text-white mb-5" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62), 0 1px 3px rgba(0,0,0,0.50), 0 0 5px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06);">
+        <!-- 资金结构：四项并列事实，保持安静的一行四列 -->
+        <div class="card-rise surface-hero px-3 py-3.5 mb-4">
             <div class="relative z-10 grid grid-cols-4">
-                <div class="text-center px-1">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">累计买入</div>
-                    <div id="logBuyTotal" class="text-base font-bold tabular-nums text-white">--</div>
+                <div class="text-center px-1.5 min-w-0">
+                    <div class="text-[10.5px] mb-1.5 tracking-[.02em]" style="color:#8a7354">累计买入</div>
+                    <div id="logBuyTotal" class="text-[15px] leading-5 font-bold tabular-nums" style="color:#1f2937">--</div>
                 </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">累计卖出</div>
-                    <div id="logSellTotal" class="text-base font-bold tabular-nums text-white">--</div>
+                <div class="text-center px-1.5 min-w-0" style="border-left:1px solid rgba(201,154,75,.22)">
+                    <div class="text-[10.5px] mb-1.5 tracking-[.02em]" style="color:#8a7354">累计卖出</div>
+                    <div id="logSellTotal" class="text-[15px] leading-5 font-bold tabular-nums" style="color:#1f2937">--</div>
                 </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">分红到账</div>
-                    <div id="logDivTotal" class="text-base font-bold tabular-nums text-white">--</div>
+                <div class="text-center px-1.5 min-w-0" style="border-left:1px solid rgba(201,154,75,.22)">
+                    <div class="text-[10.5px] mb-1.5 tracking-[.02em]" style="color:#8a7354">分红到账</div>
+                    <div id="logDivTotal" class="text-[15px] leading-5 font-bold tabular-nums" style="color:#742034">--</div>
                 </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">净投入</div>
-                    <div id="logNetTotal" class="text-base font-bold tabular-nums text-white">--</div>
+                <div class="text-center px-1.5 min-w-0" style="border-left:1px solid rgba(201,154,75,.22)">
+                    <div class="text-[10.5px] mb-1.5 tracking-[.02em]" style="color:#8a7354">净投入</div>
+                    <div id="logNetTotal" class="text-[15px] leading-5 font-bold tabular-nums" style="color:#742034">--</div>
                 </div>
             </div>
         </div>
 
-        <!-- 今日盈亏条（券商总账口径）：做T累计总盈利置顶；第二行今日盈亏 / 日内已兑现（做T） / 成本变动 -->
-        <div id="tradeLogDayWrap" class="hidden relative overflow-hidden rounded-2xl p-3.5 mb-5" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62), 0 1px 3px rgba(0,0,0,0.50), 0 0 5px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06);">
-            <div class="relative z-10 flex items-end justify-between gap-3 mb-3">
-                <div class="min-w-0">
-                    <div class="text-[10px] text-amber-100/60 mb-1">做T累计总盈利</div>
-                    <div id="logTodayFloat" class="text-[22px] leading-7 font-bold tabular-nums" style="color:#ffffff">--</div>
+        <!-- 做T经营结果：主数字 + 三格，沿用年度分红 hero 语言 -->
+        <div id="tradeLogDayWrap" class="hidden surface-hero p-4 mb-4">
+            <div class="relative z-10">
+                <div class="flex items-end justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="text-[10px] mb-1 tracking-[.02em]" style="color:#8a7354">做T累计总盈利</div>
+                        <div id="logTodayFloat" class="text-[25px] leading-8 font-bold tabular-nums" style="color:#742034">--</div>
+                    </div>
+                    <span class="tl-since-pill">成立以来</span>
                 </div>
-                <div class="text-[9px] text-amber-100/45 pb-1 whitespace-nowrap">成立以来</div>
-            </div>
-            <div class="relative z-10 grid grid-cols-3 border-t border-white/10 pt-3">
-                <div class="text-center px-1">
-                    <div class="text-[10px] text-amber-100/60 mb-1">今日盈亏</div>
-                    <div id="logTodayPnl" class="text-[16px] font-bold tabular-nums" style="color:#fff">--</div>
-                </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[10px] text-amber-100/60 mb-1">日内已兑现（做T）</div>
-                    <div id="logTodayT" class="text-[16px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
-                </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[10px] text-amber-100/60 mb-1">成本变动 <span class="text-[8px] text-amber-100/40">每股</span></div>
-                    <div id="logCostChange" class="text-[16px] font-bold tabular-nums" style="color:#ffffff">--</div>
+                <div class="tl-sum-grid">
+                    <div class="tl-sum-cell">
+                        <div class="tl-sum-label">今日盈亏</div>
+                        <div id="logTodayPnl" class="tl-sum-value" style="color:#1f2937">--</div>
+                    </div>
+                    <div class="tl-sum-cell">
+                        <div class="tl-sum-label">日内已兑现（做T）</div>
+                        <div id="logTodayT" class="tl-sum-value" style="color:#742034">--</div>
+                    </div>
+                    <div class="tl-sum-cell">
+                        <div class="tl-sum-label">成本变动<span class="tl-sum-unit">每股</span></div>
+                        <div id="logCostChange" class="tl-sum-value" style="color:#1f2937">--</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1596,46 +1674,43 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 账户汇总卡：深棕金渐变（与交易明细/行业资产分布统一） -->
-        <div class="card-rise relative overflow-hidden rounded-2xl p-4 text-white mb-5" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="card-rise surface-hero p-4 mb-5">
             <div class="relative z-10">
                 <div class="flex items-center justify-between">
-                    <div class="text-[12px] text-amber-100/60">账户预计回本（不复投）</div>
-                    <div class="text-[11px] text-amber-100/60">复投口径 <span id="beSumRe" class="text-white font-bold text-[13px] tabular-nums">--</span></div>
+                    <div class="text-[12px]" style="color:#8a7354">账户预计回本（不复投）</div>
+                    <div class="text-[11px]" style="color:#8a7354">复投口径 <span id="beSumRe" class="font-bold text-[13px] tabular-nums" style="color:#742034">--</span></div>
                 </div>
-                <div class="mt-1 text-[32px] font-bold leading-none tabular-nums" id="beSumNo">--</div>
-                <div class="mt-3 grid grid-cols-4 gap-2 border-t border-white/10 pt-3">
+                <div class="mt-1 text-[32px] font-bold leading-none tabular-nums" id="beSumNo" style="color:#742034">--</div>
+                <div class="mt-3 grid grid-cols-4 gap-2 pt-3" style="border-top:1px solid #eadfce">
                     <div class="min-w-0">
-                        <div class="text-[10px] text-amber-100/60 mb-1">动态净投入</div>
-                        <div id="beSumNet" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                        <div class="text-[10px] mb-1" style="color:#8a7354">动态净投入</div>
+                        <div id="beSumNet" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
                     </div>
                     <div class="min-w-0">
-                        <div class="text-[10px] text-amber-100/60 mb-1">累计税后分红</div>
-                        <div id="beSumDiv" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                        <div class="text-[10px] mb-1" style="color:#8a7354">累计税后分红</div>
+                        <div id="beSumDiv" class="text-[13px] font-semibold tabular-nums truncate" style="color:#742034">--</div>
                     </div>
                     <div class="min-w-0">
-                        <div class="text-[10px] text-amber-100/60 mb-1">回本缺口</div>
-                        <div id="beSumGap2" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                        <div class="text-[10px] mb-1" style="color:#8a7354">回本缺口</div>
+                        <div id="beSumGap2" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
                     </div>
                     <div class="min-w-0">
-                        <div class="text-[10px] text-amber-100/60 mb-1">近3年年均分红</div>
-                        <div id="beSumAvg" class="text-[13px] font-semibold tabular-nums truncate">--</div>
+                        <div class="text-[10px] mb-1" style="color:#8a7354">近3年年均分红</div>
+                        <div id="beSumAvg" class="text-[13px] font-semibold tabular-nums truncate" style="color:#742034">--</div>
                     </div>
                 </div>
-                <div id="beRecovWrap" class="hidden mt-3 pt-3 border-t border-white/10">
+                <div id="beRecovWrap" class="hidden mt-3 pt-3" style="border-top:1px solid #eadfce">
                     <div class="flex items-baseline justify-between leading-none">
-                        <span class="text-[10px] text-amber-100/60">成本回收进度</span>
-                        <span id="beRecovTxt" class="text-[12px] font-bold tabular-nums" style="color:#f7cf8f">--</span>
+                        <span class="text-[10px]" style="color:#8a7354">成本回收进度</span>
+                        <span id="beRecovTxt" class="text-[12px] font-bold tabular-nums" style="color:#8f2437">--</span>
                     </div>
-                    <div class="relative mt-2 h-[8px] rounded-full" style="background:rgba(255,255,255,0.12);box-shadow:inset 0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(230,210,163,0.14);">
-                        <div class="absolute inset-y-0 left-1/4 w-px" style="background:rgba(230,210,163,0.16);"></div>
-                        <div class="absolute inset-y-0 left-1/2 w-px" style="background:rgba(230,210,163,0.16);"></div>
-                        <div class="absolute inset-y-0 left-3/4 w-px" style="background:rgba(230,210,163,0.16);"></div>
-                        <div id="beRecovBar" class="relative z-10 h-full rounded-full transition-all duration-700" style="width:0%;min-width:6px;background:linear-gradient(90deg,#8d5322,#e8a33d,#f7cf8f);box-shadow:0 0 10px rgba(246,196,83,0.55);"></div>
+                    <div class="relative mt-2 h-[8px] rounded-full" style="background:rgba(116,32,52,0.10);box-shadow:inset 0 1px 2px rgba(82,55,32,0.10)">
+                        <div class="absolute inset-y-0 left-1/4 w-px" style="background:rgba(116,32,52,0.14)"></div>
+                        <div class="absolute inset-y-0 left-1/2 w-px" style="background:rgba(116,32,52,0.14)"></div>
+                        <div class="absolute inset-y-0 left-3/4 w-px" style="background:rgba(116,32,52,0.14)"></div>
+                        <div id="beRecovBar" class="relative z-10 h-full rounded-full transition-all duration-700" style="width:0%;min-width:6px;background:linear-gradient(90deg,#742034,#8f2437 60%,#e3b46b);box-shadow:0 0 8px rgba(116,32,52,0.18)"></div>
                     </div>
-                    <div class="mt-1.5 text-[9.5px] text-amber-100/45">累计税后分红 ÷ 动态净投入</div>
+                    <div class="mt-1.5 text-[9.5px]" style="color:#9a8b76">累计税后分红 ÷ 动态净投入</div>
                 </div>
             </div>
         </div>
@@ -1686,55 +1761,54 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 汇总卡：账户快照 Hero（总资产独占一行 + 总盈利/净投入/回撤三列） -->
-        <div class="card-rise relative overflow-hidden rounded-[22px] p-4 text-white mb-4" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62),0 1px 3px rgba(0,0,0,0.50),0 0 5px rgba(0,0,0,0.38),inset 0 1px 0 rgba(255,255,255,0.06);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.62),rgba(255,255,255,.12),transparent);"></div>
+        <div class="card-rise surface-hero p-4 mb-4">
 
             <div class="relative z-10 flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
-                    <div class="text-[9px] tracking-[0.2em] text-[#cfc0a6]/80 mb-1.5">资产快照</div>
-                    <div class="text-[11px] text-[#cfc0a6] mb-1">当前总资产</div>
-                    <div id="ahTotalAsset" class="text-[32px] leading-none font-bold tabular-nums tracking-tight" style="color:#ffffff">--</div>
+                    <div class="text-[9px] tracking-[0.2em] mb-1.5" style="color:rgba(143,36,55,.62)">资产快照</div>
+                    <div class="text-[11px] mb-1" style="color:#8a7354">当前总资产</div>
+                    <div id="ahTotalAsset" class="text-[32px] leading-none font-bold tabular-nums tracking-tight" style="color:#1f2937">--</div>
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2.5">
-                        <span class="text-[9px] font-semibold rounded-full px-2 py-0.5" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#ffd7a4">市值 + 现金</span>
+                        <span class="text-[9px] font-semibold rounded-full px-2 py-0.5" style="background:#f8ecef;border:1px solid #e8cdd4;color:#742034">市值 + 现金</span>
                     </div>
                 </div>
                 <div class="flex-shrink-0 text-right pt-1">
-                    <div class="text-[9px] tracking-[0.16em] text-[#cfc0a6]/70">账户</div>
-                    <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)">
-                        <span class="w-1 h-1 rounded-full" style="background:#d9a441;box-shadow:0 0 0 3px rgba(217,164,65,.10)"></span>
-                        <span class="text-[9px] text-[#e8bd7c]">实时</span>
+                    <div class="text-[9px] tracking-[0.16em]" style="color:#9a8b76">账户</div>
+                    <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="background:#f8ecef;border:1px solid #e8cdd4">
+                        <span class="w-1 h-1 rounded-full" style="background:#8f2437;box-shadow:0 0 0 3px rgba(143,36,55,.10)"></span>
+                        <span class="text-[9px]" style="color:#742034">实时</span>
                     </div>
                 </div>
             </div>
 
-            <div class="relative z-10 grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top:1px solid rgba(255,255,255,.10)">
-                <div class="min-w-0">
-                    <div class="text-[9px] text-[#cfc0a6] mb-1">总盈利</div>
-                    <div id="ahPnl" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#ffffff">--</div>
+            <div class="relative z-10 grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top:1px solid #eadfce">
+                <div class="min-w-0 text-left">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">总盈利</div>
+                    <div id="ahPnl" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#1f2937">--</div>
                     <div class="mt-0.5 flex items-baseline gap-1 whitespace-nowrap">
-                        <span class="text-[8px] text-[#cfc0a6]/70">收益率</span>
-                        <span id="ahRet" class="text-[10px] font-semibold tabular-nums" style="color:#ffffff">--</span>
+                        <span class="text-[8px]" style="color:#a4937e">收益率</span>
+                        <span id="ahRet" class="text-[10px] font-semibold tabular-nums" style="color:#1f2937">--</span>
                     </div>
                 </div>
-                <div class="min-w-0 pl-2.5" style="border-left:1px solid rgba(255,255,255,.08)">
-                    <div class="text-[9px] text-[#cfc0a6] mb-1">累计净投入</div>
-                    <div id="ahNetInvest" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#ffffff">--</div>
-                    <div class="mt-0.5 text-[8px] text-[#cfc0a6]/55 whitespace-nowrap">初始 + 转入 − 转出</div>
+                <div class="min-w-0 px-2.5 text-center" style="border-left:1px solid #efe2ca">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">累计净投入</div>
+                    <div id="ahNetInvest" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#1f2937">--</div>
+                    <div class="mt-0.5 text-[8px] whitespace-nowrap" style="color:#a4937e">初始 + 转入 − 转出</div>
                 </div>
-                <div class="min-w-0 pl-2.5" style="border-left:1px solid rgba(255,255,255,.08)">
-                    <div class="text-[9px] text-[#cfc0a6] mb-1">最大回撤</div>
-                    <div id="ahMaxDD" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#ffffff">--</div>
-                    <div id="ahMaxDDSub" class="mt-0.5 text-[8px] text-[#cfc0a6]/55 whitespace-nowrap">峰值 → 谷底</div>
+                <div class="min-w-0 pl-2.5 text-right" style="border-left:1px solid #efe2ca">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">最大回撤</div>
+                    <div id="ahMaxDD" class="text-[15px] font-semibold tabular-nums whitespace-nowrap" style="color:#8f2437">--</div>
+                    <div id="ahMaxDDSub" class="mt-0.5 text-[8px] whitespace-nowrap" style="color:#a4937e">峰值 → 谷底</div>
                 </div>
             </div>
         </div>
 
         <!-- 主图：收益率 / 资产轨迹 / 年度收益 -->
         <div class="relative bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="h-[3px]" style="background:linear-gradient(90deg,#f3dfbd,#d9b27a 38%,#8f5b2a 72%,#f3dfbd);"></div>
+            <div class="h-[3px]" style="background:linear-gradient(90deg,#f8ecef,#8f2437 20%,#742034 50%,#8f2437 80%,#f8ecef);"></div>
             <div class="px-5 pt-3.5 pb-3 border-b border-[#f4ecdd]">
                 <div class="flex items-start gap-2.5">
-                    <div class="w-[3px] h-6 rounded-full mt-0.5 shrink-0" style="background:linear-gradient(180deg,#d9b27a,#8f5b2a);"></div>
+                    <div class="w-[3px] h-6 rounded-full mt-0.5 shrink-0" style="background:linear-gradient(180deg,#8f2437,#5b1828);"></div>
                     <div class="min-w-0">
                         <div class="flex items-baseline gap-2">
                             <span id="ahTrendTitle" class="text-[15px] font-semibold text-gray-800 tracking-wide">收益率轨迹</span>
@@ -1744,7 +1818,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                 </div>
                 <div class="mt-3 grid grid-cols-3 gap-1 rounded-[12px] p-1 border border-[#efe4d2]" style="background:#f6eee0;">
-                    <button id="assetTabReturn" type="button" onclick="setAssetTrackMode('return')" aria-selected="true" class="py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#7a4a20] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors">收益率</button>
+                    <button id="assetTabReturn" type="button" onclick="setAssetTrackMode('return')" aria-selected="true" class="py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#742034] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors">收益率</button>
                     <button id="assetTabDaily" type="button" onclick="setAssetTrackMode('daily')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">资产轨迹</button>
                     <button id="assetTabYear" type="button" onclick="setAssetTrackMode('year')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">年度收益</button>
                 </div>
@@ -1752,7 +1826,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             <div id="assetReturnPanel" class="px-2 pt-2.5 pb-1">
                 <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
-                    <button id="returnRangeYear" type="button" onclick="setReturnRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#3b2e1f] text-[#f7e8cf] border-[#3b2e1f] transition-colors">今年</button>
+                    <button id="returnRangeYear" type="button" onclick="setReturnRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
                     <button id="returnRangeAll" type="button" onclick="setReturnRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
                 </div>
                 <div class="relative">
@@ -1762,16 +1836,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
                     <div class="min-w-0 flex-1">
                         <div class="text-[9px] text-[#a8987e]">最新</div>
-                        <div id="ahReturnCum" class="mt-1 text-[19px] font-bold tabular-nums leading-none text-[#8a5a2b]">--</div>
+                        <div id="ahReturnCum" class="mt-1 text-[19px] font-bold tabular-nums leading-none text-[#742034]">--</div>
                     </div>
                     <div class="text-right">
                         <div class="text-[9px] text-[#a8987e]">最高</div>
-                        <div id="ahReturnBest" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
+                        <div id="ahReturnBest" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                     <div class="w-px h-8" style="background:#eee5d6;"></div>
                     <div class="text-right">
                         <div class="text-[9px] text-[#a8987e]">最低</div>
-                        <div id="ahReturnWorst" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
+                        <div id="ahReturnWorst" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                 </div>
                 <div id="ahReturnNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">按今年口径计算 · 今日首页实时</div>
@@ -1779,7 +1853,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             <div id="assetTrackPanel" class="hidden px-2 pt-2.5 pb-1">
                 <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
-                    <button id="assetRangeYear" type="button" onclick="setAssetTrackRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#3b2e1f] text-[#f7e8cf] border-[#3b2e1f] transition-colors">今年</button>
+                    <button id="assetRangeYear" type="button" onclick="setAssetTrackRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
                     <button id="assetRange1y" type="button" onclick="setAssetTrackRange('1y')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">近一年</button>
                     <button id="assetRangeAll" type="button" onclick="setAssetTrackRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
                 </div>
@@ -1790,16 +1864,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
                     <div class="min-w-0 flex-1">
                         <div class="text-[9px] text-[#a8987e]">区间涨跌</div>
-                        <div id="ahTrackChange" class="mt-1 text-[19px] font-bold tabular-nums leading-none text-[#8a5a2b]">--</div>
+                        <div id="ahTrackChange" class="mt-1 text-[19px] font-bold tabular-nums leading-none text-[#742034]">--</div>
                     </div>
                     <div class="text-right">
                         <div class="text-[9px] text-[#a8987e]">区间最高</div>
-                        <div id="ahTrackMax" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
+                        <div id="ahTrackMax" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                     <div class="w-px h-8" style="background:#eee5d6;"></div>
                     <div class="text-right">
                         <div class="text-[9px] text-[#a8987e]">区间最低</div>
-                        <div id="ahTrackMin" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
+                        <div id="ahTrackMin" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                 </div>
                 <div id="ahTrackNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">读取每日快照表 · 历史原值 · 今日首页实时</div>
@@ -1807,7 +1881,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             <div id="assetYearPanel" class="hidden px-2 pt-2.5 pb-1">
                 <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
-                    <span class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#3b2e1f] text-[#f7e8cf] border-[#3b2e1f]">全部年度</span>
+                    <span class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437]">全部年度</span>
                     <span class="ml-auto pr-1 text-[10px] text-[#b8ab98] whitespace-nowrap">年度盈利 · 净流入已剔除</span>
                 </div>
                 <div id="chartAssetTrend" style="width:100%;height:238px;"></div>
@@ -1815,16 +1889,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
                     <div class="min-w-0 flex-1">
                         <div class="text-[9px] text-[#a8987e]">最近年度盈利</div>
-                        <div id="ahYearLast" class="mt-1 text-[19px] font-bold tabular-nums leading-none" style="color:#5a3b1e">--</div>
+                        <div id="ahYearLast" class="mt-1 text-[19px] font-bold tabular-nums leading-none" style="color:#742034">--</div>
                     </div>
                     <div class="text-right">
                         <div class="text-[9px] text-[#a8987e]">年均盈利</div>
-                        <div id="ahYearCagr" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
+                        <div id="ahYearCagr" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                     <div class="w-px h-8" style="background:#eee5d6;"></div>
                     <div class="text-right">
                         <div class="text-[9px] text-[#a8987e]">累计盈利</div>
-                        <div id="ahYearCum" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#8a5a2b]">--</div>
+                        <div id="ahYearCum" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                 </div>
                 <div class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">历史年份按「年末资产 − 上年末资产 − 当年净流入」自动补算并写入年度收益账本；今年实时，改年末资产后整表重算</div>
@@ -1832,44 +1906,44 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 72 法则：翻倍时间的一条刻度尺 -->
-        <div class="relative overflow-hidden rounded-2xl card-shadow mb-4" style="background:linear-gradient(180deg,#fffdf8 0%,#fdf8ee 100%);border:1px solid #f4ecdd;">
-            <div class="px-5 py-2.5 border-b border-[#f4ecdd] flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+        <div class="surface-hero mb-4">
+            <div class="px-5 py-2.5 flex items-center gap-2" style="border-bottom:1px solid #efe2ca">
+                <div class="w-1 h-4 rounded-full" style="background:linear-gradient(180deg,#8f2437,#5b1828);"></div>
                 <div class="min-w-0">
                     <div class="text-[14px] font-semibold text-gray-800">资产翻倍推演</div>
-                    <div class="text-[9.5px] text-[#b3a48f] mt-0.5">同样一笔钱翻倍，不同年化下的时间差</div>
+                    <div class="text-[9.5px] mt-0.5" style="color:#a4937e">同样一笔钱翻倍，不同年化下的时间差</div>
                 </div>
-                <span class="text-[10px] text-[#a8987e] ml-auto whitespace-nowrap">72 法则</span>
+                <span class="text-[10px] ml-auto whitespace-nowrap" style="color:#8f2437">72 法则</span>
             </div>
             <div class="px-5 pt-4 pb-3">
-                <div class="relative h-1.5 rounded-full" style="background:linear-gradient(90deg,#d5cdbf 0%,#d9b27a 42%,#c78f4f 62%,#e39412 100%);">
-                    <span class="absolute left-[16.67%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-white" style="background:#8b8273;box-shadow:0 0 0 1px #d5cdbf;"></span>
-                    <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white" style="background:#a9642a;box-shadow:0 0 0 1px #e8d3ae;"></span>
-                    <span class="absolute left-[83.33%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-white" style="background:#e39412;box-shadow:0 0 0 1px #f3dfbd;"></span>
+                <div class="relative h-1.5 rounded-full" style="background:linear-gradient(90deg,#ded2c4 0%,#a53b4f 42%,#8f2437 62%,#e3b46b 100%);">
+                    <span class="absolute left-[16.67%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-white" style="background:#9a8b76;box-shadow:0 0 0 1px #ded2c4;"></span>
+                    <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white" style="background:#742034;box-shadow:0 0 0 1px #e8cdd4;"></span>
+                    <span class="absolute left-[83.33%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-white" style="background:#c99a4b;box-shadow:0 0 0 1px #efdfc6;"></span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 mt-4">
                     <div class="text-center">
-                        <div class="text-[10px] text-[#a8987e] mb-1.5">保守</div>
-                        <div class="text-[18px] font-bold tabular-nums text-[#6b5a46]">14.4<span class="text-[10px] font-medium text-[#a8987e] ml-0.5">年</span></div>
-                        <div class="text-[9.5px] text-[#a8987e] mt-1">年化 5%</div>
+                        <div class="text-[10px] mb-1.5" style="color:#9a8b76">保守</div>
+                        <div class="text-[18px] font-bold tabular-nums" style="color:#6b5a46">14.4<span class="text-[10px] font-medium ml-0.5" style="color:#a4937e">年</span></div>
+                        <div class="text-[9.5px] mt-1" style="color:#a4937e">年化 5%</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-[10px] font-semibold text-amber-600 mb-1.5">中性</div>
-                        <div class="text-[18px] font-bold tabular-nums" style="color:#a9642a">9.0–10.3<span class="text-[10px] font-medium ml-0.5">年</span></div>
-                        <div class="text-[9.5px] text-[#a8987e] mt-1">年化 7%–8%</div>
+                        <div class="text-[10px] font-semibold mb-1.5" style="color:#742034">中性</div>
+                        <div class="text-[18px] font-bold tabular-nums" style="color:#742034">9.0–10.3<span class="text-[10px] font-medium ml-0.5" style="color:#8f2437">年</span></div>
+                        <div class="text-[9.5px] mt-1" style="color:#a4937e">年化 7%–8%</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-[10px] text-[#a8987e] mb-1.5">乐观</div>
-                        <div class="text-[18px] font-bold tabular-nums text-[#6b5a46]">7.2<span class="text-[10px] font-medium text-[#a8987e] ml-0.5">年</span></div>
-                        <div class="text-[9.5px] text-[#a8987e] mt-1">年化 10%</div>
+                        <div class="text-[10px] mb-1.5" style="color:#9a8b76">乐观</div>
+                        <div class="text-[18px] font-bold tabular-nums" style="color:#6b5a46">7.2<span class="text-[10px] font-medium ml-0.5" style="color:#a4937e">年</span></div>
+                        <div class="text-[9.5px] mt-1" style="color:#a4937e">年化 10%</div>
                     </div>
                 </div>
-                <div class="mt-3 pt-2.5 border-t border-[#f0e6d4] flex items-center gap-2 text-[10px] text-[#8a7a67]">
-                    <span class="w-1 h-1 rounded-full" style="background:#a9642a;"></span>
+                <div class="mt-3 pt-2.5 flex items-center gap-2 text-[10px]" style="border-top:1px solid #eadfce;color:#8a7a67">
+                    <span class="w-1 h-1 rounded-full" style="background:#8f2437;"></span>
                     <span>中性假设下约 9–10 年翻倍，比保守档快约 4–5 年</span>
                 </div>
             </div>
-            <div class="px-5 pb-3 text-[10px] text-[#a8987e] leading-relaxed">假设收益全额复投、年化恒定；实际受分红再投入节奏与市场波动影响，仅供量级参考</div>
+            <div class="px-5 pb-3 text-[10px] leading-relaxed" style="color:#9a8b76">假设收益全额复投、年化恒定；实际受分红再投入节奏与市场波动影响，仅供量级参考</div>
         </div>
 
         <!-- 年度明细：摘要带 + 轻表格 -->
@@ -1884,7 +1958,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <span id="ahYearStats" style="display:contents">
                     <span class="w-px h-3" style="background:#eee5d6;"></span>
                     <span>平均同比 <span id="ahYearAvg" class="font-semibold text-[#8a5a2b] tabular-nums">--</span></span>
-                    <span class="ml-auto">最佳 <span id="ahYearBest" class="font-semibold text-[#a9642a] tabular-nums">--</span></span>
+                    <span class="ml-auto">最佳 <span id="ahYearBest" class="font-semibold text-[#742034] tabular-nums">--</span></span>
                     <span>最差 <span id="ahYearWorst" class="font-semibold text-[#00a05c] tabular-nums">--</span></span>
                 </span>
                 <span id="ahYearHint" class="hidden text-[#b3a48f]">至少两个有效年度后生成同比摘要</span>
@@ -1923,59 +1997,66 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- ================= 账户净值 Hero ================= -->
-        <div class="card-rise relative overflow-hidden rounded-[22px] p-4 text-white mb-4" style="background:linear-gradient(135deg,#241d18 0%,#392c22 42%,#4a3038 72%,#53323f 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55),0 1px 3px rgba(26,20,12,0.45),0 0 4px rgba(26,20,12,0.40),inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(245,201,123,.62),rgba(255,255,255,.12),transparent);"></div>
-            <div class="absolute -top-12 -right-12 w-44 h-44 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(190,90,110,.20),transparent 68%)"></div>
-            <div class="absolute -bottom-16 -left-12 w-40 h-40 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(247,207,143,.10),transparent 70%)"></div>
-            <div class="absolute top-7 right-7 w-28 h-28 rounded-full pointer-events-none" style="border:1px solid rgba(247,207,143,.14)"></div>
-            <div class="absolute top-12 right-12 w-20 h-20 rounded-full pointer-events-none" style="border:1px solid rgba(247,207,143,.08)"></div>
+        <div class="card-rise surface-hero p-4 mb-4">
+            <div class="absolute -top-12 -right-12 w-44 h-44 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(168,45,67,.08),transparent 68%)"></div>
+            <div class="absolute -bottom-16 -left-12 w-40 h-40 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(227,180,107,.08),transparent 70%)"></div>
+            <div class="absolute top-7 right-7 w-28 h-28 rounded-full pointer-events-none" style="border:1px solid rgba(143,36,55,.10)"></div>
+            <div class="absolute top-12 right-12 w-20 h-20 rounded-full pointer-events-none" style="border:1px solid rgba(143,36,55,.06)"></div>
 
             <div class="relative z-10 flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
-                    <div class="text-[9px] tracking-[0.22em] text-amber-100/45 mb-1.5">PORTFOLIO NET WORTH</div>
-                    <div class="text-[11px] text-amber-100/70 mb-1">当前总资产</div>
-                    <div id="analysisTotalAsset" class="text-[32px] leading-none font-bold tabular-nums tracking-tight text-white">--</div>
+                    <div class="text-[9px] tracking-[0.22em] mb-1.5" style="color:rgba(143,36,55,.52)">PORTFOLIO NET WORTH</div>
+                    <div class="text-[11px] mb-1" style="color:#8a7354">当前总资产</div>
+                    <div id="analysisTotalAsset" class="text-[32px] leading-none font-bold tabular-nums tracking-tight" style="color:#1f2937">--</div>
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2.5">
-                        <span id="analysisAssetDelta" class="text-[11px] font-semibold tabular-nums rounded-full px-2 py-0.5" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#ffd7a4">累计盈亏 --</span>
-                        <span id="analysisAssetDeltaPct" class="text-[10px] tabular-nums" style="color:rgba(255,216,172,.72)">--</span>
-                        <span id="analysisHeroYears" class="text-[10px]" style="color:rgba(255,255,255,.42)">--</span>
+                        <span id="analysisAssetDelta" class="text-[11px] font-semibold tabular-nums rounded-full px-2 py-0.5" style="background:#f8ecef;border:1px solid #e8cdd4;">
+                            <span style="color:#742034">持仓盈亏</span>
+                            <b id="analysisAssetDeltaValue" class="ml-0.5 font-semibold tabular-nums" style="color:#742034">--</b>
+                        </span>
+                        <span class="text-[10px] inline-flex items-baseline gap-1 whitespace-nowrap" style="color:#8a7354">
+                            <span>年化收益率</span>
+                            <b id="analysisAssetDeltaPct" class="font-semibold tabular-nums" style="color:#8a7354">--</b>
+                        </span>
+                        <span id="analysisHeroYears" class="text-[10px]" style="color:#9a8b76">--</span>
                     </div>
                 </div>
                 <div class="flex-shrink-0 text-center">
-                    <div id="analysisDivRecoverRing" class="relative w-[92px] h-[92px] rounded-full flex items-center justify-center" style="background:conic-gradient(#d6a257 0deg,rgba(255,255,255,.10) 0deg);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.18);">
-                        <div class="absolute inset-[5px] rounded-full" style="background:linear-gradient(145deg,#33271f,#402b33);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);"></div>
+                    <div id="analysisDivRecoverRing" class="relative w-[92px] h-[92px] rounded-full flex items-center justify-center" style="background:conic-gradient(#8f2437 0deg,rgba(143,36,55,.12) 0deg);box-shadow:0 0 0 1px rgba(143,36,55,.10),0 8px 22px rgba(91,24,40,.08);">
+                        <div class="absolute inset-[5px] rounded-full" style="background:linear-gradient(145deg,#fffdf8,#f8ecef);box-shadow:inset 0 1px 0 rgba(255,255,255,.9);"></div>
                         <div class="relative z-10 text-center leading-tight">
-                            <div class="text-[9px] text-amber-100/70">分红回收</div>
-                            <div id="analysisDivRecoverPct" class="text-[18px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
-                            <div class="text-[8px] text-amber-100/45">持仓成本</div>
+                            <div class="text-[9px]" style="color:#8a7354">分红回收</div>
+                            <div id="analysisDivRecoverPct" class="text-[18px] font-bold tabular-nums" style="color:#8f2437">--</div>
+                            <div class="text-[8px]" style="color:#a4937e">持仓成本</div>
                         </div>
                     </div>
-                    <div id="analysisDivRecoverSub" class="text-[8px] mt-1.5" style="color:rgba(255,255,255,.38)">累计分红 / 持仓成本</div>
+                    <div id="analysisDivRecoverSub" class="text-[8px] mt-1.5" style="color:#9a8b76">累计分红 / 持仓成本</div>
                 </div>
             </div>
 
-            <div class="relative z-10 grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top:1px solid rgba(255,255,255,.10)">
-                <div class="min-w-0">
-                    <div class="text-[9px] text-amber-100/55 mb-1">累计盈亏</div>
-                    <div id="analysisCumPnl" class="text-[13px] font-semibold tabular-nums truncate" style="color:#ffd0b0">--</div>
+            <div class="relative z-10 grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top:1px solid #eadfce">
+                <div class="min-w-0 text-left">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">总盈利</div>
+                    <div id="analysisCumPnl" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
+                    <div id="analysisCumPnlPct" class="text-[8px] mt-0.5 tabular-nums truncate" style="color:#9a8b76">总收益率 --</div>
                 </div>
-                <div class="min-w-0 pl-2" style="border-left:1px solid rgba(255,255,255,.08)">
-                    <div class="text-[9px] text-amber-100/55 mb-1">今年已收</div>
-                    <div id="analysisYearDiv" class="text-[13px] font-semibold tabular-nums truncate" style="color:#f7cf8f">--</div>
+                <div class="min-w-0 px-2 text-center" style="border-left:1px solid #efe2ca">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">今年盈利</div>
+                    <div id="analysisYearDiv" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
+                    <div id="analysisYearDivPct" class="text-[8px] mt-0.5 tabular-nums truncate" style="color:#9a8b76">今年收益率 --</div>
                 </div>
-                <div class="min-w-0 pl-2" style="border-left:1px solid rgba(255,255,255,.08)">
-                    <div class="text-[9px] text-amber-100/55 mb-1">年化收益</div>
-                    <div id="analysisYearReturn" class="text-[13px] font-semibold tabular-nums truncate" style="color:#ffb3aa">--</div>
+                <div class="min-w-0 pl-2 text-right" style="border-left:1px solid #efe2ca">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">总投入</div>
+                    <div id="analysisYearReturn" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
                 </div>
             </div>
 
             <div class="relative z-10 mt-3.5">
                 <div class="flex items-center justify-between gap-2 text-[10px]">
-                    <span id="analysisMilestoneText" style="color:rgba(255,255,255,.55)">下一站 --</span>
-                    <span id="analysisMilestonePct" class="tabular-nums" style="color:#e8bd7c">--</span>
+                    <span id="analysisMilestoneText" style="color:#8a7354">下一站 --</span>
+                    <span id="analysisMilestonePct" class="tabular-nums" style="color:#742034">--</span>
                 </div>
-                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,.10)">
-                    <div id="analysisMilestoneBar" class="h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#a9642a,#d9a441,#f7cf8f);transition:width .6s ease;"></div>
+                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background:#efe2ca">
+                    <div id="analysisMilestoneBar" class="h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#5b1828,#8f2437,#a82d43);transition:width .6s ease;"></div>
                 </div>
             </div>
         </div>
@@ -2127,42 +2208,42 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="card-rise bg-white rounded-2xl p-4 card-shadow mb-4">
             <div class="flex items-center justify-between mb-2.5">
                 <div class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:#faf3e3;color:#c08a3e"><i class="fa fa-money text-[11px]"></i></span>
+                    <span class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#8f2437,#5b1828);color:#fff;box-shadow:0 2px 6px rgba(91,24,40,.18)"><i class="fa fa-money text-[11px]"></i></span>
                     <span class="text-sm font-semibold text-gray-700">分红账本</span>
                 </div>
-                <span class="text-[9px] px-2 py-1 rounded-full" style="background:#fbf0f2;border:1px solid #efd8df;color:#8b4a6b">睡后收入</span>
+                <span class="text-[9px] px-2 py-1 rounded-full" style="background:#f8ecef;border:1px solid #e8cdd4;color:#742034">睡后收入</span>
             </div>
             <div class="flex items-end justify-between gap-3 mb-2">
                 <div class="min-w-0">
                     <div class="text-[10px] text-gray-400">累计分红</div>
-                    <div id="analysisCumDiv" class="text-[28px] leading-none font-bold tabular-nums mt-1" style="color:#a9642a">--</div>
+                    <div id="analysisCumDiv" class="text-[28px] leading-none font-bold tabular-nums mt-1" style="color:#742034">--</div>
                     <div id="analysisCumDivSub" class="text-[9px] text-gray-400 mt-1">分红是账户的现金流，不是账面浮盈</div>
                 </div>
                 <div class="text-right flex-shrink-0">
                     <div class="text-[9px] text-gray-400">今年已收</div>
-                    <div id="analysisDivYear" class="text-[15px] font-bold tabular-nums" style="color:#b4554a">--</div>
+                    <div id="analysisDivYear" class="text-[15px] font-bold tabular-nums" style="color:#8f2437">--</div>
                 </div>
             </div>
             <div class="mb-3">
-                <div class="flex items-center justify-between text-[9px] mb-1"><span class="text-gray-400">分红已覆盖持仓成本</span><span id="analysisDivRecoverPct2" class="font-semibold tabular-nums" style="color:#a9642a">--</span></div>
-                <div class="h-2 rounded-full overflow-hidden" style="background:#f4ead7"><div id="analysisDivBar" class="h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#8b4a6b,#c08a3e,#d9a441)"></div></div>
+                <div class="flex items-center justify-between text-[9px] mb-1"><span class="text-gray-400">分红已覆盖持仓成本</span><span id="analysisDivRecoverPct2" class="font-semibold tabular-nums" style="color:#8f2437">--</span></div>
+                <div class="h-2 rounded-full overflow-hidden" style="background:#f2e4e8"><div id="analysisDivBar" class="h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#a82d43,#742034)"></div></div>
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <div class="rounded-xl px-3 py-2" style="background:#fbf7ed;border:1px solid #f0e4cd">
                     <div class="text-[9px] text-gray-400">未来12个月预计</div>
-                    <div id="analysisDivForward" class="text-[14px] font-bold tabular-nums text-[#8b5a2b] mt-0.5">--</div>
+                    <div id="analysisDivForward" class="text-[14px] font-bold tabular-nums text-[#1f2937] mt-0.5">--</div>
                 </div>
                 <div class="rounded-xl px-3 py-2" style="background:#fbf7ed;border:1px solid #f0e4cd">
                     <div class="text-[9px] text-gray-400">分红年数</div>
-                    <div id="analysisDivStreak" class="text-[14px] font-bold tabular-nums text-[#8b5a2b] mt-0.5">--</div>
+                    <div id="analysisDivStreak" class="text-[14px] font-bold tabular-nums text-[#1f2937] mt-0.5">--</div>
                 </div>
                 <div class="rounded-xl px-3 py-2" style="background:#fbf7ed;border:1px solid #f0e4cd">
                     <div class="text-[9px] text-gray-400">成本息率</div>
-                    <div id="analysisDivYield" class="text-[14px] font-bold tabular-nums text-[#8b5a2b] mt-0.5">--</div>
+                    <div id="analysisDivYield" class="text-[14px] font-bold tabular-nums text-[#1f2937] mt-0.5">--</div>
                 </div>
                 <div class="rounded-xl px-3 py-2" style="background:#fbf7ed;border:1px solid #f0e4cd">
                     <div class="text-[9px] text-gray-400">每万元成本年分红</div>
-                    <div id="analysisDivPerWan" class="text-[14px] font-bold tabular-nums text-[#8b5a2b] mt-0.5">--</div>
+                    <div id="analysisDivPerWan" class="text-[14px] font-bold tabular-nums text-[#1f2937] mt-0.5">--</div>
                 </div>
             </div>
             <div class="text-[9px] text-gray-300 mt-2 leading-relaxed">累计分红为历史已到账口径；成本息率与每万元年分红在今年尚未收息时按未来12个月预计计算，仅作长期现金流参考。</div>
@@ -2565,65 +2646,63 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 今日盈亏总览：券商口径拆解 + 交易脉搏 -->
-        <div class="relative overflow-hidden rounded-2xl mb-3 text-white" style="background:#171717;box-shadow:0 12px 32px rgba(0,0,0,0.26);">
-            <div class="absolute -top-16 -right-10 w-52 h-52 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(247,207,143,0.16),transparent 68%);"></div>
-            <div class="absolute -bottom-20 -left-10 w-48 h-48 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(212,83,41,0.10),transparent 70%);"></div>
+        <div class="surface-hero mb-3">
             <div class="relative z-10 p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <div class="flex items-center gap-1.5 text-[9px] tracking-[0.18em] text-[#cfc0a6]/65">
+                        <div class="flex items-center gap-1.5 text-[9px] tracking-[0.18em]" style="color:rgba(143,36,55,.52)">
                             <span>TODAY'S P&amp;L</span>
-                            <span class="w-1 h-1 rounded-full bg-[#f7cf8f]/70"></span>
+                            <span class="w-1 h-1 rounded-full" style="background:#8f2437"></span>
                         </div>
                         <div class="mt-2 flex items-end gap-2 flex-wrap">
-                            <span id="statsDayPnlAmt" class="text-[30px] font-bold tabular-nums leading-none text-[#cfc0a6]/60">--</span>
-                            <span id="statsDayPnlPct" class="text-[13px] font-semibold tabular-nums leading-none text-[#cfc0a6]/60 mb-0.5">--</span>
+                            <span id="statsDayPnlAmt" class="text-[30px] font-bold tabular-nums leading-none text-[#9a8b76]">--</span>
+                            <span id="statsDayPnlPct" class="text-[13px] font-semibold tabular-nums leading-none mb-0.5 text-[#9a8b76]">--</span>
                         </div>
-                        <div class="mt-2 text-[9.5px] leading-relaxed text-[#cfc0a6]/70">今日市值 − 昨日市值 + 卖出成交额 − 买入成交额</div>
+                        <div class="mt-2 text-[9.5px] leading-relaxed" style="color:#8a7354">今日市值 − 昨日市值 + 卖出成交额 − 买入成交额</div>
                     </div>
                     <div class="shrink-0 text-right pt-0.5">
-                        <div class="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="background:rgba(247,207,143,0.10);border:1px solid rgba(247,207,143,0.16);">
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#f7cf8f] animate-pulse"></span>
-                            <span class="text-[8.5px] text-[#cfc0a6]/80">每 3 秒刷新</span>
+                        <div class="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="background:#f8ecef;border:1px solid #e8cdd4;">
+                            <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background:#8f2437"></span>
+                            <span class="text-[8.5px]" style="color:#742034">每 3 秒刷新</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="mt-4 grid grid-cols-3 gap-2">
-                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.08);">
-                        <div class="text-[8.5px] text-[#cfc0a6]/65 whitespace-nowrap">市值变动</div>
-                        <div id="statsTodayMvDelta" class="mt-1 text-[13px] font-semibold tabular-nums leading-none text-white">--</div>
-                        <div id="statsTodayMvSub" class="mt-1 text-[8px] text-[#cfc0a6]/50 truncate">今日市值 --</div>
+                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div class="text-[8.5px] whitespace-nowrap" style="color:#8a7354">市值变动</div>
+                        <div id="statsTodayMvDelta" class="mt-1 text-[13px] font-semibold tabular-nums leading-none" style="color:#1f2937">--</div>
+                        <div id="statsTodayMvSub" class="mt-1 text-[8px] truncate" style="color:#9a8b76">今日市值 --</div>
                     </div>
-                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.08);">
-                        <div class="text-[8.5px] text-[#cfc0a6]/65 whitespace-nowrap">交易净现金流</div>
-                        <div id="statsTodayTradeFlow" class="mt-1 text-[13px] font-semibold tabular-nums leading-none text-[#f7cf8f]">--</div>
-                        <div id="statsTodayTradeFlowSub" class="mt-1 text-[8px] text-[#cfc0a6]/50 truncate">卖出 − 买入</div>
+                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div class="text-[8.5px] whitespace-nowrap" style="color:#8a7354">交易净现金流</div>
+                        <div id="statsTodayTradeFlow" class="mt-1 text-[13px] font-semibold tabular-nums leading-none" style="color:#742034">--</div>
+                        <div id="statsTodayTradeFlowSub" class="mt-1 text-[8px] truncate" style="color:#9a8b76">卖出 − 买入</div>
                     </div>
-                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.08);">
-                        <div class="text-[8.5px] text-[#cfc0a6]/65 whitespace-nowrap">昨日市值</div>
-                        <div id="statsTodayPrevMv" class="mt-1 text-[13px] font-semibold tabular-nums leading-none text-white">--</div>
-                        <div class="mt-1 text-[8px] text-[#cfc0a6]/50 truncate">昨收 × 昨仓</div>
+                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div class="text-[8.5px] whitespace-nowrap" style="color:#8a7354">昨日市值</div>
+                        <div id="statsTodayPrevMv" class="mt-1 text-[13px] font-semibold tabular-nums leading-none" style="color:#1f2937">--</div>
+                        <div class="mt-1 text-[8px] truncate" style="color:#9a8b76">昨收 × 昨仓</div>
                     </div>
                 </div>
 
                 <div class="mt-2 grid grid-cols-2 gap-2">
-                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.08);">
-                        <div class="text-[8.5px] text-[#cfc0a6]/65 whitespace-nowrap">做T已兑现</div>
-                        <div id="statsTodayT" class="mt-1 text-[13px] font-semibold tabular-nums leading-none text-white">--</div>
-                        <div id="statsTodayTSub" class="mt-1 text-[8px] text-[#cfc0a6]/50 truncate">今日无做T</div>
+                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div class="text-[8.5px] whitespace-nowrap" style="color:#8a7354">做T已兑现</div>
+                        <div id="statsTodayT" class="mt-1 text-[13px] font-semibold tabular-nums leading-none" style="color:#1f2937">--</div>
+                        <div id="statsTodayTSub" class="mt-1 text-[8px] truncate" style="color:#9a8b76">今日无做T</div>
                     </div>
-                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.08);">
-                        <div id="statsTodayNetLabel" class="text-[8.5px] text-[#cfc0a6]/65 whitespace-nowrap">净买入/净卖出</div>
-                        <div id="statsTodayNet" class="mt-1 text-[13px] font-semibold tabular-nums leading-none text-[#f7cf8f]">--</div>
-                        <div id="statsTodayBuySell" class="mt-1 text-[8px] text-[#cfc0a6]/50 truncate">买 -- / 卖 --</div>
+                    <div class="rounded-xl px-2.5 py-2 min-w-0" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div id="statsTodayNetLabel" class="text-[8.5px] whitespace-nowrap" style="color:#8a7354">净买入/净卖出</div>
+                        <div id="statsTodayNet" class="mt-1 text-[13px] font-semibold tabular-nums leading-none" style="color:#742034">--</div>
+                        <div id="statsTodayBuySell" class="mt-1 text-[8px] truncate" style="color:#9a8b76">买 -- / 卖 --</div>
                     </div>
                 </div>
 
-                <div class="mt-2 flex items-center justify-between rounded-xl px-3 py-2" style="background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.07);">
-                    <span class="text-[9px] text-[#cfc0a6]/65">今日交易</span>
-                    <span id="statsTodayTradeCount" class="text-[13px] font-semibold tabular-nums text-white">--</span>
-                    <span id="statsTodayWinLose" class="text-[9px] text-[#cfc0a6]/65">--</span>
+                <div class="mt-2 flex items-center justify-between rounded-xl px-3 py-2" style="background:#fffaf1;border:1px solid #efe2ca;">
+                    <span class="text-[9px]" style="color:#8a7354">今日交易</span>
+                    <span id="statsTodayTradeCount" class="text-[13px] font-semibold tabular-nums" style="color:#1f2937">--</span>
+                    <span id="statsTodayWinLose" class="text-[9px]" style="color:#9a8b76">--</span>
                 </div>
             </div>
         </div>
@@ -2920,7 +2999,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
             <div class="px-4 pt-3.5 pb-1">
                 <div class="flex items-baseline gap-2">
-                    <span id="fwdDivTotal" class="text-[30px] font-bold tabular-nums leading-none" style="color:#5a3b1e">--</span>
+                    <span id="fwdDivTotal" class="text-[30px] font-bold tabular-nums leading-none" style="color:#742034">--</span>
                     <span class="text-[10px] text-gray-400">预计到账</span>
                 </div>
                 <div id="fwdDivSplit" class="text-[10px] text-gray-500 mt-1.5 tabular-nums">--</div>
@@ -3406,33 +3485,30 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <!-- 现金汇总：现金独立一行，资金进出三项并排，右侧编辑按钮保持醒目 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#3a1420 0%,#5b1828 55%,#742034 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="surface-hero p-4 mb-4">
             <div class="relative z-10">
                 <div class="flex items-center justify-between gap-3">
                     <div class="min-w-0">
-                        <div class="text-[9px] tracking-[0.22em] font-medium" style="color:rgba(243,222,222,.45)">CASH BALANCE</div>
-                        <div class="text-[11px] mt-1" style="color:rgba(243,222,222,.78)">现金</div>
-                        <div id="cashNowValue" class="text-[26px] leading-tight font-bold tabular-nums text-white mt-0.5">--</div>
+                        <div class="text-[9px] tracking-[0.22em] font-medium" style="color:rgba(143,36,55,.52)">CASH BALANCE</div>
+                        <div class="text-[11px] mt-1" style="color:#742034">现金</div>
+                        <div id="cashNowValue" class="text-[26px] leading-tight font-bold tabular-nums mt-0.5" style="color:#742034">--</div>
                     </div>
-                    <button onclick="openCashEdit()" class="h-9 px-3 rounded-full bg-[#f8ecef] border border-[#e8cdd4] text-[#742034] text-[11px] font-semibold flex items-center gap-1.5 active:scale-95 transition-transform flex-shrink-0" style="box-shadow:0 3px 9px rgba(0,0,0,.18);" title="修改现金">
+                    <button onclick="openCashEdit()" class="h-9 px-3 rounded-full text-[11px] font-semibold flex items-center gap-1.5 active:scale-95 transition-transform flex-shrink-0" style="background:#8f2437;border:1px solid #8f2437;color:#fff3dd;box-shadow:0 3px 9px rgba(91,24,40,.20);" title="修改现金">
                         <i class="fa fa-pencil text-[10px]"></i>编辑
                     </button>
                 </div>
                 <div class="grid grid-cols-3 gap-2 mt-3.5">
-                    <div class="min-w-0 rounded-xl px-2.5 py-2.5" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);">
-                        <div class="text-[11px] text-[#f3dede]/65 whitespace-nowrap">总转入</div>
-                        <div id="cashTotalIn" class="text-[15px] font-bold tabular-nums mt-1 truncate text-white">--</div>
+                    <div class="min-w-0 rounded-xl px-2.5 py-2.5" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div class="text-[11px] whitespace-nowrap" style="color:#8a7354">总转入</div>
+                        <div id="cashTotalIn" class="text-[15px] font-bold tabular-nums mt-1 truncate" style="color:#1f2937">--</div>
                     </div>
-                    <div class="min-w-0 rounded-xl px-2.5 py-2.5" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);">
-                        <div class="text-[11px] text-[#f3dede]/65 whitespace-nowrap">总取出</div>
-                        <div id="cashTotalOut" class="text-[15px] font-bold tabular-nums mt-1 truncate text-white">--</div>
+                    <div class="min-w-0 rounded-xl px-2.5 py-2.5" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div class="text-[11px] whitespace-nowrap" style="color:#8a7354">总取出</div>
+                        <div id="cashTotalOut" class="text-[15px] font-bold tabular-nums mt-1 truncate" style="color:#1f2937">--</div>
                     </div>
-                    <div class="min-w-0 rounded-xl px-2.5 py-2.5" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);">
-                        <div class="text-[11px] text-[#f3dede]/65 whitespace-nowrap">外部净投入</div>
-                        <div id="cashTotalNet" class="text-[15px] font-bold tabular-nums mt-1 truncate text-white">--</div>
+                    <div class="min-w-0 rounded-xl px-2.5 py-2.5" style="background:#ffffff;border:1px solid #efe2ca;">
+                        <div class="text-[11px] whitespace-nowrap" style="color:#8a7354">外部净投入</div>
+                        <div id="cashTotalNet" class="text-[15px] font-bold tabular-nums mt-1 truncate" style="color:#742034">--</div>
                     </div>
                 </div>
             </div>
@@ -3594,36 +3670,33 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <!-- 累计汇总卡：深棕金渐变 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="surface-hero p-4 mb-4">
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-1.5">
-                        <i class="fa fa-calendar-check-o text-[12px] text-amber-100/60"></i>
-                        <span id="cfYearTitle" class="text-[11px] text-amber-100/60 tracking-wide">全部年份累计</span>
+                        <i class="fa fa-calendar-check-o text-[12px]" style="color:#8f2437"></i>
+                        <span id="cfYearTitle" class="text-[11px] tracking-wide" style="color:#8a7354">全部年份累计</span>
                     </div>
                 </div>
                 <div class="grid grid-cols-4">
                     <div class="text-center px-1">
-                        <div class="text-[11px] text-amber-100/60 mb-1.5">总收入</div>
-                        <div id="cfYearIn" class="text-[17px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                        <div class="text-[11px] mb-1.5" style="color:#8a7354">总收入</div>
+                        <div id="cfYearIn" class="text-[17px] font-bold tabular-nums" style="color:#00a05c">--</div>
                     </div>
-                    <div class="text-center px-1 border-l border-white/10">
-                        <div class="text-[11px] text-amber-100/60 mb-1.5">总支出</div>
-                        <div id="cfYearOut" class="text-[17px] font-bold tabular-nums" style="color:#ffb3a7">--</div>
+                    <div class="text-center px-1" style="border-left:1px solid #efe2ca">
+                        <div class="text-[11px] mb-1.5" style="color:#8a7354">总支出</div>
+                        <div id="cfYearOut" class="text-[17px] font-bold tabular-nums" style="color:#e03131">--</div>
                     </div>
-                    <div class="text-center px-1 border-l border-white/10">
-                        <div class="text-[11px] text-amber-100/60 mb-1.5">结余</div>
-                        <div id="cfYearBal" class="text-[17px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    <div class="text-center px-1" style="border-left:1px solid #efe2ca">
+                        <div class="text-[11px] mb-1.5" style="color:#8a7354">结余</div>
+                        <div id="cfYearBal" class="text-[17px] font-bold tabular-nums" style="color:#742034">--</div>
                     </div>
-                    <div class="text-center px-1 border-l border-white/10">
-                        <div class="text-[11px] text-amber-100/60 mb-1.5">总浮盈</div>
-                        <div id="cfYearGain" class="text-[17px] font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    <div class="text-center px-1" style="border-left:1px solid #efe2ca">
+                        <div class="text-[11px] mb-1.5" style="color:#8a7354">总浮盈</div>
+                        <div id="cfYearGain" class="text-[17px] font-bold tabular-nums" style="color:#742034">--</div>
                     </div>
                 </div>
-                <div id="cfYearVsDetail" class="mt-3 pt-2.5 border-t border-white/10 text-[10px] text-amber-100/60 text-center leading-relaxed" style="display:none">--</div>
+                <div id="cfYearVsDetail" class="mt-3 pt-2.5 text-[10px] text-center leading-relaxed" style="display:none;border-top:1px solid #eadfce;color:#9a8b76">--</div>
             </div>
         </div>
         <!-- 年度总和卡：年份切换 -->
@@ -3757,22 +3830,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <!-- 汇总卡：深棕金渐变 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="surface-hero p-4 mb-4">
             <div class="relative z-10 grid grid-cols-3">
                 <div class="text-center px-1">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">今年换手率</div>
-                    <div id="tradeTurnoverYtd" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                    <div class="text-[11px] mb-1.5" style="color:#8a7354">今年换手率</div>
+                    <div id="tradeTurnoverYtd" class="text-base font-bold tabular-nums" style="color:#742034">--</div>
                 </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">开户至今换手率</div>
-                    <div id="tradeTurnoverSince" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                <div class="text-center px-1" style="border-left:1px solid #efe2ca">
+                    <div class="text-[11px] mb-1.5" style="color:#8a7354">开户至今换手率</div>
+                    <div id="tradeTurnoverSince" class="text-base font-bold tabular-nums" style="color:#742034">--</div>
                 </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">年均换手率</div>
-                    <div id="tradeTurnoverAnnual" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                <div class="text-center px-1" style="border-left:1px solid #efe2ca">
+                    <div class="text-[11px] mb-1.5" style="color:#8a7354">年均换手率</div>
+                    <div id="tradeTurnoverAnnual" class="text-base font-bold tabular-nums" style="color:#742034">--</div>
                 </div>
             </div>
         </div>
@@ -3807,20 +3877,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 <div class="stats-t-kicker">期间做T净收益</div>
                                 <div class="mt-1 flex items-baseline gap-1.5">
                                     <span id="statsTTotal" class="stats-t-amount">0.00</span>
-                                    <span class="text-[9px] text-[#cfc0a6]/60">元</span>
+                                    <span class="text-[9px]" style="color:#9a8b76">元</span>
                                 </div>
-                                <div class="mt-1 text-[8px] text-[#cfc0a6]/45">已扣佣金 · 印花税 · 过户费</div>
+                                <div class="mt-1 text-[8px]" style="color:#9a8b76">已扣佣金 · 印花税 · 过户费</div>
                             </div>
                             <span class="stats-t-badge">税后到手</span>
                         </div>
                         <div class="stats-t-split">
                             <div class="stats-t-split-item">
                                 <div class="stats-t-split-label">盈利合计</div>
-                                <div id="statsTWinAmt" class="stats-t-split-value" style="color:#ff9b9b">--</div>
+                                <div id="statsTWinAmt" class="stats-t-split-value" style="color:#e03131">--</div>
                             </div>
                             <div class="stats-t-split-item">
                                 <div class="stats-t-split-label">亏损合计</div>
-                                <div id="statsTLoseAmt" class="stats-t-split-value" style="color:#79e0a4">--</div>
+                                <div id="statsTLoseAmt" class="stats-t-split-value" style="color:#00a05c">--</div>
                             </div>
                         </div>
                         <div class="stats-t-metrics">
@@ -4078,19 +4148,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 今日概览横幅 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="surface-hero p-4 mb-4">
             <div class="relative z-10 flex items-center justify-between">
                 <div>
-                    <div class="text-[11px] text-amber-100/60 mb-1"><i class="fa fa-bell-o mr-1"></i>今日重要消息</div>
-                    <div class="text-[22px] font-bold text-amber-200 tabular-nums" id="notifTodayCount">0 条</div>
+                    <div class="text-[11px] mb-1" style="color:#8a7354"><i class="fa fa-bell-o mr-1" style="color:#8f2437"></i>今日重要消息</div>
+                    <div class="text-[22px] font-bold tabular-nums" id="notifTodayCount" style="color:#742034">0 条</div>
                 </div>
                 <div class="text-right space-y-1">
-                    <div class="text-[11px] text-amber-100/60">除权动态 <span class="text-amber-200 font-semibold" id="notifExdivCount">0</span></div>
-                    <div class="text-[11px] text-amber-100/60">股息率提醒 <span class="text-amber-200 font-semibold" id="notifYieldCount">0</span></div>
-                    <div class="text-[11px] text-amber-100/60">目标持仓 <span class="text-amber-200 font-semibold" id="notifTargetCount">0</span></div>
+                    <div class="text-[11px]" style="color:#8a7354">除权动态 <span class="font-semibold" style="color:#742034" id="notifExdivCount">0</span></div>
+                    <div class="text-[11px]" style="color:#8a7354">股息率提醒 <span class="font-semibold" style="color:#742034" id="notifYieldCount">0</span></div>
+                    <div class="text-[11px]" style="color:#8a7354">目标持仓 <span class="font-semibold" style="color:#742034" id="notifTargetCount">0</span></div>
                 </div>
             </div>
         </div>
@@ -4116,53 +4183,50 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 汇总横幅 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <!-- 汇总横幅：年度分红收入 · 到账总览（年度模式第二行显示三格） -->
+        <div class="surface-hero p-4 mb-4">
             <div class="relative z-10">
                 <div class="flex items-center justify-between">
                     <div>
-                        <div id="divDetailTitle" class="text-[11px] text-amber-100/60 mb-1"><i class="fa fa-coins mr-1"></i>今年已收分红</div>
+                        <div id="divDetailTitle" class="text-[11px] mb-1" style="color:#742034"><i class="fa fa-coins mr-1"></i>今年已收分红</div>
                         <div class="flex items-baseline gap-2 min-w-0">
-                            <div class="text-[26px] font-bold text-white tabular-nums" id="divDetailTotal">0.00</div>
-                            <span id="divDetailYieldBadge" class="hidden inline-flex items-baseline gap-1 text-[9.5px] font-medium text-amber-200/85 border border-amber-200/25 rounded-full px-2 py-0.5 leading-none whitespace-nowrap" style="background:rgba(255,255,255,.07);" title="年度分红收入 ÷ 总资产">股息率 <b id="divDetailYield" class="text-amber-200 font-semibold tabular-nums">--</b></span>
+                            <div class="text-[26px] font-bold tabular-nums" id="divDetailTotal" style="color:#742034">0.00</div>
+                            <span id="divDetailYieldBadge" class="hidden inline-flex items-baseline gap-1 text-[9.5px] font-medium rounded-full px-2 py-0.5 leading-none whitespace-nowrap" style="color:#742034;border:1px solid #e8cdd4;background:#f8ecef;" title="年度分红收入 ÷ 总资产">股息率 <b id="divDetailYield" class="font-semibold tabular-nums" style="color:#8f2437">--</b></span>
                         </div>
                     </div>
                     <div class="text-right space-y-1">
-                        <div class="text-[11px] text-amber-100/60" id="divDetailCountLine">分红笔数 <span class="text-amber-200 font-semibold" id="divDetailCount">0</span></div>
-                        <div class="text-[11px] text-amber-100/60" id="divDetailStocksLine">来自 <span class="text-amber-200 font-semibold" id="divDetailStocks">0</span> 只持仓</div>
+                        <div class="text-[11px]" style="color:#8a7354" id="divDetailCountLine">分红笔数 <span class="font-semibold" style="color:#742034" id="divDetailCount">0</span></div>
+                        <div class="text-[11px]" style="color:#8a7354" id="divDetailStocksLine">来自 <span class="font-semibold" style="color:#742034" id="divDetailStocks">0</span> 只持仓</div>
                     </div>
                 </div>
-                <div id="divDetailHint" class="text-[10px] text-amber-100/40 mt-2">每笔 = 每股分红 × 持股数 · 仅统计已实施并发放到账的分红</div>
+                <div id="divDetailHint" class="text-[10px] mt-2" style="color:#9a8b76">每笔 = 每股分红 × 持股数 · 仅统计已实施并发放到账的分红</div>
+
+                <div id="divDetailYearSummary" class="hidden">
+                    <div class="divdd-sum-grid">
+                        <div class="divdd-sum-cell">
+                            <div class="divdd-sum-label"><span class="divdd-dot is-received"></span>已到账</div>
+                            <div class="divdd-sum-value is-received" id="divddReceived">¥0.00</div>
+                            <div class="divdd-sum-sub" id="divddReceivedSub">0 笔 · 0 只</div>
+                        </div>
+                        <div class="divdd-sum-cell">
+                            <div class="divdd-sum-label"><span class="divdd-dot is-pending"></span>待入账</div>
+                            <div class="divdd-sum-value is-pending" id="divddPending">¥0.00</div>
+                            <div class="divdd-sum-sub" id="divddPendingSub">0 笔 · 0 只</div>
+                        </div>
+                        <div class="divdd-sum-progress">
+                            <div class="divdd-sum-label">到账进度</div>
+                            <div class="divdd-sum-value" id="divddProgress">0%</div>
+                            <div class="divdd-progress-track"><div id="divddProgressBar"></div></div>
+                            <div class="divdd-sum-sub" id="divddProgressSub">今年累计 0 笔</div>
+                        </div>
+                    </div>
+                    <div class="divdd-sum-foot" id="divddStatsFoot">按已到账记录与未到账预测汇总，明细见下方列表</div>
+                </div>
             </div>
         </div>
 
         <!-- 年度分红统计（仅年度分红收入模式显示） -->
         <div id="divDetailStats" class="hidden mb-3 space-y-3">
-            <div class="divdd-sum-card">
-                <div class="divdd-sum-grid">
-                    <div class="divdd-sum-cell">
-                        <div class="divdd-sum-label"><span class="divdd-dot is-received"></span>已到账</div>
-                        <div class="divdd-sum-value is-received" id="divddReceived">¥0.00</div>
-                        <div class="divdd-sum-sub" id="divddReceivedSub">0 笔 · 0 只</div>
-                    </div>
-                    <div class="divdd-sum-cell">
-                        <div class="divdd-sum-label"><span class="divdd-dot is-pending"></span>待入账</div>
-                        <div class="divdd-sum-value is-pending" id="divddPending">¥0.00</div>
-                        <div class="divdd-sum-sub" id="divddPendingSub">0 笔 · 0 只</div>
-                    </div>
-                    <div class="divdd-sum-progress">
-                        <div class="divdd-sum-label">到账进度</div>
-                        <div class="divdd-sum-value" id="divddProgress">0%</div>
-                        <div class="divdd-progress-track"><div id="divddProgressBar"></div></div>
-                        <div class="divdd-sum-sub" id="divddProgressSub">今年累计 0 笔</div>
-                    </div>
-                </div>
-                <div class="divdd-sum-foot" id="divddStatsFoot">按已到账记录与未到账预测汇总，明细见下方列表</div>
-            </div>
-
             <div class="divdd-rhythm-card">
                 <div class="divdd-card-head">
                     <div class="min-w-0">
@@ -4292,22 +4356,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 汇总横幅 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="surface-hero p-4 mb-4">
             <div class="relative z-10">
                 <div class="flex items-center justify-between">
                     <div>
-                        <div id="costDetailTitle" class="text-[11px] text-amber-100/60 mb-1"><i class="fa fa-pie-chart mr-1"></i>投入成本总额</div>
-                        <div class="text-[26px] font-bold text-amber-200 tabular-nums" id="costDetailTotal">0.00</div>
+                        <div id="costDetailTitle" class="text-[11px] mb-1" style="color:#8a7354"><i class="fa fa-pie-chart mr-1" style="color:#8f2437"></i>投入成本总额</div>
+                        <div class="text-[26px] font-bold tabular-nums" id="costDetailTotal" style="color:#742034">0.00</div>
                     </div>
                     <div class="text-right space-y-1">
-                        <div class="text-[11px] text-amber-100/60">来源 <span class="text-amber-200 font-semibold" id="costDetailCount">0</span> 项</div>
-                        <div class="text-[11px] text-amber-100/60">覆盖 <span class="text-amber-200 font-semibold" id="costDetailYears">0</span> 年</div>
+                        <div class="text-[11px]" style="color:#8a7354">来源 <span class="font-semibold" style="color:#742034" id="costDetailCount">0</span> 项</div>
+                        <div class="text-[11px]" style="color:#8a7354">覆盖 <span class="font-semibold" style="color:#742034" id="costDetailYears">0</span> 年</div>
                     </div>
                 </div>
-                <div id="costDetailHint" class="text-[10px] text-amber-100/40 mt-2">投入成本 = 初始成本 + 历年资金净流入 · 净流入正数=转入 / 负数=转出</div>
+                <div id="costDetailHint" class="text-[10px] mt-2" style="color:#9a8b76">投入成本 = 初始成本 + 历年资金净流入 · 净流入正数=转入 / 负数=转出</div>
             </div>
         </div>
 
@@ -4332,22 +4393,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 汇总横幅 -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-4" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="surface-hero p-4 mb-4">
             <div class="relative z-10">
                 <div class="flex items-center justify-between">
                     <div>
-                        <div id="navDetailTitle" class="text-[11px] text-amber-100/60 mb-1"><i class="fa fa-tachometer mr-1"></i>最新净值</div>
-                        <div class="text-[26px] font-bold text-amber-200 tabular-nums" id="navDetailTotal">0.00</div>
+                        <div id="navDetailTitle" class="text-[11px] mb-1" style="color:#8a7354"><i class="fa fa-tachometer mr-1" style="color:#8f2437"></i>最新净值</div>
+                        <div class="text-[26px] font-bold tabular-nums" id="navDetailTotal" style="color:#742034">0.00</div>
                     </div>
                     <div class="text-right space-y-1">
-                        <div class="text-[11px] text-amber-100/60">累计份额 <span class="text-amber-200 font-semibold" id="navDetailShares">0</span></div>
-                        <div class="text-[11px] text-amber-100/60">覆盖 <span class="text-amber-200 font-semibold" id="navDetailYears">0</span> 年</div>
+                        <div class="text-[11px]" style="color:#8a7354">累计份额 <span class="font-semibold" style="color:#742034" id="navDetailShares">0</span></div>
+                        <div class="text-[11px]" style="color:#8a7354">覆盖 <span class="font-semibold" style="color:#742034" id="navDetailYears">0</span> 年</div>
                     </div>
                 </div>
-                <div id="navDetailHint" class="text-[10px] text-amber-100/40 mt-2">基准日=初始投入日期 · 初始净值=1 · 每笔投入按加仓当日净值折算份额 · 最新净值=当前总资产÷总份额</div>
+                <div id="navDetailHint" class="text-[10px] mt-2" style="color:#9a8b76">基准日=初始投入日期 · 初始净值=1 · 每笔投入按加仓当日净值折算份额 · 最新净值=当前总资产÷总份额</div>
             </div>
         </div>
 
@@ -4372,38 +4430,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 净资产卡：深棕金渐变（与持仓页资产卡同一质感） -->
-        <div class="relative overflow-hidden rounded-3xl p-5 text-white mb-4" style="background:linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(253,230,138,.4),transparent);"></div>
-            <div class="absolute -top-20 -right-14 w-52 h-52 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(253,230,138,.22) 0%,transparent 70%);"></div>
-            <div class="absolute inset-0 rounded-3xl pointer-events-none" style="box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.2);"></div>
+        <div class="surface-hero p-5 mb-4">
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-1">
-                    <div class="flex items-center gap-1.5 text-amber-100/60 text-[11px]">
-                        <i class="fa fa-diamond text-amber-300 text-[10px]"></i>
+                    <div class="flex items-center gap-1.5 text-[11px]" style="color:#8a7354">
+                        <i class="fa fa-diamond text-[10px]" style="color:#8f2437"></i>
                         <span class="tracking-wide">可用净资产</span>
-                        <span class="text-amber-100/30 text-[9px]">AVAILABLE</span>
+                        <span class="text-[9px]" style="color:#a4937e">AVAILABLE</span>
                     </div>
-                    <span id="bsDatePill" class="text-[10px] px-2 py-0.5 rounded-full tabular-nums whitespace-nowrap" style="background:rgba(253,230,138,.14);border:1px solid rgba(253,230,138,.35);color:#fde68a">截至 --</span>
+                    <span id="bsDatePill" class="text-[10px] px-2 py-0.5 rounded-full tabular-nums whitespace-nowrap" style="background:#f8ecef;border:1px solid #e8cdd4;color:#742034">截至 --</span>
                 </div>
-                <div id="bsNetWorth" class="text-[34px] font-bold tabular-nums tracking-tight text-amber-200">0.00</div>
-                <div class="flex items-center gap-1.5 mt-2.5 text-[10px] text-amber-100/60">
+                <div id="bsNetWorth" class="text-[34px] font-bold tabular-nums tracking-tight" style="color:#742034">0.00</div>
+                <div class="flex items-center gap-1.5 mt-2.5 text-[10px]" style="color:#8a7354">
                     <i class="fa fa-home text-[9px]"></i>
-                    <span>总净资产 <span id="bsTotalNet" class="font-semibold text-amber-100">0.00</span> · 含固定资产 <span id="bsFixedNet" class="font-semibold text-amber-100">0.00</span></span>
+                    <span>总净资产 <span id="bsTotalNet" class="font-semibold" style="color:#1f2937">0.00</span> · 含固定资产 <span id="bsFixedNet" class="font-semibold" style="color:#1f2937">0.00</span></span>
                 </div>
-                <div class="flex items-center mt-4 pt-3" style="border-top:1px solid rgba(255,255,255,.08);">
+                <div class="flex items-center mt-4 pt-3" style="border-top:1px solid #eadfce;">
                     <div class="flex-1">
-                        <div class="text-[10px] text-amber-100/50">流动资产合计</div>
-                        <div id="bsAssetsTotal" class="text-[15px] font-semibold text-emerald-300 tabular-nums">0.00</div>
+                        <div class="text-[10px]" style="color:#8a7354">流动资产合计</div>
+                        <div id="bsAssetsTotal" class="text-[15px] font-semibold tabular-nums" style="color:#00a05c">0.00</div>
                     </div>
-                    <div class="w-px h-8 flex-shrink-0" style="background:rgba(255,255,255,.1)"></div>
+                    <div class="w-px h-8 flex-shrink-0" style="background:#efe2ca"></div>
                     <div class="flex-1 pl-4">
-                        <div class="text-[10px] text-amber-100/50">负债合计</div>
-                        <div id="bsLiabTotal" class="text-[15px] font-semibold text-red-300 tabular-nums">0.00</div>
+                        <div class="text-[10px]" style="color:#8a7354">负债合计</div>
+                        <div id="bsLiabTotal" class="text-[15px] font-semibold tabular-nums" style="color:#e03131">0.00</div>
                     </div>
-                    <div class="w-px h-8 flex-shrink-0" style="background:rgba(255,255,255,.1)"></div>
+                    <div class="w-px h-8 flex-shrink-0" style="background:#efe2ca"></div>
                     <div class="flex-1 pl-4">
-                        <div class="text-[10px] text-amber-100/50">资产负债率</div>
-                        <div id="bsRatio" class="text-[15px] font-semibold text-amber-200 tabular-nums">0.00%</div>
+                        <div class="text-[10px]" style="color:#8a7354">资产负债率</div>
+                        <div id="bsRatio" class="text-[15px] font-semibold tabular-nums" style="color:#742034">0.00%</div>
                     </div>
                 </div>
             </div>
@@ -5364,12 +5419,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="card-rise bg-white rounded-2xl card-shadow p-4 mb-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
-                    <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
+                    <div class="w-1 h-4 bg-gradient-to-b from-[#a82d43] to-[#742034] rounded-full"></div>
                     <span class="text-sm font-semibold text-gray-800">成就墙</span>
                     <span class="text-[10px] text-gray-400 font-normal">用时间与分红换来的勋章</span>
                 </div>
-                <span class="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold text-[#8f6f35] whitespace-nowrap" style="background:linear-gradient(135deg,#fdf6e9,#f9ecd6);border:1px solid rgba(176,101,47,.28)">
-                    已达成 <span id="msAchDone" class="text-accent font-bold tabular-nums">0</span>/<span id="msAchTotal" class="tabular-nums">10</span>
+                <span class="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold text-[#742034] whitespace-nowrap" style="background:linear-gradient(135deg,#fffaf8,#f8ecef);border:1px solid #e8cdd4">
+                    已达成 <span id="msAchDone" class="text-[#742034] font-bold tabular-nums">0</span>/<span id="msAchTotal" class="tabular-nums">10</span>
                 </span>
             </div>
             <div id="msAchievements" class="grid grid-cols-2 gap-2.5"></div>
@@ -5408,22 +5463,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <!-- 总汇总卡片：总转入 / 总取出 / 累计净流入（深棕金渐变，与资金流水统一） -->
-        <div class="relative overflow-hidden rounded-2xl p-4 text-white mb-3" style="background: linear-gradient(135deg,#2f2a22 0%,#453a2c 55%,#5c4d35 100%);box-shadow:0 2px 4px rgba(26,20,12,0.55), 0 1px 3px rgba(26,20,12,0.45), 0 0 4px rgba(26,20,12,0.40), inset 0 1px 0 rgba(255,255,255,0.08);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full"></div>
+        <div class="surface-hero p-4 mb-3">
             <div class="relative z-10 grid grid-cols-3">
                 <div class="text-center px-1">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">总转入</div>
-                    <div id="ftTotalIn" class="text-base font-bold tabular-nums" style="color:#ffb3a7">--</div>
+                    <div class="text-[11px] mb-1.5" style="color:#8a7354">总转入</div>
+                    <div id="ftTotalIn" class="text-base font-bold tabular-nums" style="color:#1f2937">--</div>
                 </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">总取出</div>
-                    <div id="ftTotalOut" class="text-base font-bold tabular-nums" style="color:#9ef0cf">--</div>
+                <div class="text-center px-1" style="border-left:1px solid #efe2ca">
+                    <div class="text-[11px] mb-1.5" style="color:#8a7354">总取出</div>
+                    <div id="ftTotalOut" class="text-base font-bold tabular-nums" style="color:#1f2937">--</div>
                 </div>
-                <div class="text-center px-1 border-l border-white/10">
-                    <div class="text-[11px] text-amber-100/60 mb-1.5">累计净流入</div>
-                    <div id="ftTotalNet" class="text-base font-bold tabular-nums" style="color:#f7cf8f">--</div>
+                <div class="text-center px-1" style="border-left:1px solid #efe2ca">
+                    <div class="text-[11px] mb-1.5" style="color:#8a7354">累计净流入</div>
+                    <div id="ftTotalNet" class="text-base font-bold tabular-nums" style="color:#742034">--</div>
                 </div>
             </div>
         </div>
@@ -6061,7 +6113,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="sdSimPreviewPnl" class="sds-preview-diff">--</div>
                 <div class="sds-preview-sub">
                     <span>真实盈亏 <b id="sdSimPreviewRealPnl">--</b></span>
-                    <span>差额（模拟 − 真实） <b id="sdSimPreviewPnlDiff">--</b></span>
+                    <span>差额（真实 − 模拟） <b id="sdSimPreviewPnlDiff">--</b></span>
                 </div>
             </div>
             <div id="sdSimError" class="sds-error"></div>
@@ -9339,15 +9391,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return;
             }
             const last = valid[valid.length - 1];
-            const lastColor = last.v > 0 ? '#a9642a' : (last.v < 0 ? '#00a05c' : '#8a7a67');
+            const lastColor = last.v > 0 ? '#742034' : (last.v < 0 ? '#00a05c' : '#8a7a67');
             lastEl.innerText = fmtPnlNum(last.v);
             lastEl.style.color = lastColor;
             lastEl.style.fontSize = lastEl.innerText.length >= 13 ? '15px' : '19px';
             let sum = 0;
             valid.forEach(function(x){ sum += x.v; });
             const avg = sum / valid.length;
-            const avgColor = avg > 0 ? '#a9642a' : (avg < 0 ? '#00a05c' : '#8a7a67');
-            const cumColor = sum > 0 ? '#a9642a' : (sum < 0 ? '#00a05c' : '#8a7a67');
+            const avgColor = avg > 0 ? '#742034' : (avg < 0 ? '#00a05c' : '#8a7a67');
+            const cumColor = sum > 0 ? '#742034' : (sum < 0 ? '#00a05c' : '#8a7a67');
             cagrEl.innerText = fmtPnlNum(avg);
             cagrEl.style.color = avgColor;
             cumEl.innerText = fmtPnlNum(sum);
@@ -9373,14 +9425,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 __taEl.style.fontSize = __taLen >= 9 ? '28px' : '32px';
                 __taEl.title = Number(pr.totalAsset).toFixed(2);
             }
-            const pnlTone = pr.pnl > 0 ? '#e03131' : (pr.pnl < 0 ? '#00a05c' : '#ffffff');
+            const pnlTone = pr.pnl > 0 ? '#e03131' : (pr.pnl < 0 ? '#00a05c' : '#1f2937');
             setTxt('ahPnl', fmtPnlNum(pr.pnl), pnlTone);
             const __pnlEl = document.querySelector('#ahPnl');
             if(__pnlEl){
                 const __pnlLen = __pnlEl.innerText.length;
                 __pnlEl.style.fontSize = __pnlLen >= 9 ? '13px' : '15px';
             }
-            const retTone = pr.ret == null ? '#cfc0a6' : (pr.ret > 0 ? '#e03131' : (pr.ret < 0 ? '#00a05c' : '#ffffff'));
+            const retTone = pr.ret == null ? '#9a8b76' : (pr.ret > 0 ? '#e03131' : (pr.ret < 0 ? '#00a05c' : '#1f2937'));
             setTxt('ahRet', pr.ret == null ? '--' : fmtPctNum(pr.ret), retTone);
             setTxt('ahNetInvest', fmtMoney(pr.invested));
             const __niEl = document.querySelector('#ahNetInvest');
@@ -9394,7 +9446,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 与统计页资产分析卡同一函数、同一缓存：无有效回撤（不足两个年末快照）时统一显示 --
             const ddValid = !!(dd && dd.pct != null && dd.peakDate);
             const ddPct = ddValid ? Number(dd.pct) : null;
-            setTxt('ahMaxDD', !ddValid ? '--' : (ddPct > 0 ? ('-' + ddPct.toFixed(2) + '%') : '0.00%'), '#ffffff');
+            setTxt('ahMaxDD', !ddValid ? '--' : (ddPct > 0 ? ('-' + ddPct.toFixed(2) + '%') : '0.00%'), '#8f2437');
             const __ddEl = document.querySelector('#ahMaxDD');
             if(__ddEl){ __ddEl.style.fontSize = __ddEl.innerText.length >= 8 ? '13px' : '15px'; }
             const ddSub = document.querySelector('#ahMaxDDSub');
@@ -9508,11 +9560,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(x.g < worst.g) worst = x;
             });
             avgEl.innerText = fmtPctNum(avg);
-            avgEl.style.color = avg > 0 ? '#a9642a' : (avg < 0 ? '#00a05c' : '#8a7a67');
+            avgEl.style.color = avg > 0 ? '#742034' : (avg < 0 ? '#00a05c' : '#8a7a67');
             bestEl.innerText = best.year + ' ' + fmtPctNum(best.g);
-            bestEl.style.color = best.g > 0 ? '#a9642a' : (best.g < 0 ? '#00a05c' : '#8a7a67');
+            bestEl.style.color = best.g > 0 ? '#742034' : (best.g < 0 ? '#00a05c' : '#8a7a67');
             worstEl.innerText = worst.year + ' ' + fmtPctNum(worst.g);
-            worstEl.style.color = worst.g < 0 ? '#00a05c' : (worst.g > 0 ? '#a9642a' : '#8a7a67');
+            worstEl.style.color = worst.g < 0 ? '#00a05c' : (worst.g > 0 ? '#742034' : '#8a7a67');
         }
 
         function renderAssetTrendYearList(ys, listEl){
@@ -9580,12 +9632,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 grid: { left: 44, right: 16, top: 28, bottom: 24 },
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(169,100,42,0.06)' } },
-                    backgroundColor: 'rgba(58,37,22,0.94)',
+                    axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(116,32,52,0.06)' } },
+                    backgroundColor: 'rgba(58,24,32,0.95)',
                     borderWidth: 0,
                     padding: [7, 10],
-                    textStyle: { color: '#f7ead0', fontSize: 11 },
-                    extraCssText: 'border-radius:10px;box-shadow:0 8px 24px rgba(58,37,22,.25);',
+                    textStyle: { color: '#fff3dd', fontSize: 11 },
+                    extraCssText: 'border-radius:10px;box-shadow:0 8px 24px rgba(58,24,32,.25);',
                     formatter: function(ps){
                         const p = ps && ps[0];
                         if(!p) return '';
@@ -9627,13 +9679,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 const v = Number(p.value);
                                 if(v < 0){
                                     return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                        { offset: 0, color: '#6ee7b7' },
+                                        { offset: 0, color: '#2bb783' },
                                         { offset: 1, color: '#00a05c' }
                                     ]);
                                 }
                                 return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                    { offset: 0, color: '#e4c28e' },
-                                    { offset: 1, color: '#8f5b2a' }
+                                    { offset: 0, color: '#b3384a' },
+                                    { offset: 1, color: '#742034' }
                                 ]);
                             }
                         },
@@ -9787,7 +9839,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pct = first > 0 ? (delta / first * 100) : null;
             if(c){
                 c.innerText = fmtPnlNum(delta) + (pct == null ? '' : (' · ' + fmtPctNum(pct)));
-                c.style.color = delta >= 0 ? '#D45329' : '#00a05c';
+                c.style.color = delta >= 0 ? '#742034' : '#00a05c';
             }
             let maxV = -Infinity, minV = Infinity;
             rows.forEach(function(r){
@@ -9987,7 +10039,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const r = document.querySelector('#assetTabReturn');
             const d = document.querySelector('#assetTabDaily');
             const y = document.querySelector('#assetTabYear');
-            const active = 'py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#7a4a20] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors';
+            const active = 'py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#742034] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors';
             const idle = 'py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors';
             if(r){ r.className = assetTrackMode === 'return' ? active : idle; r.setAttribute('aria-selected', assetTrackMode === 'return' ? 'true' : 'false'); }
             if(d){ d.className = assetTrackMode === 'daily' ? active : idle; d.setAttribute('aria-selected', assetTrackMode === 'daily' ? 'true' : 'false'); }
@@ -9997,7 +10049,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const b = document.querySelector(item[1]);
                 if(!b) return;
                 b.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border transition-colors ' +
-                    (assetTrackRange === item[0] ? 'bg-[#3b2e1f] text-[#f7e8cf] border-[#3b2e1f]' : 'bg-white text-[#9a8a73] border-[#eee5d6]');
+                    (assetTrackRange === item[0] ? 'bg-[#8f2437] text-[#fff3dd] border-[#8f2437]' : 'bg-white text-[#9a8a73] border-[#eee5d6]');
             });
             const title = document.querySelector('#ahTrendTitle');
             if(title) title.innerText = assetTrackMode === 'year' ? '逐年盈利总览' : (assetTrackMode === 'return' ? '收益率轨迹' : '资产轨迹');
@@ -10085,7 +10137,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const b = document.querySelector(item[1]);
                 if(!b) return;
                 b.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border transition-colors ' +
-                    (assetReturnRange === item[0] ? 'bg-[#3b2e1f] text-[#f7e8cf] border-[#3b2e1f]' : 'bg-white text-[#9a8a73] border-[#eee5d6]');
+                    (assetReturnRange === item[0] ? 'bg-[#8f2437] text-[#fff3dd] border-[#8f2437]' : 'bg-white text-[#9a8a73] border-[#eee5d6]');
             });
         }
 
@@ -10133,16 +10185,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     cumEl.innerText = '--'; cumEl.style.color = '#9ca3af';
                 }else{
                     cumEl.innerText = fmtPctNum(latest);
-                    cumEl.style.color = latest > 0 ? '#D45329' : (latest < 0 ? '#00a05c' : '#8a7a67');
+                    cumEl.style.color = latest > 0 ? '#742034' : (latest < 0 ? '#00a05c' : '#8a7a67');
                 }
             }
             if(bestEl){
                 bestEl.innerText = isFinite(best) ? fmtPctNum(best) : '--';
-                bestEl.style.color = best > 0 ? '#D45329' : (best < 0 ? '#00a05c' : '#8a7a67');
+                bestEl.style.color = best > 0 ? '#742034' : (best < 0 ? '#00a05c' : '#8a7a67');
             }
             if(worstEl){
                 worstEl.innerText = isFinite(worst) ? fmtPctNum(worst) : '--';
-                worstEl.style.color = worst > 0 ? '#D45329' : (worst < 0 ? '#00a05c' : '#8a7a67');
+                worstEl.style.color = worst > 0 ? '#742034' : (worst < 0 ? '#00a05c' : '#8a7a67');
             }
         }
 
@@ -13507,7 +13559,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 做T累计总盈利：全部历史区间配对缓存；无行情/空窗/昨日归属均照常显示
             const dayTTotal = getDayTTotal(item);
             const dayTNum = Number(dayTTotal) || 0;
-            fEl.style.color = dayTNum > 0.005 ? '#f04b3f' : (dayTNum < -0.005 ? '#3fd35b' : '#ffffff');
+            fEl.style.color = dayTNum > 0.005 ? '#e03131' : (dayTNum < -0.005 ? '#00a05c' : '#742034');
             fEl.innerText = fmtPnlNum(dayTTotal);
             // 成本变动：成本下降为绿色（好），上升为红色（差）
             const prevCost = tradeLogPrevCloseCost(item);
@@ -13515,18 +13567,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const costDelta = (prevCost == null || !isFinite(curCost)) ? null : (curCost - prevCost);
             if(costEl){
                 costEl.innerText = costDelta == null ? '--' : fmtCostDelta(costDelta);
-                costEl.style.color = (costDelta == null || Math.abs(costDelta) < 0.00005) ? '#ffffff' : (costDelta < 0 ? '#3fd35b' : '#f04b3f');
+                costEl.style.color = (costDelta == null || Math.abs(costDelta) < 0.00005) ? '#1f2937' : (costDelta < 0 ? '#00a05c' : '#e03131');
             }
             if(!flow.hasBase){
-                pnlEl.style.color = '#ffffff'; pnlEl.innerText = '--';
-                tEl.style.color = '#f7cf8f'; tEl.innerText = '--';
+                pnlEl.style.color = '#1f2937'; pnlEl.innerText = '--';
+                tEl.style.color = '#742034'; tEl.innerText = '--';
                 return;
             }
-            const pCls = flow.pnl > 0.005 ? '#f04b3f' : (flow.pnl < -0.005 ? '#3fd35b' : '#ffffff');
+            const pCls = flow.pnl > 0.005 ? '#e03131' : (flow.pnl < -0.005 ? '#00a05c' : '#1f2937');
             pnlEl.style.color = pCls;
             pnlEl.innerText = fmtPnlNum(flow.pnl);
             const hasT = flow.buyQty > 0 && flow.sellQty > 0;
-            const tCls = hasT ? (flow.tProfit > 0 ? '#f04b3f' : '#3fd35b') : '#ffffff';
+            const tCls = hasT ? (flow.tProfit > 0 ? '#e03131' : '#00a05c') : '#1f2937';
             tEl.style.color = tCls;
             tEl.innerText = hasT ? fmtPnlNum(flow.tProfit) : '--';
         }
@@ -16142,7 +16194,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const totalNet = assetsSum - liabSum;   // 总净资产（含固定资产）
             const netEl = document.querySelector('#bsNetWorth');
             netEl.innerText = fmtMoney(Math.abs(availNet));
-            netEl.className = 'text-[34px] font-bold tabular-nums tracking-tight ' + (availNet < 0 ? 'text-red-300' : 'text-amber-200');
+            netEl.className = 'text-[34px] font-bold tabular-nums tracking-tight';
+            netEl.style.color = availNet < 0 ? '#e03131' : '#742034';
             document.querySelector('#bsAssetsTotal').innerText = fmtMoney(curSum);
             document.querySelector('#bsLiabTotal').innerText = fmtMoney(liabSum);
             document.querySelector('#bsAssetsTotal2').innerText = fmtMoney(assetsSum);
@@ -17138,7 +17191,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const realPnlRate = (realPnl != null && realCostCny > 0) ? (realPnl / realCostCny * 100) : null;
             const simPnl = (simMv != null && simCostCny != null) ? simMv - simCostCny : null;
             const simPnlRate = (simPnl != null && simCostCny > 0) ? (simPnl / simCostCny * 100) : null;
-            const pnlDiff = (simPnl != null && realPnl != null) ? simPnl - realPnl : null;
+            const pnlDiff = (simPnl != null && realPnl != null) ? realPnl - simPnl : null;
             const diff = (simMv != null && realAvailable) ? simMv - realMv : null;
             return {
                 market: market,
@@ -17210,8 +17263,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const realPnlColor = realPnl == null ? '#a99a8c' : (realPnl > 0 ? '#e03131' : (realPnl < 0 ? '#00a05c' : '#8f2437'));
             const realRateText = st.realPnlRate != null ? '收益率 ' + sdSimSignedPct(st.realPnlRate) : '收益率 --';
             const pnlDiff = st.pnlDiff;
-            const pnlDiffText = pnlDiff == null ? '--' : sdSimSignedMoney(pnlDiff);
-            const pnlDiffColor = pnlDiff == null ? '#a99a8c' : (pnlDiff > 0 ? '#e03131' : (pnlDiff < 0 ? '#00a05c' : '#8f2437'));
+            const pnlDiffZero = pnlDiff != null && Math.abs(pnlDiff) < 0.005;
+            const pnlDiffText = pnlDiff == null ? '--' : (pnlDiffZero ? '¥0.00' : sdSimSignedMoney(pnlDiff));
+            const pnlDiffColor = pnlDiff == null ? '#a99a8c' : (pnlDiff < -0.005 ? '#00a05c' : '#e03131');
             const exNote = st.simExCount > 0
                 ? '已按 ' + st.simExCount + ' 笔现金分红除权 · 仅调整模拟成本'
                 : '按当前价估算 · 仅作模拟对照';
@@ -17228,7 +17282,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">模拟持仓盈亏</div><div class="sds-pnl-amount" style="color:#a99a8c">--</div><div class="sds-pnl-rate">添加后计算</div></div>'
                     + '<div class="sds-pnl-block sds-pnl-real"><div class="sds-pnl-label">真实持仓盈亏</div><div class="sds-pnl-amount" style="color:' + realPnlColor + '">' + realPnlText + '</div><div class="sds-pnl-rate">' + realRateText + '</div></div>'
                     + '</div>'
-                    + '<div class="sds-delta"><span class="sds-delta-label">差额（模拟 − 真实）</span><span class="sds-delta-val" style="color:#a99a8c">--</span></div>'
+                    + '<div class="sds-delta"><span class="sds-delta-label">差额（真实 − 模拟）</span><span class="sds-delta-val" style="color:#a99a8c">--</span></div>'
                     + detailHtml
                     + '<button type="button" class="sds-add" aria-label="添加模拟数据" onclick="openSimHoldEditor()"><i class="fa fa-plus text-[10px]"></i>添加模拟数据</button>'
                     + '</div></div>';
@@ -17241,7 +17295,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">模拟持仓盈亏</div><div class="sds-pnl-amount" style="color:' + simPnlColor + '">' + simPnlText + '</div><div class="sds-pnl-rate">' + simRateText + '</div></div>'
                 + '<div class="sds-pnl-block sds-pnl-real"><div class="sds-pnl-label">真实持仓盈亏</div><div class="sds-pnl-amount" style="color:' + realPnlColor + '">' + realPnlText + '</div><div class="sds-pnl-rate">' + realRateText + '</div></div>'
                 + '</div>'
-                + '<div class="sds-delta"><span class="sds-delta-label">差额（模拟 − 真实）</span><span class="sds-delta-val" style="color:' + pnlDiffColor + '">' + pnlDiffText + '</span></div>'
+                + '<div class="sds-delta"><span class="sds-delta-label">差额（真实 − 模拟）</span><span class="sds-delta-val" style="color:' + pnlDiffColor + '">' + pnlDiffText + '</span></div>'
                 + detailHtml
                 + '<div class="sds-note">' + exNote + '</div>'
                 + '</div></div>';
@@ -17348,8 +17402,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 pnlEl.style.color = pnl == null ? '#ffe5bb' : (pnl > 0 ? '#ffd2c5' : (pnl < 0 ? '#bcebd3' : '#ffe5bb'));
             }
             if(pnlDiffEl){
-                pnlDiffEl.innerText = pnlDiff == null ? '--' : sdSimSignedMoney(pnlDiff);
-                pnlDiffEl.style.color = pnlDiff == null ? '#ffe5bb' : (pnlDiff > 0 ? '#ffd2c5' : (pnlDiff < 0 ? '#bcebd3' : '#ffe5bb'));
+                const pnlDiffZero = pnlDiff != null && Math.abs(pnlDiff) < 0.005;
+                pnlDiffEl.innerText = pnlDiff == null ? '--' : (pnlDiffZero ? '¥0.00' : sdSimSignedMoney(pnlDiff));
+                pnlDiffEl.style.color = pnlDiff == null ? '#ffe5bb' : (pnlDiff < -0.005 ? '#bcebd3' : '#ffd2c5');
             }
         }
 
@@ -18305,6 +18360,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const statsEl = document.querySelector('#divDetailStats');
             if(!statsEl) return;
             statsEl.classList.remove('hidden');
+            const summaryEl = document.querySelector('#divDetailYearSummary');
+            if(summaryEl) summaryEl.classList.remove('hidden');
             const receivedEl = document.querySelector('#divddReceived');
             const pendingEl = document.querySelector('#divddPending');
             const progressEl = document.querySelector('#divddProgress');
@@ -18515,6 +18572,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const mode = divDetailMode;
             const statsRoot = document.querySelector('#divDetailStats');
             if(statsRoot) statsRoot.classList.add('hidden');
+            const summaryRoot = document.querySelector('#divDetailYearSummary');
+            if(summaryRoot) summaryRoot.classList.add('hidden');
             const cumulativeCardRoot = document.querySelector('#divDetailCumulativeCard');
             if(cumulativeCardRoot) cumulativeCardRoot.classList.add('hidden');
             const yieldBadgeRoot = document.querySelector('#divDetailYieldBadge');
@@ -18544,9 +18603,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 entries.forEach(function(e){ sumT += e.amount; });
                 document.querySelector('#divDetailTotal').innerText = fmtMoney(sumT);
                 var countLineT = document.querySelector('#divDetailCountLine');
-                if(countLineT) countLineT.innerHTML = '年度 <span class="text-amber-200 font-semibold">' + entries.length + '</span> 个';
+                if(countLineT) countLineT.innerHTML = '年度 <span class="font-semibold" style="color:#742034">' + entries.length + '</span> 个';
                 var stocksLineT = document.querySelector('#divDetailStocksLine');
-                if(stocksLineT) stocksLineT.innerHTML = '今年已收 <span class="text-amber-200 font-semibold">¥' + fmtMoney(curVal) + '</span>';
+                if(stocksLineT) stocksLineT.innerHTML = '今年已收 <span class="font-semibold" style="color:#742034">¥' + fmtMoney(curVal) + '</span>';
                 var headingT = document.querySelector('#divDetailHeading');
                 if(headingT) headingT.innerText = '累计分红趋势';
                 var trendCardT = document.querySelector('#divDetailTrendCard');
@@ -18560,9 +18619,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return;
             }
             var countLineEl = document.querySelector('#divDetailCountLine');
-            if(countLineEl) countLineEl.innerHTML = '分红笔数 <span class="text-amber-200 font-semibold" id="divDetailCount">0</span>';
+            if(countLineEl) countLineEl.innerHTML = '分红笔数 <span class="font-semibold" style="color:#742034" id="divDetailCount">0</span>';
             var stocksLineEl = document.querySelector('#divDetailStocksLine');
-            if(stocksLineEl) stocksLineEl.innerHTML = '来自 <span class="text-amber-200 font-semibold" id="divDetailStocks">0</span> 只持仓';
+            if(stocksLineEl) stocksLineEl.innerHTML = '来自 <span class="font-semibold" style="color:#742034" id="divDetailStocks">0</span> 只持仓';
             var headingEl = document.querySelector('#divDetailHeading');
             if(headingEl) headingEl.innerText = '分红明细';
             var trendCardEl = document.querySelector('#divDetailTrendCard');
@@ -24899,7 +24958,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const totalEl = document.querySelector('#statsTTotal');
             if(totalEl){
                 totalEl.innerText = fmtPnlNum(data.total);
-                totalEl.style.color = data.total > 0.005 ? '#ff9b9b' : (data.total < -0.005 ? '#79e0a4' : '#f5e3c6');
+                totalEl.style.color = data.total > 0.005 ? '#e03131' : (data.total < -0.005 ? '#00a05c' : '#1f2937');
             }
             const winAmtEl = document.querySelector('#statsTWinAmt');
             if(winAmtEl) winAmtEl.innerText = data.winCount ? fmtPnlNum(data.winAmount) : '0.00';
@@ -26116,9 +26175,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             setTxt('cfYearIn', cfFmt(sumIn));
             setTxt('cfYearOut', cfFmt(sumOut));
             const balEl = document.querySelector('#cfYearBal');
-            if(balEl){ balEl.innerText = cfFmt(bal); balEl.style.color = bal >= 0 ? '#f7cf8f' : '#ffb3a7'; }
+            if(balEl){ balEl.innerText = cfFmt(bal); balEl.style.color = bal >= 0 ? '#742034' : '#e03131'; }
             const gainEl = document.querySelector('#cfYearGain');
-            if(gainEl){ gainEl.innerText = cfFmt(sumGain); gainEl.style.color = sumGain >= 0 ? '#f7cf8f' : '#ffb3a7'; }
+            if(gainEl){ gainEl.innerText = cfFmt(sumGain); gainEl.style.color = sumGain >= 0 ? '#e03131' : '#00a05c'; }
             const vsEl = document.querySelector('#cfYearVsDetail');
             if(vsEl) vsEl.style.display = 'none';
             // 年度总和卡
@@ -26532,12 +26591,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const currentYear = String(new Date().getFullYear());
             const dataYears = Object.keys(root.years || {}).sort();
             const allYears = Array.from(new Set([currentYear].concat(dataYears))).sort().reverse();
-            if(!cashstatBillYear || !root.years[cashstatBillYear]){
-                cashstatBillYear = root.years[currentYear] ? currentYear : (dataYears.slice().reverse()[0] || currentYear);
+            const visibleYears = allYears.slice(0, 3);
+            if(!cashstatBillYear || !root.years[cashstatBillYear] || visibleYears.indexOf(String(cashstatBillYear)) < 0){
+                cashstatBillYear = root.years[currentYear] ? currentYear : (visibleYears.find(function(y){ return !!root.years[y]; }) || visibleYears[0] || currentYear);
             }
             const yearsEl = document.getElementById('cashstatAnnualYears');
             if(yearsEl){
-                yearsEl.innerHTML = allYears.map(function(y){
+                yearsEl.innerHTML = visibleYears.map(function(y){
                     return '<button type="button" class="cashstat-year' + (String(y) === String(cashstatBillYear) ? ' is-on' : '') + '" onclick="setCashstatBillYear(\'' + y + '\')">' + y + '</button>';
                 }).join('');
             }
@@ -26842,7 +26902,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const tagEl = document.querySelector('#fwdDivTag');
             if(tagEl) tagEl.innerText = d.items.length ? (d.items.length + ' 笔 · 未来 12 个月') : '暂无已公布或可推算的分红';
             const splitEl = document.querySelector('#fwdDivSplit');
-            if(splitEl) splitEl.innerText = d.items.length ? ('已公布 ' + fmtMoney(d.published) + ' · 预估 ' + fmtMoney(d.estimate) + (d.undated > 0 ? '（待定 ' + fmtMoney(d.undated) + '）' : '')) : '暂无持仓或未获取分红方案';
+            if(splitEl){
+                if(d.items.length){
+                    splitEl.innerHTML = '<span style="color:#9a8b76">已公布</span> '
+                        + '<span class="font-semibold" style="color:#742034">' + fmtMoney(d.published) + '</span>'
+                        + '<span style="color:#9a8b76"> · 预估</span> '
+                        + '<span class="font-semibold" style="color:#742034">' + fmtMoney(d.estimate) + '</span>'
+                        + (d.undated > 0 ? '<span style="color:#9a8b76">（待定</span> '
+                            + '<span class="font-semibold" style="color:#742034">' + fmtMoney(d.undated) + '</span>'
+                            + '<span style="color:#9a8b76">）</span>' : '');
+                } else {
+                    splitEl.innerText = '暂无持仓或未获取分红方案';
+                }
+            }
             const nextEl = document.querySelector('#fwdDivNext');
             if(nextEl){
                 const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -26858,7 +26930,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         + '<span class="text-gray-400">下一笔</span>'
                         + '<span class="text-gray-700 font-medium">' + nextItem.date.substring(5) + ' · ' + nextItem.name + '</span>'
                         + '<span class="ml-auto text-gray-400">' + (days === 0 ? '今天' : days + ' 天后') + '</span>'
-                        + '<span class="font-semibold" style="color:#a9642a">' + fmtMoney(nextItem.amt) + '</span>';
+                        + '<span class="font-semibold" style="color:#742034">' + fmtMoney(nextItem.amt) + '</span>';
                 } else {
                     nextEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#d8c8ae"></span><span class="text-gray-400">暂无已排期分红</span>';
                 }
@@ -26913,14 +26985,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let html = '<div class="px-4 py-2 text-[10px] text-gray-400 bg-gray-50/60 flex"><span>明细（已公布优先）</span><span class="ml-auto">预计金额</span></div>';
             d.items.forEach(function(it){
                 const isEst = it.src !== 'published';
-                const color = isEst ? '#a9865f' : '#2f9e73';
+                const tone = isEst ? '#a9865f' : '#2f9e73';
                 html += '<div class="px-4 py-2.5 flex items-center gap-2.5">'
                     + '<div class="w-[52px] flex-shrink-0 text-[10px] text-gray-500 tabular-nums">' + (it.date ? it.date.substring(5) : '待定') + '</div>'
                     + '<div class="min-w-0 flex-1">'
                     + '<div class="text-[12px] text-gray-800 truncate">' + it.name + (it.market === 'HK' ? '<span class="text-[9px] text-blue-500 ml-1">港</span>' : '') + '</div>'
-                    + '<div class="text-[9px] text-gray-400 tabular-nums">每股 ' + (Number(it.per) || 0).toFixed(3) + ' · <span style="color:' + color + '">' + (isEst ? '预估' : '已公布') + '</span></div>'
+                    + '<div class="text-[9px] text-gray-400 tabular-nums">每股 ' + (Number(it.per) || 0).toFixed(3) + ' · <span style="color:' + tone + '">' + (isEst ? '预估' : '已公布') + '</span></div>'
                     + '</div>'
-                    + '<div class="text-[12px] font-semibold tabular-nums flex-shrink-0" style="color:' + color + '">' + fmtMoney(it.amt) + '</div>'
+                    + '<div class="text-[12px] font-semibold tabular-nums flex-shrink-0" style="color:#742034">' + fmtMoney(it.amt) + '</div>'
                     + '</div>';
             });
             listEl.innerHTML = html;
@@ -27371,8 +27443,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(todaySnap.hasValidDayPct){
                 const hasPct = todaySnap.dayPnlPct != null && !isNaN(Number(todaySnap.dayPnlPct));
                 const dayPnlPct = hasPct ? Number(todaySnap.dayPnlPct) : null;
-                const amtCls = todaySnap.totalDayPnl > 0.01 ? 'text-[#e03131]' : (todaySnap.totalDayPnl < -0.01 ? 'text-[#00a05c]' : 'text-white');
-                const pctCls = !hasPct ? 'text-[#cfc0a6]/60' : (dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-[#cfc0a6]'));
+                const amtCls = todaySnap.totalDayPnl > 0.01 ? 'text-[#e03131]' : (todaySnap.totalDayPnl < -0.01 ? 'text-[#00a05c]' : 'text-[#1f2937]');
+                const pctCls = !hasPct ? 'text-[#9a8b76]' : (dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-[#1f2937]'));
                 numTween(dayPnlAmtEl, todaySnap.totalDayPnl, fmtPnlNum);
                 dayPnlAmtEl.className = 'text-[30px] font-bold tabular-nums leading-none ' + amtCls;
                 const pctText = hasPct ? ((dayPnlPct > 0.005 ? '+' : '') + dayPnlPct.toFixed(2) + '%') : '--';
@@ -27380,9 +27452,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 dayPnlPctEl.className = 'text-[13px] font-semibold tabular-nums leading-none mb-0.5 ' + pctCls;
             } else {
                 dayPnlAmtEl.innerText = '--';
-                dayPnlAmtEl.className = 'text-[30px] font-bold tabular-nums leading-none text-[#cfc0a6]/60';
+                dayPnlAmtEl.className = 'text-[30px] font-bold tabular-nums leading-none text-[#9a8b76]';
                 dayPnlPctEl.innerText = '--';
-                dayPnlPctEl.className = 'text-[13px] font-semibold tabular-nums leading-none mb-0.5 text-[#cfc0a6]/60';
+                dayPnlPctEl.className = 'text-[13px] font-semibold tabular-nums leading-none mb-0.5 text-[#9a8b76]';
             }
             renderStatsTodayOverview(todaySnap);
 
@@ -27399,13 +27471,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const setTone = function(id, cls){
                 const node = el(id);
                 if(!node) return;
-                node.classList.remove('text-[#e03131]', 'text-[#00a05c]', 'text-white', 'text-[#f7cf8f]', 'text-[#cfc0a6]', 'text-[#cfc0a6]/60', 'text-gray-400', 'text-gray-500');
+                node.classList.remove('text-[#e03131]', 'text-[#00a05c]', 'text-[#1f2937]', 'text-white', 'text-[#f7cf8f]', 'text-[#cfc0a6]', 'text-[#cfc0a6]/60', 'text-gray-400', 'text-gray-500', 'text-[#9a8b76]');
                 if(cls) node.classList.add(cls);
             };
             const pnlTone = function(v){
                 if(v > 0.005) return 'text-[#e03131]';
                 if(v < -0.005) return 'text-[#00a05c]';
-                return 'text-white';
+                return 'text-[#1f2937]';
             };
             const hasData = !!snap.hasValidDayPct;
             const listEl = el('statsTodayContribList');
@@ -27413,13 +27485,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             if(!hasData){
                 setText('statsTodayMvDelta', '--');
-                setTone('statsTodayMvDelta', 'text-[#cfc0a6]/60');
+                setTone('statsTodayMvDelta', 'text-[#9a8b76]');
                 setText('statsTodayMvSub', '今日市值 --');
                 setText('statsTodayTradeFlow', '--');
                 setText('statsTodayTradeFlowSub', '卖出 − 买入');
                 setText('statsTodayPrevMv', '--');
                 setText('statsTodayT', '--');
-                setTone('statsTodayT', 'text-[#cfc0a6]/60');
+                setTone('statsTodayT', 'text-[#9a8b76]');
                 setText('statsTodayTSub', '今日无做T');
                 setText('statsTodayNetLabel', '净买入/净卖出');
                 setText('statsTodayNet', '--');
@@ -27455,7 +27527,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 setText('statsTodayTSub', '做T ' + (Number(snap.tMatchCount) || 0) + ' 笔');
             } else {
                 setText('statsTodayT', '--');
-                setTone('statsTodayT', 'text-[#cfc0a6]/60');
+                setTone('statsTodayT', 'text-[#9a8b76]');
                 setText('statsTodayTSub', '今日无做T');
             }
 
@@ -27642,11 +27714,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return;
             }
             function renderCol(title, cls, rows, total, count, isUp){
+                const panelCls = isUp ? ' is-up' : ' is-down';
                 const titleHtml = '<div class="divcmp-rank-title"><span class="' + cls + '"><i class="fa ' + (isUp ? 'fa-arrow-up' : 'fa-arrow-down') + '"></i> ' + title + '</span><em>共 ' + (count || 0) + ' 只</em></div>';
                 if(!rows.length){
-                    return '<div class="divcmp-rank-col">' + titleHtml + '<div class="divcmp-rank-empty">暂无' + (isUp ? '明显增量' : '明显拖累') + '</div></div>';
+                    return '<div class="divcmp-rank-col' + panelCls + '">' + titleHtml + '<div class="divcmp-rank-empty">暂无' + (isUp ? '明显增量' : '明显拖累') + '</div></div>';
                 }
-                return '<div class="divcmp-rank-col">' + titleHtml + rows.map(function(r, i){
+                return '<div class="divcmp-rank-col' + panelCls + '">' + titleHtml + rows.map(function(r, i){
                     const share = total > 0 ? Math.min(100, Math.abs(r.impact) / total * 100) : 0;
                     const bar = Math.min(100, Math.max(3, share));
                     const green = !isUp;
@@ -29609,20 +29682,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const totalCost = Number(sum.totalCost) || 0;
             const totalPnl = Number(sum.totalPnl) || 0;
             const cumDiv = Number(sum.totalDivReceived) || 0;
-            const thisYearDiv = Number(sum.totalReceived) || 0;
-            const costRet = totalCost > 0 ? (totalPnl / totalCost * 100) : null;
+            const pnlRet = calcPnlRet();
+            const totalProfit = Number(pnlRet.pnl) || 0;
+            const totalProfitRet = (pnlRet.ret != null && isFinite(Number(pnlRet.ret))) ? Number(pnlRet.ret) : null;
+            const yearGain = (sum.yearTotalGain != null && isFinite(Number(sum.yearTotalGain))) ? Number(sum.yearTotalGain) : null;
+            const yearRate = (sum.yearReturnRate != null && isFinite(Number(sum.yearReturnRate))) ? Number(sum.yearReturnRate) : null;
             const cagr = calcMineCagr();
             const annual = (cagr != null && isFinite(Number(cagr))) ? Number(cagr) : (sum.annualReturnRate != null ? Number(sum.annualReturnRate) : null);
 
             _anSet('analysisTotalAsset', fmtMoney(total));
-            _anSet('analysisAssetDelta', '累计盈亏 ' + _anSignedMoney(totalPnl));
-            _anSet('analysisAssetDeltaPct', costRet != null ? '成本收益率 ' + _anSignedPct(costRet) : '成本口径 --');
-            _anSet('analysisCumPnl', _anSignedMoney(totalPnl));
-            _anSet('analysisYearDiv', fmtMoney(thisYearDiv));
-            _anSet('analysisYearReturn', annual != null ? _anSignedPct(annual) : '--');
-
-            const retEl = document.getElementById('analysisYearReturn');
-            if(retEl) retEl.style.color = annual == null ? '#c9b99f' : (annual >= 0 ? '#ffb3aa' : '#8fe0b0');
+            _anSet('analysisAssetDeltaValue', _anSignedMoney(totalPnl));
+            _anSet('analysisAssetDeltaPct', annual != null ? _anSignedPct(annual) : '--');
+            _anSet('analysisCumPnl', _anSignedMoney(totalProfit));
+            _anSet('analysisCumPnlPct', totalProfitRet != null ? '总收益率 ' + _anSignedPct(totalProfitRet) : '总收益率 --');
+            _anSet('analysisYearDiv', yearGain != null ? _anSignedMoney(yearGain) : '--');
+            _anSet('analysisYearDivPct', yearRate != null ? '今年收益率 ' + _anSignedPct(yearRate) : '今年收益率 --');
+            _anSet('analysisYearReturn', fmtMoney(pnlRet.invested));
+            const adValEl = document.getElementById('analysisAssetDeltaValue');
+            if(adValEl) adValEl.style.color = totalPnl > 0.005 ? '#e03131' : (totalPnl < -0.005 ? '#00a05c' : '#742034');
+            const adPctEl = document.getElementById('analysisAssetDeltaPct');
+            if(adPctEl) adPctEl.style.color = annual == null ? '#9a8b76' : (annual > 0 ? '#e03131' : (annual < 0 ? '#00a05c' : '#1f2937'));
+            const cumPnlEl = document.getElementById('analysisCumPnl');
+            if(cumPnlEl) cumPnlEl.style.color = totalProfit > 0.005 ? '#e03131' : (totalProfit < -0.005 ? '#00a05c' : '#1f2937');
+            const cumPctEl = document.getElementById('analysisCumPnlPct');
+            if(cumPctEl) cumPctEl.style.color = totalProfitRet == null ? '#9a8b76' : (totalProfitRet > 0 ? '#e03131' : (totalProfitRet < 0 ? '#00a05c' : '#9a8b76'));
+            const yearPnlEl = document.getElementById('analysisYearDiv');
+            if(yearPnlEl) yearPnlEl.style.color = yearGain == null ? '#9a8b76' : (yearGain > 0.005 ? '#e03131' : (yearGain < -0.005 ? '#00a05c' : '#1f2937'));
+            const yearPctEl = document.getElementById('analysisYearDivPct');
+            if(yearPctEl) yearPctEl.style.color = yearRate == null ? '#9a8b76' : (yearRate > 0 ? '#e03131' : (yearRate < 0 ? '#00a05c' : '#9a8b76'));
 
             const iy = calcInvestYears();
             if(iy != null){
@@ -29637,10 +29724,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const ring = document.getElementById('analysisDivRecoverRing');
             if(ring){
                 if(rec == null || !isFinite(rec)){
-                    ring.style.background = 'conic-gradient(from -90deg,#9a7b45 0deg,#9a7b45 0deg,rgba(255,255,255,.10) 0deg)';
+                    ring.style.background = 'conic-gradient(from -90deg,#8f2437 0deg,#8f2437 0deg,rgba(143,36,55,.12) 0deg)';
                 } else {
                     const deg = Math.max(0, Math.min(100, rec)) * 3.6;
-                    ring.style.background = 'conic-gradient(from -90deg,#a9642a 0deg,#f7cf8f ' + deg + 'deg,rgba(255,255,255,.10) ' + deg + 'deg)';
+                    ring.style.background = 'conic-gradient(from -90deg,#8f2437 0deg,#e3b46b ' + deg + 'deg,rgba(143,36,55,.12) ' + deg + 'deg)';
                 }
             }
             _anSet('analysisDivRecoverPct', rec != null ? rec.toFixed(1) + '%' : '--');
@@ -30832,22 +30919,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const totalEl = document.querySelector('#msAchTotal');
             if(totalEl) totalEl.innerText = defs.length;
             box.innerHTML = defs.map(function(a){
-                const iconBg = a.done ? 'linear-gradient(135deg,#f7d673,#c9911d)' : 'rgba(240,240,240,0.9)';
+                const iconBg = a.done ? 'linear-gradient(135deg,#8f2437,#5b1828)' : 'rgba(240,240,240,0.9)';
                 const iconCls = a.done ? 'text-white' : 'text-gray-300';
-                const borderCls = a.done ? 'border-[#e9cf9a]' : 'border-gray-100';
-                const bgCls = a.done ? 'background:linear-gradient(135deg,#fdf9ef,#fbf1dd)' : 'background:#fafafa';
-                return '<div class="rounded-xl px-3 py-2.5 border ' + borderCls + '" style="' + bgCls + ';box-shadow:0 1px 4px rgba(120,90,40,.05)">'
+                const borderCls = a.done ? 'border-[#e8cdd4]' : 'border-gray-100';
+                const bgCls = a.done ? 'background:linear-gradient(135deg,#fffaf8,#f8ecef)' : 'background:#fafafa';
+                return '<div class="rounded-xl px-3 py-2.5 border ' + borderCls + '" style="' + bgCls + ';box-shadow:0 1px 4px rgba(116,32,52,.05)">'
                     + '<div class="flex items-center gap-1.5 mb-1">'
                     + '<div class="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] flex-shrink-0" style="background:' + iconBg + '"><i class="fa ' + a.icon + ' ' + iconCls + '"></i></div>'
-                    + '<span class="text-[11px] font-semibold text-gray-700 truncate">' + a.name + '</span>'
-                    + (a.done ? '<span class="ml-auto w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white text-[9px] flex items-center justify-center flex-shrink-0"><i class="fa fa-check"></i></span>'
+                    + '<span class="text-[11px] font-semibold truncate ' + (a.done ? 'text-[#5b1828]' : 'text-gray-700') + '">' + a.name + '</span>'
+                    + (a.done ? '<span class="ml-auto w-4 h-4 rounded-full text-white text-[9px] flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#8f2437,#5b1828)"><i class="fa fa-check"></i></span>'
                         : '<span class="ml-auto text-[9px] text-gray-300 whitespace-nowrap flex-shrink-0">未达成</span>')
                     + '</div>'
                     + '<div class="text-[9.5px] text-gray-400 leading-snug mb-1.5">' + a.desc + '</div>'
                     + '<div class="flex items-center gap-1.5">'
-                    + '<div class="flex-1 h-1 rounded-full overflow-hidden" style="background:' + (a.done ? 'rgba(201,145,29,.18)' : '#ececec') + '">'
-                    + '<div class="h-full rounded-full" style="width:' + a.prog.toFixed(0) + '%;background:' + (a.done ? 'linear-gradient(90deg,#f6c453,#a9642a)' : '#d8d8d8') + '"></div></div>'
-                    + '<span class="text-[8.5px] tabular-nums ' + (a.done ? 'text-[#a9642a] font-semibold' : 'text-gray-300') + ' whitespace-nowrap">' + a.curTxt + '</span>'
+                    + '<div class="flex-1 h-1 rounded-full overflow-hidden" style="background:' + (a.done ? 'rgba(143,36,55,.16)' : '#ececec') + '">'
+                    + '<div class="h-full rounded-full" style="width:' + a.prog.toFixed(0) + '%;background:' + (a.done ? 'linear-gradient(90deg,#a82d43,#742034)' : '#d8d8d8') + '"></div></div>'
+                    + '<span class="text-[8.5px] tabular-nums ' + (a.done ? 'text-[#742034] font-semibold' : 'text-gray-300') + ' whitespace-nowrap">' + a.curTxt + '</span>'
                     + '</div></div>';
             }).join('');
         }

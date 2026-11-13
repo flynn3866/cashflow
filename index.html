@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261113.298';</script>
+    <script>window.APP_VERSION = '20261113.302';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -4866,6 +4866,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             #sdSimEditorModal .sds-real-strip-value{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
             #sdSimEditorModal .sds-real-strip-dot{width:1px;height:11px;background:rgba(255,229,187,.35)}
             #sdSimEditorModal .sds-field-label{font-size:11px;font-weight:650;color:#5c473b;margin:0 0 5px}
+            #sdSimEditorModal .sds-sign-switch{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:999px;border:1px solid #e8cdd4;background:#f8ecef;flex-shrink:0;min-height:30px;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+            #sdSimEditorModal .sds-sign-btn{border:0;border-radius:999px;min-width:36px;min-height:24px;padding:0 8px;background:transparent;color:#a06b76;font-size:10px;font-weight:650;line-height:1.2;cursor:pointer;transition:background .18s ease,color .18s ease,box-shadow .18s ease;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+            #sdSimEditorModal .sds-sign-btn:hover{background:#efd8df;color:#742034}
+            #sdSimEditorModal .sds-sign-btn.is-on{background:linear-gradient(135deg,#8f2437,#742034);color:#fff7eb;box-shadow:0 1px 4px rgba(116,32,52,.18)}
+            #sdSimEditorModal .sds-sign-btn.is-on:hover{background:linear-gradient(135deg,#a82d43,#8f2437);color:#fff7eb}
+            #sdSimEditorModal .sds-sign-btn:focus-visible{outline:2px solid #c99a4b;outline-offset:2px}
+            #sdSimEditorModal .sds-sign-prefix{display:none;flex:0 0 auto;font-size:18px;font-weight:800;line-height:1;color:#742034;margin-right:1px}
+            #sdSimEditorModal .sds-sign-prefix.is-on{display:inline-block}
             #sdSimEditorModal .sds-field{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:12px;border:1px solid #e5cfb5;background:#fffefb;transition:border-color .2s,box-shadow .2s}
             #sdSimEditorModal .sds-field:focus-within{border-color:#c99a4b;box-shadow:0 0 0 3px rgba(201,154,75,.11)}
             #sdSimEditorModal .sds-input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#3e2d26;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -6100,12 +6108,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <div>
-                <div class="sds-field-label">模拟成本价 <span id="sdSimCostUnitLabel" class="text-[9px] text-[#a08f81] font-normal">（每股）</span></div>
+                <div class="sds-field-label flex items-center justify-between gap-2">
+                    <span>模拟成本价 <span id="sdSimCostUnitLabel" class="text-[9px] text-[#a08f81] font-normal">（每股）</span></span>
+                    <span class="sds-sign-switch" role="group" aria-label="模拟成本价正负">
+                        <button id="sdSimSignPos" type="button" class="sds-sign-btn is-on" onclick="sdSimSetCostSign(1)">正</button>
+                        <button id="sdSimSignNeg" type="button" class="sds-sign-btn" onclick="sdSimSetCostSign(-1)">负</button>
+                    </span>
+                </div>
                 <div class="sds-field">
-                    <input id="sdSimCostInput" class="sds-input" type="number" inputmode="decimal" min="0" step="0.0001" placeholder="例如 5.20" aria-label="模拟成本价" oninput="sdSimUpdatePreview()">
+                    <span id="sdSimCostSignText" class="sds-sign-prefix" aria-hidden="true"></span>
+                    <input id="sdSimCostInput" class="sds-input" type="number" inputmode="decimal" step="0.0001" placeholder="例如 5.20" aria-label="模拟成本价" oninput="sdSimOnCostInput()">
                     <span id="sdSimCostUnit" class="sds-unit">元</span>
                 </div>
-                <div id="sdSimCostHelp" class="sds-field-help">模拟成本价只用于计算这份模拟记录，不影响真实成本。</div>
+                <div id="sdSimCostHelp" class="sds-field-help">模拟成本价可为负数或 0，只用于计算这份模拟记录，不影响真实成本。</div>
             </div>
 
             <div class="sds-preview">
@@ -17035,6 +17050,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const SD_SIM_KEY = 'dividendSimHoldingsV1';
         let sdSimData = null;
         let sdSimPrevPageOverflow = '';
+        let sdSimCostSign = 1;
 
         function sdSimLoad(){
             if(sdSimData) return sdSimData;
@@ -17055,7 +17071,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(!v || typeof v !== 'object') return;
                 const n = Number(v.count);
                 const c = Number(v.costPrice);
-                if(!isFinite(n) || n <= 0 || !isFinite(c) || c < 0) return;
+                if(!isFinite(n) || n <= 0 || !isFinite(c)) return;
                 clean[k] = {
                     count: Math.max(1, Math.round(n)),
                     costPrice: c,
@@ -17127,7 +17143,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     || (exDate && sim.processedDivDates.indexOf(exDate) >= 0)) return;
                 const perShare = per10 / 10;
                 const before = Number(sim.costPrice) || 0;
-                sim.costPrice = Math.max(0, Number((before - perShare).toFixed(4)));
+                sim.costPrice = Number((before - perShare).toFixed(4));
                 sim.processedDivDates.push(divKey);
                 changed = true;
             });
@@ -17146,7 +17162,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function sdSimMoney(v, prefix){
             if(v == null || !isFinite(Number(v))) return '--';
-            return (prefix || '¥') + fmtMoney(Math.abs(Number(v)));
+            const n = Number(v);
+            return (n < 0 ? '-' : '') + (prefix || '¥') + fmtMoney(Math.abs(n));
+        }
+
+        function sdSimPrice(v, prefix){
+            const n = Number(v);
+            if(n == null || !isFinite(n)) return '--';
+            return (n < 0 ? '-' : '') + (prefix || '¥') + sdSimFmtPrice(Math.abs(n));
         }
 
         function sdSimSignedMoney(v){
@@ -17167,8 +17190,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function sdSimFmtPrice(v){
             const n = Number(v);
-            if(!isFinite(n) || n < 0) return '--';
-            return Math.abs(n) >= 1 ? n.toFixed(2) : n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+            if(!isFinite(n)) return '--';
+            const abs = Math.abs(n);
+            return (n < 0 ? '-' : '') + (abs >= 1 ? abs.toFixed(2) : abs.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''));
         }
 
         function sdSimState(stock, simOverride){
@@ -17181,7 +17205,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pricePerCny = realAvailable ? realMv / realCount : 0;
             const sim = simOverride || (sdSimLoad()[sdSimKeyOf(stock)] || null);
             const simCount = sim ? Math.max(0, Math.round(Number(sim.count) || 0)) : 0;
-            const simCostPrice = sim ? Math.max(0, Number(sim.costPrice) || 0) : 0;
+            const simCostPrice = sim ? (Number(sim.costPrice) || 0) : 0;
             const simMv = (sim && simCount > 0 && pricePerCny > 0) ? simCount * pricePerCny : null;
             const simCostTotal = sim ? simCount * simCostPrice : null;
             const fx = market === 'HK' ? (Number(hkFxRate) || 1) : 1;
@@ -17233,7 +17257,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function sdSimRowsHtml(st){
             const prefix = st.currency;
             return '<div class="sds-row"><span class="sds-row-label">模拟持股</span><span class="sds-row-val">' + (st.sim ? sdSimFmtCount(st.simCount) + ' 股' : '--') + '</span></div>'
-                + '<div class="sds-row"><span class="sds-row-label">模拟成本价</span><span class="sds-row-val">' + (st.sim ? prefix + sdSimFmtPrice(st.simCostPrice) : '--') + '</span></div>'
+                + '<div class="sds-row"><span class="sds-row-label">模拟成本价</span><span class="sds-row-val">' + (st.sim ? sdSimPrice(st.simCostPrice, prefix) : '--') + '</span></div>'
                 + '<div class="sds-row"><span class="sds-row-label">成本总额</span><span class="sds-row-val">' + (st.sim ? sdSimMoney(st.simCostTotal, prefix) : '--') + '</span></div>';
         }
 
@@ -17271,7 +17295,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 : '按当前价估算 · 仅作模拟对照';
             const detailHtml = '<div class="sds-detail-grid">'
                 + '<div class="sds-detail-item"><span class="sds-detail-label">模拟持股</span><span class="sds-detail-val">' + (st.sim ? sdSimFmtCount(st.simCount) + ' 股' : '--') + '</span></div>'
-                + '<div class="sds-detail-item"><span class="sds-detail-label">模拟成本价</span><span class="sds-detail-val">' + (st.sim ? st.currency + sdSimFmtPrice(st.simCostPrice) : '--') + '</span></div>'
+                + '<div class="sds-detail-item"><span class="sds-detail-label">模拟成本价</span><span class="sds-detail-val">' + (st.sim ? sdSimPrice(st.simCostPrice, st.currency) : '--') + '</span></div>'
                 + '<div class="sds-detail-item"><span class="sds-detail-label">成本总额</span><span class="sds-detail-val">' + (st.sim ? sdSimMoney(st.simCostTotal, st.currency) : '--') + '</span></div>'
                 + '</div>';
             if(!st.sim){
@@ -17320,11 +17344,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             document.querySelector('#sdSimCostUnit').innerText = st.currencyName;
             document.querySelector('#sdSimCostHelp').innerText = st.market === 'HK'
-                ? '按每股港币填写；只用于计算这份模拟记录，不改变真实成本。'
-                : '按每股人民币填写；只改模拟记录，不改变真实成本；从保存日起，A股现金分红自动冲减模拟成本。';
+                ? '按每股港币填写，可为负数或 0；只用于计算这份模拟记录，不改变真实成本。'
+                : '按每股人民币填写，可为负数或 0；只改模拟记录，不改变真实成本；从保存日起，A股现金分红自动冲减模拟成本。';
             document.querySelector('#sdSimCountInput').value = sim ? String(sim.count) : '';
-            document.querySelector('#sdSimCostInput').value = sim ? String(sim.costPrice) : '';
-            document.querySelector('#sdSimClearBtn').classList.toggle('hidden', !sim);
+            sdSimCostSign = (sim && Number(sim.costPrice) < 0) ? -1 : 1;
+            document.querySelector('#sdSimCostInput').value = sim ? String(Math.abs(Number(sim.costPrice))) : '';
+            sdSimSyncCostSignUI();
             document.querySelector('#sdSimError').innerText = '';
             if(page){
                 sdSimPrevPageOverflow = page.style.overflow || '';
@@ -17354,18 +17379,72 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(e && e.target === document.querySelector('#sdSimEditorModal')) closeSimHoldEditor();
         }
 
+        function sdSimSyncCostSignUI(){
+            const pos = document.querySelector('#sdSimSignPos');
+            const neg = document.querySelector('#sdSimSignNeg');
+            const signText = document.querySelector('#sdSimCostSignText');
+            const isNeg = sdSimCostSign < 0;
+            if(pos) pos.classList.toggle('is-on', !isNeg);
+            if(neg) neg.classList.toggle('is-on', isNeg);
+            if(pos) pos.setAttribute('aria-pressed', String(!isNeg));
+            if(neg) neg.setAttribute('aria-pressed', String(isNeg));
+            if(signText){
+                signText.innerText = isNeg ? '−' : '';
+                signText.classList.toggle('is-on', isNeg);
+            }
+        }
+
+        function sdSimOnCostInput(){
+            const input = document.querySelector('#sdSimCostInput');
+            if(input){
+                const raw = String(input.value || '').trim();
+                if(raw.charAt(0) === '-' || raw.charAt(0) === '−'){
+                    sdSimCostSign = -1;
+                    input.value = raw.slice(1).trim();
+                }else if(raw.charAt(0) === '+'){
+                    sdSimCostSign = 1;
+                    input.value = raw.slice(1).trim();
+                }
+            }
+            sdSimSyncCostSignUI();
+            sdSimUpdatePreview();
+        }
+
+        function sdSimSetCostSign(sign){
+            sdSimCostSign = sign < 0 ? -1 : 1;
+            const input = document.querySelector('#sdSimCostInput');
+            if(input){
+                const raw = String(input.value || '').trim();
+                if(raw.charAt(0) === '-' || raw.charAt(0) === '−' || raw.charAt(0) === '+'){
+                    input.value = raw.slice(1).trim();
+                }
+            }
+            sdSimSyncCostSignUI();
+            sdSimUpdatePreview();
+            if(input){
+                try{
+                    input.focus();
+                    const end = input.value.length;
+                    input.setSelectionRange(end, end);
+                }catch(e){}
+            }
+        }
+
         function sdSimReadDraft(){
             const countRaw = String((document.querySelector('#sdSimCountInput') || {}).value || '').trim();
             const costRaw = String((document.querySelector('#sdSimCostInput') || {}).value || '').trim();
             const countNum = Number(countRaw);
-            const costNum = Number(costRaw);
+            const costParsed = Number(costRaw);
+            const costNum = isFinite(costParsed)
+                ? (sdSimCostSign < 0 ? -Math.abs(costParsed) : Math.abs(costParsed))
+                : NaN;
             return {
                 countRaw: countRaw,
                 costRaw: costRaw,
                 countNum: countNum,
                 costNum: costNum,
                 countOk: countRaw !== '' && isFinite(countNum) && countNum > 0 && Math.abs(countNum - Math.round(countNum)) < 1e-9,
-                costOk: costRaw !== '' && isFinite(costNum) && costNum >= 0
+                costOk: costRaw !== '' && isFinite(costNum)
             };
         }
 
@@ -17419,7 +17498,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return;
             }
             if(!d.costOk){
-                if(err) err.innerText = '请输入有效的模拟成本价（可为 0）。';
+                if(err) err.innerText = '请输入有效的模拟成本价（可为负数或 0）。';
                 try{ document.querySelector('#sdSimCostInput').focus(); }catch(e){}
                 return;
             }

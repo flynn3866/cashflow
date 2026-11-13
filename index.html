@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261113.264';</script>
+    <script>window.APP_VERSION = '20261113.269';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -735,6 +735,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .divdd-sum-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,#7c2638,#c99a4b 45%,#f2d39a 58%,#a82d43); }
         .divdd-sum-grid{ display:grid; grid-template-columns:1fr 1fr .94fr; gap:0; align-items:stretch; }
         .divdd-sum-cell{ min-width:0; padding-right:10px; border-right:1px solid #f1e5d4; }
+        .divdd-sum-cell + .divdd-sum-cell{ padding-left:10px; }
         .divdd-sum-progress{ min-width:0; padding-left:10px; }
         .divdd-sum-label{ display:flex; align-items:center; gap:4px; font-size:8.5px; color:#9d876d; line-height:1.3; white-space:nowrap; }
         .divdd-dot{ width:5px; height:5px; border-radius:50%; display:inline-block; flex:0 0 auto; }
@@ -779,7 +780,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .divdd-contrib-empty{ padding:16px 14px 14px; text-align:center; font-size:9px; color:#b2a08d; }
         @media (max-width:420px){
             .divdd-sum-grid{ grid-template-columns:1fr 1fr; row-gap:9px; }
-            .divdd-sum-cell:nth-child(2){ border-right:0; padding-right:0; }
+            .divdd-sum-cell:nth-child(2){ border-right:0; padding-right:0; padding-left:0; }
             .divdd-sum-progress{ grid-column:1 / -1; padding-left:0; padding-top:8px; border-top:1px solid #f1e5d4; }
             .divdd-sum-value{ font-size:16px; }
             .divdd-chart{ height:170px; }
@@ -1728,7 +1729,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 主图：收益率 / 资产轨迹 / 逐年总览 -->
+        <!-- 主图：收益率 / 资产轨迹 / 年度收益 -->
         <div class="relative bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="h-[3px]" style="background:linear-gradient(90deg,#f3dfbd,#d9b27a 38%,#8f5b2a 72%,#f3dfbd);"></div>
             <div class="px-5 pt-3.5 pb-3 border-b border-[#f4ecdd]">
@@ -1745,7 +1746,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="mt-3 grid grid-cols-3 gap-1 rounded-[12px] p-1 border border-[#efe4d2]" style="background:#f6eee0;">
                     <button id="assetTabReturn" type="button" onclick="setAssetTrackMode('return')" aria-selected="true" class="py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#7a4a20] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors">收益率</button>
                     <button id="assetTabDaily" type="button" onclick="setAssetTrackMode('daily')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">资产轨迹</button>
-                    <button id="assetTabYear" type="button" onclick="setAssetTrackMode('year')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">逐年总览</button>
+                    <button id="assetTabYear" type="button" onclick="setAssetTrackMode('year')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">年度收益</button>
                 </div>
             </div>
 
@@ -4484,357 +4485,569 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
-    <!-- 年度投资报告页面（年度账单式沉浸报告） -->
-    <div id="pageAnnualReport" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
-            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
-            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
-            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
+    <!-- 年度投资报告页面：沉浸式年度手记 -->
+    <div id="pageAnnualReport" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10 ar-page">
+        <style>
+            #pageAnnualReport{
+                background:linear-gradient(180deg,#f7f0e7 0%,#fbf7f1 24%,#fffdfa 100%);
+                color:#2d211c;
+            }
+            #pageAnnualReport .ar-sticky{
+                position:sticky;top:0;z-index:40;
+                background:rgba(255,253,249,.94);
+                border:1px solid rgba(116,32,52,.12);
+                border-radius:16px;
+                box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 28px -24px rgba(45,33,28,.55);
+                backdrop-filter:blur(14px);
+                margin-bottom:16px;
+            }
+            #pageAnnualReport .ar-sticky-line{
+                position:absolute;left:0;right:0;top:0;height:2px;border-radius:16px 16px 0 0;
+                background:linear-gradient(90deg,transparent,#742034 18%,#c99a4b 50%,#742034 82%,transparent);
+            }
+            #pageAnnualReport .ar-kicker{
+                font-size:8px;letter-spacing:.18em;color:#9d8574;line-height:1.2;font-weight:600;
+            }
+            #pageAnnualReport .ar-sticky-title{
+                font-family:"Songti SC","Noto Serif SC",serif;
+                font-size:16px;font-weight:700;color:#2c211c;letter-spacing:.04em;line-height:1.2;
+            }
+            #pageAnnualReport .ar-year-pill{
+                font-size:10px;font-weight:600;color:#742034;background:#f8efe7;
+                border:1px solid #ead8c9;border-radius:999px;padding:5px 10px;white-space:nowrap;
+                font-variant-numeric:tabular-nums;
+            }
+            #pageAnnualReport .ar-hero{
+                position:relative;overflow:hidden;border-radius:26px;color:#fff;
+                background:
+                    radial-gradient(circle at 86% 10%,rgba(201,154,75,.24),transparent 32%),
+                    radial-gradient(circle at 8% 78%,rgba(168,45,67,.18),transparent 38%),
+                    linear-gradient(155deg,#211013 0%,#35131c 42%,#5b1a2b 100%);
+                border:1px solid rgba(227,180,107,.2);
+                box-shadow:0 22px 45px -35px rgba(45,16,25,.75);
+                margin-bottom:16px;
+            }
+            #pageAnnualReport .ar-hero:after{
+                content:"";position:absolute;inset:0;pointer-events:none;opacity:.055;
+                background-image:linear-gradient(rgba(255,255,255,.9) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.9) 1px,transparent 1px);
+                background-size:30px 30px;
+            }
+            #pageAnnualReport .ar-hero:before{
+                content:"";position:absolute;right:-40px;top:-70px;width:210px;height:210px;border-radius:50%;
+                border:1px solid rgba(227,180,107,.18);box-shadow:0 0 0 22px rgba(227,180,107,.025),0 0 0 52px rgba(227,180,107,.018);
+                pointer-events:none;
+            }
+            #pageAnnualReport .ar-seal{
+                width:40px;height:40px;border-radius:50%;flex:0 0 auto;
+                display:flex;align-items:center;justify-content:center;
+                border:1px solid rgba(227,180,107,.48);
+                background:rgba(255,255,255,.05);
+                color:#f2d19a;font-family:"Songti SC","Noto Serif SC",serif;font-size:18px;font-weight:700;
+                box-shadow:0 0 0 4px rgba(227,180,107,.06);
+            }
+            #pageAnnualReport .ar-brand{
+                font-family:"Songti SC","Noto Serif SC",serif;font-size:17px;font-weight:700;letter-spacing:.12em;color:#fff8ec;
+            }
+            #pageAnnualReport .ar-brand-sub{font-size:8px;letter-spacing:.14em;color:rgba(247,215,175,.58);margin-top:3px}
+            #pageAnnualReport .ar-year-btn{
+                width:27px;height:27px;border-radius:50%;border:1px solid rgba(227,180,107,.28);
+                color:#f0d2a2;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;
+                transition:transform .16s ease,background .16s ease;flex:0 0 auto;
+            }
+            #pageAnnualReport .ar-year-btn:active{transform:scale(.94);background:rgba(255,255,255,.1)}
+            #pageAnnualReport .ar-year-btn:disabled{opacity:.24}
+            #pageAnnualReport .ar-year-label{font-size:20px;font-weight:700;letter-spacing:.12em;color:#f7d6a0;line-height:1.15;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-year-cap{font-size:8px;letter-spacing:.2em;color:rgba(247,214,160,.48);line-height:1.2;text-align:center;margin-bottom:2px}
+            #pageAnnualReport .ar-hero-kicker{font-size:9px;letter-spacing:.22em;color:rgba(247,215,175,.56);margin-bottom:7px}
+            #pageAnnualReport .ar-hero-title{
+                font-family:"Songti SC","Noto Serif SC",serif;font-size:27px;font-weight:700;
+                line-height:1.28;letter-spacing:.08em;color:#fff9ef;text-wrap:balance;
+            }
+            #pageAnnualReport .ar-cover-label{font-size:9px;letter-spacing:.14em;color:rgba(247,215,175,.55);margin-bottom:4px}
+            #pageAnnualReport .ar-cover-asset{
+                font-size:42px;font-weight:750;line-height:1.05;letter-spacing:-.025em;color:#f2cb8a;
+                font-variant-numeric:tabular-nums;text-shadow:0 5px 22px rgba(201,154,75,.12);
+            }
+            #pageAnnualReport .ar-hero-metrics{
+                display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;
+                margin-top:20px;padding-top:15px;border-top:1px solid rgba(247,215,175,.16);
+            }
+            #pageAnnualReport .ar-hero-metric{padding:0 10px;min-width:0}
+            #pageAnnualReport .ar-hero-metric:first-child{padding-left:0}
+            #pageAnnualReport .ar-hero-metric:last-child{padding-right:0}
+            #pageAnnualReport .ar-hero-metric + .ar-hero-metric{border-left:1px solid rgba(247,215,175,.12)}
+            #pageAnnualReport .ar-hero-metric-label{font-size:9px;color:rgba(247,225,197,.5);margin-bottom:5px;white-space:nowrap}
+            #pageAnnualReport .ar-hero-metric-value{font-size:13px;font-weight:650;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAnnualReport .ar-cover-up{color:#ff5f5f!important}
+            #pageAnnualReport .ar-cover-down{color:#43d69b!important}
+            #pageAnnualReport .ar-cover-gold{color:#f3d29b!important}
+            #pageAnnualReport .ar-hero-foot{margin-top:17px;font-size:9px;letter-spacing:.16em;color:rgba(247,225,197,.4);display:flex;align-items:center;gap:9px}
+            #pageAnnualReport .ar-hero-foot:before,#pageAnnualReport .ar-hero-foot:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(227,180,107,.28))}
+            #pageAnnualReport .ar-hero-foot:after{background:linear-gradient(90deg,rgba(227,180,107,.28),transparent)}
+            #pageAnnualReport .ar-card{
+                background:#fffdfa;border:1px solid #eadfd2;border-radius:18px;overflow:hidden;
+                box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 12px 34px -30px rgba(58,35,22,.48);
+                margin-bottom:16px;
+            }
+            #pageAnnualReport .ar-head{
+                display:flex;align-items:center;gap:9px;padding:13px 18px;border-bottom:1px solid #f1e7db;
+            }
+            #pageAnnualReport .ar-bar{width:3px;height:15px;border-radius:99px;flex:0 0 auto;background:linear-gradient(180deg,#a82d43,#742034)}
+            #pageAnnualReport .ar-bar-gold{width:3px;height:15px;border-radius:99px;flex:0 0 auto;background:linear-gradient(180deg,#e3b46b,#b77b32)}
+            #pageAnnualReport .ar-title{font-size:15px;font-weight:650;color:#2b211c;letter-spacing:.01em}
+            #pageAnnualReport .ar-sub{margin-left:auto;font-size:9.5px;color:#9b8a7c;white-space:nowrap}
+            #pageAnnualReport .ar-body{padding:16px 18px}
+            #pageAnnualReport .ar-label{font-size:10px;color:#9b8a7c;line-height:1.4}
+            #pageAnnualReport .ar-note{font-size:9.5px;line-height:1.7;color:#a99a8c;padding:0 18px 15px}
+            #pageAnnualReport .ar-summary{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;padding:17px 18px 0}
+            #pageAnnualReport .ar-summary-main{padding:2px 0 0;min-width:0}
+            #pageAnnualReport .ar-summary-big{font-size:31px;font-weight:750;line-height:1.1;color:#8f2437;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+            #pageAnnualReport .ar-summary-next{font-size:10px;color:#9b8a7c;margin-top:7px}
+            #pageAnnualReport .ar-summary-list{display:flex;flex-direction:column;justify-content:center;gap:0;min-width:0}
+            #pageAnnualReport .ar-mini-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed #eee1d4;min-width:0}
+            #pageAnnualReport .ar-mini-row:first-child{padding-top:0}
+            #pageAnnualReport .ar-mini-row:last-child{border-bottom:0;padding-bottom:0}
+            #pageAnnualReport .ar-mini-label{font-size:9.5px;color:#8e7d70;white-space:nowrap}
+            #pageAnnualReport .ar-mini-value{font-size:12px;font-weight:650;color:#3a2d26;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAnnualReport .ar-score{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;padding:17px 18px 6px}
+            #pageAnnualReport .ar-return{font-size:42px;font-weight:750;line-height:1.03;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-score-side{display:grid;grid-template-columns:1fr;gap:7px}
+            #pageAnnualReport .ar-kpi{background:#faf5ee;border:1px solid #f0e4d7;border-radius:11px;padding:8px 10px;min-width:0}
+            #pageAnnualReport .ar-kpi-label{font-size:9px;color:#9b8a7c;margin-bottom:3px;white-space:nowrap}
+            #pageAnnualReport .ar-kpi-value{font-size:12.5px;font-weight:650;color:#3a2d26;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.25}
+            #pageAnnualReport .ar-vsline{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 6px;margin-top:8px;padding-top:8px;border-top:1px dashed #eee2d6;font-size:9.5px;color:#9b8a7c}
+            #pageAnnualReport .ar-vsline span:first-child{white-space:nowrap}
+            #pageAnnualReport .ar-vsline span:last-child{font-size:11.5px;font-weight:650;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-bench{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:10px 18px 16px}
+            #pageAnnualReport .ar-bench-cell{background:#fcf8f2;border:1px solid #f0e6da;border-radius:10px;padding:8px 9px;min-width:0}
+            #pageAnnualReport .ar-bench-label{font-size:8.5px;color:#a08f80;line-height:1.2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #pageAnnualReport .ar-bench-value{font-size:11px;font-weight:650;color:#4a3a30;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAnnualReport .ar-up{color:#e03131!important}
+            #pageAnnualReport .ar-down{color:#00a05c!important}
+            #pageAnnualReport .ar-flat{color:#9b8a7c!important}
+            #pageAnnualReport .ar-asset-wrap{padding:17px 18px 15px}
+            #pageAnnualReport .ar-asset-top{text-align:center;margin-bottom:14px}
+            #pageAnnualReport .ar-gain{font-size:29px;font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+            #pageAnnualReport .ar-caption{font-size:10px;color:#9b8a7c;margin-top:5px;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-asset-rail{position:relative;height:34px;margin:3px 4px 12px}
+            #pageAnnualReport .ar-asset-rail:before{content:"";position:absolute;left:0;right:0;top:8px;height:1px;background:linear-gradient(90deg,#e9d8c3,#c99a4b,#e9d8c3)}
+            #pageAnnualReport .ar-rail-dot{position:absolute;top:3px;width:11px;height:11px;border-radius:50%;background:#fffdfa;border:1px solid #c99a4b;box-shadow:0 0 0 3px #fffdfa}
+            #pageAnnualReport .ar-rail-dot.left{left:0}
+            #pageAnnualReport .ar-rail-dot.right{right:0;background:#742034;border-color:#742034}
+            #pageAnnualReport .ar-asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+            #pageAnnualReport .ar-asset-box{background:#faf5ee;border:1px solid #f0e4d7;border-radius:11px;padding:9px 10px;min-width:0}
+            #pageAnnualReport .ar-asset-box.end{background:linear-gradient(135deg,#742034,#5b1a2b);border-color:#742034}
+            #pageAnnualReport .ar-asset-box .ar-kpi-label{margin-bottom:3px}
+            #pageAnnualReport .ar-asset-box.end .ar-kpi-label{color:rgba(255,225,186,.62)}
+            #pageAnnualReport .ar-asset-box.end .ar-kpi-value{color:#f5d7a3}
+            #pageAnnualReport .ar-chart-summary{display:flex;gap:6px;flex-wrap:wrap;padding:12px 18px 0}
+            #pageAnnualReport .ar-chip{display:inline-flex;align-items:baseline;gap:4px;padding:4px 7px;border-radius:999px;background:#faf5ee;border:1px solid #f0e4d7;font-size:8.5px;color:#9b8a7c;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-chip b{font-size:10px;color:#5a4639;font-weight:650}
+            #pageAnnualReport .ar-chart{width:100%;height:208px;padding:0 5px}
+            #pageAnnualReport .ar-empty{padding:34px 18px;text-align:center;font-size:11px;color:#b5a596}
+            #pageAnnualReport .ar-div-card{
+                position:relative;overflow:hidden;border-radius:20px;margin-bottom:16px;color:#fff;
+                background:
+                    radial-gradient(circle at 92% 4%,rgba(227,180,107,.18),transparent 34%),
+                    linear-gradient(135deg,#3b111c 0%,#5a1928 52%,#742034 100%);
+                border:1px solid rgba(227,180,107,.16);
+                box-shadow:0 16px 36px -30px rgba(45,16,25,.8);
+            }
+            #pageAnnualReport .ar-div-card:after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.04;background-image:linear-gradient(90deg,rgba(255,255,255,.8) 1px,transparent 1px);background-size:26px 26px}
+            #pageAnnualReport .ar-div-head{display:flex;align-items:center;gap:9px;padding:14px 18px 0;position:relative;z-index:2}
+            #pageAnnualReport .ar-div-title{font-size:15px;font-weight:650;color:#fff5e4}
+            #pageAnnualReport .ar-div-sub{margin-left:auto;font-size:9.5px;color:rgba(255,225,186,.52)}
+            #pageAnnualReport .ar-div-body{padding:16px 18px 16px;position:relative;z-index:2}
+            #pageAnnualReport .ar-div-label{font-size:9.5px;color:rgba(255,225,186,.55);margin-bottom:4px}
+            #pageAnnualReport .ar-div-big{font-size:39px;font-weight:750;line-height:1.06;color:#f3d29b;font-variant-numeric:tabular-nums;letter-spacing:-.025em}
+            #pageAnnualReport .ar-div-yoy{font-size:11.5px;font-weight:650;margin-top:7px;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-div-up{color:#ff6262!important}
+            #pageAnnualReport .ar-div-down{color:#4bd89c!important}
+            #pageAnnualReport .ar-div-warn{color:rgba(247,215,175,.68)!important}
+            #pageAnnualReport .ar-div-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+            #pageAnnualReport .ar-dark-tile{background:rgba(255,255,255,.055);border:1px solid rgba(255,225,186,.12);border-radius:11px;padding:9px 10px;min-width:0}
+            #pageAnnualReport .ar-dark-label{font-size:9px;color:rgba(255,225,186,.45);margin-bottom:4px}
+            #pageAnnualReport .ar-dark-value{font-size:12px;font-weight:650;color:#f7e3c2;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAnnualReport .ar-div-note{font-size:9px;line-height:1.65;color:rgba(255,225,186,.38);padding:0 18px 15px;position:relative;z-index:2}
+            #pageAnnualReport .ar-month-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:15px 18px 0}
+            #pageAnnualReport .ar-month-tile{border-radius:12px;padding:11px 12px;min-width:0}
+            #pageAnnualReport .ar-month-tile.gold{background:linear-gradient(135deg,#fbf4e6,#f7ead3);border:1px solid #eedbbe}
+            #pageAnnualReport .ar-month-tile.wine{background:linear-gradient(135deg,#fbf1ef,#f6e3e2);border:1px solid #ecd2d2}
+            #pageAnnualReport .ar-month-label{font-size:9px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:3px}
+            #pageAnnualReport .ar-month-tile.gold .ar-month-label{color:#a9752f}
+            #pageAnnualReport .ar-month-tile.wine .ar-month-label{color:#8f2437}
+            #pageAnnualReport .ar-month-avg{font-size:17px;font-weight:700;color:#7c5725;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-month-vs{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+            #pageAnnualReport .ar-month-vsp{font-size:9px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+            #pageAnnualReport .ar-contrib-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px 0}
+            #pageAnnualReport .ar-contrib-panel{border-radius:14px;padding:10px 10px 8px;min-width:0;border:1px solid transparent}
+            #pageAnnualReport .ar-contrib-panel.win{background:#fff8f5;border-color:#f1dcd5}
+            #pageAnnualReport .ar-contrib-panel.lose{background:#f5fbf7;border-color:#dcece2}
+            #pageAnnualReport .ar-contrib-head{display:flex;align-items:center;justify-content:space-between;gap:5px;padding-bottom:7px;border-bottom:1px solid rgba(116,32,52,.08)}
+            #pageAnnualReport .ar-contrib-head-left{display:flex;align-items:center;gap:5px;min-width:0}
+            #pageAnnualReport .ar-contrib-dot{width:5px;height:5px;border-radius:50%;flex:0 0 auto}
+            #pageAnnualReport .ar-contrib-panel.win .ar-contrib-dot{background:#e03131}
+            #pageAnnualReport .ar-contrib-panel.lose .ar-contrib-dot{background:#00a05c}
+            #pageAnnualReport .ar-contrib-title{font-size:10.5px;font-weight:650;color:#4b3930;white-space:nowrap}
+            #pageAnnualReport .ar-contrib-count{font-size:8.5px;color:#a49384;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAnnualReport .ar-contrib-list{min-height:84px;padding-top:1px}
+            #pageAnnualReport .ar-contrib-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dashed rgba(116,32,52,.075);min-width:0}
+            #pageAnnualReport .ar-contrib-row:last-child{border-bottom:0}
+            #pageAnnualReport .ar-rank{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:8px;font-weight:700;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-rank-1{color:#fff;background:#8f2437;box-shadow:0 2px 6px -3px rgba(116,32,52,.5)}
+            #pageAnnualReport .ar-rank-2{color:#fff;background:#b6813c}
+            #pageAnnualReport .ar-rank-3{color:#fff;background:#a89470}
+            #pageAnnualReport .ar-rank-rest{color:#9e8877;background:#f1e7db}
+            #pageAnnualReport .ar-contrib-main{flex:1;min-width:0}
+            #pageAnnualReport .ar-contrib-name{font-size:11px;font-weight:600;color:#3a2d26;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #pageAnnualReport .ar-contrib-meta{font-size:8px;color:#a49384;line-height:1.35;margin-top:1px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #pageAnnualReport .ar-contrib-amt{font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;line-height:1.2}
+            #pageAnnualReport .ar-contrib-total{display:flex;align-items:center;justify-content:space-between;gap:5px;padding-top:8px;margin-top:3px;border-top:1px solid rgba(116,32,52,.09);font-size:8.5px;color:#9b8a7c}
+            #pageAnnualReport .ar-contrib-total b{font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-contrib-panel.win .ar-contrib-total b{color:#a82d43}
+            #pageAnnualReport .ar-contrib-panel.lose .ar-contrib-total b{color:#008a50}
+            #pageAnnualReport .ar-contrib-empty{display:flex;align-items:center;justify-content:center;height:84px;font-size:10px;color:#b6a697;text-align:center;line-height:1.6;padding:0 6px}
+            #pageAnnualReport .ar-divrank-list{padding:12px 18px 14px}
+            #pageAnnualReport .ar-hold-wrap{padding:14px 18px 15px;display:flex;flex-direction:column;gap:10px}
+            #pageAnnualReport .ar-hold-row{display:flex;align-items:flex-start;gap:10px}
+            #pageAnnualReport .ar-hold-icon{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:10px}
+            #pageAnnualReport .ar-hold-icon.new{background:#fbecec;color:#e03131}
+            #pageAnnualReport .ar-hold-icon.out{background:#eaf7f0;color:#00a05c}
+            #pageAnnualReport .ar-hold-title{font-size:12px;font-weight:600;color:#3a2d26;line-height:1.3}
+            #pageAnnualReport .ar-hold-title b{font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-hold-list{font-size:10px;color:#9b8a7c;line-height:1.6;margin-top:3px}
+            #pageAnnualReport .ar-fee-wrap{padding:14px 18px 15px}
+            #pageAnnualReport .ar-fee-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;padding:5px 0}
+            #pageAnnualReport .ar-fee-row span:first-child{color:#9b8a7c}
+            #pageAnnualReport .ar-fee-row span:last-child{font-weight:600;color:#4a3a30;font-variant-numeric:tabular-nums}
+            #pageAnnualReport .ar-fee-total{border-top:1px solid #eee1d4;margin-top:5px;padding-top:10px}
+            #pageAnnualReport .ar-fee-total span:first-child{color:#6d5b4d;font-weight:600}
+            #pageAnnualReport .ar-fee-total span:last-child{font-size:12px;font-weight:750;color:#742034}
+            #pageAnnualReport .ar-footer{text-align:center;font-size:9px;color:#b7a696;padding:9px 0 5px;line-height:1.7}
+            #pageAnnualReport .ar-footer-brand{display:inline-flex;align-items:center;gap:6px;color:#8f2437;letter-spacing:.16em;font-size:9.5px;font-weight:600;margin-bottom:2px}
+            @media (max-width:420px){
+                #pageAnnualReport .ar-cover-asset{font-size:38px}
+                #pageAnnualReport .ar-hero-title{font-size:24px}
+                #pageAnnualReport .ar-summary{grid-template-columns:1fr .98fr;gap:10px}
+                #pageAnnualReport .ar-summary-big{font-size:27px}
+                #pageAnnualReport .ar-score{grid-template-columns:1fr 1fr;gap:10px}
+                #pageAnnualReport .ar-return{font-size:35px}
+                #pageAnnualReport .ar-div-big{font-size:33px}
+                #pageAnnualReport .ar-contrib-grid{gap:8px;padding-left:12px;padding-right:12px}
+                #pageAnnualReport .ar-contrib-panel{padding-left:8px;padding-right:8px}
+                #pageAnnualReport .ar-contrib-name{font-size:10px}
+                #pageAnnualReport .ar-contrib-amt{font-size:9.5px}
+            }
+        </style>
+
+        <div class="ar-sticky px-4 py-3 relative">
+            <div class="ar-sticky-line"></div>
             <div class="flex items-center gap-2.5 relative z-10">
-                <button id="annualReportBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                    年度投资报告
-                </h2>
-                <span class="ml-auto text-[10px] text-gray-400 text-right leading-tight">报告年度<br><span id="arHeaderYear" class="text-[11px] text-gray-500 font-medium tabular-nums">2026</span></span>
+                <button id="annualReportBackBtn" class="w-9 h-9 rounded-xl bg-[#f8f0e8] border border-[#ead8c9] flex items-center justify-center text-[#6d5347] active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[13px]"></i></button>
+                <div class="min-w-0">
+                    <div class="ar-kicker">Annual Review</div>
+                    <h2 class="ar-sticky-title">年度投资报告</h2>
+                </div>
+                <div class="ml-auto ar-year-pill"><span id="arHeaderYear">2026 年</span></div>
             </div>
         </div>
 
-        <!-- 封面：品牌水滴 + 报告期间 + 年末总资产大数字（参考平安年度账单） -->
-        <div class="relative rounded-3xl overflow-hidden mb-4 text-white shadow-2xl" style="background: linear-gradient(160deg,#151028 0%,#2b1b33 42%,#4a2c1f 100%);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.55), transparent);"></div>
-            <div class="absolute top-0 right-0 w-40 h-40 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute top-1/3 left-0 w-44 h-44 bg-purple-500/10 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-            <div class="absolute bottom-0 left-0 w-32 h-32 bg-accent/15 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-            <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 26px 26px;"></div>
-            <div class="relative z-10 px-6 py-9 text-center">
-                <div class="flex items-center justify-center gap-2.5 mb-5">
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-400 via-purple-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/40 ring-1 ring-white/20">
-                        <i class="fa fa-tint text-white text-xl"></i>
+        <section class="ar-hero">
+            <div class="relative z-10 px-5 pt-5 pb-5" style="position:relative;z-index:2">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="ar-seal">细</div>
+                        <div class="min-w-0">
+                            <div class="ar-brand">细水长流</div>
+                            <div class="ar-brand-sub">Dividend Portfolio · 年度手记</div>
+                        </div>
                     </div>
-                    <div class="text-left">
-                        <div class="font-serif text-lg font-semibold tracking-wide leading-tight">细水长流</div>
-                        <div class="text-[10px] tracking-[0.3em] text-violet-200/60">股息持仓账户</div>
-                    </div>
-                </div>
-                <div class="text-[10px] tracking-[0.4em] text-violet-200/70 mb-2">ANNUAL REVIEW</div>
-                <!-- 报告年度切换器：可回看往年年报 -->
-                <div class="flex items-center justify-center gap-4 mb-5">
-                    <button id="arPrevYearBtn" class="w-9 h-9 rounded-full bg-white/10 border border-violet-200/25 text-violet-100 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-25 disabled:active:scale-100" title="上一年度报告">
-                        <i class="fa fa-chevron-left text-xs"></i>
-                    </button>
-                    <div class="min-w-[120px]">
-                        <div class="text-[9px] tracking-[0.35em] text-violet-200/50 mb-0.5">报告年度</div>
-                        <div class="text-xl font-bold tracking-widest tabular-nums" id="arYearLabel">2026</div>
-                    </div>
-                    <button id="arNextYearBtn" class="w-9 h-9 rounded-full bg-white/10 border border-violet-200/25 text-violet-100 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-25 disabled:active:scale-100" title="下一年度报告">
-                        <i class="fa fa-chevron-right text-xs"></i>
-                    </button>
-                </div>
-                <div class="font-serif text-2xl font-bold tracking-wide leading-snug mb-5" id="arCoverTitle">2026年度投资回顾</div>
-                <!-- 年末总资产大数字 -->
-                <div class="text-[11px] text-gray-400 mb-1">我的年末总资产</div>
-                <div class="text-4xl font-bold tabular-nums tracking-tight mb-6" id="arCoverAsset" style="color:#f7cf8f">--</div>
-                <!-- 净转入 / 总收益 两行 -->
-                <div class="max-w-xs mx-auto space-y-2.5">
-                    <div class="flex justify-between items-center px-5 py-2.5 rounded-xl bg-white/5">
-                        <span class="text-xs text-gray-400">净转入</span>
-                        <span class="text-sm font-semibold text-amber-100 tabular-nums" id="arCoverNetInflow">--</span>
-                    </div>
-                    <div class="flex justify-between items-center px-5 py-2.5 rounded-xl bg-white/5">
-                        <span class="text-xs text-gray-400">总收益</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arCoverGain">--</span>
-                    </div>
-                    <div class="flex justify-between items-center px-5 py-2.5 rounded-xl bg-white/5">
-                        <span class="text-xs text-gray-400">总分红</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arCoverDiv" style="color:#f7cf8f">--</span>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <button id="arPrevYearBtn" class="ar-year-btn" title="上一年度报告"><i class="fa fa-chevron-left text-[9px]"></i></button>
+                        <div class="min-w-[54px]">
+                            <div class="ar-year-cap">报告年度</div>
+                            <div class="ar-year-label text-center" id="arYearLabel">2026</div>
+                        </div>
+                        <button id="arNextYearBtn" class="ar-year-btn" title="下一年度报告"><i class="fa fa-chevron-right text-[9px]"></i></button>
                     </div>
                 </div>
-                <div class="mt-6 flex items-center justify-center gap-2 text-[10px] text-gray-500">
-                    <span class="h-px w-8 bg-gradient-to-r from-transparent to-amber-200/30"></span>
-                    <span class="tracking-widest" id="arCoverDate">--</span>
-                    <span class="h-px w-8 bg-gradient-to-l from-transparent to-amber-200/30"></span>
-                </div>
-            </div>
-        </div>
 
-        <!-- 巴菲特式年度摘要：一年分红 / 再投入 / 成本回收 / 跑赢指数 / 明年预测（一页看懂这一年） -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-amber-500 to-amber-700 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">巴菲特式年度摘要</span>
-                <span class="text-[10px] text-gray-400 ml-auto">一页看懂这一年</span>
-            </div>
-            <div class="px-5 py-4">
-                <div class="flex items-end justify-between mb-4">
-                    <div>
-                        <div class="text-[11px] text-gray-400 mb-1">今年收到分红</div>
-                        <div class="text-3xl font-bold tabular-nums" id="arBhDiv" style="color:#a9642a">--</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-[11px] text-gray-400 mb-1">明年预计分红</div>
-                        <div class="text-lg font-bold tabular-nums" id="arBhNextDiv" style="color:#a9642a">--</div>
-                    </div>
+                <div class="mt-8">
+                    <div class="ar-hero-kicker">Year in Review · 回望这一年</div>
+                    <h1 class="ar-hero-title" id="arCoverTitle">2026 年度投资回顾</h1>
                 </div>
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl" style="background:#faf7ef;border:1px solid #eedfc0">
-                        <span class="text-xs text-gray-500">分红到账 · 再投入笔数</span>
-                        <span class="text-sm font-semibold tabular-nums text-gray-800" id="arBhCount">--</span>
-                    </div>
-                    <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl" style="background:#faf7ef;border:1px solid #eedfc0">
-                        <span class="text-xs text-gray-500">成本已回收</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arBhRecover" style="color:#a9642a">--</span>
-                    </div>
-                    <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl" style="background:#faf7ef;border:1px solid #eedfc0">
-                        <span class="text-xs text-gray-500">跑赢沪深300</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arBhVs300">--</span>
-                    </div>
-                </div>
-                <div class="text-[9.5px] text-gray-300 mt-2.5 leading-relaxed">分红到账即视为继续再投入（股息复利视角）；跑赢 = 今年收益率 − 沪深300全收益同期涨幅。基准均为全收益指数（含股息再投资），年内按已计股息折算。</div>
-            </div>
-        </div>
 
-        <!-- 业绩摘要 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-violet-500 to-purple-700 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">业绩摘要</span>
-                <span class="text-[10px] text-gray-400 ml-auto" id="arDataTag">数据实时</span>
-            </div>
-            <div class="px-5 py-4">
-                <div class="text-center mb-4">
-                    <div class="text-[11px] text-gray-400 mb-1">今年收益率</div>
-                    <div class="text-4xl font-bold tabular-nums" id="arYearReturn">--</div>
+                <div class="mt-7">
+                    <div class="ar-cover-label">年末总资产</div>
+                    <div class="ar-cover-asset" id="arCoverAsset">--</div>
                 </div>
-                <div class="space-y-2.5">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">对比 · 上证指数</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arIndexSH">加载中…</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">对比 · 沪深300全收益</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arIndex300">加载中…</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">对比 · 中证红利全收益</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arIndexDiv">加载中…</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">跑赢 / 跑输（沪深300全收益）</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arVsIndex">--</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">年内最大回撤</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arMaxDrawdown">--</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">期末总资产</span>
-                        <span class="text-sm font-semibold tabular-nums" id="arTotalAsset">--</span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- 资产增长：今年资产增加 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-violet-500 to-purple-700 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">资产增长</span>
-                <span class="text-[10px] text-gray-400 ml-auto">年初 → 年末</span>
-            </div>
-            <div class="px-5 py-4">
-                <div class="text-center mb-4">
-                    <div class="text-[11px] text-gray-400 mb-1">今年资产增加</div>
-                    <div class="text-3xl font-bold tabular-nums" id="arAssetGain">--</div>
-                    <div class="text-[11px] mt-1 tabular-nums" id="arAssetGainPct">--</div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-50 rounded-xl p-3 text-center">
-                        <div class="text-[10px] text-gray-400 mb-1">年初总资产</div>
-                        <div class="text-base font-semibold text-gray-800 tabular-nums" id="arAssetStart">--</div>
+                <div class="ar-hero-metrics">
+                    <div class="ar-hero-metric">
+                        <div class="ar-hero-metric-label">净转入</div>
+                        <div class="ar-hero-metric-value ar-cover-gold" id="arCoverNetInflow">--</div>
                     </div>
-                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-3 text-center">
-                        <div class="text-[10px] text-orange-300 mb-1">年末总资产</div>
-                        <div class="text-base font-semibold text-accent tabular-nums" id="arAssetEnd">--</div>
+                    <div class="ar-hero-metric">
+                        <div class="ar-hero-metric-label">总收益</div>
+                        <div class="ar-hero-metric-value" id="arCoverGain">--</div>
+                    </div>
+                    <div class="ar-hero-metric">
+                        <div class="ar-hero-metric-label">总分红</div>
+                        <div class="ar-hero-metric-value ar-cover-gold" id="arCoverDiv">--</div>
                     </div>
                 </div>
+                <div class="ar-hero-foot"><span id="arCoverDate">--</span></div>
             </div>
-        </div>
+        </section>
 
-        <!-- 分红增长：今年 vs 去年（重点板块） -->
-        <div class="relative rounded-2xl overflow-hidden mb-4 text-white shadow-lg" style="background: linear-gradient(135deg,#3a2410 0%,#553017 60%,#6e3c1a 100%);">
-            <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(245,201,123,.5), transparent);"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute -bottom-10 -left-10 w-36 h-36 bg-purple-500/10 rounded-full"></div>
-            <div class="relative z-10 px-5 py-4">
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="w-1 h-4 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full"></div>
-                    <span class="text-base font-semibold">分红增长</span>
-                    <span class="text-[10px] text-amber-100/50 ml-auto">现金分红 · 收息复利</span>
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar"></span>
+                <span class="ar-title">年度摘要</span>
+                <span class="ar-sub">一页看懂这一年</span>
+            </div>
+            <div class="ar-summary">
+                <div class="ar-summary-main">
+                    <div class="ar-label">今年收到分红</div>
+                    <div class="ar-summary-big" id="arBhDiv">--</div>
+                    <div class="ar-summary-next">明年预计 <span id="arBhNextDiv" style="color:#a9752f;font-weight:600;font-variant-numeric:tabular-nums">--</span></div>
                 </div>
-                <div class="text-center mb-4">
-                    <div class="text-[11px] text-amber-100/60 mb-1">今年分红收入</div>
-                    <div class="text-4xl font-bold tabular-nums" id="arDivThisYear" style="color:#f7cf8f">--</div>
-                    <div class="text-[12px] mt-2 font-semibold tabular-nums" id="arDivGrow">--</div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white/5 rounded-xl p-3 text-center">
-                        <div class="text-[10px] text-amber-100/50 mb-1">去年分红（<span id="arDivLastYearLabel">--</span>）</div>
-                        <div class="text-base font-semibold text-amber-100 tabular-nums" id="arDivLastYear">--</div>
+                <div class="ar-summary-list">
+                    <div class="ar-mini-row">
+                        <span class="ar-mini-label">分红到账 · 再投入笔数</span>
+                        <span class="ar-mini-value" id="arBhCount">--</span>
                     </div>
-                    <div class="bg-white/5 rounded-xl p-3 text-center">
-                        <div class="text-[10px] text-amber-100/50 mb-1">分红增长</div>
-                        <div class="text-base font-semibold tabular-nums" id="arDivGainAmount">--</div>
+                    <div class="ar-mini-row">
+                        <span class="ar-mini-label">成本已回收</span>
+                        <span class="ar-mini-value" id="arBhRecover" style="color:#8f2437">--</span>
+                    </div>
+                    <div class="ar-mini-row">
+                        <span class="ar-mini-label">跑赢沪深300</span>
+                        <span class="ar-mini-value" id="arBhVs300">--</span>
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="ar-note">分红到账即视为继续再投入（股息复利视角）；跑赢 = 今年收益率 − 沪深300全收益同期涨幅。基准均为全收益指数（含股息再投资），年内按已计股息折算。</div>
+        </section>
 
-        <!-- 分红 · 月度节奏：报告年每月分红 vs 去年同月 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">分红 · 月度节奏</span>
-                <span class="text-[10px] text-gray-400 ml-auto" id="arMonthDivTag">今年 · 已到账</span>
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar"></span>
+                <span class="ar-title">年度成绩单</span>
+                <span class="ar-sub" id="arDataTag">数据实时</span>
             </div>
-            <div class="px-5 py-4">
-                <!-- 月均分红 / 较去年月均 两栏对比（金紫双框） -->
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 text-center">
-                        <div class="text-[11px] text-amber-600 font-semibold mb-1.5"><i class="fa fa-calendar-o mr-1"></i>月均分红</div>
-                        <div class="text-lg font-bold tabular-nums" id="arMonthDivAvg" style="color:#b8860b">--</div>
+            <div class="ar-score">
+                <div>
+                    <div class="ar-label">今年收益率</div>
+                    <div class="ar-return" id="arYearReturn">--</div>
+                    <div class="ar-vsline"><span>较沪深300全收益</span><span id="arVsIndex">--</span></div>
+                </div>
+                <div class="ar-score-side">
+                    <div class="ar-kpi">
+                        <div class="ar-kpi-label">年内最大回撤</div>
+                        <div class="ar-kpi-value" id="arMaxDrawdown">--</div>
                     </div>
-                    <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-4 text-center">
-                        <div class="text-[11px] text-violet-500 font-semibold mb-1.5"><i class="fa fa-exchange mr-1"></i>较去年月均</div>
-                        <div class="text-lg font-bold tabular-nums" id="arMonthDivVs">--</div>
-                        <div class="text-[10px] font-semibold tabular-nums mt-0.5" id="arMonthDivVsPct"></div>
+                    <div class="ar-kpi">
+                        <div class="ar-kpi-label">期末总资产</div>
+                        <div class="ar-kpi-value" id="arTotalAsset">--</div>
                     </div>
                 </div>
-                <div id="chartMonthlyDiv" style="width:100%;height:230px;"></div>
-                <div class="text-[10px] text-gray-400 mt-2 leading-relaxed" id="arMonthDivNote">金色为本年每月已到账分红，淡紫为去年同月；月度明细按当前持仓的到账流水统计。</div>
             </div>
-        </div>
+            <div class="ar-bench">
+                <div class="ar-bench-cell">
+                    <div class="ar-bench-label">上证指数</div>
+                    <div class="ar-bench-value" id="arIndexSH">加载中…</div>
+                </div>
+                <div class="ar-bench-cell">
+                    <div class="ar-bench-label">沪深300全收益</div>
+                    <div class="ar-bench-value" id="arIndex300">加载中…</div>
+                </div>
+                <div class="ar-bench-cell">
+                    <div class="ar-bench-label">中证红利全收益</div>
+                    <div class="ar-bench-value" id="arIndexDiv">加载中…</div>
+                </div>
+            </div>
+        </section>
 
-        <!-- 分红贡献榜：今年分红主要贡献股票 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">分红贡献榜</span>
-                <span class="text-[10px] text-gray-400 ml-auto" id="arDivRankTag">今年已到账分红</span>
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar-gold"></span>
+                <span class="ar-title">资产台阶</span>
+                <span class="ar-sub">年初 → 年末</span>
             </div>
-            <div id="arDivRankList" class="px-5 py-3 space-y-2.5"></div>
-        </div>
+            <div class="ar-asset-wrap">
+                <div class="ar-asset-top">
+                    <div class="ar-label">今年资产增加</div>
+                    <div class="ar-gain" id="arAssetGain">--</div>
+                    <div class="ar-caption" id="arAssetGainPct">--</div>
+                </div>
+                <div class="ar-asset-rail">
+                    <div class="ar-rail-dot left"></div>
+                    <div class="ar-rail-dot right"></div>
+                </div>
+                <div class="ar-asset-grid">
+                    <div class="ar-asset-box">
+                        <div class="ar-kpi-label">年初总资产</div>
+                        <div class="ar-kpi-value" id="arAssetStart">--</div>
+                    </div>
+                    <div class="ar-asset-box end">
+                        <div class="ar-kpi-label">年末总资产</div>
+                        <div class="ar-kpi-value" id="arAssetEnd">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <!-- 持仓变化：今年新增 / 清仓 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-violet-400 to-purple-600 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">持仓变化</span>
-                <span class="text-[10px] text-gray-400 ml-auto" id="arHoldChangeTag">今年</span>
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar-gold"></span>
+                <span class="ar-title">资产轨迹</span>
+                <span class="ar-sub" id="arAssetChartTag">每日快照</span>
             </div>
-            <div class="px-5 py-3.5 space-y-3">
-                <div class="flex items-start gap-3">
-                    <div class="w-7 h-7 rounded-full bg-red-50 text-[#e03131] flex items-center justify-center flex-shrink-0"><i class="fa fa-plus text-[11px]"></i></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-medium text-gray-800"><span id="arNewLabel">今年新增</span> <span id="arNewCount" class="text-[#e03131] font-semibold">0</span> 只</div>
-                        <div class="text-[11px] text-gray-400 mt-1 leading-relaxed" id="arNewList">--</div>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3 pt-2.5 border-t border-gray-50">
-                    <div class="w-7 h-7 rounded-full bg-green-50 text-[#00b57a] flex items-center justify-center flex-shrink-0"><i class="fa fa-minus text-[11px]"></i></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-medium text-gray-800"><span id="arClosedLabel">今年清仓</span> <span id="arClosedCount" class="text-[#00b57a] font-semibold">0</span> 只</div>
-                        <div class="text-[11px] text-gray-400 mt-1 leading-relaxed" id="arClosedList">--</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <div class="ar-chart-summary" id="arAssetChartSummary"></div>
+            <div class="ar-chart" id="chartAnnualAsset"></div>
+            <div class="ar-empty hidden" id="arAssetChartEmpty">暂无每日总资产快照</div>
+            <div class="ar-note" id="arAssetChartNote">来自系统每日总资产快照，仅展示实际记录，不做估算。</div>
+        </section>
 
-        <!-- 收益归因：明星股 vs 坑爹股 顶部对比 + 前五榜 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-violet-500 to-purple-700 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">收益归因 · 今年贡献</span>
-                <span class="text-[10px] text-gray-400 ml-auto">按今年盈亏额</span>
+        <section class="ar-div-card">
+            <div class="ar-div-head">
+                <span class="ar-bar-gold"></span>
+                <span class="ar-div-title">收息现金流</span>
+                <span class="ar-div-sub">现金分红 · 收息复利</span>
             </div>
-            <div class="px-5 py-4">
-                <!-- 顶部：明星股 / 坑爹股 两栏对比 -->
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-4">
-                        <div class="text-[11px] text-[#e03131] font-semibold mb-1"><i class="fa fa-trophy mr-1"></i>明星股</div>
-                        <div class="text-lg font-bold text-gray-800 truncate" id="arStarName">--</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5 truncate" id="arStarReason">--</div>
-                        <div class="text-lg font-bold text-[#e03131] mt-1.5 tabular-nums" id="arStarPnl">--</div>
+            <div class="ar-div-body">
+                <div class="ar-div-label">今年分红收入</div>
+                <div class="ar-div-big" id="arDivThisYear">--</div>
+                <div class="ar-div-yoy" id="arDivGrow">--</div>
+                <div class="ar-div-grid">
+                    <div class="ar-dark-tile">
+                        <div class="ar-dark-label">去年分红（<span id="arDivLastYearLabel">--</span>）</div>
+                        <div class="ar-dark-value" id="arDivLastYear">--</div>
                     </div>
-                    <div class="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-4">
-                        <div class="text-[11px] text-[#00a05c] font-semibold mb-1"><i class="fa fa-bug mr-1"></i>坑爹股</div>
-                        <div class="text-lg font-bold text-gray-800 truncate" id="arBadName">--</div>
-                        <div class="text-[10px] text-gray-400 mt-0.5 truncate" id="arBadReason">--</div>
-                        <div class="text-lg font-bold text-[#00a05c] mt-1.5 tabular-nums" id="arBadPnl">--</div>
+                    <div class="ar-dark-tile">
+                        <div class="ar-dark-label">分红增长</div>
+                        <div class="ar-dark-value" id="arDivGainAmount">--</div>
                     </div>
-                </div>
-                <!-- 明星股榜：盈利前五 -->
-                <div class="pt-1">
-                    <div class="text-[11px] font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
-                        <i class="fa fa-trophy text-[10px] text-[#e03131]"></i>明星股 · 盈利前五
-                    </div>
-                    <div id="arStarList" class="space-y-2.5"></div>
-                </div>
-                <!-- 坑爹股榜：亏损前五 -->
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                    <div class="text-[11px] font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
-                        <i class="fa fa-bug text-[10px] text-[#00a05c]"></i>坑爹股 · 亏损前五
-                    </div>
-                    <div id="arBadList" class="space-y-2.5"></div>
                 </div>
             </div>
-        </div>
+            <div class="ar-div-note">口径与年度账单一致：当年按已到账分红实时累计，历史年份使用归档年度总额；不使用估算值。</div>
+        </section>
 
-        <!-- 组合健康点评：基于当前持仓 + 分红数据，本地规则引擎生成（无 AI / 联网） -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">组合健康点评</span>
-                <span class="text-[10px] text-gray-400 ml-auto" id="arHealthTag">基于当前持仓测算</span>
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar-gold"></span>
+                <span class="ar-title">分红节奏</span>
+                <span class="ar-sub" id="arMonthDivTag">今年 · 已到账</span>
             </div>
-            <div id="arHealthBody" class="px-5 py-4"></div>
-        </div>
+            <div class="ar-month-grid">
+                <div class="ar-month-tile gold">
+                    <div class="ar-month-label"><i class="fa fa-calendar-o text-[9px]"></i>月均分红</div>
+                    <div class="ar-month-avg" id="arMonthDivAvg">--</div>
+                </div>
+                <div class="ar-month-tile wine">
+                    <div class="ar-month-label"><i class="fa fa-exchange text-[9px]"></i>较去年月均</div>
+                    <div class="ar-month-vs" id="arMonthDivVs">--</div>
+                    <div class="ar-month-vsp" id="arMonthDivVsPct"></div>
+                </div>
+            </div>
+            <div id="chartMonthlyDiv" class="ar-chart" style="height:210px"></div>
+            <div class="ar-note" id="arMonthDivNote">金色为本年每月已到账分红，暖沙色为去年同月；月度明细按当前持仓的到账流水统计。</div>
+        </section>
 
-        <!-- 税费与费用 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-violet-400 to-purple-600 rounded-full"></div>
-                <span class="text-base font-semibold text-gray-800">税费与费用</span>
-                <span class="text-[10px] text-gray-400 ml-auto">摩擦成本</span>
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar"></span>
+                <span class="ar-title">收益归因 · 今年贡献</span>
+                <span class="ar-sub">按今年盈亏额</span>
             </div>
-            <div class="px-5 py-3.5 space-y-2.5 text-sm">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400">印花税（卖出）</span>
-                    <span class="font-semibold text-gray-800 tabular-nums" id="arStampTax">--</span>
+            <div class="ar-contrib-grid">
+                <div class="ar-contrib-panel win">
+                    <div class="ar-contrib-head">
+                        <div class="ar-contrib-head-left">
+                            <span class="ar-contrib-dot"></span>
+                            <span class="ar-contrib-title">盈利榜</span>
+                            <span class="ar-contrib-count" id="arStarCount">0 只</span>
+                        </div>
+                    </div>
+                    <div class="ar-contrib-list" id="arStarList"></div>
+                    <div class="ar-contrib-total"><span>全部合计</span><b id="arStarSum">--</b></div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400">佣金（含最低佣金）</span>
-                    <span class="font-semibold text-gray-800 tabular-nums" id="arCommission">--</span>
+                <div class="ar-contrib-panel lose">
+                    <div class="ar-contrib-head">
+                        <div class="ar-contrib-head-left">
+                            <span class="ar-contrib-dot"></span>
+                            <span class="ar-contrib-title">亏损榜</span>
+                            <span class="ar-contrib-count" id="arBadCount">0 只</span>
+                        </div>
+                    </div>
+                    <div class="ar-contrib-list" id="arBadList"></div>
+                    <div class="ar-contrib-total"><span>全部合计</span><b id="arBadSum">--</b></div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-400">过户费</span>
-                    <span class="font-semibold text-gray-800 tabular-nums" id="arTransferFee">--</span>
-                </div>
-                <div class="flex justify-between items-center border-t border-gray-100 pt-2.5 mt-1">
-                    <span class="text-gray-500 font-medium">摩擦成本合计</span>
-                    <span class="font-bold tabular-nums" id="arFeeTotal">--</span>
-                </div>
-                <div class="text-[10px] text-gray-300 mt-1.5 leading-relaxed">实际口径：逐笔取买卖记录中的费用（佣金按设置费率与最低佣金、A股卖出印花税、港股双边印花税、A股过户费）。旧交易无费用记录按 0 计，不追溯估算。</div>
             </div>
-        </div>
+            <div class="ar-note">仅统计当前持仓，且需有年初基础价；盈利/亏损分别按今年盈亏金额取前五，不含已清仓，与统计页「盈亏贡献榜」同口径。</div>
+        </section>
 
-        <!-- 报告底部 -->
-        <div class="text-center text-[10px] text-gray-300 mt-6 pb-2">
-            <div class="inline-flex items-center gap-1.5 mb-1">
-                <i class="fa fa-tint text-violet-500 text-[10px]"></i>
-                <span class="tracking-widest">细水长流 · 股息投资</span>
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar-gold"></span>
+                <span class="ar-title">分红贡献榜</span>
+                <span class="ar-sub" id="arDivRankTag">今年已到账分红</span>
             </div>
-            <div class="text-gray-200/60">每年一份 · 记录复利生长的足迹</div>
+            <div id="arDivRankList" class="ar-divrank-list"></div>
+        </section>
+
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar"></span>
+                <span class="ar-title">持仓变化</span>
+                <span class="ar-sub" id="arHoldChangeTag">今年</span>
+            </div>
+            <div class="ar-hold-wrap">
+                <div class="ar-hold-row">
+                    <div class="ar-hold-icon new"><i class="fa fa-plus text-[10px]"></i></div>
+                    <div class="min-w-0">
+                        <div class="ar-hold-title"><span id="arNewLabel">今年新增</span> <b id="arNewCount" style="color:#e03131">0</b> 只</div>
+                        <div class="ar-hold-list" id="arNewList">--</div>
+                    </div>
+                </div>
+                <div class="ar-hold-row" style="padding-top:10px;border-top:1px dashed #eee1d4">
+                    <div class="ar-hold-icon out"><i class="fa fa-minus text-[10px]"></i></div>
+                    <div class="min-w-0">
+                        <div class="ar-hold-title"><span id="arClosedLabel">今年清仓</span> <b id="arClosedCount" style="color:#00a05c">0</b> 只</div>
+                        <div class="ar-hold-list" id="arClosedList">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar-gold"></span>
+                <span class="ar-title">组合健康点评</span>
+                <span class="ar-sub" id="arHealthTag">基于当前持仓测算</span>
+            </div>
+            <div id="arHealthBody" style="padding:15px 18px 16px"></div>
+        </section>
+
+        <section class="ar-card">
+            <div class="ar-head">
+                <span class="ar-bar"></span>
+                <span class="ar-title">税费与费用</span>
+                <span class="ar-sub">摩擦成本</span>
+            </div>
+            <div class="ar-fee-wrap">
+                <div class="ar-fee-row"><span>印花税（卖出）</span><span id="arStampTax">--</span></div>
+                <div class="ar-fee-row"><span>佣金（含最低佣金）</span><span id="arCommission">--</span></div>
+                <div class="ar-fee-row"><span>过户费</span><span id="arTransferFee">--</span></div>
+                <div class="ar-fee-row ar-fee-total"><span>摩擦成本合计</span><span id="arFeeTotal">--</span></div>
+                <div class="ar-note" style="padding:8px 0 0">实际口径：逐笔取买卖记录中的费用（佣金按设置费率与最低佣金、A股卖出印花税、港股双边印花税、A股过户费）。旧交易无费用记录按 0 计，不追溯估算。</div>
+            </div>
+        </section>
+
+        <div class="ar-footer">
+            <div class="ar-footer-brand"><i class="fa fa-tint text-[10px]"></i><span>细水长流 · 股息投资</span></div>
+            <div>每年一份 · 记录复利生长的足迹</div>
         </div>
     </div>
 
@@ -5532,12 +5745,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 目标持仓设置：底部抽屉，聚焦单只股票；目标只做计划，不改变股数/成本/现金 -->
     <div id="targetEditorModal" class="fixed inset-0 z-[95] hidden items-end justify-center bg-black/50">
-        <div id="targetEditorSheet" class="relative w-full max-w-xl mx-auto bg-white rounded-t-3xl px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[90vh] overflow-y-auto" style="overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
+        <div id="targetEditorSheet" class="relative w-full max-w-xl mx-auto bg-white rounded-t-3xl px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[90vh] overflow-y-auto" style="overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-top:3px solid #742034;">
             <div class="mx-auto w-9 h-1 rounded-full bg-gray-200 mb-3"></div>
             <div class="flex items-center gap-2.5 mb-4">
-                <div class="w-9 h-9 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[14px] text-accent"></i></div>
+                <div class="w-9 h-9 rounded-xl bg-[#fbeff1] ring-1 ring-[#e4c5cb] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[14px] text-[#8f2437]"></i></div>
                 <div class="min-w-0">
-                    <div class="text-[16px] font-semibold text-gray-800">设置目标持仓</div>
+                    <div class="text-[16px] font-semibold text-[#8f2437]">设置目标持仓</div>
                     <div id="targetEditStockLine" class="text-[11px] text-gray-400 mt-0.5 truncate">--</div>
                 </div>
                 <button id="targetEditorCloseBtn" type="button" class="ml-auto w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times text-[13px]"></i></button>
@@ -5558,11 +5771,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
             <div id="targetEditorHint" class="text-[10.5px] text-gray-400 mt-2 leading-relaxed">目标股数按整数设置；未达标时每天在消息中心提醒一次。</div>
 
-            <div class="mt-3.5 rounded-xl bg-[#fffaf0] ring-1 ring-[#eedfc0] px-3.5 py-3">
+            <div class="mt-3.5 rounded-xl bg-[#fdf5f3] ring-1 ring-[#e4c7cb] px-3.5 py-3">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#3a2a1c;"><i class="fa fa-bolt text-[11px]" style="color:#f2d49b"></i></div>
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#742034;"><i class="fa fa-bolt text-[11px]" style="color:#ffe5bb"></i></div>
                     <div class="min-w-0 flex-1">
-                        <div class="text-[12.5px] font-semibold text-[#5b4126]">加仓最高优先级</div>
+                        <div class="text-[12.5px] font-semibold text-[#7c2638]">加仓最高优先级</div>
                         <div class="text-[9.5px] text-[#9b7b54] mt-0.5 leading-relaxed">开启后首页目标卡置顶提示 · 同时间仅一只</div>
                     </div>
                     <button id="targetPriorityBtn" type="button" onclick="targetTogglePriority()" class="flex flex-col items-end gap-1 flex-shrink-0 active:opacity-80 transition-opacity" title="切换加仓最高优先级">
@@ -5580,7 +5793,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             <div class="flex gap-2.5 mt-4">
                 <button id="targetClearBtn" type="button" class="hidden flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 text-[13px] font-medium active:bg-gray-50 transition-colors">清除目标</button>
-                <button id="targetSaveBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-accent to-[#a9642a] text-white text-[13px] font-semibold shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform">保存目标</button>
+                <button id="targetSaveBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#a82d43] to-[#742034] text-white text-[13px] font-semibold shadow-[0_6px_18px_rgba(116,32,52,0.24)] active:scale-[0.98] transition-transform">保存目标</button>
             </div>
             <div class="text-center text-[10px] text-gray-400 mt-2.5">目标仅用于进度和提醒，不影响成本、盈亏、现金或交易流水</div>
         </div>
@@ -5588,13 +5801,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 目标持仓总览：只在已设置目标时从首页摘要打开 -->
     <div id="targetOverviewModal" class="fixed inset-0 z-[94] hidden items-end justify-center bg-black/50">
-        <div id="targetOverviewSheet" class="relative w-full max-w-xl mx-auto bg-[#fbf8f1] rounded-t-3xl px-4 pt-0 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[88vh] overflow-y-auto" style="overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
+        <div id="targetOverviewSheet" class="relative w-full max-w-xl mx-auto bg-[#fbf8f1] rounded-t-3xl px-4 pt-0 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl max-h-[88vh] overflow-y-auto" style="overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-top:3px solid #742034;">
             <div id="targetOverviewStickyHeader" class="sticky top-0 z-10 -mx-4 rounded-t-3xl px-4 pt-3 pb-2" style="background:#fbf8f1;box-shadow:0 1px 0 rgba(230,209,168,.7);">
                 <div class="mx-auto w-9 h-1 rounded-full bg-gray-200 mb-3"></div>
                 <div class="flex items-center gap-2.5 mb-1">
-                    <div class="w-9 h-9 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[14px] text-accent"></i></div>
+                    <div class="w-9 h-9 rounded-xl bg-[#fbeff1] ring-1 ring-[#e4c5cb] flex items-center justify-center flex-shrink-0"><i class="fa fa-bullseye text-[14px] text-[#8f2437]"></i></div>
                     <div>
-                        <div class="text-[16px] font-semibold text-gray-800">目标持仓</div>
+                        <div class="text-[16px] font-semibold text-[#8f2437]">目标持仓</div>
                         <div id="targetOverviewSummary" class="text-[11px] text-gray-400 mt-0.5">--</div>
                     </div>
                     <button id="targetOverviewCloseBtn" type="button" class="ml-auto w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><i class="fa fa-times text-[13px]"></i></button>
@@ -16404,20 +16617,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const done = rows.filter(function(r){ return r.achieved; }).length;
             const pending = rows.length - done;
             const allDone = pending === 0;
-            const accent = allDone ? '#2f7d5a' : '#a9642a';
-            const accentSoft = allDone ? '#6fb894' : '#d8b07a';
-            const border = allDone ? '#c8dfd2' : '#e6d1a8';
-            const rail = allDone ? '#4f8a6e' : '#b07a3a';
-            const iconBg = allDone ? '#2f5d49' : '#3a2a1c';
-            const iconColor = allDone ? '#d9eee1' : '#f2d49b';
-            const muted = allDone ? '#6f8f7d' : '#9b7b54';
-            const ratioSub = allDone ? '#9ab7a7' : '#b0946b';
-            const chevron = allDone ? '#547a65' : '#9a7550';
-            const track = allDone ? '#e1eee7' : '#efe3cd';
-            const shadow = allDone ? 'rgba(47,125,90,0.08)' : 'rgba(169,100,42,0.10)';
+            const accent = allDone ? '#2f7d5a' : '#a82d43';
+            const accentSoft = allDone ? '#6fb894' : '#c99a4b';
+            const border = allDone ? '#c8dfd2' : '#e4c7cb';
+            const rail = allDone ? '#4f8a6e' : '#742034';
+            const iconBg = allDone ? '#2f5d49' : '#742034';
+            const iconColor = allDone ? '#d9eee1' : '#ffe5bb';
+            const muted = allDone ? '#6f8f7d' : '#8e7464';
+            const ratioSub = allDone ? '#9ab7a7' : '#c8a5a0';
+            const chevron = allDone ? '#547a65' : '#8f5f67';
+            const track = allDone ? '#e1eee7' : '#f1e1e4';
+            const shadow = allDone ? 'rgba(47,125,90,0.08)' : 'rgba(116,32,52,0.10)';
             const chip = allDone
                 ? '<span class="text-[9.5px] font-semibold text-[#2f7d5a] bg-[#e8f5ee] ring-1 ring-[#cde7db] rounded-full px-2 py-0.5 flex-shrink-0">全部达成</span>'
-                : '<span class="text-[9.5px] font-semibold text-[#9a6a2f] bg-[#fff7e6] ring-1 ring-[#e8cf9c] rounded-full px-2 py-0.5 flex-shrink-0">待完成 ' + pending + '</span>';
+                : '<span class="text-[9.5px] font-semibold text-[#8f2437] bg-[#fdf0f1] ring-1 ring-[#e4c6ca] rounded-full px-2 py-0.5 flex-shrink-0">待完成 ' + pending + '</span>';
             const priorityRow = rows.find(function(r){ return r.goal.priority === true; }) || null;
             const nearestRow = !allDone ? rows.filter(function(r){ return !r.achieved; }).sort(function(a, b){
                 if(a.gap !== b.gap) return a.gap - b.gap;
@@ -16425,7 +16638,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return a.item.name.localeCompare(b.item.name, 'zh-CN');
             })[0] : null;
             const priorityChip = priorityRow
-                ? '<div class="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-full px-2.5 py-[3px]" style="background:#3a2a1c;color:#f2d49b;box-shadow:0 2px 6px rgba(58,42,28,0.18);"><i class="fa fa-bolt text-[8.5px] flex-shrink-0"></i><span class="text-[10px] font-semibold whitespace-nowrap flex-shrink-0">最高优先</span><span class="text-[10px] opacity-90 truncate">· ' + targetEsc(priorityRow.item.name) + '</span></div>'
+                ? '<div class="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-full px-2.5 py-[3px]" style="background:#742034;color:#ffe5bb;box-shadow:0 2px 6px rgba(116,32,52,0.22);"><i class="fa fa-bolt text-[8.5px] flex-shrink-0"></i><span class="text-[10px] font-semibold whitespace-nowrap flex-shrink-0">最高优先</span><span class="text-[10px] opacity-90 truncate">· ' + targetEsc(priorityRow.item.name) + '</span></div>'
                 : '';
             const nearestChip = nearestRow
                 ? '<div class="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-full px-2.5 py-[3px] ring-1 ring-[#e8cf9c]" style="background:#fff7e6;color:#6b4a2a;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);"><i class="fa fa-flag text-[8.5px] flex-shrink-0" style="color:#a9642a;"></i><span class="text-[9.5px] font-semibold whitespace-nowrap flex-shrink-0">最近可达成</span><span class="text-[9.5px] opacity-80 truncate">· ' + targetEsc(nearestRow.item.name) + '</span><span class="text-[9.5px] font-semibold whitespace-nowrap flex-shrink-0">还差 ' + targetFmtShares(nearestRow.gap) + ' 股</span></div>'
@@ -16440,7 +16653,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:' + iconBg + ';box-shadow:0 3px 8px ' + (allDone ? 'rgba(47,93,73,0.20)' : 'rgba(58,42,28,0.18)') + ';">'
                 + '<i class="fa fa-bullseye text-[14px]" style="color:' + iconColor + ';"></i></div>'
                 + '<div class="min-w-0 flex-1">'
-                + '<div class="flex items-center gap-2 min-w-0"><span class="text-[13px] font-semibold text-[#5b4126] truncate">目标持仓</span>' + chip + '</div>'
+                + '<div class="flex items-center gap-2 min-w-0"><span class="text-[16px] font-semibold text-[#a82d43] truncate">目标持仓</span>' + chip + '</div>'
                 + focusChip
                 + '<div class="mt-2 h-[3px] rounded-full overflow-hidden" style="background:' + track + ';"><div style="width:' + (done / rows.length * 100).toFixed(1) + '%;height:100%;border-radius:3px;background:linear-gradient(90deg,' + accentSoft + ',' + accent + ');"></div></div>'
                 + '</div>'
@@ -16564,13 +16777,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const btn = document.querySelector('#targetPriorityBtn');
             const state = document.querySelector('#targetPriorityState');
             if(!track || !knob) return;
-            track.classList.toggle('bg-accent', targetPriorityOn);
-            track.classList.toggle('bg-gray-300', !targetPriorityOn);
+            track.classList.remove('bg-accent', 'bg-gray-300');
+            track.style.background = targetPriorityOn ? '#742034' : '#d1d5db';
             knob.style.left = targetPriorityOn ? '18px' : '2px';
             if(state){
                 state.innerText = targetPriorityOn ? '已开启' : '未开启';
-                state.classList.toggle('text-accent', targetPriorityOn);
-                state.classList.toggle('text-gray-400', !targetPriorityOn);
+                state.classList.remove('text-accent', 'text-gray-400');
+                state.style.color = targetPriorityOn ? '#8f2437' : '#9ca3af';
             }
             if(btn) btn.setAttribute('aria-pressed', targetPriorityOn ? 'true' : 'false');
         }
@@ -16756,27 +16969,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     : '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] text-white bg-[#e03131] flex-shrink-0">A</span>';
                 const status = r.achieved
                     ? '<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#2f7d5a] bg-[#e8f5ee] ring-1 ring-[#cde7db] rounded-full px-2 py-0.5 flex-shrink-0"><i class="fa fa-check text-[9px]"></i>已达成</span>'
-                    : '<span class="text-[10px] font-semibold text-accent bg-[#faf3e3] ring-1 ring-[#f0dfbf] rounded-full px-2 py-0.5 flex-shrink-0">待完成</span>';
+                    : '<span class="text-[10px] font-semibold text-[#8f2437] bg-[#fdf0f1] ring-1 ring-[#e4c6ca] rounded-full px-2 py-0.5 flex-shrink-0">待完成</span>';
                 const priorityChip = r.goal.priority === true
-                    ? '<span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-[#f2d49b] bg-[#3a2a1c] ring-1 ring-[#5a3b1e] rounded-full px-1.5 py-0.5 flex-shrink-0"><i class="fa fa-bolt text-[7px]"></i>最高优先</span>'
+                    ? '<span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-[#ffe5bb] bg-[#742034] ring-1 ring-[#8e2b43] rounded-full px-1.5 py-0.5 flex-shrink-0"><i class="fa fa-bolt text-[7px]"></i>最高优先</span>'
                     : '';
                 const cardStyle = r.achieved ? ' style="border-left:3px solid #4f9c78"' : '';
                 const cardClass = r.achieved
                     ? 'rounded-2xl bg-[#f7fcf9] border border-[#b9d8c6] px-3 py-2.5 shadow-[0_3px_12px_rgba(47,125,90,0.07)] active:bg-[#f0f8f3]'
-                    : 'rounded-2xl bg-white border border-[#e1ccad] px-3 py-2.5 shadow-[0_3px_12px_rgba(90,65,35,0.07)] active:bg-gray-50';
+                    : 'rounded-2xl bg-white border border-[#e4c7cb] px-3 py-2.5 shadow-[0_3px_12px_rgba(116,32,52,0.07)] active:bg-gray-50';
                 const money = targetMoneyShort(r);
                 const moneyMuted = money === '—';
                 const valuePanelBg = r.achieved
                     ? 'linear-gradient(135deg,#fbfefc 0%,#eef8f2 100%)'
-                    : 'linear-gradient(135deg,#fffdf8 0%,#f8ecd6 100%)';
-                const valuePanelBorder = r.achieved ? '#cfe3d7' : '#e7d2b2';
-                const valueLabel = r.achieved ? '#6b8f7d' : '#96744c';
+                    : 'linear-gradient(135deg,#fffdfb 0%,#f9ecec 100%)';
+                const valuePanelBorder = r.achieved ? '#cfe3d7' : '#e8d2d5';
+                const valueLabel = r.achieved ? '#6b8f7d' : '#9b7a7d';
                 const valueCurrent = r.achieved ? '#2f6b52' : '#4a3520';
-                const valueDivider = r.achieved ? '#cfe4d9' : '#e2cfb0';
+                const valueDivider = r.achieved ? '#cfe4d9' : '#e8d4d7';
                 return '<div class="' + cardClass + '"' + cardStyle + ' onclick="openTargetEditorByCode(\'' + String(it.code) + '\',\'' + String(it.marketType) + '\',true)">'
                     + '<div class="flex items-center gap-1.5 min-w-0">'
                     + '<span class="text-[16px] font-semibold text-gray-800 truncate">' + targetEsc(it.name) + '</span>' + tag + priorityChip + status
-                    + '<span class="ml-auto text-[15px] font-bold tabular-nums ' + (r.achieved ? 'text-[#2f7d5a]' : 'text-accent') + '">' + r.pct.toFixed(1) + '%</span>'
+                    + '<span class="ml-auto text-[15px] font-bold tabular-nums ' + (r.achieved ? 'text-[#2f7d5a]' : 'text-[#a82d43]') + '">' + r.pct.toFixed(1) + '%</span>'
                     + '</div>'
                     + '<div class="text-[9px] text-gray-400 mt-0.5 tabular-nums">' + String(it.code) + '</div>'
                     + '<div class="mt-2 flex items-stretch rounded-lg px-2.5 py-1.5" style="background:' + valuePanelBg + ';border:1px solid ' + valuePanelBorder + ';">'
@@ -16787,7 +17000,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="w-px flex-shrink-0 mx-2" style="background:' + valueDivider + ';"></div>'
                     + '<div class="flex-1 min-w-0">'
                     + '<div class="text-[9.5px]" style="color:' + valueLabel + ';">目标股数</div>'
-                    + '<div class="mt-0.5 flex items-baseline gap-0.5"><span class="text-[13px] font-bold leading-none tabular-nums" style="color:' + (r.achieved ? '#2f7d5a' : '#a9642a') + ';">' + targetFmtShares(r.target) + '</span><span class="text-[8.5px]" style="color:' + valueLabel + ';">股</span></div>'
+                    + '<div class="mt-0.5 flex items-baseline gap-0.5"><span class="text-[13px] font-bold leading-none tabular-nums" style="color:' + (r.achieved ? '#2f7d5a' : '#8f2437') + ';">' + targetFmtShares(r.target) + '</span><span class="text-[8.5px]" style="color:' + valueLabel + ';">股</span></div>'
                     + '</div>'
                     + '<div class="w-px flex-shrink-0 mx-2" style="background:' + valueDivider + ';"></div>'
                     + '<div class="flex-1 min-w-0 text-right">'
@@ -16795,11 +17008,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="mt-0.5 text-[13px] font-bold leading-none tabular-nums" style="color:' + (moneyMuted ? valueLabel : (r.achieved ? '#2f7d5a' : '#6b4a2a')) + ';">' + money + '</div>'
                     + '</div>'
                     + '</div>'
-                    + '<div class="mt-1.5 h-[3px] rounded-full ' + (r.achieved ? 'bg-[#e3f1e9]' : 'bg-[#f0e4cf]') + ' overflow-hidden"><div style="width:' + r.pct.toFixed(1) + '%;height:100%;border-radius:3px;background:' + (r.achieved ? 'linear-gradient(90deg,#6fb894,#2f7d5a)' : 'linear-gradient(90deg,#d8b07a,#a9642a)') + ';"></div></div>'
+                    + '<div class="mt-1.5 h-[3px] rounded-full ' + (r.achieved ? 'bg-[#e3f1e9]' : 'bg-[#f1e1e4]') + ' overflow-hidden"><div style="width:' + r.pct.toFixed(1) + '%;height:100%;border-radius:3px;background:' + (r.achieved ? 'linear-gradient(90deg,#6fb894,#2f7d5a)' : 'linear-gradient(90deg,#c99a4b,#a82d43 58%,#742034)') + ';"></div></div>'
                     + '<div class="flex items-center justify-between mt-1.5 text-[9.5px]">'
                     + (r.achieved
                         ? '<span class="inline-flex items-center gap-1 text-[#2f7d5a]/80"><i class="fa fa-check-circle text-[9px]"></i>提醒已停止</span><span class="text-[#2f7d5a] font-medium">调整目标 ›</span>'
-                        : '<span class="text-gray-400">还差 <span class="text-accent font-semibold text-[11.5px] tabular-nums">' + targetFmtShares(r.gap) + '</span> 股</span><span class="text-accent font-medium">调整目标 ›</span>')
+                        : '<span class="text-gray-400">还差 <span class="text-[#a82d43] font-semibold text-[11.5px] tabular-nums">' + targetFmtShares(r.gap) + '</span> 股</span><span class="text-[#8f2437] font-medium">调整目标 ›</span>')
                     + '</div>'
                     + '</div>';
             }).join('');
@@ -17820,10 +18033,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         : '<span class="text-[10px] text-accent bg-[#faf3e3] px-1.5 py-0.5 rounded flex-shrink-0">A</span>';
                     const isRecv = /^已收/.test(String(e.sub || ''));
                     const rowAccent = isRecv
-                        ? 'linear-gradient(180deg,#7b4bb8,#4c2579)'
+                        ? 'linear-gradient(180deg,#a82d43,#742034)'
                         : 'linear-gradient(180deg,#f59e0b,#d97706)';
                     const rowIcon = isRecv
-                        ? '<div class="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0" style="background:linear-gradient(135deg,#7b4bb8 0%,#4c2579 100%);box-shadow:0 3px 8px rgba(76,37,121,.28);"><span style="font-size:10px;font-weight:700;letter-spacing:.02em;line-height:1;">已收</span></div>'
+                        ? '<div class="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0" style="background:linear-gradient(135deg,#a82d43 0%,#742034 100%);box-shadow:0 3px 8px rgba(116,32,52,.22);"><span style="font-size:10px;font-weight:700;letter-spacing:.02em;line-height:1;">已收</span></div>'
                         : '<div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-md"><i class="fa fa-line-chart text-[13px]"></i></div>';
                     htmlY += '<div class="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 overflow-hidden relative">'
                         + '<div class="absolute left-0 top-0 bottom-0 w-1" style="background:' + rowAccent + ';"></div>'
@@ -21155,16 +21368,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#arCoverAsset').innerText = yearEndMarket > 0 ? fmtMoney(yearEndMarket) : '--';
             const niEl = document.querySelector('#arCoverNetInflow');
             niEl.innerText = (periodNetInflow >= 0 ? '+' : '') + fmtMoney(periodNetInflow);
-            niEl.className = 'text-sm font-semibold tabular-nums ' + (periodNetInflow >= 0 ? 'text-amber-100' : 'text-[#00a05c]');
+            niEl.className = 'ar-hero-metric-value ' + (periodNetInflow >= 0 ? 'ar-cover-gold' : 'ar-cover-down');
             const gEl = document.querySelector('#arCoverGain');
             gEl.innerText = yearStartMarket > 0 ? ((yearTotalGain >= 0 ? '+' : '') + fmtMoney(yearTotalGain)) : '--';
-            gEl.className = 'text-sm font-semibold tabular-nums ' + (yearTotalGain >= 0 ? 'text-[#ff8a8c]' : 'text-[#00a05c]');
+            gEl.className = 'ar-hero-metric-value ' + (yearStartMarket > 0 ? (yearTotalGain >= 0 ? 'ar-cover-up' : 'ar-cover-down') : 'ar-cover-gold');
             // 报告年总分红：当年用今年已收实时口径（手动基准 + 后续到账累加），历史年份用归档值
             const divThisYear = isCurYear ? getCurYearReceived() : ((historyData.yearlyDiv && historyData.yearlyDiv[reportYStr]) || 0);
             const cdEl = document.querySelector('#arCoverDiv');
             if(cdEl){
                 cdEl.innerText = divThisYear > 0 ? fmtMoney(divThisYear) : '--';
             }
+            // 年度资产轨迹：只读取 assetDaily 的真实每日快照，不做任何回算或估算
+            renderAnnualAssetChart(reportYStr);
             // 业绩摘要数据标签：历史年份显示"已归档数据"
             const dtEl = document.querySelector('#arDataTag');
             if(dtEl) dtEl.innerText = isCurYear ? '数据实时' : '已归档数据';
@@ -21177,10 +21392,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const yrEl = document.querySelector('#arYearReturn');
             if(yr != null && !isNaN(yr)){
                 yrEl.innerText = (yr >= 0 ? '+' : '') + yr.toFixed(2) + '%';
-                yrEl.className = 'text-4xl font-bold tabular-nums ' + (yr >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
+                yrEl.className = 'ar-return ' + (yr >= 0 ? 'ar-up' : 'ar-down');
             } else {
                 yrEl.innerText = '--';
-                yrEl.className = 'text-4xl font-bold tabular-nums text-gray-300';
+                yrEl.className = 'ar-return ar-flat';
             }
             document.querySelector('#arTotalAsset').innerText = yearEndMarket > 0 ? fmtMoney(yearEndMarket) : '--';
             // 资产增长板块
@@ -21189,14 +21404,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const agEl = document.querySelector('#arAssetGain');
             if(assetGain != null){
                 agEl.innerText = (assetGain >= 0 ? '+' : '') + fmtMoney(assetGain);
-                agEl.className = 'text-3xl font-bold tabular-nums ' + (assetGain >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
+                agEl.className = 'ar-gain ' + (assetGain >= 0 ? 'ar-up' : 'ar-down');
             } else {
                 agEl.innerText = '--';
-                agEl.className = 'text-3xl font-bold tabular-nums text-gray-300';
+                agEl.className = 'ar-gain ar-flat';
             }
             const agpEl = document.querySelector('#arAssetGainPct');
             agpEl.innerText = (yearEndMarket > 0 && yearStartMarket > 0) ? ('含净转入 · 较年初 ' + (assetGainPct >= 0 ? '+' : '') + assetGainPct.toFixed(2) + '%') : '年初数据不足';
-            agpEl.className = 'text-[11px] mt-1 tabular-nums text-gray-400';
+            agpEl.className = 'ar-caption';
             document.querySelector('#arAssetStart').innerText = yearStartMarket > 0 ? fmtMoney(yearStartMarket) : '--';
             document.querySelector('#arAssetEnd').innerText = yearEndMarket > 0 ? fmtMoney(yearEndMarket) : '--';
             // 分红增长板块：报告年分红 vs 上年分红（divThisYear 已在封面统一计算）
@@ -21209,21 +21424,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const dgEl = document.querySelector('#arDivGrow');
             if(divThisYear > 0 && divLastYear > 0){
                 dgEl.innerText = '较去年 ' + (divGain >= 0 ? '增长 +' : '下降 ') + Math.abs(divGain).toFixed(2) + ' · ' + (divGrowPct >= 0 ? '+' : '') + divGrowPct.toFixed(1) + '%';
-                dgEl.className = 'text-[12px] mt-2 font-semibold tabular-nums ' + (divGain >= 0 ? 'text-[#ff8a8c]' : 'text-[#00a05c]');
+                dgEl.className = 'ar-div-yoy ' + (divGain >= 0 ? 'ar-div-up' : 'ar-div-down');
             } else if(divThisYear > 0){
                 dgEl.innerText = '去年暂无分红数据，' + reportYStr + '是收息新起点';
-                dgEl.className = 'text-[12px] mt-2 font-semibold tabular-nums text-amber-100/70';
+                dgEl.className = 'ar-div-yoy ar-div-warn';
             } else {
                 dgEl.innerText = reportYStr + '年暂无分红记录';
-                dgEl.className = 'text-[12px] mt-2 font-semibold tabular-nums text-amber-100/70';
+                dgEl.className = 'ar-div-yoy ar-div-warn';
             }
             const dgaEl = document.querySelector('#arDivGainAmount');
             if(divThisYear > 0 && divLastYear > 0){
                 dgaEl.innerText = (divGain >= 0 ? '+' : '') + fmtMoney(divGain);
-                dgaEl.className = 'text-base font-semibold tabular-nums ' + (divGain >= 0 ? 'text-[#ff8a8c]' : 'text-[#00a05c]');
+                dgaEl.className = 'ar-dark-value ' + (divGain >= 0 ? 'ar-div-up' : 'ar-div-down');
             } else {
                 dgaEl.innerText = '--';
-                dgaEl.className = 'text-base font-semibold tabular-nums text-amber-100/70';
+                dgaEl.className = 'ar-dark-value ar-div-warn';
             }
             // 分红 · 月度节奏：报告年每月分红 vs 去年同月（图表仅打开/切年时渲染一次）
             const aggMonth = function(yrStr){
@@ -21256,18 +21471,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const avgPct = avgDiff / avgLast * 100;
                 mdVsEl.innerText = (avgDiff >= 0 ? '+' : '') + fmtMoney(avgDiff);
                 mdVsPctEl.innerText = (avgPct >= 0 ? '+' : '') + avgPct.toFixed(1) + '%';
-                mdVsEl.className = 'text-lg font-bold tabular-nums ' + (avgDiff >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
-                mdVsPctEl.className = 'text-[10px] font-semibold tabular-nums mt-0.5 ' + (avgDiff >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
+                mdVsEl.className = 'ar-month-vs ' + (avgDiff >= 0 ? 'ar-up' : 'ar-down');
+                mdVsPctEl.className = 'ar-month-vsp ' + (avgDiff >= 0 ? 'ar-up' : 'ar-down');
             } else if(avgThis > 0){
                 mdVsEl.innerText = '去年暂无';
                 mdVsPctEl.innerText = '';
-                mdVsEl.className = 'text-lg font-bold tabular-nums text-amber-600';
-                mdVsPctEl.className = 'text-[10px] font-semibold tabular-nums mt-0.5';
+                mdVsEl.className = 'ar-month-vs ar-flat';
+                mdVsPctEl.className = 'ar-month-vsp';
             } else {
                 mdVsEl.innerText = '--';
                 mdVsPctEl.innerText = '';
-                mdVsEl.className = 'text-lg font-bold tabular-nums text-gray-300';
-                mdVsPctEl.className = 'text-[10px] font-semibold tabular-nums mt-0.5';
+                mdVsEl.className = 'ar-month-vs ar-flat';
+                mdVsPctEl.className = 'ar-month-vsp';
             }
             const mdNoteEl = document.querySelector('#arMonthDivNote');
             if(!hasMonthDetail){
@@ -21318,7 +21533,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f3f3f3' } }, axisLabel: { fontSize: 10, color: '#bbb', formatter: function(v){ return v >= 10000 ? (v / 10000) + '万' : v; } } },
                         series: [
                             { name: reportYStr + '年', type: 'bar', data: curData, barWidth: '30%', itemStyle: { borderRadius: [3, 3, 0, 0], color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#f5c97b' }, { offset: 1, color: '#d89b3f' }] } } },
-                            { name: lastYStr + '年', type: 'bar', data: lastData, barWidth: '30%', itemStyle: { borderRadius: [3, 3, 0, 0], color: '#cbb8e8' } }
+                            { name: lastYStr + '年', type: 'bar', data: lastData, barWidth: '30%', itemStyle: { borderRadius: [3, 3, 0, 0], color: '#d8c3ad' } }
                         ]
                     });
                 }
@@ -21370,12 +21585,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 let h = '';
                 divRankList.forEach(function(x, i){
                     const pct = maxDiv > 0 ? (x.amount / maxDiv * 100) : 0;
-                    // 前三名徽章用高贵的紫金渐变，其余保持金色
+                    // 前三名徽章用酒红 / 暖金层次，其余保持低饱和纸色
                     const badgeCls = i < 3
-                        ? 'bg-gradient-to-br from-violet-500 via-purple-500 to-purple-700 shadow shadow-violet-300/40'
-                        : 'bg-gradient-to-br from-amber-400 to-amber-600';
+                        ? (i === 0 ? 'bg-[#8f2437] shadow shadow-[#8f2437]/30' : i === 1 ? 'bg-[#b6813c] shadow shadow-[#b6813c]/25' : 'bg-[#a89470]')
+                        : 'bg-[#eee1d4]';
+                    const badgeStyle = i < 3 ? '' : ' style="color:#8b7362"';
                     h += '<div class="flex items-center gap-2.5">'
-                        + '<div class="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 ' + badgeCls + '">' + (i + 1) + '</div>'
+                        + '<div class="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 ' + badgeCls + '"' + badgeStyle + '>' + (i + 1) + '</div>'
                         + '<div class="flex-1 min-w-0">'
                         + '<div class="flex items-center gap-1.5">'
                         + (x.item
@@ -21440,11 +21656,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const vs = yr - hsPct;
                     const vsEl = document.querySelector('#arVsIndex');
                     vsEl.innerText = (vs >= 0 ? '跑赢 +' : '跑输 ') + Math.abs(vs).toFixed(2) + '%';
-                    vsEl.className = 'text-sm font-semibold tabular-nums ' + (vs >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
+                    vsEl.className = 'ar-kpi-value ' + (vs >= 0 ? 'ar-up' : 'ar-down');
                 } else {
                     const vsEl = document.querySelector('#arVsIndex');
                     vsEl.innerText = '--';
-                    vsEl.className = 'text-sm font-semibold tabular-nums text-gray-800';
+                    vsEl.className = 'ar-kpi-value ar-flat';
                 }
             } else {
                 document.querySelector('#arIndexSH').innerText = '--';
@@ -21453,7 +21669,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(divEl2) divEl2.innerText = '--';
                 const vsEl = document.querySelector('#arVsIndex');
                 vsEl.innerText = '--';
-                vsEl.className = 'text-sm font-semibold tabular-nums text-gray-800';
+                vsEl.className = 'ar-kpi-value ar-flat';
             }
             // ===== 巴菲特式年度摘要（当年实时 / 历史归档，全部基于既有数据） =====
             {
@@ -21487,10 +21703,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(isCurYear && hsPctA != null && yr != null){
                         const vs2 = yr - hsPctA;
                         bhVsEl.innerText = (vs2 >= 0 ? '跑赢 +' : '跑输 ') + Math.abs(vs2).toFixed(2) + '%';
-                        bhVsEl.className = 'text-sm font-semibold tabular-nums ' + (vs2 >= 0 ? 'text-[#e03131]' : 'text-[#00a05c]');
+                        bhVsEl.className = 'ar-mini-value ' + (vs2 >= 0 ? 'ar-up' : 'ar-down');
                     } else {
                         bhVsEl.innerText = '--';
-                        bhVsEl.className = 'text-sm font-semibold tabular-nums text-gray-800';
+                        bhVsEl.className = 'ar-mini-value ar-flat';
                     }
                 }
             }
@@ -21499,29 +21715,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const mddEl = document.querySelector('#arMaxDrawdown');
             if(mdd && mdd.pct > 0){
                 mddEl.innerText = '-' + mdd.pct.toFixed(2) + '%';
-                mddEl.className = 'text-sm font-semibold tabular-nums text-[#00a05c]';
+                mddEl.className = 'ar-kpi-value ar-down';
             } else {
                 mddEl.innerText = '--';
-                mddEl.className = 'text-sm font-semibold tabular-nums text-gray-800';
+                mddEl.className = 'ar-kpi-value ar-flat';
             }
-            // 收益归因与榜单：仅当年实时计算；历史年份的持仓明细已归档，仅保留年度汇总
-            const starEl = document.querySelector('#arStarName');
-            const starReasonEl = document.querySelector('#arStarReason');
-            const starPnlEl = document.querySelector('#arStarPnl');
-            const badEl = document.querySelector('#arBadName');
-            const badReasonEl = document.querySelector('#arBadReason');
-            const badPnlEl = document.querySelector('#arBadPnl');
+            // 收益归因与榜单：与统计页「盈亏贡献榜」完全同一口径
             const starListEl = document.querySelector('#arStarList');
             const badListEl = document.querySelector('#arBadList');
+            const starCountEl = document.querySelector('#arStarCount');
+            const badCountEl = document.querySelector('#arBadCount');
+            const starSumEl = document.querySelector('#arStarSum');
+            const badSumEl = document.querySelector('#arBadSum');
             if(!isCurYear){
-                starEl.innerText = '已归档';
-                starReasonEl.innerText = '往年持仓明细不参与实时归因';
-                starPnlEl.innerText = '--';
-                badEl.innerText = '已归档';
-                badReasonEl.innerText = '往年持仓明细不参与实时归因';
-                badPnlEl.innerText = '--';
-                starListEl.innerHTML = '<div class="text-center text-gray-300 text-xs py-3">' + reportYStr + '年度持仓盈亏明细已归档，仅保留年度汇总</div>';
-                badListEl.innerHTML = '';
+                starListEl.innerHTML = '<div class="ar-contrib-empty">' + reportYStr + ' 年持仓盈亏明细已归档<br>仅保留年度汇总</div>';
+                badListEl.innerHTML = '<div class="ar-contrib-empty">' + reportYStr + ' 年持仓盈亏明细已归档<br>仅保留年度汇总</div>';
+                starCountEl.innerText = '--';
+                badCountEl.innerText = '--';
+                starSumEl.innerText = '--';
+                badSumEl.innerText = '--';
                 // 税费与费用：按报告年交易流水计算
                 const fees = calcAnnualFees(reportY);
                 const hasFee = (fees.stamp > 0 || fees.commission > 0 || fees.transfer > 0);
@@ -21529,9 +21741,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 document.querySelector('#arCommission').innerText = hasFee ? fmtMoney(fees.commission) : '--';
                 const arTf = document.querySelector('#arTransferFee');
                 if(arTf) arTf.innerText = hasFee ? fmtMoney(fees.transfer) : '--';
-                const feeTotalEl = document.querySelector('#arFeeTotal');
-                feeTotalEl.innerText = hasFee ? fmtMoney(fees.total) : '--';
-                feeTotalEl.className = 'font-bold tabular-nums text-gray-800';
+                document.querySelector('#arFeeTotal').innerText = hasFee ? fmtMoney(fees.total) : '--';
                 return;
             }
             // 当年：收益归因与榜单（按今年盈亏额排序，有年初基础价的股票才可计算）
@@ -21542,79 +21752,175 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pct = getYtdPct(it);
                 ranked.push({ item: it, pnl: ytd, pct: pct });
             });
-            ranked.sort(function(a, b){ return b.pnl - a.pnl; });
-            const stars = ranked.filter(function(x){ return x.pnl > 0; }).slice(0, 5);
-            const bads = ranked.filter(function(x){ return x.pnl < 0; }).slice(0, 5);
-            // 明星股 / 坑爹股卡片
-            if(stars.length){
-                const s = stars[0];
-                starEl.innerText = s.item.name;
-                starReasonEl.innerText = (s.pct != null ? '今年涨幅 ' + (s.pct >= 0 ? '+' : '') + s.pct.toFixed(2) + '%' : '年初基础价未获取');
-                starPnlEl.innerText = '+' + fmtMoney(s.pnl);
-            } else {
-                starEl.innerText = '暂无';
-                starReasonEl.innerText = '今年无盈利持仓';
-                starPnlEl.innerText = '--';
-            }
-            if(bads.length){
-                const b = bads[bads.length - 1];
-                badEl.innerText = b.item.name;
-                badReasonEl.innerText = (b.pct != null ? '今年涨幅 ' + (b.pct >= 0 ? '+' : '') + b.pct.toFixed(2) + '%' : '年初基础价未获取');
-                badPnlEl.innerText = fmtMoney(b.pnl);
-            } else {
-                badEl.innerText = '暂无';
-                badReasonEl.innerText = '今年无亏损持仓';
-                badPnlEl.innerText = '--';
-            }
-            // 明星股榜 / 坑爹股榜
-            if(stars.length){
-                let h = '';
-                stars.forEach(function(x, i){
-                    h += '<div class="flex items-center gap-2.5">'
-                        + '<div class="w-5 h-5 rounded-full bg-gradient-to-br from-red-400 to-red-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">' + (i + 1) + '</div>'
-                        + '<div class="flex-1 min-w-0">'
-                        + '<div class="flex items-center gap-1.5">'
-                        + '<span class="text-[13px] font-medium text-gray-800 truncate">' + x.item.name + '</span>'
-                        + '<span class="text-[9px] ' + (x.item.marketType === 'HK' ? 'text-blue-500 bg-blue-50' : 'text-accent bg-[#faf3e3]') + ' px-1 py-0.5 rounded flex-shrink-0">' + (x.item.marketType === 'HK' ? '港' : 'A') + '</span>'
-                        + '</div>'
-                        + (x.pct != null ? '<div class="text-[10px] text-gray-400 mt-0.5">今年涨幅 ' + (x.pct >= 0 ? '+' : '') + x.pct.toFixed(2) + '%</div>' : '')
-                        + '</div>'
-                        + '<div class="text-right flex-shrink-0"><div class="text-[13px] font-semibold text-[#e03131] tabular-nums">+' + fmtMoney(x.pnl) + '</div></div>'
-                        + '</div>';
-                });
-                starListEl.innerHTML = h;
-            } else {
-                starListEl.innerHTML = '<div class="text-center text-gray-300 text-xs py-3">今年暂无盈利持仓（或年初基础价未获取）</div>';
-            }
-            if(bads.length){
-                let h = '';
-                bads.forEach(function(x, i){
-                    h += '<div class="flex items-center gap-2.5">'
-                        + '<div class="w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">' + (i + 1) + '</div>'
-                        + '<div class="flex-1 min-w-0">'
-                        + '<div class="flex items-center gap-1.5">'
-                        + '<span class="text-[13px] font-medium text-gray-800 truncate">' + x.item.name + '</span>'
-                        + '<span class="text-[9px] ' + (x.item.marketType === 'HK' ? 'text-blue-500 bg-blue-50' : 'text-accent bg-[#faf3e3]') + ' px-1 py-0.5 rounded flex-shrink-0">' + (x.item.marketType === 'HK' ? '港' : 'A') + '</span>'
-                        + '</div>'
-                        + (x.pct != null ? '<div class="text-[10px] text-gray-400 mt-0.5">今年涨幅 ' + (x.pct >= 0 ? '+' : '') + x.pct.toFixed(2) + '%</div>' : '')
-                        + '</div>'
-                        + '<div class="text-right flex-shrink-0"><div class="text-[13px] font-semibold text-[#00a05c] tabular-nums">' + fmtMoney(x.pnl) + '</div></div>'
-                        + '</div>';
-                });
-                badListEl.innerHTML = h;
-            } else {
-                badListEl.innerHTML = '<div class="text-center text-gray-300 text-xs py-3">今年暂无亏损持仓（或年初基础价未获取）</div>';
-            }
+            const wins = ranked.filter(function(x){ return x.pnl > 0; }).sort(function(a, b){ return b.pnl - a.pnl; });
+            const losses = ranked.filter(function(x){ return x.pnl < 0; }).sort(function(a, b){ return a.pnl - b.pnl; });
+            const stars = wins.slice(0, 5);
+            const bads = losses.slice(0, 5);
+            const winSum = wins.reduce(function(s, x){ return s + x.pnl; }, 0);
+            const loseSum = losses.reduce(function(s, x){ return s + x.pnl; }, 0);
+            const annualContribRow = function(x, i, isWin){
+                const pctText = (x.pct != null) ? ((x.pct >= 0 ? '+' : '') + x.pct.toFixed(2) + '%') : '基础价未获取';
+                const code = String(x.item.code || '');
+                const market = x.item.marketType === 'HK' ? '港' : 'A';
+                const meta = market + (code ? ' · ' + code : '') + ' · ' + pctText;
+                const rankCls = i === 0 ? 'ar-rank-1' : i === 1 ? 'ar-rank-2' : i === 2 ? 'ar-rank-3' : 'ar-rank-rest';
+                return '<div class="ar-contrib-row">'
+                    + '<div class="ar-rank ' + rankCls + '">' + (i + 1) + '</div>'
+                    + '<div class="ar-contrib-main">'
+                    + '<div class="ar-contrib-name">' + x.item.name + '</div>'
+                    + '<div class="ar-contrib-meta">' + meta + '</div>'
+                    + '</div>'
+                    + '<div class="ar-contrib-amt ' + (isWin ? 'ar-up' : 'ar-down') + '">' + (isWin ? '+' : '') + fmtMoney(x.pnl) + '</div>'
+                    + '</div>';
+            };
+            starListEl.innerHTML = stars.length
+                ? stars.map(function(x, i){ return annualContribRow(x, i, true); }).join('')
+                : '<div class="ar-contrib-empty">今年暂无盈利持仓（或年初基础价未获取）</div>';
+            badListEl.innerHTML = bads.length
+                ? bads.map(function(x, i){ return annualContribRow(x, i, false); }).join('')
+                : '<div class="ar-contrib-empty">今年暂无亏损持仓（或年初基础价未获取）</div>';
+            starCountEl.innerText = wins.length + ' 只';
+            badCountEl.innerText = losses.length + ' 只';
+            starSumEl.innerText = wins.length ? '+' + fmtMoney(winSum) : '--';
+            badSumEl.innerText = losses.length ? fmtMoney(loseSum) : '--';
             // 税费与费用
             const fees = calcAnnualFees(curY);
             document.querySelector('#arStampTax').innerText = fmtMoney(fees.stamp);
             document.querySelector('#arCommission').innerText = fmtMoney(fees.commission);
             const arTf2 = document.querySelector('#arTransferFee');
             if(arTf2) arTf2.innerText = fmtMoney(fees.transfer);
-            const feeTotalEl = document.querySelector('#arFeeTotal');
-            feeTotalEl.innerText = fmtMoney(fees.total);
-            feeTotalEl.className = 'font-bold tabular-nums text-gray-800';
+            document.querySelector('#arFeeTotal').innerText = fmtMoney(fees.total);
                     renderArHealth();
+        }
+        // ---- 年度资产轨迹：只展示 assetDaily 中真实存在的每日总资产快照 ----
+        let _arAssetChartSeq = 0;
+        async function renderAnnualAssetChart(reportYStr){
+            const chartEl = document.querySelector('#chartAnnualAsset');
+            const emptyEl = document.querySelector('#arAssetChartEmpty');
+            const summaryEl = document.querySelector('#arAssetChartSummary');
+            const tagEl = document.querySelector('#arAssetChartTag');
+            const noteEl = document.querySelector('#arAssetChartNote');
+            if(!chartEl) return;
+            const seq = ++_arAssetChartSeq;
+            if(typeof echarts !== 'undefined'){
+                const old = echarts.getInstanceByDom(chartEl);
+                if(old) old.dispose();
+            }
+            chartEl.style.display = 'none';
+            if(emptyEl) emptyEl.classList.add('hidden');
+            if(summaryEl) summaryEl.innerHTML = '';
+            if(tagEl) tagEl.innerText = '每日快照';
+            if(noteEl) noteEl.innerText = '来自系统每日总资产快照，仅展示实际记录，不做估算。';
+            if(!AppDB.ok || !AppDB.db){
+                if(emptyEl) emptyEl.classList.remove('hidden');
+                if(noteEl) noteEl.innerText = '本地数据库未就绪，暂时无法读取每日资产快照。';
+                return;
+            }
+            let rows = [];
+            try{
+                rows = await AssetDaily.loadRange(reportYStr + '-01-01', reportYStr + '-12-31');
+            }catch(e){ rows = []; }
+            if(seq !== _arAssetChartSeq) return;
+            const rawPts = (rows || []).filter(function(r){
+                return r && r.date && Number.isFinite(Number(r.total));
+            }).map(function(r){
+                return { date: String(r.date), total: Number(r.total) };
+            });
+            // 总资产快照出现非正值时视为异常记录（总资产不可能为负），不参与绘图，并在说明中标注
+            const pts = rawPts.filter(function(p){ return p.total > 0; });
+            const dropped = rawPts.length - pts.length;
+            if(tagEl) tagEl.innerText = pts.length ? (pts.length + ' 个快照') : '每日快照';
+            if(pts.length < 2){
+                if(emptyEl) emptyEl.classList.remove('hidden');
+                if(noteEl) noteEl.innerText = '暂无足够的每日总资产快照；仅展示系统已有记录，不做估算。'
+                    + (dropped ? '（另有 ' + dropped + ' 个非正值异常快照已排除）' : '');
+                return;
+            }
+            const first = pts[0], last = pts[pts.length - 1];
+            let high = pts[0], low = pts[0];
+            pts.forEach(function(p){
+                if(p.total > high.total) high = p;
+                if(p.total < low.total) low = p;
+            });
+            if(summaryEl){
+                summaryEl.innerHTML = '<span class="ar-chip">期初 <b>' + fmtMoney(first.total) + '</b></span>'
+                    + '<span class="ar-chip">期末 <b>' + fmtMoney(last.total) + '</b></span>'
+                    + '<span class="ar-chip">最高 <b>' + fmtMoney(high.total) + '</b></span>'
+                    + '<span class="ar-chip">最低 <b>' + fmtMoney(low.total) + '</b></span>';
+            }
+            if(noteEl) noteEl.innerText = '来自系统每日总资产快照，共 ' + pts.length + ' 个实际记录；最高/最低为记录值，不做估算。'
+                + (dropped ? '已排除 ' + dropped + ' 个非正值异常快照。' : '');
+            chartEl.style.display = 'block';
+            if(typeof echarts === 'undefined') return;
+            const inst = echarts.init(chartEl);
+            inst.setOption({
+                animation: false,
+                tooltip: {
+                    trigger: 'axis',
+                    appendToBody: true,
+                    backgroundColor: 'rgba(255,253,249,.97)',
+                    borderColor: '#e8dccd',
+                    borderWidth: 1,
+                    textStyle: { color: '#3a2d26', fontSize: 11 },
+                    padding: [7, 10],
+                    formatter: function(params){
+                        const p = params && params[0];
+                        if(!p) return '';
+                        return '<div style="font-size:10px;color:#9b8a7c">' + p.axisValue + '</div>'
+                            + '<div style="font-size:12px;font-weight:700;margin-top:2px">' + fmtMoney(p.value) + '</div>';
+                    }
+                },
+                grid: { left: 4, right: 18, top: 10, bottom: 0, containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: pts.map(function(p){ return p.date; }),
+                    axisLine: { lineStyle: { color: '#eee3d7' } },
+                    axisTick: { show: false },
+                    axisLabel: {
+                        fontSize: 9,
+                        color: '#a49384',
+                        interval: Math.max(0, Math.floor(pts.length / 6) - 1),
+                        hideOverlap: true,
+                        formatter: function(v){ return String(v).slice(5).replace('-', '/'); }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    scale: true,
+                    splitNumber: 3,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    splitLine: { lineStyle: { color: '#f4eadf', type: 'dashed' } },
+                    axisLabel: {
+                        fontSize: 9,
+                        color: '#b3a293',
+                        hideOverlap: true,
+                        formatter: function(v){
+                            const a = Math.abs(Number(v));
+                            if(a >= 100000000) return (v / 100000000).toFixed(2) + '亿';
+                            if(a >= 10000) return (v / 10000).toFixed(1) + '万';
+                            return String(Math.round(v));
+                        }
+                    }
+                },
+                series: [{
+                    type: 'line',
+                    data: pts.map(function(p){ return p.total; }),
+                    showSymbol: false,
+                    smooth: 0.15,
+                    lineStyle: { width: 1.5, color: '#8f2437' },
+                    areaStyle: {
+                        color: {
+                            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [
+                                { offset: 0, color: 'rgba(143,36,55,.16)' },
+                                { offset: 1, color: 'rgba(201,154,75,.02)' }
+                            ]
+                        }
+                    }
+                }]
+            });
         }
         // ---- 组合健康点评：本地确定性规则引擎（无 AI，可复现、可解释） ----
         function calcArHealth(){
@@ -21842,8 +22148,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             bfDims.liquid += liqConcBf + liqMktBf;
             // 总分与评级（巴菲特评级标准）
             const bfScore = Math.max(0, Math.min(100, Math.round(bfDims.quality + bfDims.div + bfDims.risk + bfDims.capital + bfDims.liquid)));
-            let bfGrade = '', bfGradeColor = '#8b5cf6', bfGradeDesc = '';
-            if(bfScore >= 85){ bfGrade = '优秀'; bfGradeColor = '#8b5cf6'; bfGradeDesc = '伯克希尔风格组合：适合 30 年养老底仓，抗熊市能力强'; }
+            let bfGrade = '', bfGradeColor = '#8f2437', bfGradeDesc = '';
+            if(bfScore >= 85){ bfGrade = '优秀'; bfGradeColor = '#8f2437'; bfGradeDesc = '伯克希尔风格组合：适合 30 年养老底仓，抗熊市能力强'; }
             else if(bfScore >= 70){ bfGrade = '良好'; bfGradeColor = '#d4a017'; bfGradeDesc = '长期可用，存在局部短板，微调即可'; }
             else if(bfScore >= 55){ bfGrade = '一般'; bfGradeColor = '#f59e0b'; bfGradeDesc = '有明显风险，需要调整行业 / 个股仓位'; }
             else { bfGrade = '不合格'; bfGradeColor = '#ef4444'; bfGradeDesc = '不满足巴菲特长期投资原则，永久亏损风险偏高'; }
@@ -21923,7 +22229,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const bfObj = { score: bfScore, grade: bfGrade, gradeColor: bfGradeColor, gradeDesc: bfGradeDesc, pros: bfPros, cons: bfCons, tips: bfTips, dims: bfDims, hhi: hhiBf, maxW: maxWt, divRate: divRate, details: bfDetails, advices: bfAdvices, riskProfile: riskProfile, weak: bfWeak.slice(0, 5) };
             score = Math.max(0, Math.min(100, Math.round(score)));
             let grade = '', gradeColor = '#10b981', gradeDesc = '';
-            if(score >= 90){ grade = '卓越'; gradeColor = '#8b5cf6'; gradeDesc = '组合质量非常高，收息体系成熟，保持定力继续持有'; }
+            if(score >= 90){ grade = '卓越'; gradeColor = '#8f2437'; gradeDesc = '组合质量非常高，收息体系成熟，保持定力继续持有'; }
             else if(score >= 80){ grade = '优秀'; gradeColor = '#10b981'; gradeDesc = '组合健康，收息稳健，个别指标可继续优化'; }
             else if(score >= 70){ grade = '良好'; gradeColor = '#84cc16'; gradeDesc = '组合整体良好，仍有提升空间'; }
             else if(score >= 60){ grade = '稳健'; gradeColor = '#f59e0b'; gradeDesc = '组合基本稳健，需关注短板指标'; }
@@ -21943,7 +22249,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const ringHtml = function(score, color){
                 const off = RING * (1 - score / 100);
                 return '<svg viewBox="0 0 100 100" class="w-full h-full">'
-                    + '<circle cx="50" cy="50" r="42" fill="none" stroke="#f3f4f6" stroke-width="9"/>'
+                    + '<circle cx="50" cy="50" r="42" fill="none" stroke="#ece1d7" stroke-width="9"/>'
                     + '<circle cx="50" cy="50" r="42" fill="none" stroke="' + color + '" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + RING + '" stroke-dashoffset="' + off + '" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .8s ease"/>'
                     + '</svg>'
                     + '<div class="absolute inset-0 flex flex-col items-center justify-center">'
@@ -21956,7 +22262,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             h.cons.forEach(function(c, i){ if(!seenCons[c]){ seenCons[c] = 1; consPairs.push({ c: c, t: h.tips[i] }); } });
             h.bf.cons.forEach(function(c, i){ if(!seenCons[c]){ seenCons[c] = 1; consPairs.push({ c: c, t: h.bf.tips[i] }); } });
             let s = '<div class="grid grid-cols-2 gap-3">'
-                + '<div class="rounded-2xl px-3 py-3 flex flex-col items-center" style="background:#fafafa">'
+                + '<div class="rounded-2xl px-3 py-3 flex flex-col items-center" style="background:linear-gradient(135deg,#fbf6f1,#f8eee7)">'
                 + '<div class="relative w-20 h-20">' + ringHtml(h.score, h.gradeColor) + '</div>'
                 + '<div class="mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full text-white" style="background:' + h.gradeColor + '">组合健康 · ' + h.grade + '</div>'
                 + '<div class="text-[10px] text-gray-400 mt-1 text-center leading-relaxed">' + h.gradeDesc + '</div>'
@@ -21973,35 +22279,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="text-[11px] font-bold tabular-nums mt-0.5" style="color:' + color + '">' + v.toFixed(1) + '<span class="text-[8px] text-gray-300 font-normal">/' + max + '</span></div>'
                     + '</div>';
             };
-            s += '<div class="mt-3 rounded-2xl p-3" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff)">'
+            s += '<div class="mt-3 rounded-2xl p-3" style="background:linear-gradient(135deg,#fbf4ee,#f4e4dd)">'
                 + '<div class="flex items-center gap-1.5 mb-2">'
-                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#8b5cf6,#6d28d9)"></span>'
-                + '<span class="text-[11px] font-bold text-purple-700">【伯克希尔风格组合评估】</span>'
-                + '<span class="ml-auto text-[10px] text-purple-400 font-medium">总分 ' + h.bf.score + ' · 市值加权分项</span></div>'
+                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#8f2437,#5e1a2a)"></span>'
+                + '<span class="text-[11px] font-bold text-[#7a2233]">【伯克希尔风格组合评估】</span>'
+                + '<span class="ml-auto text-[10px] text-[#a8826a] font-medium">总分 ' + h.bf.score + ' · 市值加权分项</span></div>'
                 + '<div class="grid grid-cols-5 gap-1.5 text-center">'
-                + dimCell('底层生意', h.bf.dims.quality, 30, '#7c3aed')
-                + dimCell('分红可持续', h.bf.dims.div, 25, '#7c3aed')
-                + dimCell('安全边际', h.bf.dims.risk, 20, '#7c3aed')
-                + dimCell('资本配置', h.bf.dims.capital, 15, '#7c3aed')
-                + dimCell('流动性', h.bf.dims.liquid, 10, '#7c3aed')
+                + dimCell('底层生意', h.bf.dims.quality, 30, '#742034')
+                + dimCell('分红可持续', h.bf.dims.div, 25, '#742034')
+                + dimCell('安全边际', h.bf.dims.risk, 20, '#742034')
+                + dimCell('资本配置', h.bf.dims.capital, 15, '#742034')
+                + dimCell('流动性', h.bf.dims.liquid, 10, '#742034')
                 + '</div></div>';
             // ===== 伯克希尔顾问：分项扣分明细 + 优化配置建议 + 抗风险画像 =====
             if(h.bf.details && h.bf.details.length){
-                s += '<div class="mt-3 rounded-2xl p-3" style="background:linear-gradient(135deg,#faf5ff,#f5f0ff)">'
+                s += '<div class="mt-3 rounded-2xl p-3" style="background:linear-gradient(135deg,#fbf4ee,#fbf3ed)">'
                     + '<div class="flex items-center gap-1.5 mb-2">'
-                    + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#8b5cf6,#6d28d9)"></span>'
-                    + '<span class="text-[11px] font-bold text-purple-700">【伯克希尔顾问 · 分项扣分明细】</span>'
-                    + '<span class="ml-auto text-[10px] text-purple-400">五维市值加权</span></div>';
+                    + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#8f2437,#5e1a2a)"></span>'
+                    + '<span class="text-[11px] font-bold text-[#7a2233]">【伯克希尔顾问 · 分项扣分明细】</span>'
+                    + '<span class="ml-auto text-[10px] text-[#a8826a]">五维市值加权</span></div>';
                 h.bf.details.forEach(function(dm){
                     const lost = dm.f - dm.s;
                     const barPct = dm.f > 0 ? dm.s / dm.f * 100 : 0;
                     s += '<div class="rounded-xl bg-white px-2.5 py-2 mb-1.5 last:mb-0">'
                         + '<div class="flex items-center gap-1.5">'
                         + '<span class="text-[10px] text-gray-600 font-medium whitespace-nowrap w-[74px]">' + dm.name + '</span>'
-                        + '<div class="flex-1 h-[5px] rounded-full overflow-hidden" style="background:#eee">'
-                        + '<div style="width:' + barPct + '%;height:100%;background:' + (barPct >= 80 ? '#10b981' : barPct >= 60 ? '#f59e0b' : '#ef4444') + ';border-radius:999px"></div></div>'
+                        + '<div class="flex-1 h-[5px] rounded-full overflow-hidden" style="background:#efe4d8">'
+                        + '<div style="width:' + barPct + '%;height:100%;background:' + (barPct >= 80 ? '#a9752f' : barPct >= 60 ? '#f59e0b' : '#ef4444') + ';border-radius:999px"></div></div>'
                         + '<span class="text-[10px] font-semibold tabular-nums whitespace-nowrap">' + dm.s.toFixed(1) + '<span class="text-gray-300">/' + dm.f + '</span></span>'
-                        + (lost > 0.05 ? '<span class="text-[9px] text-red-500 whitespace-nowrap">扣 ' + lost.toFixed(1) + ' 分</span>' : '<span class="text-[9px] text-emerald-500 whitespace-nowrap">满分</span>')
+                        + (lost > 0.05 ? '<span class="text-[9px] text-red-500 whitespace-nowrap">扣 ' + lost.toFixed(1) + ' 分</span>' : '<span class="text-[9px] text-[#a9752f] whitespace-nowrap">满分</span>')
                         + '</div>'
                         + (dm.reasons && dm.reasons.length ? '<div class="mt-1 space-y-0.5">' + dm.reasons.map(function(r){ return '<div class="text-[10px] leading-relaxed" style="color:#a16207">· ' + r + '</div>'; }).join('') + '</div>' : '')
                         + '</div>';
@@ -22017,7 +22323,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 h.bf.advices.forEach(function(a){
                     s += '<div class="rounded-xl bg-white/80 px-2.5 py-2 mb-1.5 last:mb-0">'
                         + '<div class="flex items-center gap-1.5">'
-                        + '<span class="text-[9px] font-semibold text-white px-1.5 py-0.5 rounded-full flex-shrink-0" style="background:#8b5cf6">' + a.tag + '</span>'
+                        + '<span class="text-[9px] font-semibold text-white px-1.5 py-0.5 rounded-full flex-shrink-0" style="background:#8f2437">' + a.tag + '</span>'
                         + '<span class="text-[11px] font-semibold text-gray-700">' + a.issue + '</span></div>'
                         + '<div class="text-[11px] leading-relaxed mt-1" style="color:#374151">→ ' + a.action + '</div>'
                         + (a.effect ? '<div class="text-[10px] mt-0.5" style="color:#d97706">· ' + a.effect + '</div>' : '')
@@ -22029,39 +22335,39 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const rp = h.bf.riskProfile;
                 s += '<div class="mt-3 rounded-2xl p-3" style="background:#fff">'
                     + '<div class="flex items-center gap-1.5 mb-2">'
-                    + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#10b981,#047857)"></span>'
-                    + '<span class="text-[11px] font-bold text-emerald-700">【组合抗风险画像】</span>'
+                    + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#a9752f,#7a4a12)"></span>'
+                    + '<span class="text-[11px] font-bold text-[#7a4a12]">【组合抗风险画像】</span>'
                     + '<span class="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full text-white" style="background:' + rp.color + '">抗衰退 ' + rp.rating + '</span></div>'
                     + '<div class="grid grid-cols-3 gap-2">'
-                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa"><div class="text-[9px] text-gray-400">防御型 · 公用/银行/消费/电信</div><div class="text-[13px] font-bold mt-0.5" style="color:#10b981">' + rp.defPct.toFixed(1) + '%</div></div>'
-                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa"><div class="text-[9px] text-gray-400">资源型 · 能源/黄金/煤炭</div><div class="text-[13px] font-bold mt-0.5" style="color:#d4a017">' + rp.resPct.toFixed(1) + '%</div></div>'
-                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa"><div class="text-[9px] text-gray-400">周期型 · 有色/钢铁/化工/地产</div><div class="text-[13px] font-bold mt-0.5" style="color:#f59e0b">' + rp.cycPct.toFixed(1) + '%</div></div>'
+                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fbf6f1"><div class="text-[9px] text-gray-400">防御型 · 公用/银行/消费/电信</div><div class="text-[13px] font-bold mt-0.5" style="color:#a9752f">' + rp.defPct.toFixed(1) + '%</div></div>'
+                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fbf6f1"><div class="text-[9px] text-gray-400">资源型 · 能源/黄金/煤炭</div><div class="text-[13px] font-bold mt-0.5" style="color:#d4a017">' + rp.resPct.toFixed(1) + '%</div></div>'
+                    + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fbf6f1"><div class="text-[9px] text-gray-400">周期型 · 有色/钢铁/化工/地产</div><div class="text-[13px] font-bold mt-0.5" style="color:#f59e0b">' + rp.cycPct.toFixed(1) + '%</div></div>'
                     + '</div>'
-                    + (rp.note ? '<div class="text-[10px] mt-2 leading-relaxed" style="color:#047857">' + rp.note + '</div>' : '')
+                    + (rp.note ? '<div class="text-[10px] mt-2 leading-relaxed" style="color:#7a4a12">' + rp.note + '</div>' : '')
                     + '</div>';
             }
             s += '<div class="grid grid-cols-3 gap-2 mt-3">'
-                + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa">'
+                + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fbf6f1">'
                 + '<div class="text-[10px] text-gray-400">持仓数</div>'
                 + '<div class="text-[13px] font-semibold text-gray-700 tabular-nums mt-0.5">' + h.n + ' 只</div></div>'
-                + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa">'
+                + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fbf6f1">'
                 + '<div class="text-[10px] text-gray-400">组合股息率' + (h.isCurYear ? '（预计）' : '') + '</div>'
                 + '<div class="text-[13px] font-semibold text-gray-700 tabular-nums mt-0.5">' + (h.divRate > 0 ? h.divRate.toFixed(2) + '%' : '--') + '</div></div>'
-                + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa">'
+                + '<div class="rounded-xl px-2 py-2 text-center" style="background:#fbf6f1">'
                 + '<div class="text-[10px] text-gray-400">最大持仓</div>'
                 + '<div class="text-[13px] font-semibold text-gray-700 tabular-nums mt-0.5 truncate">' + h.maxPct.toFixed(1) + '%</div></div>'
                 + '</div>';
             s += '<div class="mt-4 flex items-center gap-1.5 mb-1.5">'
-                + '<i class="fa fa-check-circle text-emerald-500 text-[12px]"></i>'
-                + '<span class="text-[12px] font-semibold text-emerald-600">优点</span>'
+                + '<i class="fa fa-check-circle text-[#a9752f] text-[12px]"></i>'
+                + '<span class="text-[12px] font-semibold text-[#7a4a12]">优点</span>'
                 + '<span class="text-[9px] text-gray-300">PROS</span>'
                 + '<span class="ml-auto text-[10px] text-gray-300 tabular-nums">' + prosAll.length + ' 项</span></div>';
             if(prosAll.length){
                 s += '<div class="space-y-1.5">' + prosAll.map(function(t){
-                    return '<div class="rounded-lg px-2.5 py-1.5 text-[12px] leading-relaxed" style="background:rgba(16,185,129,.07);color:#047857">✓ ' + t + '</div>';
+                    return '<div class="rounded-lg px-2.5 py-1.5 text-[12px] leading-relaxed" style="background:rgba(201,154,75,.10);color:#7a4a12">✓ ' + t + '</div>';
                 }).join('') + '</div>';
             } else {
-                s += '<div class="rounded-lg px-2.5 py-1.5 text-[12px] text-gray-400" style="background:#fafafa">暂无明显优点</div>';
+                s += '<div class="rounded-lg px-2.5 py-1.5 text-[12px] text-gray-400" style="background:#fbf6f1">暂无明显优点</div>';
             }
             s += '<div class="mt-4 flex items-center gap-1.5 mb-1.5">'
                 + '<i class="fa fa-exclamation-triangle text-amber-500 text-[12px]"></i>'
@@ -22076,7 +22382,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         + '</div>';
                 }).join('') + '</div>';
             } else {
-                s += '<div class="rounded-lg px-2.5 py-1.5 text-[12px] text-emerald-600" style="background:rgba(16,185,129,.07)">✓ 无明显短板，组合结构健康</div>';
+                s += '<div class="rounded-lg px-2.5 py-1.5 text-[12px] text-[#7a4a12]" style="background:rgba(201,154,75,.10)">✓ 无明显短板，组合结构健康</div>';
             }
             body.innerHTML = s;
         }

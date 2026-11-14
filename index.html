@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261114.331';</script>
+    <script>window.APP_VERSION = '20261114.335';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -1808,18 +1808,36 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             <div class="relative z-10 flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
-                    <div class="text-[9px] tracking-[0.2em] mb-1.5" style="color:rgba(143,36,55,.62)">资产快照</div>
-                    <div class="text-[11px] mb-1" style="color:#8a7354">当前总资产</div>
+                    <div class="text-[9px] tracking-[0.2em] mb-2" style="color:rgba(143,36,55,.62)">资产快照</div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-[11px]" style="color:#8a7354">当前总资产</span>
+                    </div>
                     <div id="ahTotalAsset" class="text-[32px] leading-none font-bold tabular-nums tracking-tight" style="color:#1f2937">--</div>
-                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2.5">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-4">
                         <span class="text-[9px] font-semibold rounded-full px-2 py-0.5" style="background:#f8ecef;border:1px solid #e8cdd4;color:#742034">市值 + 现金</span>
                     </div>
                 </div>
-                <div class="flex-shrink-0 text-right pt-1">
-                    <div class="text-[9px] tracking-[0.16em]" style="color:#9a8b76">账户</div>
-                    <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="background:#f8ecef;border:1px solid #e8cdd4">
+                <div class="flex-shrink-0 w-[104px] sm:w-[132px] text-right pt-0.5">
+                    <span id="ahAssetTier" class="inline-flex items-center gap-1.5 rounded-full pl-2 pr-2.5 py-[5px]" style="background:linear-gradient(135deg,#241f1a 0%,#332a21 55%,#443628 100%);border:1px solid rgba(236,210,154,.48);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 1px 3px rgba(58,42,28,.16);" title="资产段位">
+                        <span id="ahTierCode" class="text-[11px] font-semibold leading-none tracking-[.08em]" style="font-family:Georgia,'Times New Roman',serif;color:#ecd29a;">A1</span>
+                        <span class="w-px h-[9px]" style="background:rgba(232,200,138,.35);"></span>
+                        <span id="ahTierName" class="text-[9px] leading-none tracking-[.08em]" style="color:#ead6ad;">初启</span>
+                    </span>
+                    <div class="mt-1.5 flex items-center justify-end gap-1 text-[8px] leading-none tracking-[.06em]" style="color:#9a8b76">
                         <span class="w-1 h-1 rounded-full" style="background:#8f2437;box-shadow:0 0 0 3px rgba(143,36,55,.10)"></span>
-                        <span class="text-[9px]" style="color:#742034">实时</span>
+                        <span>账户 · 实时</span>
+                    </div>
+                    <div id="ahTierProgressWrap" class="mt-2.5">
+                        <div class="text-[9px] leading-none" style="color:#a4937e"><span id="ahTierNextPrefix">距</span> <span id="ahTierNext" style="color:#6e5a45">--</span></div>
+                        <div class="mt-1 flex items-center justify-end gap-1 text-[9px] leading-none" style="color:#a4937e">
+                            <span id="ahTierGapPrefix">还差</span>
+                            <span id="ahTierGap" class="tabular-nums" style="color:#8a7354">--</span>
+                        </div>
+                        <div class="mt-1.5 ml-auto w-[20vw] max-w-[82px] h-[2px] rounded-full overflow-hidden" style="background:rgba(143,36,55,.10)">
+                            <div id="ahTierBar" class="relative h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#b98f50,#ecd29a);transition:width .5s cubic-bezier(.22,1,.36,1)">
+                                <span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-[3px] rounded-full" style="background:#f6e4bb;box-shadow:0 0 4px rgba(236,210,154,.85)"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -9461,6 +9479,76 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             cumEl.style.fontSize = cumEl.innerText.length >= 12 ? '10px' : '11.5px';
         }
 
+        const ASSET_TIERS = [
+            { min: 0, code: 'A1', name: '初启', tone: '#c3a57f', border: 'rgba(195,165,127,.38)' },
+            { min: 10, code: 'A2', name: '萌芽', tone: '#c3a57f', border: 'rgba(195,165,127,.38)' },
+            { min: 100, code: 'A3', name: '积累', tone: '#c3a57f', border: 'rgba(195,165,127,.38)' },
+            { min: 1000, code: 'A4', name: '成长', tone: '#ecd29a', border: 'rgba(236,210,154,.48)' },
+            { min: 10000, code: 'A5', name: '进阶', tone: '#ecd29a', border: 'rgba(236,210,154,.48)' },
+            { min: 100000, code: 'A6', name: '稳健', tone: '#ecd29a', border: 'rgba(236,210,154,.48)' },
+            { min: 1000000, code: 'A7', name: '富足', tone: '#f0d7a0', border: 'rgba(240,215,160,.60)' },
+            { min: 10000000, code: 'A8', name: '丰盛', tone: '#f0d7a0', border: 'rgba(240,215,160,.60)' },
+            { min: 100000000, code: 'A9', name: '尊享', tone: '#f7e4b8', border: 'rgba(247,228,184,.72)' },
+            { min: 1000000000, code: 'A10', name: '卓越', tone: '#f7e4b8', border: 'rgba(247,228,184,.72)' },
+            { min: 10000000000, code: 'A11', name: '殿堂', tone: '#f7e4b8', border: 'rgba(247,228,184,.72)' },
+            { min: 100000000000, code: 'A12', name: '传奇', tone: '#f7e4b8', border: 'rgba(247,228,184,.72)' }
+        ];
+        function assetTierOf(total){
+            const v = Number(total);
+            const amount = isFinite(v) && v > 0 ? v : 0;
+            let tier = ASSET_TIERS[0];
+            for(let i = 0; i < ASSET_TIERS.length; i++){
+                if(amount >= ASSET_TIERS[i].min) tier = ASSET_TIERS[i];
+                else break;
+            }
+            return tier;
+        }
+        function fmtTierGap(v){
+            const n = Math.max(0, Number(v) || 0);
+            if(n >= 100000000) return (n / 100000000).toFixed(2) + '亿';
+            if(n >= 10000) return (n / 10000).toFixed(2) + '万';
+            return Math.round(n).toLocaleString('zh-CN') + '元';
+        }
+        function updateAssetTierBadge(total){
+            const wrap = document.querySelector('#ahAssetTier');
+            const code = document.querySelector('#ahTierCode');
+            const name = document.querySelector('#ahTierName');
+            const nextEl = document.querySelector('#ahTierNext');
+            const gapEl = document.querySelector('#ahTierGap');
+            const nextPrefix = document.querySelector('#ahTierNextPrefix');
+            const gapPrefix = document.querySelector('#ahTierGapPrefix');
+            const barEl = document.querySelector('#ahTierBar');
+            if(!wrap || !code || !name) return;
+            const raw = Number(total);
+            const amount = isFinite(raw) && raw > 0 ? raw : 0;
+            const tier = assetTierOf(amount);
+            const idx = ASSET_TIERS.indexOf(tier);
+            const next = idx >= 0 ? ASSET_TIERS[idx + 1] : null;
+            code.innerText = tier.code;
+            name.innerText = tier.name;
+            code.style.color = tier.tone;
+            name.style.color = tier.tone;
+            wrap.style.borderColor = tier.border;
+            wrap.title = '资产段位 ' + tier.code + ' · ' + tier.name;
+            if(nextEl && gapEl && barEl){
+                let pct = 100;
+                if(next){
+                    const span = next.min - tier.min;
+                    pct = span > 0 ? (amount - tier.min) / span * 100 : 100;
+                    if(nextPrefix) nextPrefix.innerText = '距';
+                    if(gapPrefix) gapPrefix.innerText = '还差';
+                    nextEl.innerText = next.code + ' · ' + next.name;
+                    gapEl.innerText = fmtTierGap(next.min - amount);
+                } else {
+                    if(nextPrefix) nextPrefix.innerText = '';
+                    if(gapPrefix) gapPrefix.innerText = '';
+                    nextEl.innerText = '最高段位';
+                    gapEl.innerText = '传奇 · 已达成';
+                }
+                barEl.style.width = Math.max(0, Math.min(100, pct)).toFixed(2) + '%';
+            }
+        }
+
         function renderAssetTrendPage(){
             const st = getAssetHighState();
             const hv = document.querySelector('#ahHighVal');
@@ -9472,6 +9560,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const setTxt = function(id, v, color){ const el = document.querySelector('#' + id); if(!el) return; el.innerText = v; if(color) el.style.color = color; };
             // 总资产 Hero：用“万”单位保持大字可读，完整金额放在 title 里兜底
             setTxt('ahTotalAsset', fmtMoney(pr.totalAsset));
+            updateAssetTierBadge(pr.totalAsset);
             const __taEl = document.querySelector('#ahTotalAsset');
             if(__taEl){
                 const __taLen = __taEl.innerText.length;

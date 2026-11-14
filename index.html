@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261114.311';</script>
+    <script>window.APP_VERSION = '20261114.322';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -228,6 +228,28 @@
                 font-size: 15px;
                 line-height: 1.22;
                 white-space: nowrap;
+            }
+            /* 列表第二行数值统一 13.8px，第一行保持 15px */
+            #holdList .hold-list-val.hold-list-sub {
+                font-size: 13.8px;
+            }
+            /* 已回本股票第二行市值：低饱和灰酒红，与涨红区分 */
+            #holdList .hold-list-val.hold-recovered-sub {
+                color: #9c6b72;
+            }
+            /* 卡片模式「更多指标」第二行低位数值：13.8px，单行显示 */
+            #holdList .hold-card-sub {
+                font-size: 13.8px;
+                white-space: nowrap;
+            }
+            /* 卡片模式累计盈亏数值：单行显示，便于按单元格宽度逐项判断 */
+            #holdList .hold-card-pnl-val {
+                white-space: nowrap;
+            }
+            /* 成本/累计盈亏列：允许按列宽收缩，避免长数值把整列撑宽 */
+            #holdList .hold-cost-cell,
+            #holdList .hold-pnl-cell {
+                min-width: 0;
             }
             /* 数字变化平滑过渡 */
             .num-transition {
@@ -31544,6 +31566,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             body.classList.toggle('hidden', !willOpen);
             if(arrow) arrow.classList.toggle('rotate-180', willOpen);
             if(label) label.textContent = willOpen ? '收起指标' : '更多指标';
+            if(willOpen) fitCardPnlOverflowFonts(card);
         };
         // ==================== 行情刷新增量更新（A：只更新数字节点，不重建列表） ====================
         // 顶部汇总卡增量更新（含今日盈亏/资产新高）：renderPage 全量渲染与行情刷新共用同一段逻辑
@@ -31772,7 +31795,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(lastN && lastN.nodeType === 3) lastN.nodeValue = txt;
             else el.innerText = txt;
             if(cls){
-                el.className = el.className.replace(/text-\[#e03131\]|text-\[#00a05c\]|text-gray-400|text-gray-500|text-gray-600|text-gray-700|text-gray-800|text-purple-600|text-purple-700/g, '');
+                el.className = el.className.replace(/text-\[#e03131\]|text-\[#00a05c\]|text-gray-400|text-gray-500|text-gray-600|text-gray-700|text-gray-800|text-purple-400|text-purple-600|text-purple-700|hold-recovered-sub/g, '');
                 el.className += ' ' + cls;
             }
         }
@@ -31848,6 +31871,51 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 setNumText(card.querySelector('.hq-be-no'), fmtBeYears(beD.beNo), beNoCls);
                 setNumText(card.querySelector('.hq-be-re'), fmtBeYears(beD.beRe), beReCls);
             });
+            fitCardPnlOverflowFonts(document.querySelector('#holdList'));
+        }
+
+        // 列表模式：成本/累计盈亏列逐项检测；成本整数部分达 4 位或单项溢出时降为 12px
+        function fitListOverflowFonts(listDom){
+            const root = listDom || document.querySelector('#holdList');
+            if(!root) return;
+            root.querySelectorAll('.hold-row').forEach(function(row){
+                const cells = row.querySelectorAll('.hold-cost-cell, .hold-pnl-cell');
+                cells.forEach(function(cell){
+                    if(!cell.clientWidth) return;
+                    const vals = cell.querySelectorAll('.hold-list-val');
+                    if(!vals.length) return;
+                    // 先移除上一轮内联字号，让第一行 15px、第二行 13.8px 的基准生效
+                    vals.forEach(function(v){ v.style.fontSize = ''; });
+                    vals.forEach(function(v){
+                        let needSmall = v.scrollWidth > cell.clientWidth;
+                        if(v.getAttribute('data-field') === 'cost'){
+                            const digits = (v.textContent || '').replace(/[^0-9.]/g, '').split('.')[0].replace(/^0+/, '');
+                            if(digits.length >= 4) needSmall = true;
+                        }
+                        if(needSmall) v.style.fontSize = '12px';
+                    });
+                });
+            });
+        }
+
+        // 卡片模式：累计盈亏单元格逐项检测，单个数值超出可用宽度时降为 12px
+        function fitCardPnlOverflowFonts(root){
+            const scope = root || document.querySelector('#holdList');
+            if(!scope) return;
+            const cards = (scope.classList && scope.classList.contains('hold-card'))
+                ? [scope]
+                : scope.querySelectorAll('#holdList .hold-card');
+            cards.forEach(function(card){
+                const cell = card.querySelector('.hold-card-pnl-cell');
+                if(!cell || !cell.clientWidth) return;
+                const vals = cell.querySelectorAll('.hold-card-pnl-val');
+                if(!vals.length) return;
+                // 先移除上一轮内联字号，让第一行 15px、第二行 13.8px 的基准生效
+                vals.forEach(function(v){ v.style.fontSize = ''; });
+                vals.forEach(function(v){
+                    if(v.clientWidth && v.scrollWidth > v.clientWidth) v.style.fontSize = '12px';
+                });
+            });
         }
 
         // 列表模式：行内 data-field 锚点（market/price/dayPnl/dayPnlPct/holdPct/pnl/pnlPct）
@@ -31879,8 +31947,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         dayPnlPctText = (pct != null && !isNaN(pct)) ? ((pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%') : '--';
                     }
                 }
-                setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal), isCostRecovered ? 'text-purple-600' : 'text-gray-800');
-                setNumText(row.querySelector('[data-field="holdPct"]'), holdPct + '%', 'text-gray-700');
+                setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal), isCostRecovered ? 'hold-recovered-sub' : 'text-gray-500');
+                setNumText(row.querySelector('[data-field="holdPct"]'), holdPct + '%', 'text-gray-500');
                 setNumText(row.querySelector('[data-field="price"]'), fmtListPrice(item.nowPrice), 'text-gray-700');
                 setNumText(row.querySelector('[data-field="dayPnl"]'), dayPnlText, dayPnlClass);
                 const dayPnlPctEl = row.querySelector('[data-field="dayPnlPct"]');
@@ -31896,6 +31964,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 listPrevValues.dayPnlPct[code] = pct;
             });
+            fitListOverflowFonts(document.querySelector('#holdList'));
         }
 
         // 持仓页行情增量刷新入口（A）：非滚动时由 refreshAll 调用；滚动停止后补渲染
@@ -32084,22 +32153,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <div class="px-1 py-2 text-center">
                                 <div class="text-[10px] text-gray-400">今年涨幅</div>
                                 <div class="text-[15px] font-semibold mt-0.5 ${ytdPnlClass} tabular-nums hq-ytdpnl">${ytdPnlText}</div>
-                                <div class="text-[15px] font-medium mt-0.5 ${ytdClass} tabular-nums hq-ytd">${ytdText}</div>
+                                <div class="hold-card-sub font-medium mt-0.5 ${ytdClass} tabular-nums hq-ytd">${ytdText}</div>
                             </div>
-                            <div class="px-1 py-2 text-center split-line">
+                            <div class="px-1 py-2 text-center split-line hold-card-pnl-cell">
                                 <div class="text-[10px] text-gray-400">累计盈亏</div>
-                                <div class="text-[15px] font-semibold mt-0.5 ${itemPnlClass} tabular-nums hq-pnl">${formatPnl(itemPnl)}</div>
-                                <div class="text-[15px] font-medium mt-0.5 ${itemPnlClass} tabular-nums hq-pnlpct">${pnlPctText}</div>
+                                <div class="text-[15px] font-semibold mt-0.5 ${itemPnlClass} tabular-nums hq-pnl hold-card-pnl-val">${formatPnl(itemPnl)}</div>
+                                <div class="hold-card-sub hold-card-pnl-val font-medium mt-0.5 ${itemPnlClass} tabular-nums hq-pnlpct">${pnlPctText}</div>
                             </div>
                             <div class="px-1 py-2 text-center split-line">
                                 <div class="text-[10px] text-gray-400">现价/息率</div>
                                 <div class="text-[15px] font-semibold text-gray-800 mt-0.5 tabular-nums hq-price"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
-                                <div class="text-[15px] font-medium mt-0.5 text-gray-800 tabular-nums hq-yield">${stockYield}%</div>
+                                <div class="hold-card-sub font-medium mt-0.5 text-gray-800 tabular-nums hq-yield">${stockYield}%</div>
                             </div>
                             <div class="px-1 py-2 text-center split-line">
                                 <div class="text-[10px] text-gray-400">最新涨幅</div>
                                 <div class="text-[15px] font-semibold mt-0.5 ${dayChangeClass} tabular-nums hq-chg">${dayChangeAmtText}</div>
-                                <div class="text-[15px] font-medium mt-0.5 ${dayChangeClass} tabular-nums hq-chgpct">${dayChangePctText}</div>
+                                <div class="hold-card-sub font-medium mt-0.5 ${dayChangeClass} tabular-nums hq-chgpct">${dayChangePctText}</div>
                             </div>
                         </div>
                         <!-- 折叠区底部：低频管理操作（明细 / 编辑 / 目标）左对齐，与右侧主操作（买入/卖出）分居两侧 -->
@@ -32132,6 +32201,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     if(label) label.textContent = '收起指标';
                 }
             });
+            fitCardPnlOverflowFonts(holdListDom);
         }
 
         // 列表模式渲染（卡片风格：整个表格在一个白色卡片上，按行业分组显示）
@@ -32169,10 +32239,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             htmlStr += `
             <div class="bg-white overflow-visible" style="margin:0 -0.75rem;">
                 <!-- 表头：sticky固定在顶部，滚动时一直可见 -->
-                <div class="sticky top-0 z-20 grid pl-4 pr-4 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-lg" style="grid-template-columns:1.38fr 0.90fr 1.32fr 1.18fr 1.12fr">
+                <div class="sticky top-0 z-20 grid pl-4 pr-4 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-lg" style="grid-template-columns:1.38fr 0.90fr 1.18fr 1.28fr 1.16fr">
                     <div class="text-left text-[12px] text-gray-400 font-medium">名称/市值</div>
                     <div class="text-right text-[12px] text-gray-400 font-medium">个股仓位</div>
-                    <div class="text-right text-[12px] text-gray-400 font-medium">成本/现价</div>
+                    <div class="text-right text-[12px] text-gray-400 font-medium">现价/成本</div>
                     <div class="text-right text-[12px] text-gray-400 font-medium">累计盈亏</div>
                     <div class="text-right text-[12px] text-gray-400 font-medium">当日盈亏</div>
                 </div>
@@ -32250,7 +32320,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         ? 'bg-gradient-to-r from-purple-50 via-purple-100/40 to-purple-50 border border-purple-200/60'
                         : 'bg-white';
                     // 市值颜色：已回本股票显示紫色
-                    const marketValueClass = isCostRecovered ? 'text-purple-600' : 'text-gray-800';
+                    const marketValueSubClass = isCostRecovered ? 'hold-recovered-sub' : 'text-gray-500';
                     // 市值数字与股票名左对齐（名称行左对齐贴序号后，数字固定缩进logo+gap宽度）
                     const mvText = fmtMoney(itemMarketTotal);
                     // 行风格：和卡片视图的两行一致（bg-pageBg rounded-xl），列表模式不可点击编辑
@@ -32261,7 +32331,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         ? ';border-bottom:0.6px solid #F0EDE7'
                         : '';
                     htmlStr += `
-                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300 cursor-pointer" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="grid-template-columns:1.38fr 0.90fr 1.32fr 1.18fr 1.12fr${rowDivider}">
+                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300 cursor-pointer" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="grid-template-columns:1.38fr 0.90fr 1.18fr 1.28fr 1.16fr${rowDivider}">
                         <div class="text-left pl-[2px]">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
@@ -32270,24 +32340,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                             <div class="flex items-center gap-1 mt-1">
                                 <span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none ${tagBg} flex-shrink-0">${tagText}</span>
-                                <div class="hold-list-val font-medium ${marketValueClass} tabular-nums list-num" data-code="${item.code}" data-field="market">${mvText}</div>
+                                <div class="hold-list-val hold-list-sub font-medium ${marketValueSubClass} tabular-nums list-num" data-code="${item.code}" data-field="market">${mvText}</div>
                             </div>
                         </div>
                         <div class="text-right">
                             <div class="hold-list-val font-medium text-gray-700 tabular-nums">${item.count}</div>
-                            <div class="hold-list-val font-medium text-gray-700 mt-1 tabular-nums list-num" data-field="holdPct">${holdPct}%</div>
+                            <div class="hold-list-val hold-list-sub font-medium text-gray-500 mt-1 tabular-nums list-num" data-field="holdPct">${holdPct}%</div>
                         </div>
-                        <div class="text-right">
-                            <div class="hold-list-val font-medium text-gray-700 tabular-nums"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtListCost(item.costPrice)}</div>
-                            <div class="hold-list-val font-medium text-gray-700 mt-1 tabular-nums list-num" data-code="${item.code}" data-field="price"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtListPrice(item.nowPrice)}</div>
+                        <div class="text-right hold-cost-cell">
+                            <div class="hold-list-val font-medium text-gray-700 tabular-nums" data-code="${item.code}" data-field="price"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtListPrice(item.nowPrice)}</div>
+                            <div class="hold-list-val hold-list-sub font-medium text-gray-500 mt-1 tabular-nums" data-field="cost"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtListCost(item.costPrice)}</div>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right hold-pnl-cell">
                             <div class="hold-list-val font-medium ${itemPnlClass2} tabular-nums list-num" data-field="pnl">${formatPnl(itemPnl2)}</div>
-                            <div class="hold-list-val font-medium ${itemPnlClass2} mt-1 tabular-nums list-num" data-field="pnlPct">${pnlPctText2}</div>
+                            <div class="hold-list-val hold-list-sub font-medium ${itemPnlClass2} mt-1 tabular-nums list-num" data-field="pnlPct">${pnlPctText2}</div>
                         </div>
                         <div class="text-right pr-[2px]">
                             <div class="hold-list-val font-medium ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
-                            <div class="hold-list-val font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
+                            <div class="hold-list-val hold-list-sub font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>
                     </div>
                     <!-- 列表模式点击行展开的操作层：买入/卖出/编辑/明细（与卡片模式功能一致；再点行收起） -->
@@ -32303,6 +32373,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             });
             htmlStr += '<div class="h-2"></div></div>';
             holdListDom.innerHTML = htmlStr;
+            fitListOverflowFonts(holdListDom);
 
             // 渲染后仅检测当日盈亏百分比变化，触发柔和闪烁（东方财富通风格）
             setTimeout(function(){

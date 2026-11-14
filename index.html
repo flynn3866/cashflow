@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261114.335';</script>
+    <script>window.APP_VERSION = '20261114.338';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -17119,6 +17119,32 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 ? '<div class="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-full px-2.5 py-[3px] ring-1 ring-[#cde7db]" style="background:#e8f5ee;color:#2f7d5a;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);"><i class="fa fa-check-circle text-[8.5px] flex-shrink-0"></i><span class="text-[9.5px] font-semibold whitespace-nowrap flex-shrink-0">已完成全部目标</span></div>'
                 : '';
             const focusChip = allDone ? allDoneChip : (priorityChip || nearestChip);
+            const topPositionRow = (holdDataList || []).slice()
+                .filter(function(it){ return Number(it.count) > 0 && getMarketValue(it) > 0; })
+                .sort(function(a, b){ return getMarketValue(b) - getMarketValue(a); })[0] || null;
+            const quoteItem = (!allDone && priorityRow) ? priorityRow.item : topPositionRow;
+            let focusQuote = '';
+            if(quoteItem){
+                const quotePct = getEffectiveChangePct(quoteItem.changePct);
+                const quoteChg = getEffectiveChange(quoteItem.change);
+                const quoteName = String(quoteItem.name || '').trim() || '--';
+                const quotePrice = Number(quoteItem.nowPrice) > 0 ? fmtListPrice(quoteItem.nowPrice) : '--';
+                const quotePriceText = quotePrice === '--' ? '--' : ((quoteItem.marketType === 'HK' ? 'HK$' : '') + quotePrice);
+                const quoteChgText = (quoteChg == null || isNaN(quoteChg)) ? '--' : ((quoteChg > 0 ? '+' : '') + quoteChg.toFixed(3));
+                const quotePctText = (quotePct == null || isNaN(quotePct)) ? '--' : ((quotePct > 0 ? '+' : '') + quotePct.toFixed(2) + '%');
+                const quoteTone = (quotePct == null || isNaN(quotePct))
+                    ? ((quoteChg == null || isNaN(quoteChg)) ? '#8a7a67' : (quoteChg > 0 ? '#e03131' : (quoteChg < 0 ? '#00a05c' : '#8a7a67')))
+                    : (quotePct > 0 ? '#e03131' : (quotePct < 0 ? '#00a05c' : '#8a7a67'));
+                focusQuote = '<div class="mt-2.5 pt-2 flex items-center gap-1.5 text-[9.5px] leading-none border-t" style="border-color:rgba(143,36,55,.10)">'
+                    + '<span class="font-semibold truncate" style="color:#3a302b;max-width:92px">' + targetEsc(quoteName) + '</span>'
+                    + '<span style="color:#a4937e">现价</span>'
+                    + '<span class="font-semibold tabular-nums" style="color:#3a302b">' + quotePriceText + '</span>'
+                    + '<span class="ml-auto" style="color:#a4937e">今日</span>'
+                    + '<span class="font-semibold tabular-nums" style="color:' + quoteTone + '">' + quoteChgText + '</span>'
+                    + '<span style="color:#c8b6a4">·</span>'
+                    + '<span class="font-medium tabular-nums" style="color:' + quoteTone + '">' + quotePctText + '</span>'
+                    + '</div>';
+            }
             el.classList.remove('hidden');
             el.innerHTML = '<div class="relative overflow-hidden rounded-2xl border px-4 py-3 cursor-pointer active:scale-[0.99] transition-transform" style="background:linear-gradient(135deg,#fffdf8 0%,#f7ecd8 100%);border-color:' + border + ';border-left:3px solid ' + rail + ';box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 4px 14px ' + shadow + ';" onclick="openTargetOverview()">'
                 + '<div class="flex items-center gap-3">'
@@ -17135,6 +17161,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '</div>'
                 + '<svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
                 + '</div>'
+                + focusQuote
                 + '</div>';
         }
         function renderStockTargetCard(){
@@ -32358,7 +32385,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const indPct = totalMarketForPct > 0 ? (ind.totalMV / totalMarketForPct * 100).toFixed(1) : 0;
                 // 行业标题行：左侧彩色竖条 + 行业名 + 股票数 + 仓位百分比（靠着标题右边）
                 htmlStr += `
-                <div class="grid grid-cols-12 mx-0 mt-3 mb-1.5 rounded-xl overflow-hidden items-center" style="background:#faf5e9;border:1px solid rgba(176,101,47,.18)">
+                <div class="grid grid-cols-12 mx-0 mt-3 mb-1.5 rounded-none overflow-hidden items-center" style="background:#faf5e9;border:1px solid rgba(176,101,47,.18)">
                     <div class="col-span-12 flex items-center gap-2 pl-[15px] pr-3 py-2.5">
                         <span class="w-1 h-4 rounded-full flex-shrink-0" style="background:${indColor}"></span>
                         <span class="text-[12px] font-medium text-gray-700">${ind.name}</span>

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261114.338';</script>
+    <script>window.APP_VERSION = '20261114.339';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -420,6 +420,7 @@
             to{ opacity:1; transform:scale(1) translateY(0); }
         }
         body{ -webkit-tap-highlight-color:transparent; overscroll-behavior:none; }
+        html{ background-color:#f5efe3; overscroll-behavior-y:none; }
         /* 触摸设备：财务表原生横向滚动禁用（避免 iOS 横向橡皮筋），横向由方向分流手势 JS 驱动 scrollLeft；桌面保留原生横向滚动与滚动条 */
         @media (hover:none) and (pointer:coarse){ #sdFinBody{ overflow-x:hidden; } }
         .no-spinner::-webkit-inner-spin-button,.no-spinner::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
@@ -35468,6 +35469,67 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <button onclick="resetGoalCfg()" class="w-full mt-3 text-[11px] text-gray-400 active:text-gray-600">恢复默认目标</button>
         </div>
     </div>
+
+    <script>
+    /* iOS 页面级橡皮筋约束：只在页面/独立滚动容器到达顶底边界时拦截继续拉扯，
+       正常滚动、横向手势、输入框与可编辑区域全部走原生行为，不改变现有滚动链路。 */
+    (function(){
+        if(!('ontouchstart' in window)) return;
+        if(!window.matchMedia || !window.matchMedia('(pointer:coarse)').matches) return;
+        let sx = 0, sy = 0, ly = 0, tracking = false, scroller = null;
+        function isEditable(target){
+            return !!(target && target.closest && target.closest('input,textarea,select,[contenteditable="true"]'));
+        }
+        function findScroller(target){
+            let el = target;
+            while(el && el !== document.body && el !== document.documentElement){
+                const cs = window.getComputedStyle(el);
+                const oy = cs.overflowY;
+                if((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && el.scrollHeight - el.clientHeight > 1){
+                    return el;
+                }
+                el = el.parentElement;
+            }
+            return document.scrollingElement || document.documentElement;
+        }
+        function isDoc(el){
+            return el === document.scrollingElement || el === document.documentElement;
+        }
+        function atTop(el){
+            return isDoc(el) ? (window.scrollY <= 0) : (el.scrollTop <= 0);
+        }
+        function atBottom(el){
+            if(isDoc(el)){
+                const doc = document.scrollingElement || document.documentElement;
+                return window.scrollY + window.innerHeight >= doc.scrollHeight - 1;
+            }
+            return el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+        }
+        document.addEventListener('touchstart', function(e){
+            if(e.touches.length !== 1 || isEditable(e.target)){ tracking = false; return; }
+            const t = e.touches[0];
+            sx = t.clientX; sy = ly = t.clientY;
+            scroller = findScroller(e.target);
+            tracking = true;
+        }, {passive:true, capture:true});
+        document.addEventListener('touchmove', function(e){
+            if(!tracking || e.touches.length !== 1 || e.defaultPrevented) return;
+            const t = e.touches[0];
+            const dx = Math.abs(t.clientX - sx), dy = Math.abs(t.clientY - sy);
+            if(dx > dy + 2) return;
+            if(!scroller){ tracking = false; return; }
+            const step = t.clientY - ly;
+            if(step > 0 && atTop(scroller)){
+                e.preventDefault();
+            }else if(step < 0 && atBottom(scroller)){
+                e.preventDefault();
+            }
+            ly = t.clientY;
+        }, {passive:false, capture:true});
+        document.addEventListener('touchend', function(){ tracking = false; }, {passive:true, capture:true});
+        document.addEventListener('touchcancel', function(){ tracking = false; }, {passive:true, capture:true});
+    })();
+    </script>
 
 </body>
 </html>

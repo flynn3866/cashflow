@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261115.355';</script>
+    <script>window.APP_VERSION = '20261115.357';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -334,6 +334,80 @@
             content:'';position:absolute;top:-74px;right:-52px;width:180px;height:180px;border-radius:50%;
             background:radial-gradient(circle,rgba(168,45,67,.07),transparent 68%);
             pointer-events:none;
+        }
+        /* 总资产详情·资产段位轨道 */
+        .ah-tier-rail{
+            position:relative;z-index:10;margin-top:13px;padding:10px 11px 9px;
+            border:1px solid rgba(234,223,206,.82);border-radius:14px;
+            background:linear-gradient(180deg,rgba(255,255,255,.78) 0%,rgba(255,251,245,.36) 100%);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.86);
+        }
+        .ah-tier-rail-head{display:flex;align-items:baseline;gap:7px;min-width:0}
+        .ah-tier-eyebrow{font-size:8.5px;font-weight:600;letter-spacing:.12em;color:#a4937e;white-space:nowrap}
+        .ah-tier-current{display:inline-flex;align-items:center;gap:5px;min-width:0}
+        .ah-tier-current b{
+            font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1;font-weight:700;
+            letter-spacing:.03em;color:#742034;
+        }
+        .ah-tier-current span{font-size:9.5px;color:#6e5a45;letter-spacing:.02em;white-space:nowrap}
+        .ah-tier-count{
+            margin-left:auto;font-size:9px;color:#a4937e;white-space:nowrap;
+            font-variant-numeric:tabular-nums;letter-spacing:.04em;
+        }
+        .ah-tier-track{position:relative;height:22px;margin-top:7px}
+        .ah-tier-line{
+            position:absolute;left:0;right:0;top:10px;height:2px;border-radius:999px;
+            background:linear-gradient(90deg,#efe3d2,#f3e9dc);
+        }
+        .ah-tier-fill{
+            position:absolute;left:0;top:10px;height:2px;width:0;border-radius:999px;
+            background:linear-gradient(90deg,#b98f50,#ecd29a);
+            box-shadow:0 0 7px rgba(236,210,154,.32);
+            transition:width .72s cubic-bezier(.22,1,.36,1);
+        }
+        .ah-tier-nodes{position:absolute;inset:0}
+        .ah-tier-codes{position:relative;height:9px;margin-top:1px}
+        .ah-tier-code{
+            position:absolute;top:0;transform:translateX(-50%);
+            font-size:7.5px;line-height:1;letter-spacing:0;
+            color:#b5a38c;font-variant-numeric:tabular-nums;white-space:nowrap;
+        }
+        .ah-tier-code.is-minor{opacity:.55}
+        .ah-tier-code.is-past{color:#9a8469;opacity:.82}
+        .ah-tier-code.is-minor:not(.is-current){opacity:.60}
+        .ah-tier-code.is-current{color:#742034;font-weight:700;opacity:1}
+        .ah-tier-code.is-edge-start{transform:none}
+        .ah-tier-code.is-edge-end{transform:translateX(-100%)}
+        .ah-tier-node{
+            position:absolute;top:11px;transform:translate(-50%,-50%);
+            width:5px;height:5px;border-radius:50%;background:#e8dac8;
+            box-shadow:inset 0 0 0 1px rgba(143,36,55,.06);
+            transition:transform .2s ease,opacity .2s ease;
+        }
+        .ah-tier-node.is-minor{width:4px;height:4px;opacity:.72}
+        .ah-tier-node.is-major{width:6px;height:6px;opacity:.78}
+        .ah-tier-node.is-past{
+            background:linear-gradient(135deg,#c9a45e,#ecd29a);
+            box-shadow:0 0 0 1px rgba(185,143,80,.10),0 1px 3px rgba(185,143,80,.10);
+            opacity:1;
+        }
+        .ah-tier-node.is-current{
+            width:10px;height:10px;z-index:3;opacity:1;
+            background:radial-gradient(circle at 34% 28%,#a82d43 0%,#742034 70%);
+            border:1px solid rgba(236,210,154,.82);
+            box-shadow:0 0 0 3px rgba(236,210,154,.20),0 2px 7px rgba(143,36,55,.28);
+            animation:ahTierArrive .5s cubic-bezier(.22,1,.36,1) both;
+        }
+        .ah-tier-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;font-size:9px;line-height:1.2}
+        .ah-tier-next{color:#6e5a45;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ah-tier-gap{color:#a4937e;font-variant-numeric:tabular-nums;white-space:nowrap}
+        @keyframes ahTierArrive{
+            0%{transform:translate(-50%,-50%) scale(.52);opacity:.25}
+            100%{transform:translate(-50%,-50%) scale(1);opacity:1}
+        }
+        @media (prefers-reduced-motion: reduce){
+            .ah-tier-fill{transition:none}
+            .ah-tier-node.is-current{animation:none}
         }
         /* 交易明细页：做T经营结果卡，沿用年度分红 hero 的「主数字 + 三白格」结构 */
         #tradeLogDayWrap .tl-sum-grid{
@@ -2661,18 +2735,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span class="w-1 h-1 rounded-full" style="background:#8f2437;box-shadow:0 0 0 3px rgba(143,36,55,.10)"></span>
                         <span>账户 · 实时</span>
                     </div>
-                    <div id="ahTierProgressWrap" class="mt-2.5">
-                        <div class="text-[9px] leading-none" style="color:#a4937e"><span id="ahTierNextPrefix">距</span> <span id="ahTierNext" style="color:#6e5a45">--</span></div>
-                        <div class="mt-1 flex items-center justify-end gap-1 text-[9px] leading-none" style="color:#a4937e">
-                            <span id="ahTierGapPrefix">还差</span>
-                            <span id="ahTierGap" class="tabular-nums" style="color:#8a7354">--</span>
-                        </div>
-                        <div class="mt-1.5 ml-auto w-[20vw] max-w-[82px] h-[2px] rounded-full overflow-hidden" style="background:rgba(143,36,55,.10)">
-                            <div id="ahTierBar" class="relative h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#b98f50,#ecd29a);transition:width .5s cubic-bezier(.22,1,.36,1)">
-                                <span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-[3px] rounded-full" style="background:#f6e4bb;box-shadow:0 0 4px rgba(236,210,154,.85)"></span>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+            </div>
+
+            <!-- 资产段位轨道：全宽成长线，A1-A5用小点，A6+为大节点 -->
+            <div id="ahTierJourney" class="ah-tier-rail" aria-label="资产段位进度">
+                <div class="ah-tier-rail-head">
+                    <span class="ah-tier-eyebrow">资产段位</span>
+                    <span class="ah-tier-current"><b id="ahTierRailCode">A1</b><span id="ahTierRailName">初启</span></span>
+                    <span id="ahTierRailCount" class="ah-tier-count">1 / 12</span>
+                </div>
+                <div id="ahTierTrack" class="ah-tier-track" role="progressbar" aria-valuemin="1" aria-valuemax="12" aria-valuenow="1" aria-label="资产段位轨道">
+                    <div class="ah-tier-line"></div>
+                    <div id="ahTierFill" class="ah-tier-fill"></div>
+                    <div id="ahTierNodes" class="ah-tier-nodes"></div>
+                </div>
+                <div id="ahTierCodes" class="ah-tier-codes" aria-hidden="true"></div>
+                <div class="ah-tier-foot">
+                    <span id="ahTierRailNext" class="ah-tier-next">下一站 A2 · 萌芽</span>
+                    <span id="ahTierRailGap" class="ah-tier-gap">还差 ¥10</span>
                 </div>
             </div>
 
@@ -10437,11 +10518,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const wrap = document.querySelector('#ahAssetTier');
             const code = document.querySelector('#ahTierCode');
             const name = document.querySelector('#ahTierName');
-            const nextEl = document.querySelector('#ahTierNext');
-            const gapEl = document.querySelector('#ahTierGap');
-            const nextPrefix = document.querySelector('#ahTierNextPrefix');
-            const gapPrefix = document.querySelector('#ahTierGapPrefix');
-            const barEl = document.querySelector('#ahTierBar');
             if(!wrap || !code || !name) return;
             const raw = Number(total);
             const amount = isFinite(raw) && raw > 0 ? raw : 0;
@@ -10454,23 +10530,50 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             name.style.color = tier.tone;
             wrap.style.borderColor = tier.border;
             wrap.title = '资产段位 ' + tier.code + ' · ' + tier.name;
-            if(nextEl && gapEl && barEl){
-                let pct = 100;
-                if(next){
-                    const span = next.min - tier.min;
-                    pct = span > 0 ? (amount - tier.min) / span * 100 : 100;
-                    if(nextPrefix) nextPrefix.innerText = '距';
-                    if(gapPrefix) gapPrefix.innerText = '还差';
-                    nextEl.innerText = next.code + ' · ' + next.name;
-                    gapEl.innerText = fmtTierGap(next.min - amount);
-                } else {
-                    if(nextPrefix) nextPrefix.innerText = '';
-                    if(gapPrefix) gapPrefix.innerText = '';
-                    nextEl.innerText = '最高段位';
-                    gapEl.innerText = '传奇 · 已达成';
-                }
-                barEl.style.width = Math.max(0, Math.min(100, pct)).toFixed(2) + '%';
+            renderAssetTierRail(amount, tier, idx, next);
+        }
+        function renderAssetTierRail(amount, tier, idx, next){
+            const nodesEl = document.querySelector('#ahTierNodes');
+            const codesEl = document.querySelector('#ahTierCodes');
+            const fillEl = document.querySelector('#ahTierFill');
+            const trackEl = document.querySelector('#ahTierTrack');
+            const codeEl = document.querySelector('#ahTierRailCode');
+            const nameEl = document.querySelector('#ahTierRailName');
+            const countEl = document.querySelector('#ahTierRailCount');
+            const nextEl = document.querySelector('#ahTierRailNext');
+            const gapEl = document.querySelector('#ahTierRailGap');
+            if(!nodesEl || !fillEl || !trackEl) return;
+            const n = ASSET_TIERS.length;
+            let nodes = '', codes = '';
+            for(let i = 0; i < n; i++){
+                const t = ASSET_TIERS[i];
+                const state = i < idx ? 'is-past' : (i === idx ? 'is-current' : 'is-future');
+                const size = i <= 4 ? 'is-minor' : 'is-major';
+                const left = n > 1 ? (i / (n - 1) * 100) : 0;
+                const start = i === 0 ? '起点' : ('起步 ' + fmtTierGap(t.min));
+                nodes += '<span class="ah-tier-node ' + size + ' ' + state + '" style="left:' + left.toFixed(4) + '%" title="' + t.code + ' · ' + t.name + ' · ' + start + '"></span>';
+                const edge = i === 0 ? ' is-edge-start' : (i === n - 1 ? ' is-edge-end' : '');
+                codes += '<span class="ah-tier-code ' + size + ' ' + state + edge + '" style="left:' + left.toFixed(4) + '%">' + t.code + '</span>';
             }
+            nodesEl.innerHTML = nodes;
+            if(codesEl) codesEl.innerHTML = codes;
+            if(codeEl) codeEl.innerText = tier.code;
+            if(nameEl) nameEl.innerText = tier.name;
+            if(countEl) countEl.innerText = (idx + 1) + ' / ' + n;
+            if(nextEl) nextEl.innerText = next ? ('下一站 ' + next.code + ' · ' + next.name) : '最高段位 · 传奇';
+            if(gapEl) gapEl.innerText = next ? ('还差 ' + fmtTierGap(next.min - amount)) : '已抵达最高段位';
+            trackEl.setAttribute('aria-valuenow', String(idx + 1));
+            trackEl.setAttribute('aria-valuetext', tier.code + ' · ' + tier.name);
+            let pct = 100;
+            if(next){
+                const span = next.min - tier.min;
+                const within = span > 0 ? Math.max(0, Math.min(1, (amount - tier.min) / span)) : 0;
+                pct = n > 1 ? ((idx + within) / (n - 1) * 100) : 0;
+            }
+            fillEl.style.width = '0%';
+            const setWidth = function(){ fillEl.style.width = Math.max(0, Math.min(100, pct)).toFixed(2) + '%'; };
+            if(typeof requestAnimationFrame === 'function') requestAnimationFrame(setWidth);
+            else setTimeout(setWidth, 0);
         }
 
         function renderAssetTrendPage(){

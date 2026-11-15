@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261115.360';</script>
+    <script>window.APP_VERSION = '20261115.367';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -702,6 +702,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .stats-t-rank-foot strong{ font-size:9px; font-weight:650; font-variant-numeric:tabular-nums; }
         .stats-t-empty{ padding:20px 8px 18px; text-align:center; color:#a39684; font-size:9.5px; }
         .stats-t-foot{ padding:7px 4px 0; font-size:7.5px; line-height:1.45; color:#a39684; }
+        /* ===== 交易统计页：做T月度走势（全账户近12个月柱形） ===== */
+        .stats-tm-card{ position:relative; overflow:hidden; border-radius:18px; background:#fff; border:1px solid #f1e7d6; box-shadow:0 8px 24px rgba(93,72,38,.06), 0 1px 2px rgba(93,72,38,.04); }
+        .stats-tm-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#f8ecef,#8f2437 20%,#742034 50%,#8f2437 80%,#f8ecef); }
+        .stats-tm-head{ position:relative; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:14px 14px 9px; border-bottom:1px solid #f4ecdd; }
+        .stats-tm-title-row{ display:flex; align-items:center; gap:6px; min-width:0; }
+        .stats-tm-title{ font-size:13px; font-weight:600; line-height:1.2; color:#3d352b; }
+        .stats-tm-sub{ margin-top:3px; font-size:8px; line-height:1.3; color:#a39684; }
+        .stats-tm-total{ flex-shrink:0; padding-left:4px; text-align:right; }
+        .stats-tm-total-label{ font-size:7.5px; line-height:1.2; color:#a39684; white-space:nowrap; }
+        #statsTMonthlyTotal{ margin-top:3px; font-size:14px; line-height:1.1; font-weight:750; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .stats-tm-chart{ height:190px; margin:0 2px; }
+        .stats-tm-empty{ display:none; height:150px; margin:8px 14px 0; align-items:center; justify-content:center; flex-direction:column; gap:3px; border:1px dashed #eadac3; border-radius:10px; text-align:center; background:#fffdf9; }
+        .stats-tm-empty strong{ font-size:10px; font-weight:600; color:#9a8b76; }
+        .stats-tm-empty span{ font-size:8px; color:#b3a48f; }
+        .stats-tm-foot{ margin:0 14px; padding:7px 0 12px; border-top:1px solid #f0e3d2; font-size:7.5px; line-height:1.5; color:#a39684; }
+        @media (max-width:360px){ .stats-tm-title{ font-size:12px; } .stats-tm-chart{ height:178px; } }
         @media (max-width:360px){ .stats-t-amount{ font-size:26px; } .stats-t-tab{ font-size:9.5px; } .stats-t-row-name{ font-size:9.5px; } }
         /* ===== 资金流水统计：资金结构 / 近12个月瀑布 / 年度账单 ===== */
         .cashstat-map{ position:relative; overflow:hidden; border-radius:20px; background:#fffaf3; border:1px solid #efe0c9; box-shadow:0 3px 10px rgba(87,54,23,.07),0 1px 3px rgba(87,54,23,.05); }
@@ -2800,7 +2816,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="h-[3px]" style="background:linear-gradient(90deg,#f8ecef,#8f2437 20%,#742034 50%,#8f2437 80%,#f8ecef);"></div>
             <div class="px-5 pt-3.5 pb-3 border-b border-[#f4ecdd]">
                 <div class="flex items-start gap-2.5">
-                    <div class="w-[3px] h-6 rounded-full mt-0.5 shrink-0" style="background:linear-gradient(180deg,#8f2437,#5b1828);"></div>
+                    <div class="stats-t-mark mt-0.5">
+                        <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
+                    </div>
                     <div class="min-w-0">
                         <div class="flex items-baseline gap-2">
                             <span id="ahTrendTitle" class="text-[15px] font-semibold text-gray-800 tracking-wide">收益率轨迹</span>
@@ -2900,7 +2918,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 72 法则：翻倍时间的一条刻度尺 -->
         <div class="surface-hero mb-4">
             <div class="px-5 py-2.5 flex items-center gap-2" style="border-bottom:1px solid #efe2ca">
-                <div class="w-1 h-4 rounded-full" style="background:linear-gradient(180deg,#8f2437,#5b1828);"></div>
+                <div class="stats-t-mark">
+                    <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l4.5-4.5 3.5 3 8-9"/><path d="M20 7.5v5h-5"/></svg>
+                </div>
                 <div class="min-w-0">
                     <div class="text-[14px] font-semibold text-gray-800">资产翻倍推演</div>
                     <div class="text-[9.5px] mt-0.5" style="color:#a4937e">同样一笔钱翻倍，不同年化下的时间差</div>
@@ -4916,6 +4936,33 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
                 <div class="stats-t-foot">按本期已闭环做T净收益排序；同一股票合并当前持仓与已清仓流水；买卖均按扣费后净价计算。</div>
             </div>
+        </div>
+        <!-- 做T月度走势：全账户近12个月柱形 -->
+        <div id="statsTMonthlyCard" class="stats-tm-card mb-4">
+            <div class="stats-tm-head">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="stats-t-mark">
+                        <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="stats-tm-title-row">
+                            <span class="stats-tm-title">做T月度走势</span>
+                            <span class="stats-t-chip">近12个月</span>
+                        </div>
+                        <div class="stats-tm-sub">全账户 · 已闭环做T净收益</div>
+                    </div>
+                </div>
+                <div class="stats-tm-total">
+                    <div class="stats-tm-total-label">近12月累计</div>
+                    <div id="statsTMonthlyTotal">--</div>
+                </div>
+            </div>
+            <div id="statsTMonthlyChart" class="stats-tm-chart"></div>
+            <div id="statsTMonthlyEmpty" class="stats-tm-empty">
+                <strong>近12个月暂无已闭环的做T</strong>
+                <span>有买卖闭环后，会在这里按月汇总</span>
+            </div>
+            <div class="stats-tm-foot">按自然月汇总全部股票；仅计当月已闭环做T，月初底仓不参与配对；买卖按扣费后净价计算。</div>
         </div>
         <!-- 全部交易 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
@@ -26185,6 +26232,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let statsTradeFilter = 'all';
         let statsTradePageCount = 10;
         let statsTPeriod = 'month'; // 交易统计页做T期间：day / month / half / year
+        let statsTMonthlyChart = null;
         function updateStatsTradeFilterUI(){
             document.querySelectorAll('.stats-trade-filter').forEach(function(b){
                 const on = b.getAttribute('data-f') === statsTradeFilter;
@@ -26578,6 +26626,148 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + statsTContribColumn('亏损前五', false, loseTop, loseAll.length, loseSum, '暂无亏损')
                 + '</div>';
         }
+        // ===== 做T月度走势（全账户近12个月） =====
+        // 与“做T盈利”共用 statsTTargets + statsTRangeItem 区间配对口径：
+        // 同一只股票独立配对、允许月内跨日闭环、月初底仓不参与配对、已清仓流水继续保留。
+        function calcStatsTMonthlyData(){
+            const targets = statsTTargets();
+            const now = new Date();
+            const months = [];
+            for(let i = 11; i >= 0; i--){
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push({ y: d.getFullYear(), m: d.getMonth() });
+            }
+            return months.map(function(mm){
+                const start = new Date(mm.y, mm.m, 1, 0, 0, 0, 0);
+                const end = new Date(mm.y, mm.m + 1, 0, 23, 59, 59, 999);
+                let value = 0, closedQty = 0, stockCount = 0;
+                targets.forEach(function(item){
+                    try{
+                        const r = statsTRangeItem(item, { start: start, end: end });
+                        if(!r || !r.participated) return;
+                        value += Number(r.profit) || 0;
+                        closedQty += Number(r.closedQty) || 0;
+                        stockCount++;
+                    }catch(e){}
+                });
+                return {
+                    label: (mm.m + 1) + '月',
+                    fullLabel: mm.y + '-' + String(mm.m + 1).padStart(2, '0'),
+                    value: value,
+                    closedQty: closedQty,
+                    stockCount: stockCount,
+                    participated: stockCount > 0
+                };
+            });
+        }
+        function statsTMonthlyDispose(){
+            try{ if(statsTMonthlyChart && !statsTMonthlyChart.isDisposed()) statsTMonthlyChart.dispose(); }catch(e){}
+            statsTMonthlyChart = null;
+        }
+        function statsTMonthlyBarLabel(v){
+            const n = Number(v) || 0;
+            const sign = n > 0.005 ? '+' : (n < -0.005 ? '-' : '');
+            const abs = Math.abs(n);
+            if(abs >= 10000) return sign + (abs / 10000).toFixed(1).replace(/\.0$/, '') + '万';
+            if(abs >= 1000) return sign + Math.round(abs).toLocaleString('zh-CN');
+            return sign + (Math.abs(abs - Math.round(abs)) < 0.005 ? Math.round(abs) : abs.toFixed(2));
+        }
+        function renderStatsTMonthly(){
+            const el = document.querySelector('#statsTMonthlyChart');
+            const emptyEl = document.querySelector('#statsTMonthlyEmpty');
+            const totalEl = document.querySelector('#statsTMonthlyTotal');
+            if(!el) return;
+            statsTMonthlyDispose();
+            const data = calcStatsTMonthlyData();
+            const hasAny = data.some(function(d){ return d.participated; });
+            const total = data.reduce(function(s, d){ return s + d.value; }, 0);
+            if(totalEl){
+                totalEl.innerText = hasAny ? fmtPnlNum(total) : '--';
+                totalEl.style.color = !hasAny ? '#8a8175' : (total > 0.005 ? '#742034' : (total < -0.005 ? '#00a05c' : '#1f2937'));
+            }
+            if(emptyEl) emptyEl.style.display = hasAny ? 'none' : 'flex';
+            el.style.display = hasAny ? 'block' : 'none';
+            if(!hasAny || typeof echarts === 'undefined') return;
+            try{ statsTMonthlyChart = echarts.init(el); }catch(e){ return; }
+            statsTMonthlyChart.setOption({
+                animationDuration: 620,
+                animationEasing: 'cubicOut',
+                grid: { left: 40, right: 10, top: 28, bottom: 24 },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(116,32,52,0.06)' } },
+                    backgroundColor: 'rgba(58,24,32,0.95)',
+                    borderWidth: 0,
+                    padding: [7, 10],
+                    textStyle: { color: '#fff3dd', fontSize: 11 },
+                    extraCssText: 'border-radius:10px;box-shadow:0 8px 24px rgba(58,24,32,.25);',
+                    formatter: function(ps){
+                        const p = (ps && ps[0]) || {};
+                        const d = data[p.dataIndex] || {};
+                        return '<div style="font-size:10px;color:#e8d9bc">' + (d.fullLabel || '') + ' · 全账户</div>'
+                            + '<div style="font-size:12px;font-weight:600;color:#fff;margin-top:2px">做T ' + fmtPnlNum(d.value || 0) + '</div>'
+                            + '<div style="font-size:9px;color:#a89b84;margin-top:2px">闭环 ' + Math.round(d.closedQty || 0) + ' 股 · ' + (d.stockCount || 0) + ' 只股票</div>';
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.map(function(d){ return d.label; }),
+                    axisLine: { lineStyle: { color: '#e8dcc9' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#8a7a67', fontSize: 9.5, interval: 0, margin: 8 }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitNumber: 3,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#a8987e', fontSize: 9.5, formatter: tlMonthlyTAxis },
+                    splitLine: { lineStyle: { color: 'rgba(169,100,42,0.09)', type: 'dashed' } }
+                },
+                series: [{
+                    type: 'bar',
+                    barWidth: '30%',
+                    barMaxWidth: 22,
+                    data: data.map(function(d){
+                        const v = Number(d.value) || 0;
+                        const isZero = Math.abs(v) < 0.005;
+                        const isUp = v > 0.005;
+                        const isDown = v < -0.005;
+                        return {
+                            value: v,
+                            itemStyle: {
+                                color: isDown
+                                    ? new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                        { offset: 0, color: '#2bb783' },
+                                        { offset: 1, color: '#00a05c' }
+                                    ])
+                                    : new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                        { offset: 0, color: '#b3384a' },
+                                        { offset: 1, color: '#742034' }
+                                    ]),
+                                borderRadius: [3, 3, 3, 3]
+                            },
+                            label: {
+                                show: !isZero,
+                                position: v >= 0 ? 'top' : 'bottom',
+                                distance: 3,
+                                color: '#8a7a67',
+                                fontSize: 8,
+                                fontWeight: 600,
+                                formatter: function(p){ return statsTMonthlyBarLabel(p.value); }
+                            }
+                        };
+                    }),
+                    labelLayout: { hideOverlap: true },
+                    emphasis: { scale: false, itemStyle: { opacity: 0.92 } },
+                    silent: false
+                }]
+            });
+            setTimeout(function(){ try{ if(statsTMonthlyChart && !statsTMonthlyChart.isDisposed()) statsTMonthlyChart.resize(); }catch(e){} }, 60);
+        }
+        window.addEventListener('resize', function(){
+            try{ if(statsTMonthlyChart && !statsTMonthlyChart.isDisposed()) statsTMonthlyChart.resize(); }catch(e){}
+        });
         function setStatsTPeriod(periodKey){
             if(['day', 'month', 'half', 'year'].indexOf(periodKey) < 0) return;
             if(statsTPeriod === periodKey) return;
@@ -26604,6 +26794,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             updateStatsTradeFilterUI();
             await renderStatsTradeList(true);
             renderStatsTStats();
+            renderStatsTMonthly();
         }
         async function renderStatsTradeList(reset){
             const token = reset ? (window._statsTradeToken = (window._statsTradeToken || 0) + 1) : (window._statsTradeToken || 0);
@@ -33815,7 +34006,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         : '';
                     htmlStr += `
                     <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-[4px] py-2.5 items-center transition-all duration-300 cursor-pointer" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="grid-template-columns:1.38fr 0.90fr 1.18fr 1.28fr 1.16fr;padding-top:11.5px;padding-bottom:11.5px;padding-left:4px;padding-right:4px${rowDivider}">
-                        <div class="text-left">
+                        <div class="text-left pl-[1px]">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
                                 <span class="hold-list-val font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'}">${shortName}</span>
@@ -33838,7 +34029,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <div class="hold-list-val font-medium ${itemPnlClass2} tabular-nums list-num" data-field="pnl">${formatPnl(itemPnl2)}</div>
                             <div class="hold-list-val hold-list-sub font-medium ${itemPnlClass2} mt-1 tabular-nums list-num" data-field="pnlPct">${pnlPctText2}</div>
                         </div>
-                        <div class="text-right pr-[2px]">
+                        <div class="text-right pr-[1px]">
                             <div class="hold-list-val font-medium ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
                             <div class="hold-list-val hold-list-sub font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>

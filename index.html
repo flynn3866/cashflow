@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261115.367';</script>
+    <script>window.APP_VERSION = '20261115.376';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -160,6 +160,29 @@
         }
         #holdList .hold-row{
             transition-property:background-color,border-color,color,opacity !important;
+        }
+    </style>
+    <!-- 一级页刊头：不使用背景条/白卡，只用眉标、宋体大标题与一条发丝线建立统一层级 -->
+    <style>
+        .page-masthead{
+            display:flex;align-items:center;justify-content:space-between;
+            gap:16px;padding-bottom:12px;margin-bottom:16px;
+            border-bottom:1px solid rgba(116,32,52,.10);
+        }
+        .page-masthead-main{min-width:0;}
+        .page-eyebrow{
+            font-size:9px;line-height:1;font-weight:600;
+            letter-spacing:.18em;text-transform:uppercase;color:#9b8a7c;
+        }
+        .page-title{
+            margin-top:5px;font-family:"Noto Serif SC","Songti SC","SimSun",Georgia,"Times New Roman",serif;
+            font-size:26px;line-height:1.16;font-weight:600;
+            letter-spacing:.02em;color:#2b211c;white-space:nowrap;
+        }
+        .page-title.is-brand{color:#742034;}
+        .page-head-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+        @media (max-width:360px){
+            .page-title{font-size:24px;}
         }
     </style>
     <style type="text/tailwindcss">
@@ -646,7 +669,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         /* ===== 交易统计页：做T盈利（期间切换 + 贡献榜） ===== */
         .stats-t-shell{ position:relative; overflow:hidden; border-radius:18px; background:linear-gradient(180deg,#fffdf9 0%,#fdf8ef 100%); border:1px solid #eee2cd; box-shadow:0 5px 20px rgba(74,53,26,.07), 0 1px 2px rgba(74,53,26,.05); }
         .stats-t-shell::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#8f2437,#a82d43,#8f2437,transparent); opacity:.85; }
-        .stats-t-mark{ width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:linear-gradient(145deg,#8f2437,#5b1828); box-shadow:0 3px 9px rgba(91,24,40,.28), inset 0 1px 0 rgba(255,255,255,.12); }
+        .card-mark{ width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:linear-gradient(145deg,#8f2437,#5b1828); box-shadow:0 3px 9px rgba(91,24,40,.28), inset 0 1px 0 rgba(255,255,255,.12); }
+        .section-mark{ width:2px; height:16px; border-radius:999px; flex-shrink:0; display:block; background:linear-gradient(180deg,#8f2437,#5b1828); }
+        /* 统计页模块入口：酒红线描 + 极浅酒粉底，轻量但保持品牌色相 */
+        .module-mark{ width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#7c2638; background:linear-gradient(180deg,#fffaf8 0%,#fbf1f2 100%); border:1px solid rgba(143,36,55,.14); box-shadow:inset 0 1px 0 rgba(255,255,255,.94); }
+        .module-mark.is-warm{ color:#a9642a; background:linear-gradient(180deg,#fffdf9 0%,#faf4e8 100%); border-color:#efe3d1; box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(90,60,30,.035); }
+        .module-mark i{ font-size:13px; line-height:1; }
+        .module-mark svg{ width:13px; height:13px; stroke:currentColor; }
         .stats-t-chip{ display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:999px; background:#f8ecef; color:#8f2437; font-size:8.5px; line-height:1; font-weight:600; white-space:nowrap; }
         .stats-t-tabs{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; padding:4px; margin-top:12px; background:#f4eee2; border:1px solid #eee4d2; border-radius:12px; }
         .stats-t-tab{ border:0; background:transparent; border-radius:9px; padding:7px 3px; color:#8e8375; font-size:10px; font-weight:600; line-height:1.2; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
@@ -1370,10 +1399,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageBalanceSheet .bs-top-heading{
             position:relative;z-index:1;min-width:0;display:flex;align-items:center;gap:8px;flex:1;
         }
-        #pageBalanceSheet .bs-top-mark{
-            width:3px;height:20px;border-radius:2px;flex-shrink:0;
-            background:linear-gradient(180deg,#5e1b2b 0%,#9a4a5c 100%);
-        }
         #pageBalanceSheet .bs-top-title{
             font-size:17px;font-weight:600;letter-spacing:.01em;color:#2e2e35;line-height:1.25;
             white-space:nowrap;
@@ -1860,12 +1885,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
     <div id="pageHold" class="max-w-xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 我的持仓标题（置顶，汇总卡上方；右侧消息铃铛与其他一级页统一） -->
-        <div class="flex items-center justify-between mb-4 mt-0">
-            <div class="flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full opacity-50"></div>
-                <h2 class="text-xl font-semibold tracking-wide" style="text-shadow:0 1px 1.5px rgba(0,0,0,0.10)"><span style="color:#4285F4">细</span><span style="color:#EA4335">水</span><span style="color:#FBBC05">长</span><span style="color:#34A853">流</span></h2>
+        <div class="page-masthead">
+            <div class="page-masthead-main">
+                <div class="page-eyebrow">PORTFOLIO</div>
+                <h2 class="page-title is-brand">细水长流</h2>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="page-head-actions">
                 <button class="notif-bell relative w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30 flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
                     <i class="fa fa-bell text-[16px]"></i>
                     <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
@@ -2080,7 +2105,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <i class="fa fa-arrow-left"></i>
             </button>
             <h3 id="modalTitle" class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-[#8f2437] to-[#b98f50] rounded-full"></div>
                 新增持仓股票
             </h3>
         </div>
@@ -2234,7 +2258,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button id="divEntryBackBtn" onclick="closeDivEntry()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">分红手工录入</span>
             </div>
         </div>
@@ -2324,7 +2347,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <i class="fa fa-arrow-left"></i>
             </button>
             <h3 id="tradeModalTitle" class="text-xl font-semibold flex items-center gap-2">
-                <div id="tradeTitleRail" class="w-1 h-5 rounded-full bg-gradient-to-b from-[#8f2437] to-[#b98f50]"></div>
                 <span id="tradeTitleText">买入</span>
             </h3>
         </div>
@@ -2425,7 +2447,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <button id="tradeLogBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <div class="flex-1 min-w-0">
                     <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                        <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                         交易明细
                     </h2>
                     <div id="tradeLogStockInfo" class="text-xs text-gray-400 mt-0.5 truncate"></div>
@@ -2487,7 +2508,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div id="tlMonthlyTCard" class="tl-flow-card bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 pt-3 pb-2.5 border-b border-gray-100">
                 <div class="flex items-start gap-2.5">
-                    <div id="tlChartIconWrap" class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i id="tlChartIcon" class="fa fa-bar-chart text-[12px] text-accent"></i></div>
+                    <div id="tlChartIconWrap" class="module-mark is-warm"><i id="tlChartIcon" class="fa fa-bar-chart text-[12px] text-accent"></i></div>
                     <div class="min-w-0 flex-1">
                         <div id="tlChartTitle" class="text-[13px] font-semibold text-gray-800 leading-5">每月做T盈利</div>
                         <div id="tlChartSub" class="text-[9px] text-gray-400 mt-0.5">近 12 个月 · 月初底仓 / 月内建仓</div>
@@ -2610,7 +2631,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 pt-3 pb-2.5 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <div class="section-mark"></div>
                     <span class="text-[13px] font-semibold text-gray-700">资金与分红流水</span>
                 </div>
                 <div class="flex items-center gap-2 flex-1 justify-end min-w-0">
@@ -2647,7 +2668,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <button id="beBackBtn" onclick="closeBreakEvenPage()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <div class="flex-1 min-w-0">
                     <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                        <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                         回本分析
                     </h2>
                     <div id="bePageSub" class="text-xs text-gray-400 mt-0.5">资金流水口径 · 分红回收动态成本</div>
@@ -2732,7 +2752,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button id="assetHighBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     总资产趋势
                 </h2>
                 <div class="ml-auto text-right leading-none">
@@ -2816,7 +2835,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="h-[3px]" style="background:linear-gradient(90deg,#f8ecef,#8f2437 20%,#742034 50%,#8f2437 80%,#f8ecef);"></div>
             <div class="px-5 pt-3.5 pb-3 border-b border-[#f4ecdd]">
                 <div class="flex items-start gap-2.5">
-                    <div class="stats-t-mark mt-0.5">
+                    <div class="card-mark mt-0.5">
                         <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
                     </div>
                     <div class="min-w-0">
@@ -2918,7 +2937,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 72 法则：翻倍时间的一条刻度尺 -->
         <div class="surface-hero mb-4">
             <div class="px-5 py-2.5 flex items-center gap-2" style="border-bottom:1px solid #efe2ca">
-                <div class="stats-t-mark">
+                <div class="card-mark">
                     <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l4.5-4.5 3.5 3 8-9"/><path d="M20 7.5v5h-5"/></svg>
                 </div>
                 <div class="min-w-0">
@@ -2961,7 +2980,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 年度明细：摘要带 + 轻表格 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-2.5 border-b border-[#f4ecdd] flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-[14px] font-semibold text-gray-800">年度明细</span>
                 <span class="text-[10px] text-[#a8987e] ml-auto">年末资产 · 年度收益已固化</span>
             </div>
@@ -2996,7 +3014,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent via-[#b46a48] to-[#8b4a6b] rounded-full"></div>
                 <div class="min-w-0">
                     <div class="text-gray-800 text-[17px] font-semibold tracking-wide leading-tight">资产分析</div>
                     <div class="text-[9px] text-gray-400 tracking-[0.16em] mt-0.5">PORTFOLIO ARCHIVE</div>
@@ -3220,7 +3237,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="card-rise bg-white rounded-2xl p-4 card-shadow mb-4">
             <div class="flex items-center justify-between mb-2.5">
                 <div class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#8f2437,#5b1828);color:#fff;box-shadow:0 2px 6px rgba(91,24,40,.18)"><i class="fa fa-money text-[11px]"></i></span>
+                    <span class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:#faf3e3;color:#a9642a"><i class="fa fa-money text-[11px]"></i></span>
                     <span class="text-sm font-semibold text-gray-700">分红账本</span>
                 </div>
                 <span class="text-[9px] px-2 py-1 rounded-full" style="background:#f8ecef;border:1px solid #e8cdd4;color:#742034">睡后收入</span>
@@ -3303,16 +3320,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <div id="pageWatchSel" class="hidden max-w-2xl mx-auto fixed inset-0 z-30 px-3" style="overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <!-- 吸顶区：标题栏 + 指数汇总卡 + 表头（纵向滚动时整体固定在顶部，背景与页面一致） -->
         <div id="watchSelSticky" class="sticky top-0 z-50" style="background:#f5efe3;margin:0 -0.75rem;padding:calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 0;">
-            <!-- 标题栏（与其他主页面一致：font-serif 裸标题 + 竖杆 + 米色圆角按钮；吸顶区结构不动） -->
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-serif text-xl font-semibold text-gray-800 flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                    自选
-                    <span class="text-[10px] text-gray-400 font-normal whitespace-nowrap" id="watchSelCount">0 只</span>
-                </h2>
+            <!-- 标题栏：与其余一级页共用刊头语法（眉标 + 宋体大标题 + 发丝线），吸顶区结构不动 -->
+            <div class="page-masthead">
+                <div class="page-masthead-main">
+                    <div class="page-eyebrow">WATCHLIST</div>
+                    <h2 class="page-title flex items-center gap-2">
+                        自选
+                        <span class="text-[10px] text-[#9b8a7c] font-normal tracking-[.02em] whitespace-nowrap" id="watchSelCount">0 只</span>
+                    </h2>
+                </div>
                 <!-- 添加自选：右上角 + 号原位变输入框（嵌入标题栏一行；添加完成后还原 + 号） -->
-                <div id="watchAddSlot" class="relative flex items-center justify-end flex-1 min-w-0 ml-4 max-w-[240px]">
-                    <button id="watchAddBtn" class="w-9 h-9 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
+                <div id="watchAddSlot" class="relative flex items-center justify-end flex-1 min-w-0 max-w-[240px]">
+                    <button id="watchAddBtn" class="w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" onclick="openWatchPage()" title="添加自选股"><i class="fa fa-plus"></i></button>
                     <div id="watchSearchBar" class="hidden items-center w-full">
                         <div class="relative w-full">
                             <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]"></i>
@@ -3387,7 +3406,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <button onclick="applyWatchOrder()" class="h-9 px-4 rounded-xl bg-gradient-to-b from-[#8f2437] to-[#742034] text-[#ffe5bb] text-[13px] font-semibold flex items-center gap-1.5 shadow-sm shadow-[#742034]/25 active:scale-95 transition-transform">
                     <i class="fa fa-check text-[11px]"></i>完成
                 </button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">管理自选股</span>
                 <span class="ml-auto text-[10px] text-gray-400 whitespace-nowrap" id="watchMgrCount">0 只</span>
             </div>
@@ -3428,7 +3446,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- K线走势：日/周/月K，前复权（东方财富） -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-bar-chart text-[12px] text-accent"></i></div>
+                <div class="card-mark"><i class="fa fa-bar-chart text-[14px]" style="color:#f2d492"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">K线走势</div>
                 <span id="sdKlineAdj" class="text-[9px] text-gray-500 bg-gray-50 rounded px-1.5 py-0.5 flex-shrink-0">前复权</span>
                 <span id="sdKlineMeta" class="ml-auto text-[10px] text-gray-400 tabular-nums whitespace-nowrap">--</span>
@@ -3483,7 +3501,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 单股检查：护城河体检 + 分红可持续性三查 + 估值温度计（巴菲特式体检报告） -->
         <div id="sdMoatCard" class="hidden bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-shield text-[12px] text-accent"></i></div>
+                <div class="card-mark"><i class="fa fa-shield text-[14px]" style="color:#f2d492"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">单股检查</div>
                 <span id="sdMoatBadge" class="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full">--</span>
             </div>
@@ -3492,7 +3510,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 财务数据 · 最近5年 -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-line-chart text-[12px] text-accent"></i></div>
+                <div class="section-mark"></div>
                 <div class="text-[13px] font-semibold text-gray-800">财务数据 <span class="text-[10px] font-normal text-gray-400 ml-0.5">最近5年 · 年报口径</span></div>
             </div>
             <div id="sdFinBody" class="overflow-auto" style="-webkit-overflow-scrolling:touch;padding-bottom:4px;"></div>
@@ -3500,7 +3518,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 行业排名 -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-trophy text-[12px] text-accent"></i></div>
+                <div class="section-mark"></div>
                 <div class="text-[13px] font-semibold text-gray-800">行业排名</div>
                 <span class="ml-auto text-[10px] text-gray-400" id="sdRankTag">--</span>
             </div>
@@ -3509,7 +3527,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 控股股东增减持 · 最近5年 -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-users text-[12px] text-accent"></i></div>
+                <div class="section-mark"></div>
                 <div class="text-[13px] font-semibold text-gray-800">股东增减持 <span class="text-[10px] font-normal text-gray-400 ml-0.5">最近5年</span></div>
             </div>
             <div id="sdHolderBody" class="px-4 py-3"></div>
@@ -3520,14 +3538,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计页面 -->
     <div id="pageStats" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <h2 class="font-serif relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-            统计
-            <button class="notif-bell absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
-                <i class="fa fa-bell text-[16px]"></i>
-                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
-            </button>
-        </h2>
+        <div class="page-masthead">
+            <div class="page-masthead-main">
+                <div class="page-eyebrow">INSIGHTS</div>
+                <h2 class="page-title">统计</h2>
+            </div>
+            <div class="page-head-actions">
+                <button class="notif-bell relative w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30 flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
+                    <i class="fa fa-bell text-[16px]"></i>
+                    <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+                </button>
+            </div>
+        </div>
 
         <!-- 统计板块宫格：点击进入对应详情页 -->
         <div class="grid grid-cols-3 gap-3">
@@ -3562,69 +3584,69 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
             </button>
             <button onclick="openStatsSection('analysis')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-area-chart text-[13px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-area-chart"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">资产分析</div>
                 <div id="statsCardSummaryAnalysis" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubAnalysis" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('position')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-pie-chart text-[13px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-pie-chart"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">仓位分布</div>
                 <div id="statsCardSummaryPosition" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubPosition" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('pnl')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-balance-scale text-[13px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-balance-scale"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">累计盈亏</div>
                 <div id="statsCardSummaryPnl" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubPnl" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('divrank')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-cny text-[13px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-cny"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">分红排行</div>
                 <div id="statsCardSummaryDivRank" class="text-[13px] font-bold text-accent mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubDivRank" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('schedule')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform relative">
                 <span id="statsCardScheduleBadge" class="hidden absolute -top-1.5 -right-1.5 z-10 text-[10px] font-semibold text-white pl-2 pr-2 py-1 rounded-full today-reg-pulse whitespace-nowrap" style="background:linear-gradient(135deg,#e03131,#b0332f);box-shadow:0 2px 8px rgba(224,49,49,0.4)">今日 0 笔</span>
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-calendar-check-o text-[13px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-calendar-check-o"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">分红派发</div>
                 <div id="statsCardSummarySchedule" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubSchedule" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('compare')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-exchange"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">分红对比</div>
                 <div id="statsCardSummaryCompare" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubCompare" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('industry')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-building text-[12px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-building"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">行业资产</div>
                 <div id="statsCardSummaryIndustry" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubIndustry" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('cash')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-exchange text-[12px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-exchange"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">资金流水</div>
                 <div id="statsCardSummaryCash" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubCash" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('trade')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><svg class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+                <div class="module-mark mb-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
                 <div class="text-[13px] font-semibold text-gray-800">交易统计</div>
                 <div id="statsCardSummaryTrade" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubTrade" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('cashflow')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><i class="fa fa-credit-card text-[13px] text-accent"></i></div>
+                <div class="module-mark mb-3"><i class="fa fa-credit-card"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">收支统计</div>
                 <div id="statsCardCashFlowBal" class="text-[13px] font-bold tabular-nums mt-1.5 truncate text-gray-800">--</div>
                 <div id="statsCardSummaryCashFlow" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
                 <div id="statsCardCashFlowSub" class="hidden text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('risk')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="w-8 h-8 rounded-xl bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center mb-3"><svg class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3z"/><path d="M9.4 12.1l1.9 1.9 3.5-3.6"/></svg></div>
+                <div class="module-mark mb-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3z"/><path d="M9.4 12.1l1.9 1.9 3.5-3.6"/></svg></div>
                 <div class="text-[13px] font-semibold text-gray-800">风险指标</div>
                 <div id="statsCardSummaryRisk" class="text-[13px] font-bold tabular-nums mt-1.5 truncate text-gray-800">--</div>
                 <div id="statsCardSubRisk" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
@@ -3645,7 +3667,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <div class="min-w-0">
                     <div class="text-gray-800 text-[17px] font-semibold tracking-wide leading-tight">今日盈亏</div>
                     <div class="text-[9px] text-gray-400 mt-0.5">今日涨跌幅排行</div>
@@ -3766,7 +3787,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">仓位分布</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
@@ -3845,7 +3865,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">累计盈亏排行</span>
                 <div class="ml-auto text-right leading-tight">
                     <div id="pnlRankTotal" class="text-[12px] font-bold tabular-nums text-gray-800">--</div>
@@ -3858,7 +3877,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div id="statsPnlIndWrap">
                 <div class="px-5 py-3 bg-gray-50/50 border-b border-gray-100">
                     <div class="flex items-center gap-1.5 mb-3">
-                        <i class="fa fa-pie-chart text-[11px] text-accent"></i>
                         <span class="text-[12px] font-semibold text-gray-600">行业累计盈亏占比</span>
                         <span class="ml-auto text-[10px] text-gray-400" id="statsPnlIndTag">&gt;1% 行业</span>
                     </div>
@@ -3932,7 +3950,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">累计分红排行</span>
                 <div class="ml-auto text-right leading-tight">
                     <div id="divRankTotal" class="text-[12px] font-bold tabular-nums text-amber-600">--</div>
@@ -3945,7 +3962,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div id="statsDivRankPieWrap">
                 <div class="px-5 py-3 bg-gray-50/50 border-b border-gray-100">
                     <div class="flex items-center gap-1.5 mb-3">
-                        <i class="fa fa-pie-chart text-[11px] text-accent"></i>
                         <span class="text-[12px] font-semibold text-gray-600">行业累计分红占比</span>
                         <span class="ml-auto text-[10px] text-gray-400" id="statsDivRankIndTag">&gt;2% 行业</span>
                     </div>
@@ -3995,7 +4011,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">分红派发日程</span>
                 <span class="flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
@@ -4006,7 +4021,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 未来 12 个月分红到账：已公布优先，未公布按去年同期推算 -->
         <div class="rounded-2xl card-shadow overflow-hidden mb-4" style="background:linear-gradient(180deg,#fffefb 0%,#fdf7ec 100%);border:1px solid #f1e3cb;">
             <div class="px-4 py-2.5 border-b border-[#f0e2ca] flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <div class="section-mark"></div>
                 <span class="text-[16px] font-semibold text-gray-800">未来 12 个月</span>
                 <span id="fwdDivTag" class="text-[10px] text-gray-400 ml-auto tabular-nums">--</span>
             </div>
@@ -4039,7 +4054,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </style>
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-[16px] font-semibold text-gray-800">分红日历</span>
                 <span id="divCalSummary" class="text-[10px] text-gray-400 ml-auto tabular-nums">--</span>
             </div>
@@ -4066,7 +4080,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 分红预测：今年各月预计分红汇总（月度柱形图） -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-[16px] font-semibold text-gray-800">今年派发节奏</span>
                 <span class="text-[10px] text-gray-400 ml-auto" id="statsDivMonthTag">今年暂无已公布分红</span>
             </div>
@@ -4079,7 +4092,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 分红预计派发时间表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <div class="section-mark"></div>
                 <span class="text-[16px] font-semibold text-gray-800">今年派发记录</span>
                 <span id="statsScheduleTag" class="text-[10px] text-gray-400 ml-auto tabular-nums">--</span>
             </div>
@@ -4098,7 +4111,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">目标规划</span>
                 <span class="ml-auto text-[10px] text-gray-400 whitespace-nowrap">自然增长口径</span>
             </div>
@@ -4161,7 +4173,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 达成路径 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <div class="section-mark"></div>
                 <span class="text-base font-semibold text-gray-800">达成路径</span>
                 <span id="goalPathTag" class="text-[10px] text-gray-400 ml-auto tabular-nums">按当前增速</span>
             </div>
@@ -4203,7 +4215,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 本金视角 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-base font-semibold text-gray-800">本金视角</span>
                 <span class="text-[10px] text-gray-400 ml-auto">多股息率测算</span>
             </div>
@@ -4246,7 +4257,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">分红对比统计</span>
                 <span class="flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
@@ -4355,7 +4365,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f59e0b,#a9642a,transparent)"></div>
                 <!-- 分区标题栏：调仓分析对比（做测算） -->
                 <div class="px-4 py-3.5 border-b border-[#eedfc0] flex items-center gap-2.5 bg-white">
-                    <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-balance-scale text-[12px] text-accent"></i></div>
+                    <div class="section-mark"></div>
                     <div class="min-w-0">
                         <div class="text-[14px] font-semibold text-gray-800">调仓分析对比</div>
                     </div>
@@ -4412,7 +4422,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">行业资产分析</span>
                 <div class="ml-auto flex items-center gap-1.5">
                     <select id="industryYearSelect" onchange="industryYear = this.value; renderIndustryMulti();" class="text-[11px] font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-1 py-1 outline-none appearance-none max-w-[86px]"></select>
@@ -4489,7 +4498,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">资金流水</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
@@ -4604,7 +4612,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
             <div class="px-4 pt-3 pb-2.5 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <div class="section-mark"></div>
                     <span class="text-[13px] font-semibold text-gray-700">资金动向</span>
                 </div>
                 <div class="flex items-center gap-2 flex-1 justify-end min-w-0">
@@ -4637,7 +4645,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">风险指标</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-shield text-[10px]"></i>
@@ -4674,7 +4681,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">收支统计</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-credit-card text-[10px]"></i>
@@ -4716,7 +4722,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 pt-3 pb-2 flex items-center justify-between">
                 <div class="flex items-center gap-1.5">
-                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <div class="section-mark"></div>
                     <span class="text-[13px] font-semibold text-gray-700">年度总和</span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -4750,7 +4756,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 pt-3 pb-2 flex items-center justify-between">
                 <div class="flex items-center gap-1.5">
-                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     <span class="text-[13px] font-semibold text-gray-700">月度收支走势</span>
                 </div>
                 <div class="flex items-center gap-3 text-[10px] text-gray-400">
@@ -4764,7 +4769,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 pt-3 pb-2 flex items-center justify-between">
                 <div class="flex items-center gap-1.5">
-                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     <span class="text-[13px] font-semibold text-gray-700">年度总结余走势</span>
                 </div>
                 <div class="flex items-center gap-3 text-[10px] text-gray-400">
@@ -4788,7 +4792,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <i class="fa fa-arrow-left"></i>
             </button>
             <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 记一笔收支
             </h3>
         </div>
@@ -4834,7 +4837,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">交易统计</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
@@ -4864,7 +4866,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="px-4 pt-4 pb-3">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="stats-t-mark">
+                        <div class="card-mark">
                             <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M12 6v13"/></svg>
                         </div>
                         <div class="min-w-0">
@@ -4941,7 +4943,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div id="statsTMonthlyCard" class="stats-tm-card mb-4">
             <div class="stats-tm-head">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="stats-t-mark">
+                    <div class="card-mark">
                         <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
                     </div>
                     <div class="min-w-0">
@@ -4968,7 +4970,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
             <div class="px-4 pt-3 pb-2.5 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     <span class="text-[13px] font-semibold text-gray-700">全部交易</span>
                 </div>
                 <div class="flex items-center gap-2 flex-1 justify-end min-w-0">
@@ -4997,14 +4998,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 我的页面 -->
     <div id="pageMine" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <h2 class="font-serif relative text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-            我的
-            <button class="notif-bell absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30" onclick="openNotifCenter()" title="消息中心">
-                <i class="fa fa-bell text-[16px]"></i>
-                <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
-            </button>
-        </h2>
+        <div class="page-masthead">
+            <div class="page-masthead-main">
+                <div class="page-eyebrow">PROFILE</div>
+                <h2 class="page-title">我的</h2>
+            </div>
+            <div class="page-head-actions">
+                <button class="notif-bell relative w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform z-30 flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
+                    <i class="fa fa-bell text-[16px]"></i>
+                    <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
+                </button>
+            </div>
+        </div>
         <!-- 用户信息卡片：与首页汇总卡同语言（同款深棕黑渐变 + 整块半透明核心数据面板 + 无装饰光晕），
              顶部深色卡与下方白色持仓概览形成材质对比，更简洁大气、低调内敛 -->
         <div class="card-rise rounded-3xl p-5 mb-4 relative overflow-hidden" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62), 0 1px 3px rgba(0,0,0,0.50), 0 0 5px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06);">
@@ -5045,7 +5050,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 持仓概览 -->
         <div class="card-rise bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-base font-semibold text-gray-800">持仓概览</span>
                 <span class="ml-auto flex items-center gap-1.5 text-[11px] text-[#742034] tracking-wide bg-[#f8ecef] border border-[#e8cdd4] rounded-full pl-2 pr-2.5 py-1 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full" style="background:linear-gradient(135deg,#a82d43,#742034);box-shadow:0 0 0 2px rgba(116,32,52,.12)"></span>投资市场<span class="text-[#8f2437] font-semibold tabular-nums" id="mineMarketSpan">--</span></span>
             </div>
@@ -5145,7 +5149,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeYearSnapshot()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">年度快照</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-camera text-[10px]"></i>
@@ -5180,7 +5183,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button id="notifBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     消息中心
                 </h2>
                 <button id="notifReadAllBtn" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 active:scale-95 transition-transform"><i class="fa fa-check-circle text-[11px]"></i>全部已读</button>
@@ -5216,7 +5218,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button id="divDetailBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     <span id="divDetailHeading">分红明细</span>
                 </h2>
                 <span id="divDetailTag" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">今年已收</span>
@@ -5344,7 +5345,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div id="divDetailTrendCard" class="hidden mb-3">
             <div class="bg-white rounded-2xl card-shadow overflow-hidden">
                 <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                    <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     <span class="text-[14px] font-semibold text-gray-800">逐年分红与增速</span>
                     <span id="divDetailTrendAvg" class="text-[10px] text-gray-400 ml-auto">近三年 --</span>
                 </div>
@@ -5359,7 +5359,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 年度明细（仅累计模式） -->
         <div id="divDetailYearCard" class="hidden bg-white rounded-2xl card-shadow overflow-hidden mb-3">
             <div class="px-5 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-[14px] font-semibold text-gray-800">年度明细</span>
                 <span class="text-[10px] text-gray-400 ml-auto">金额 / 同比</span>
             </div>
@@ -5388,7 +5387,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button id="costDetailBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     投入成本明细
                 </h2>
                 <span id="costDetailTag" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">投入成本</span>
@@ -5425,7 +5423,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button id="navDetailBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     净值历史
                 </h2>
                 <span id="navDetailTag" class="ml-auto text-[12px] font-medium text-accent bg-accent/10 px-3 py-1.5 rounded-full">每年最终净值</span>
@@ -5458,7 +5455,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bs-topbar">
             <button id="bsBackBtn" class="bs-back" aria-label="返回"><i class="fa fa-arrow-left"></i></button>
             <div class="bs-top-heading">
-                <span class="bs-top-mark"></span>
                 <b class="bs-top-title">资产负债表</b>
             </div>
             <span class="bs-updated">更新于 <span id="bsUpdateAt">--</span></span>
@@ -5742,8 +5738,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             #pageAnnualReport .ar-head{
                 display:flex;align-items:center;gap:9px;padding:13px 18px;border-bottom:1px solid #f1e7db;
             }
-            #pageAnnualReport .ar-bar{width:3px;height:15px;border-radius:99px;flex:0 0 auto;background:linear-gradient(180deg,#a82d43,#742034)}
-            #pageAnnualReport .ar-bar-gold{width:3px;height:15px;border-radius:99px;flex:0 0 auto;background:linear-gradient(180deg,#e3b46b,#b77b32)}
+            #pageAnnualReport .ar-bar{width:2px;height:16px;border-radius:99px;flex:0 0 auto;background:linear-gradient(180deg,#a82d43,#742034)}
+            #pageAnnualReport .ar-div-card .ar-bar{background:linear-gradient(180deg,#e7b3bf,#c26a7d)}
             #pageAnnualReport .ar-title{font-size:15px;font-weight:650;color:#2b211c;letter-spacing:.01em}
             #pageAnnualReport .ar-sub{margin-left:auto;font-size:9.5px;color:#9b8a7c;white-space:nowrap}
             #pageAnnualReport .ar-body{padding:16px 18px}
@@ -6240,7 +6236,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         <section class="ar-card">
             <div class="ar-head">
-                <span class="ar-bar-gold"></span>
+                <span class="ar-bar"></span>
                 <span class="ar-title">资产台阶</span>
                 <span class="ar-sub">年初 → 年末</span>
             </div>
@@ -6269,7 +6265,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         <section class="ar-card">
             <div class="ar-head">
-                <span class="ar-bar-gold"></span>
+                <span class="ar-bar"></span>
                 <span class="ar-title">资产轨迹</span>
                 <span class="ar-sub" id="arAssetChartTag">每日快照</span>
             </div>
@@ -6281,7 +6277,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         <section class="ar-div-card">
             <div class="ar-div-head">
-                <span class="ar-bar-gold"></span>
+                <span class="ar-bar"></span>
                 <span class="ar-div-title">收息现金流</span>
                 <span class="ar-div-sub">现金分红 · 收息复利</span>
             </div>
@@ -6305,7 +6301,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         <section class="ar-card">
             <div class="ar-head">
-                <span class="ar-bar-gold"></span>
+                <span class="ar-bar"></span>
                 <span class="ar-title">分红节奏</span>
                 <span class="ar-sub" id="arMonthDivTag">今年 · 已到账</span>
             </div>
@@ -6359,7 +6355,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         <section class="ar-card">
             <div class="ar-head">
-                <span class="ar-bar-gold"></span>
+                <span class="ar-bar"></span>
                 <span class="ar-title">分红贡献榜</span>
                 <span class="ar-sub" id="arDivRankTag">今年已到账分红</span>
             </div>
@@ -6392,7 +6388,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         <section class="ar-card">
             <div class="ar-head">
-                <span class="ar-bar-gold"></span>
+                <span class="ar-bar"></span>
                 <span class="ar-title">组合健康点评</span>
                 <span class="ar-sub" id="arHealthTag">基于当前持仓测算</span>
             </div>
@@ -6423,17 +6419,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 分红收入里程碑页面 -->
     <div id="pageMilestone" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 头部 -->
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="font-serif text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
-                分红里程碑
-            </h2>
-            <div class="flex items-center gap-2">
+        <div class="page-masthead">
+            <div class="page-masthead-main">
+                <div class="page-eyebrow">MILESTONES</div>
+                <h2 class="page-title">分红里程碑</h2>
+            </div>
+            <div class="page-head-actions">
                 <button class="notif-bell w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow-soft flex items-center justify-center text-accent active:scale-95 transition-transform relative flex-shrink-0" onclick="openNotifCenter()" title="消息中心">
                     <i class="fa fa-bell text-[16px]"></i>
                     <span class="notif-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e03131] text-white text-[10px] font-bold flex items-center justify-center hidden">0</span>
                 </button>
-                <button id="milestoneSettingBtn" class="w-9 h-9 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" title="设置里程碑节点">
+                <button id="milestoneSettingBtn" class="w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" title="设置里程碑节点">
                     <i class="fa fa-cog"></i>
                 </button>
             </div>
@@ -6536,7 +6532,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="card-rise bg-white rounded-2xl card-shadow p-4 mb-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
-                    <div class="w-1 h-4 bg-gradient-to-b from-[#a82d43] to-[#742034] rounded-full"></div>
+                    <div class="section-mark"></div>
                     <span class="text-sm font-semibold text-gray-800">成就墙</span>
                     <span class="text-[10px] text-gray-400 font-normal">用时间与分红换来的勋章</span>
                 </div>
@@ -6550,7 +6546,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 累计分红征程 -->
         <div class="card-rise bg-white rounded-2xl card-shadow p-4 mb-4">
             <div class="text-sm font-semibold text-gray-800 mb-1 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-[#a82d43] to-[#742034] rounded-full"></div>
+                <div class="section-mark"></div>
                 累计分红征程
                 <span class="text-[10px] text-gray-400 font-normal">每一笔分红都在加码</span>
             </div>
@@ -6574,7 +6570,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeFundTransfer()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">资金转入转出记录</span>
                 <button onclick="openFundTransferAdd()" class="ml-auto flex items-center gap-1 px-3 py-1.5 rounded-full text-white text-[12px] font-semibold active:scale-95 transition-transform shadow-md" style="background:linear-gradient(135deg,#D45329,#f97316);box-shadow:0 4px 14px rgba(212,83,41,.35)"><i class="fa fa-plus text-[11px]"></i>新增流水</button>
             </div>
@@ -6601,7 +6596,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
             <div class="px-4 pt-3 pb-2.5 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                    <div class="section-mark"></div>
                     <span class="text-[13px] font-semibold text-gray-700">年度资金汇总</span>
                 </div>
                 <span id="ftYearCount" class="text-[10px] text-gray-400 bg-gray-50 rounded-full px-2.5 py-1">--</span>
@@ -6622,7 +6617,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeFundTransferAdd()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">新增资金流水</span>
             </div>
         </div>
@@ -6669,7 +6663,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex items-center gap-2.5 relative z-10">
                 <button id="settingsBackBtn" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
                 <h2 class="text-[17px] font-semibold text-gray-800 tracking-wide flex items-center gap-2">
-                    <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     设置
                 </h2>
                 
@@ -6680,9 +6673,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" onclick="toggleSettingsCollapse('yearAsset')" id="yearAssetHeader">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-[#faf3e3] flex items-center justify-center">
-                        <i class="fa fa-bank text-accent text-sm"></i>
-                    </div>
+                    <div class="section-mark"></div>
                     <div>
                         <div class="text-base font-semibold text-gray-800">历年总资产</div>
                         <div class="text-[10px] text-gray-400 mt-0.5">手动录入系统投入使用前的历史年终总资产；今年总资产由系统自动记录，无需填写</div>
@@ -6704,9 +6695,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" onclick="toggleSettingsCollapse('yearDiv')" id="yearDivHeader">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                        <i class="fa fa-coins text-amber-500 text-sm"></i>
-                    </div>
+                    <div class="section-mark"></div>
                     <div>
                         <div class="text-base font-semibold text-gray-800">历年分红收入</div>
                         <div class="text-[10px] text-gray-400 mt-0.5">手动录入系统投入使用前的历史年份分红收入，编辑后不会被自动计算覆盖</div>
@@ -6729,9 +6718,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors" onclick="toggleSettingsCollapse('yearReturn')" id="yearReturnHeader">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-                        <i class="fa fa-line-chart text-green-500 text-sm"></i>
-                    </div>
+                    <div class="section-mark"></div>
                     <div>
                         <div class="text-base font-semibold text-gray-800">历年总收益率</div>
                         <div class="text-[10px] text-gray-400 mt-0.5">手动录入系统投入使用前的历史年份收益率，编辑后不会被自动计算覆盖</div>
@@ -6753,7 +6740,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-1 h-4 bg-gradient-to-b from-[#D45329] to-[#a9642a] rounded-full"></div>
                     <span class="text-[13px] font-semibold text-gray-800">交易费率</span>
                     <span class="text-[10px] text-gray-400">买卖自动扣费</span>
                 </div>
@@ -6867,7 +6853,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeIndustryMapPage()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">行业映射配置</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-indigo-500 font-medium whitespace-nowrap bg-indigo-50 px-2 py-0.5 rounded-full">
                     <i class="fa fa-sitemap text-[10px]"></i>
@@ -6906,7 +6891,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-1 h-4 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                     <span class="text-[13px] font-semibold text-gray-800">映射规则</span>
                     <span class="text-[10px] text-gray-400" id="industryMapCount">0 条</span>
                 </div>
@@ -6919,7 +6903,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mt-4">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-1 h-4 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
                     <span class="text-[13px] font-semibold text-gray-800">港股行业映射</span>
                     <span class="text-[10px] text-gray-400" id="hkIndustryMapCount">0 条</span>
                 </div>
@@ -6935,7 +6918,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mt-4">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="w-1 h-4 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full"></div>
                     <span class="text-[13px] font-semibold text-gray-800">当前持仓原始行业</span>
                     <span class="text-[10px] text-gray-400" id="holdRawIndCount"></span>
                 </div>
@@ -6956,7 +6938,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStockScores()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-[#a82d43] to-[#742034] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">股票评分</span>
                 <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
@@ -6975,7 +6956,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeHealthCheck()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
                 <span class="text-gray-800 text-[17px] font-semibold tracking-wide">持仓体检</span>
                 <span class="ml-auto text-[10px] text-gray-400 whitespace-nowrap">组合级护城河榜</span>
             </div>
@@ -6995,7 +6975,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 组合安全边际（Gordon 分红贴现：内在价值 = 每股分红 ÷ (要求回报 − 永续增长)） -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-3">
             <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-amber-500 to-amber-700 rounded-full"></div>
                 <span class="text-[13px] font-semibold text-gray-800">组合安全边际</span>
                 <span class="text-[9.5px] text-gray-400 ml-auto">Gordon 分红贴现</span>
             </div>
@@ -7022,7 +7001,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 集中度检查（能力圈提示：单股 / 行业占比警示） -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-3">
             <div class="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                <div class="w-1 h-4 bg-gradient-to-b from-amber-500 to-amber-700 rounded-full"></div>
                 <span class="text-[13px] font-semibold text-gray-800">集中度检查</span>
                 <span class="text-[9.5px] text-gray-400 ml-auto">能力圈提示</span>
             </div>
@@ -19575,7 +19553,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 月末提醒：仅最后一天出现，不写入每日消息，月初自动消失
             if(monthEnd){
                 html += '<div class="flex items-center gap-1.5 mb-2 mt-1">'
-                    + '<div class="w-1 h-3.5 bg-gradient-to-b from-[#8f2437] to-[#5e1b2b] rounded-full"></div>'
+                    + '<div class="section-mark"></div>'
                     + '<span class="text-[12px] font-semibold text-gray-600">月度提醒</span>'
                     + '<span class="text-[10px] text-gray-400">仅月底出现</span>'
                     + '</div>'
@@ -19597,7 +19575,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(goalItems.length){
                 const doneCount = goalItems.filter(function(x){ return x.type === 'targetDone'; }).length;
                 html += '<div class="flex items-center gap-1.5 mb-2 mt-1">'
-                    + '<div class="w-1 h-3.5 bg-gradient-to-b from-[#a82d43] to-[#742034] rounded-full"></div>'
+                    + '<div class="section-mark"></div>'
                     + '<span class="text-[12px] font-semibold text-gray-600">目标持仓</span>'
                     + '<span class="text-[10px] text-gray-400">' + (targetPending ? targetPending + ' 只未达成 · 每天提醒' : '全部达成 · 不再提醒') + '</span>'
                     + '</div>';
@@ -19633,7 +19611,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 除权动态分组
             if(exdivItems.length){
                 html += '<div class="flex items-center gap-1.5 mb-2 mt-1">'
-                    + '<div class="w-1 h-3.5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>'
+                    + '<div class="section-mark"></div>'
                     + '<span class="text-[12px] font-semibold text-gray-600">除权动态</span>'
                     + '<span class="text-[10px] text-gray-400">今日登记 / 除权</span>'
                     + '</div>';
@@ -19666,7 +19644,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 股息率提醒分组（仅关注股票，突破阶梯瞬间定格提醒一次）
             if(yieldItems.length){
                 html += '<div class="flex items-center gap-1.5 mb-2 mt-4">'
-                    + '<div class="w-1 h-3.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>'
+                    + '<div class="section-mark"></div>'
                     + '<span class="text-[12px] font-semibold text-gray-600">关注 · 股息率提醒</span>'
                     + '<span class="text-[10px] text-gray-400">突破 4%/5%/6% 各提醒一次</span>'
                     + '</div>';

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261114.339';</script>
+    <script>window.APP_VERSION = '20261114.346';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -941,6 +941,268 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .divcum-since{ margin-left:0; }
         }
 
+        /* ===== 买入 / 卖出 / 持仓编辑：白卡分层 + 酒红点级 ===== */
+        #pageTrade .trade-ticket,
+        #pageStockEdit .stock-edit-card{
+            position:relative;
+            background:#ffffff !important;
+            border:1px solid #e9e2d8;
+            box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 12px 30px rgba(73,56,35,.075) !important;
+        }
+        #pageTrade .trade-ticket::before,
+        #pageStockEdit .stock-edit-card::before{
+            content:'';
+            position:absolute;
+            left:20px; top:0;
+            width:38px; height:2px;
+            border-radius:0 0 3px 3px;
+            background:linear-gradient(90deg,#8f2437,#b98f50);
+            pointer-events:none;
+        }
+        #pageTrade.trade-sell .trade-ticket::before{
+            background:linear-gradient(90deg,#2f7d5a,#7fae95);
+        }
+        #pageTrade .trade-quote-hero{
+            position:relative;
+            overflow:hidden;
+            margin-bottom:12px;
+            padding:14px 16px 10px;
+            border-radius:20px;
+            border:1px solid #eadfce;
+            background:linear-gradient(180deg,#fffdf8 0%,#fffaf3 100%);
+            box-shadow:0 3px 12px rgba(82,55,32,.06),inset 0 1px 0 rgba(255,255,255,.86);
+        }
+        #pageTrade .trade-quote-hero::before{
+            content:'';
+            position:absolute; left:0; right:0; top:0; height:2px; z-index:2;
+            background:linear-gradient(90deg,transparent,#8f2437 22%,#a82d43 50%,#8f2437 78%,transparent);
+        }
+        #pageTrade.trade-sell .trade-quote-hero::before{
+            background:linear-gradient(90deg,transparent,#2f7d5a 22%,#3f946c 50%,#2f7d5a 78%,transparent);
+        }
+        #pageTrade .trade-quote-hero::after{
+            content:'';
+            position:absolute; top:-74px; right:-52px;
+            width:180px; height:180px; border-radius:50%;
+            background:radial-gradient(circle,rgba(168,45,67,.07),transparent 68%);
+            pointer-events:none;
+        }
+        #pageTrade.trade-sell .trade-quote-hero::after{
+            background:radial-gradient(circle,rgba(47,125,90,.07),transparent 68%);
+        }
+        #pageTrade .trade-quote-top{
+            position:relative; z-index:1;
+            display:flex; align-items:center; gap:8px;
+        }
+        #pageTrade #tradeModeBadge{
+            display:inline-flex; align-items:center;
+            padding:2px 7px;
+            border-radius:999px;
+            border:1px solid #e8cdd4;
+            background:#f8ecef;
+            color:#742034;
+            font-size:9px; line-height:1.4; letter-spacing:.08em;
+        }
+        #pageTrade.trade-sell #tradeModeBadge{
+            border-color:#cfe1d6;
+            background:#eef7f2;
+            color:#2f7d5a;
+        }
+        #pageTrade #tradeStockCode{
+            font-size:10px; color:#8a7354; letter-spacing:.06em;
+        }
+        #pageTrade #tradeStockName{
+            position:relative; z-index:1;
+            margin-top:6px;
+            font-size:19px; font-weight:600; color:#1f2937; letter-spacing:.02em;
+        }
+        #pageTrade .trade-quote-price-label{
+            position:relative; z-index:1;
+            font-size:9px; line-height:1.2; letter-spacing:.08em;
+            color:#a4937e; margin-bottom:2px;
+        }
+        #pageTrade #tradeNowPrice{
+            position:relative; z-index:1;
+            font-size:25px; font-weight:600; color:#1f2937; letter-spacing:-.01em;
+        }
+        #pageTrade .trade-quote-foot{
+            position:relative; z-index:1;
+            display:flex; align-items:flex-end; justify-content:space-between; gap:14px;
+            margin-top:9px; padding-top:8px;
+            border-top:1px solid #eee3d1;
+        }
+        #pageTrade .trade-hold-label{
+            font-size:8.5px; line-height:1.2; letter-spacing:.12em;
+            color:#a4937e;
+        }
+        #pageTrade .trade-hold-value{
+            margin-top:3px;
+            font-size:16px; line-height:1; font-weight:600;
+            color:#1f2937; letter-spacing:-.01em;
+        }
+        #pageTrade .trade-hold-unit{
+            margin-left:3px;
+            font-size:10px; line-height:1; font-weight:500;
+            color:#8a7a67; letter-spacing:0;
+        }
+        #pageTrade .trade-cost-metric{
+            flex-shrink:0; text-align:right;
+        }
+        #pageTrade .trade-cost-value{
+            margin-top:3px;
+            font-size:12px; line-height:1; font-weight:600;
+            color:#6e5a45;
+        }
+        #pageTrade .trade-form-divider{
+            height:1px; background:#f1eee8; margin:0;
+        }
+        #pageTrade .trade-preview-panel{
+            background:#f8f7f4;
+            border:1px solid #ebe6de;
+            border-radius:12px;
+            padding:10px 14px !important;
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+        }
+        #pageTrade .trade-preview-panel .text-gray-400{ color:#8f877c !important; }
+        #pageTrade .trade-preview-amount{
+            padding-bottom:2px;
+            border-bottom:1px solid #efebe4;
+            margin-bottom:2px;
+        }
+        #pageTrade .trade-preview-amount > span:first-child{
+            font-size:10.5px !important; letter-spacing:.04em;
+        }
+        #pageTrade #tradeAmount{ color:#8f2437 !important; font-size:19px; font-weight:600; line-height:1.2; }
+        #pageTrade.trade-sell #tradeAmount{ color:#2f7d5a !important; }
+        #pageTrade #tradeFee{ color:#8f877c !important; font-size:12.5px; font-weight:500; }
+        #pageTrade #tradeNet,
+        #pageTrade #tradeCostPreview,
+        #pageTrade #tradeAfter,
+        #pageTrade #tradeSellCost{ color:#3a302b !important; font-size:12.5px; font-weight:600; }
+        #pageStockEdit .stock-section-head{
+            display:flex; align-items:center; gap:8px;
+            margin:5px 0 -2px;
+        }
+        #pageStockEdit .stock-section-title{
+            display:inline-flex; align-items:center; gap:6px;
+            font-size:10.5px; font-weight:600; letter-spacing:.08em; color:#3a302b;
+            white-space:nowrap;
+        }
+        #pageStockEdit .stock-section-title::before{
+            content:''; width:3px; height:10px; border-radius:2px;
+            background:linear-gradient(180deg,#8f2437,#b98f50);
+        }
+        #pageStockEdit .stock-section-line{
+            flex:1; height:1px; background:#f1eee8;
+        }
+        #pageStockEdit .stock-section-hint{
+            font-size:9.5px; color:#aba092; letter-spacing:.02em; white-space:nowrap;
+        }
+        #pageStockEdit label,
+        #pageTrade label{
+            color:#3a302b !important;
+            font-size:12px !important;
+            font-weight:600 !important;
+            letter-spacing:.04em;
+        }
+        #pageStockEdit label span,
+        #pageTrade label span{ color:#a4937e !important; font-weight:400 !important; letter-spacing:0; }
+        #pageStockEdit input:not([type="hidden"]),
+        #pageTrade input:not([type="hidden"]){
+            border-width:1px !important;
+            border-color:#e2dcd3 !important;
+            background-color:#ffffff !important;
+            color:#2f2a26;
+            border-radius:10px !important;
+            box-shadow:0 1px 0 rgba(255,255,255,.95) inset;
+            transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;
+        }
+        #pageStockEdit input:not([type="hidden"]):focus,
+        #pageTrade input:not([type="hidden"]):focus{
+            border-color:#8f2437 !important;
+            background-color:#ffffff !important;
+            box-shadow:0 0 0 3px rgba(143,36,55,.07),0 1px 0 rgba(255,255,255,.95) inset !important;
+            outline:none !important;
+        }
+        #pageTrade.trade-sell input:not([type="hidden"]):focus{
+            border-color:#2f7d5a !important;
+            box-shadow:0 0 0 3px rgba(47,125,90,.075),0 1px 0 rgba(255,255,255,.95) inset !important;
+        }
+        #pageStockEdit input[readonly],
+        #pageTrade input[readonly]{
+            background-color:#f5f3ef !important;
+            border-color:#e8e3da !important;
+            color:#8e877c !important;
+            box-shadow:none !important;
+        }
+        #pageStockEdit input::placeholder,
+        #pageTrade input::placeholder{ color:#b6aa9d !important; }
+        #pageStockEdit .fa-lock{ color:#b5a89a !important; }
+        #pageStockEdit .fa-search{ color:#b5a89a !important; }
+        #pageStockEdit #stockEditBackBtn,
+        #pageTrade #tradeBackBtn{
+            background:#ffffff !important;
+            border:1px solid #e8e1d6;
+            box-shadow:0 3px 10px rgba(73,56,35,.07),inset 0 1px 0 rgba(255,255,255,.85);
+            color:#8f2437 !important;
+        }
+        #pageStockEdit #modalTitle{
+            color:#3a302b;
+            letter-spacing:.02em;
+        }
+        #pageStockEdit #stockForm button[type="submit"]{
+            background:linear-gradient(135deg,#8f2437 0%,#742034 100%) !important;
+            box-shadow:0 7px 18px rgba(116,32,52,.19) !important;
+            font-weight:600;
+        }
+        #pageStockEdit #cancelBtn,
+        #pageTrade #tradeCancel{
+            background:#ffffff !important;
+            border:1px solid #e2dcd3 !important;
+            color:#6f6358 !important;
+            font-weight:500;
+            box-shadow:0 1px 0 rgba(255,255,255,.9) inset;
+        }
+        #pageTrade .trade-price-quick,
+        #pageTrade .trade-qty-quick{
+            background:#f7f6f3 !important;
+            border:1px solid #e8e2d8;
+            color:#77695c !important;
+            border-radius:8px;
+            font-size:11px;
+        }
+        #pageTrade .trade-price-quick:active,
+        #pageTrade .trade-qty-quick:active{
+            background:#8f2437 !important;
+            border-color:#8f2437 !important;
+            color:#fff !important;
+        }
+        #pageTrade .trade-qty-quick[data-ratio="1"]{
+            background:linear-gradient(90deg,#2f7d5a,#1f5f44) !important;
+            border-color:#2f7d5a !important;
+            color:#fff !important;
+        }
+        #pageTrade.trade-sell .trade-qty-quick:active{
+            background:#2f7d5a !important;
+            border-color:#2f7d5a !important;
+        }
+        #pageTrade.trade-sell .trade-price-quick:active{
+            background:#2f7d5a !important;
+            border-color:#2f7d5a !important;
+        }
+        #pageStockEdit input[type="number"]::-webkit-inner-spin-button,
+        #pageStockEdit input[type="number"]::-webkit-outer-spin-button,
+        #pageTrade input[type="number"]::-webkit-inner-spin-button,
+        #pageTrade input[type="number"]::-webkit-outer-spin-button{
+            -webkit-appearance:none;
+            margin:0;
+        }
+        #pageStockEdit input[type="number"],
+        #pageTrade input[type="number"]{
+            -moz-appearance:textfield;
+            appearance:textfield;
+        }
+
 </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
@@ -1167,14 +1429,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <i class="fa fa-arrow-left"></i>
             </button>
             <h3 id="modalTitle" class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <div class="w-1 h-5 bg-gradient-to-b from-accent to-[#a9642a] rounded-full"></div>
+                <div class="w-1 h-5 bg-gradient-to-b from-[#8f2437] to-[#b98f50] rounded-full"></div>
                 新增持仓股票
             </h3>
         </div>
-        <div class="bg-white rounded-2xl card-shadow p-5">
+        <div class="stock-edit-card rounded-2xl card-shadow p-5">
             <form id="stockForm" class="space-y-3.5">
                 <!-- 市场类型：按输入代码自动判断（5位港股 / 6位A股），隐藏字段供提交与编辑使用 -->
                 <input type="hidden" id="marketType" value="A">
+                <div class="stock-section-head">
+                    <span class="stock-section-title">标的信息</span>
+                    <span class="stock-section-line"></span>
+                    <span class="stock-section-hint">代码与名称</span>
+                </div>
                 <!-- 股票代码 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">股票代码</label>
@@ -1234,6 +1501,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </select>
                 </div>
                 <!-- 持仓股数 -->
+                <div class="stock-section-head">
+                    <span class="stock-section-title">持仓数据</span>
+                    <span class="stock-section-line"></span>
+                    <span class="stock-section-hint">用于成本与盈亏</span>
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">持仓股数</label>
                     <input type="number" id="stockCount" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="50000" min="1" required>
@@ -1241,7 +1513,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <!-- 买入成本价 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5" id="costLabel">买入成本价(元)</label>
-                    <input type="number" step="0.0001" id="costPrice" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="4.9460" required>
+                    <input type="number" step="any" id="costPrice" class="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 focus:border-accent focus:outline-none transition-colors text-base" placeholder="4.9460" required>
                 </div>
                 <!-- 当前股价（自动获取，不可编辑） -->
                 <div>
@@ -1291,7 +1563,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="mt-2 text-xs text-gray-400 leading-relaxed">新一年分红到账后在此添加一笔（到账日期 + 每股分红），系统按日期自动归属年份并累加到「今年已收 / 每年分红收入 / 行业分红」，已保存的历史记录不会被后续持股变动影响。未录入任何记录时，按「每股分红 × 持股数」估算当年。</div>
                 </div>
                 <!-- 操作按钮 -->
-                <div class="pt-4 flex gap-3">
+                <div class="pt-4 flex gap-3 border-t border-[#f1eee8]">
                     <button type="button" id="cancelBtn" class="flex-1 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 transition-colors">取消</button>
                     <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-accent to-[#a9642a] text-white rounded-xl font-medium shadow-lg shadow-[#e9dcbe] hover:shadow-xl transition-all">保存持仓</button>
                 </div>
@@ -1401,23 +1673,38 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <i class="fa fa-arrow-left"></i>
             </button>
             <h3 id="tradeModalTitle" class="text-xl font-semibold flex items-center gap-2">
-                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-[#e03131] to-[#e03434]"></div>
-                买入
+                <div id="tradeTitleRail" class="w-1 h-5 rounded-full bg-gradient-to-b from-[#8f2437] to-[#b98f50]"></div>
+                <span id="tradeTitleText">买入</span>
             </h3>
         </div>
-        <div class="bg-white rounded-2xl card-shadow p-4 space-y-3.5">
-            <!-- 股票信息卡 -->
-            <div class="rounded-xl px-4 py-1 flex justify-between items-center">
-                <div>
-                    <div id="tradeStockName" class="text-base font-semibold text-gray-800"></div>
-                    <div id="tradeStockCode" class="text-xs text-gray-400 mt-0.5"></div>
-                </div>
+        <!-- 独立行情头：深色底、香槟金细节，建立页面第一层视觉 -->
+        <div class="trade-quote-hero">
+            <div class="trade-quote-top">
+                <span id="tradeModeBadge">买入</span>
+                <span id="tradeStockCode"></span>
+            </div>
+            <div class="flex items-end justify-between gap-3">
+                <div id="tradeStockName"></div>
                 <div class="text-right">
-                    <div id="tradeNowPrice" class="text-base font-semibold text-gray-800 tabular-nums"></div>
-                    <div id="tradeHoldInfo" class="text-[10px] text-gray-400 mt-0.5 tabular-nums"></div>
+                    <div class="trade-quote-price-label">最新价</div>
+                    <div id="tradeNowPrice" class="tabular-nums"></div>
                 </div>
             </div>
-            <div class="rounded-xl px-4 py-1 space-y-3.5">
+            <div class="trade-quote-foot">
+                <div class="trade-hold-metric">
+                    <div class="trade-hold-label">当前持仓</div>
+                    <div class="trade-hold-value tabular-nums">
+                        <span id="tradeHoldCount">--</span><span class="trade-hold-unit">股</span>
+                    </div>
+                </div>
+                <div class="trade-cost-metric">
+                    <div class="trade-hold-label">持仓成本</div>
+                    <div id="tradeHoldCost" class="trade-cost-value tabular-nums">--</div>
+                </div>
+            </div>
+        </div>
+        <div class="trade-ticket rounded-2xl card-shadow p-4 space-y-3.5">
+            <div class="space-y-3.5">
                 <!-- 交易价格 -->
                 <div>
                     <label id="tradePriceLabel" class="block text-sm font-medium text-gray-700 mb-1.5">买入价格(元)</label>
@@ -1441,8 +1728,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                 </div>
                 <!-- 预估金额 / 成本预览 -->
-                <div class="bg-gray-50 rounded-xl px-3.5 py-3 space-y-2 text-sm">
-                    <div class="flex justify-between">
+                <div class="trade-form-divider"></div>
+                <div class="trade-preview-panel rounded-xl space-y-1.5 text-sm">
+                    <div class="flex justify-between items-end trade-preview-amount">
                         <span class="text-gray-400">预估金额</span>
                         <span id="tradeAmount" class="font-semibold text-gray-800 tabular-nums">--</span>
                     </div>
@@ -4006,9 +4294,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="border-t border-gray-100"></div>
             <div class="px-4 py-2 grid grid-cols-[minmax(0,1.25fr)_0.65fr_0.95fr_0.95fr] gap-2 text-[10px] text-gray-400 items-center bg-gray-50/60 border-b border-gray-100" id="statsTradeHead">
                 <span>股票/时间</span>
-                <span class="text-right">成交价</span>
-                <span class="text-right">成交量</span>
-                <span class="text-right">业务/金额</span>
+                <span class="text-right">价格/成本</span>
+                <span class="text-right">数量</span>
+                <span class="text-right">类型/金额</span>
             </div>
             <div id="statsTradeList"></div>
             <div id="statsTradeMoreWrap" class="hidden px-4 pb-3">
@@ -6250,6 +6538,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const HOLDING_GOALS_KEY = 'holdingTargetGoals';
         const HOLDING_TARGET_NOTIF_KEY = 'holdingTargetNotifs';
         let holdDataList = [];
+        // 成本价统一口径：仅存储 4 位小数；计算过程仍按原公式，不对中间值做截断。
+        function roundCost4(v){
+            const n = Number(v);
+            return isFinite(n) ? Number(n.toFixed(4)) : 0;
+        }
+        function normalizeCost4Item(it){
+            if(!it || typeof it !== 'object') return it;
+            if(it.costPrice != null && isFinite(Number(it.costPrice))) it.costPrice = roundCost4(it.costPrice);
+            if(it.costSnapshots && typeof it.costSnapshots === 'object'){
+                Object.keys(it.costSnapshots).forEach(function(k){
+                    if(isFinite(Number(it.costSnapshots[k]))) it.costSnapshots[k] = roundCost4(it.costSnapshots[k]);
+                });
+            }
+            return it;
+        }
+        function normalizeCost4List(list){
+            if(Array.isArray(list)) list.forEach(normalizeCost4Item);
+        }
         // 主数据加载完成闸门：init 解析完已存持仓（或确认本来无数据）前，禁止 saveLocal 把空数组/半成品写回
         let _holdDataLoaded = false;
         // 清空所有数据执行中：禁止任何保存/快照/账本回写，避免刷新前把旧数据重新写回
@@ -7558,6 +7864,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const localStr = lsGet(STORAGE_KEY);
             if(localStr) {
                 holdDataList = JSON.parse(localStr);
+                normalizeCost4List(holdDataList);
                 // 兼容旧数据：旧字段为年度分红总额 yearDivMoney，换算为每股分红
                 holdDataList.forEach(function(it){
                     if(it.divPerShare == null && it.yearDivMoney != null){
@@ -7726,6 +8033,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function saveLocal() {
             // 主数据未完成加载前，holdDataList 可能还是空数组或半成品；此时禁止写回，避免覆盖真实持仓
             if(!_holdDataLoaded || _allDataClearing) return;
+            normalizeCost4List(holdDataList);
             lsSet(STORAGE_KEY, JSON.stringify(holdDataList));
             // 持仓数据变更：立即失效按天快照，下次读取自动重建为最新（6:00/20:00 定时刷新机制不变）
             invalidateStatsSnaps();
@@ -10803,7 +11111,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             stockCountEl.value = item.count;
             stockCountEl.readOnly = true;
             stockCountEl.className = 'w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 bg-gray-50 text-gray-600 cursor-not-allowed';
-            costPriceEl.value = item.costPrice;
+            costPriceEl.value = item.costPrice != null ? String(roundCost4(item.costPrice)) : '';
             nowPriceEl.value = item.nowPrice != null ? item.nowPrice : '';
             divPerShareEl.value = item.divPerShare != null ? item.divPerShare : '';
             stockIndustryEl.value = item.industry || '其他';
@@ -12106,7 +12414,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function saveCostSnapshot(it, dateStr){
             if(!it || !dateStr) return;
             if(!it.costSnapshots) it.costSnapshots = {};
-            it.costSnapshots[dateStr] = Number(it.costPrice) || 0;
+            it.costSnapshots[dateStr] = roundCost4(it.costPrice);
         }
         function buildBreakEvenDaily(scope){
             const items = scope ? [scope] : allBreakEvenItems();
@@ -12678,7 +12986,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const isHk = item.marketType === 'HK';
             const closePx = (tradePrice != null && tradePrice > 0) ? tradePrice : (Number(item.nowPrice) || 0);
             const count = Number(item.count) || 0;
-            const cost = Number(item.costPrice) || 0;
+            const cost = roundCost4(item.costPrice);
             let pnl = (closePx - cost) * count;
             pnl -= Number(tradeFee) || 0; // 卖出费用直接从本次已实现盈亏中扣除（券商净回款口径）
             if(isHk) pnl = pnl * hkFxRate;
@@ -12960,14 +13268,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(editingId != null){
                 const item = holdDataList.find(it => it.id === editingId);
                 if(item){
-                    const newCost = Number(costPriceEl.value);
+                    const newCost = roundCost4(Number(costPriceEl.value));
                     const oldCntEdit = item.count, oldCostEdit = item.costPrice;
                     // 编辑是数据修正：不清空已处理分红标识——已除权过的分红（含当天18:00已到账）
                     // 后续任何操作（编辑/覆盖/删除重加）都不得重复除权、重复入账
                     // 股数锁定：编辑只对齐成本（readonly 仅防键盘输入，此处强制保持原股数做双重保障；
                     // 股数变更请走买入/卖出交易，会自动增减现金）
                     item.count = oldCntEdit;
-                    item.costPrice = newCost;
+                    item.costPrice = roundCost4(newCost);
                     saveCostSnapshot(item, todayStr());
                     item.divPerShare = Number(divPerShareEl.value || 0);
                     // 港股行业优先取最新映射表，无配置时保留手动选择
@@ -13022,7 +13330,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(hkNew) industry = hkNew;
             }
             const count = Number(stockCountEl.value);
-            const costPrice = Number(costPriceEl.value);
+            const costInput = Number(costPriceEl.value);
+            const costPrice = roundCost4(costInput);
             const nowPrice = Number(nowPriceEl.value || 0);
             const divPerShare = Number(divPerShareEl.value || 0);
 
@@ -13041,7 +13350,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 覆盖更新是数据修正（不产生买卖流水）；若无交易流水则补一条原建仓流水，保证今年盈亏额按年初持仓计算
                 if(!existing.transactions || !existing.transactions.length){
                     const origCreated = existing.createdAt ? new Date(existing.createdAt).getTime() : Date.now();
-                    existing.transactions = [{ t: origCreated, delta: count, price: costPrice }];
+                    existing.transactions = [{ t: origCreated, delta: count, price: costInput }];
                 }
                 // 覆盖更新：保留原建仓日与全部分红标记（已除权分红绝不重复除权，历史到账记录不重算）
                 if(marketType === 'HK'){
@@ -13087,7 +13396,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 nowPrice,
                 divPerShare,
                 // 建仓交易流水（用于今年盈亏额精确计算：买入股数 + 建仓成本价）
-                transactions: [{ t: Date.now(), delta: count, price: costPrice }],
+                transactions: [{ t: Date.now(), delta: count, price: costInput }],
                 createdAt: new Date().toISOString()
             }
             // 重新买入同一只已清仓股票：完整继承该股票的分红历史
@@ -13135,7 +13444,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!newItem.costSnapshots) newItem.costSnapshots = {};
             newItem.costSnapshots[todayStr()] = Number(newItem.costPrice) || 0;
             // 买入建仓：账户现金扣减买入金额（股数 × 成本价，港股按汇率折算人民币）
-            adjustCash(-count * costPrice * (marketType === 'HK' ? hkFxRate : 1));
+            adjustCash(-count * costInput * (marketType === 'HK' ? hkFxRate : 1));
             // 建仓成交后把当时现金快照存到建仓流水（事件驱动，此后现金再变不回写）
             if(newItem.transactions && newItem.transactions.length) newItem.transactions[newItem.transactions.length - 1].cashAfter = historyData.cashBalance;
             saveLocal();
@@ -13445,17 +13754,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const isHk = item.marketType === 'HK';
             const pxUnit = isHk ? '港币' : '元';
             const titleEl = document.querySelector('#tradeModalTitle');
-            titleEl.innerText = mode === 'buy' ? '买入' : '卖出';
-            titleEl.className = 'text-lg font-semibold ' + (mode === 'buy' ? 'text-[#e03131]' : 'text-[#00b57a]');
+            const titleText = document.querySelector('#tradeTitleText');
+            if(titleText) titleText.innerText = mode === 'buy' ? '买入' : '卖出';
+            titleEl.className = 'flex items-center gap-2 text-[19px] font-semibold tracking-[.02em] ' + (mode === 'buy' ? 'text-[#8f2437]' : 'text-[#2f7d5a]');
+            const titleRail = document.querySelector('#tradeTitleRail');
+            if(titleRail){
+                titleRail.style.background = mode === 'buy'
+                    ? 'linear-gradient(180deg,#8f2437,#b98f50)'
+                    : 'linear-gradient(180deg,#2f7d5a,#7fae95)';
+            }
+            const tradePage = document.querySelector('#pageTrade');
+            if(tradePage) tradePage.classList.toggle('trade-sell', mode === 'sell');
+            const modeBadge = document.querySelector('#tradeModeBadge');
+            if(modeBadge) modeBadge.innerText = mode === 'buy' ? '买入' : '卖出';
             document.querySelector('#tradeStockName').innerText = item.name;
             document.querySelector('#tradeStockCode').innerText = item.code + (item.marketType === 'HK' ? ' · 港股' : ' · A股');
             document.querySelector('#tradeNowPrice').innerHTML = (isHk ? 'HK$' : '') + fmtPrice(item.nowPrice, item.code, isHk);
-            document.querySelector('#tradeHoldInfo').innerText = '当前持仓 ' + item.count + ' 股 · 成本 ' + (isHk ? 'HK$' : '') + item.costPrice;
+            const tradeHoldCountEl = document.querySelector('#tradeHoldCount');
+            if(tradeHoldCountEl) tradeHoldCountEl.innerText = Number(item.count).toLocaleString('en-US');
+            const tradeHoldCostEl = document.querySelector('#tradeHoldCost');
+            if(tradeHoldCostEl) tradeHoldCostEl.innerText = (isHk ? 'HK$' : '') + item.costPrice;
             document.querySelector('#tradePriceLabel').innerText = (mode === 'buy' ? '买入' : '卖出') + '价格(' + pxUnit + ')';
             const priceInput = document.querySelector('#tradePrice');
             priceInput.value = item.nowPrice != null && item.nowPrice > 0 ? item.nowPrice : '';
             priceInput.step = isEtfCode(item.code) ? '0.001' : '0.01';
             document.querySelector('#tradeQty').value = '';
+            const tradeNetRowEl = document.querySelector('#tradeNetRow');
+            if(tradeNetRowEl) tradeNetRowEl.style.display = 'flex';
+            const tradeNetLabelEl = document.querySelector('#tradeNetLabel');
+            if(tradeNetLabelEl) tradeNetLabelEl.innerText = mode === 'buy' ? '实付金额' : '实收金额';
             document.querySelector('#tradeCostPreviewRow').style.display = mode === 'buy' ? 'flex' : 'none';
             document.querySelector('#tradeAfterRow').style.display = mode === 'sell' ? 'flex' : 'none';
             document.querySelector('#tradeSellCostRow').style.display = mode === 'sell' ? 'flex' : 'none';
@@ -13463,8 +13790,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cfm = document.querySelector('#tradeConfirm');
             cfm.innerText = mode === 'buy' ? '确认买入' : '确认卖出';
             cfm.className = mode === 'buy'
-                ? 'flex-1 py-3 rounded-xl text-white font-medium shadow-lg bg-gradient-to-r from-[#e03131] to-[#e03434] shadow-red-200'
-                : 'flex-1 py-3 rounded-xl text-white font-medium shadow-lg bg-gradient-to-r from-[#00c987] to-[#00a56c] shadow-green-200';
+                ? 'flex-1 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-[#8f2437] to-[#742034]'
+                : 'flex-1 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-[#2f7d5a] to-[#1f5f44]';
+            cfm.style.boxShadow = mode === 'buy'
+                ? '0 7px 18px rgba(116,32,52,.20)'
+                : '0 7px 18px rgba(47,125,90,.18)';
             // 打开交易页面（隐藏持仓页，顶部返回）
             document.querySelector('#pageHold').classList.add('hidden');
             document.querySelector('#pageTrade').classList.remove('hidden');
@@ -13560,7 +13890,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const newCount = oldCount + qty;
                 const newCost = (oldCost * oldCount + qty * price + buyFee) / newCount;
                 item.count = newCount;
-                item.costPrice = newCost;
+                item.costPrice = roundCost4(newCost);
                 saveCostSnapshot(item, todayStr());
                 if(!item.transactions) item.transactions = [];
                 item.transactions.push({ t: Date.now(), delta: qty, price: price, fee: buyFee,
@@ -13616,7 +13946,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 按净回款冲减成本：费用使剩余成本相应抬高（与券商摊薄成本一致）
                 const newCost = (oldCostTotal - sellNet) / newCount;
                 item.count = newCount;
-                item.costPrice = newCost;
+                item.costPrice = roundCost4(newCost);
                 saveCostSnapshot(item, todayStr());
                 adjustCash(sellProceeds);
                 item.transactions[item.transactions.length - 1].cashAfter = historyData.cashBalance;
@@ -25310,11 +25640,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     : (ev.type === 'sell'
                         ? '<span class="cashflow-type-badge is-text bg-[#0b8f5f]" title="卖出">卖出</span>'
                         : '<span class="' + badgeCls + ' text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">' + badgeText + '</span>');
-                const amtCls = 'text-gray-600';
-                const amtTxt = ev.type === 'edit' ? '--' : ((ev.amount > 0 ? '+' : '-') + fmtMoney(Math.abs(ev.amount)));
+                const amtCls = ev.type === 'edit' ? 'text-[10px] text-gray-400' : 'text-gray-600';
+                const amtTxt = ev.type === 'edit' ? '持仓调整' : ((ev.amount > 0 ? '+' : '-') + fmtMoney(Math.abs(ev.amount)));
+                const isEditEv = ev.type === 'edit';
+                const editCost = isEditEv ? String(ev.subTxt || '').replace(/^成本\s*/, '').split('→').pop().trim() : '';
+                const editQty = isEditEv ? String(ev.qtyTxt || '').split('→').pop().trim() : '';
+                const qtyTxt = isEditEv ? (editQty || '--') : ev.qtyTxt;
                 const priceTxt = (ev.price != null && isFinite(Number(ev.price)) && Number(ev.price) > 0)
                     ? fmtPrice(Number(ev.price), ev.code, ev.market === 'HK')
-                    : '--';
+                    : '';
+                const priceHtml = isEditEv
+                    ? (editCost ? '<span class="text-[11px] text-gray-600 tabular-nums">' + editCost + '</span>' : '<span class="text-gray-400">--</span>')
+                    : (priceTxt || '<span class="text-gray-400">--</span>');
                 const d = new Date(ev.time);
                 const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
@@ -25323,8 +25660,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 html += '<div class="text-[13px] font-semibold text-gray-800 truncate">' + ev.name + '</div>';
                 html += '<div class="text-[10px] text-gray-400 mt-0.5 tabular-nums whitespace-nowrap">' + dateStr + ' ' + timeStr + '</div>';
                 html += '</div>';
-                html += '<div class="text-right"><div class="text-[12px] font-medium text-gray-600 tabular-nums whitespace-nowrap">' + priceTxt + '</div></div>';
-                html += '<div class="text-right"><div class="text-[12px] font-medium text-gray-600 tabular-nums whitespace-nowrap">' + ev.qtyTxt + '</div></div>';
+                html += '<div class="text-right"><div class="text-[12px] font-medium text-gray-600 tabular-nums whitespace-nowrap">' + priceHtml + '</div></div>';
+                html += '<div class="text-right"><div class="text-[12px] font-medium text-gray-600 tabular-nums whitespace-nowrap">' + qtyTxt + '</div></div>';
                 html += '<div class="text-right">';
                 html += badgeHtml;
                 html += '<div class="text-[12px] font-medium ' + amtCls + ' tabular-nums whitespace-nowrap mt-0.5">' + amtTxt + '</div>';
@@ -35048,6 +35385,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // 确认导入
                     showConfirm(confirmMsg, function(){
                         // 保存持仓数据
+                        normalizeCost4List(holdData);
                         lsSet(STORAGE_KEY, JSON.stringify(holdData));
                         holdDataList = holdData;
                         _holdDataLoaded = true;

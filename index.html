@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261115.357';</script>
+    <script>window.APP_VERSION = '20261115.360';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -146,6 +146,22 @@
             }
         }
     </script>
+    <!-- 首屏关键布局：Tailwind CDN 异步生成前先锁定宽度与边距，避免首次打开列表时从全宽向里压缩 -->
+    <style>
+        #pageHold{
+            box-sizing:border-box;width:100%;max-width:36rem;
+            margin-left:auto;margin-right:auto;
+            padding-left:.75rem;padding-right:.75rem;
+        }
+        #holdList .hold-row,
+        #holdList .hold-row-actions{
+            margin-left:.5rem !important;
+            margin-right:.5rem !important;
+        }
+        #holdList .hold-row{
+            transition-property:background-color,border-color,color,opacity !important;
+        }
+    </style>
     <style type="text/tailwindcss">
         @layer base {
             body {
@@ -33798,8 +33814,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         ? ';border-bottom:0.6px solid #F0EDE7'
                         : '';
                     htmlStr += `
-                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-0.5 py-2.5 items-center transition-all duration-300 cursor-pointer" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="grid-template-columns:1.38fr 0.90fr 1.18fr 1.28fr 1.16fr;padding-top:11.5px;padding-bottom:11.5px${rowDivider}">
-                        <div class="text-left pl-[2px]">
+                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-[4px] py-2.5 items-center transition-all duration-300 cursor-pointer" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="grid-template-columns:1.38fr 0.90fr 1.18fr 1.28fr 1.16fr;padding-top:11.5px;padding-bottom:11.5px;padding-left:4px;padding-right:4px${rowDivider}">
+                        <div class="text-left">
                             <div class="flex items-center justify-start gap-0.5 flex-wrap">
                                 ${stockLogoHtml(item, 16)}
                                 <span class="hold-list-val font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'}">${shortName}</span>

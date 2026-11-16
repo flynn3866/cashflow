@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261116.383';</script>
+    <script>window.APP_VERSION = '20261116.396';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -153,14 +153,37 @@
             margin-left:auto;margin-right:auto;
             padding-left:.75rem;padding-right:.75rem;
         }
-        #holdList .hold-row,
-        #holdList .hold-row-actions{
-            margin-left:.5rem !important;
-            margin-right:.5rem !important;
+        /* 列表宽度：桌面与主卡同栏；手机端明确做成左右对称的 full-bleed */
+        #holdList .hold-list-shell{
+            margin-left:0 !important;margin-right:0 !important;
+        }
+        @media (max-width:480px){
+            #holdList .hold-list-shell{
+                margin-left:-.75rem !important;margin-right:-.75rem !important;
+                border-radius:0 !important;
+            }
+        }
+        /* 底栏未选中项：提高到可在 390px 看清的暖灰，不做成纯浅灰 */
+        #bottomNav .bottomTab{ color:#7a6d61; }
+        #bottomNav .bottomTab.text-accent{ color:#8f2437; }
+        /* 视图切换同样：视觉 30px，触控热区 36px，不互相干扰 */
+        #cardModeBtn, #listModeBtn{ position:relative; }
+        #cardModeBtn::before, #listModeBtn::before{
+            content:""; position:absolute; left:0; right:0; top:-3px; bottom:-3px;
         }
         #holdList .hold-row{
+            margin-left:0 !important;
+            margin-right:0 !important;
             transition-property:background-color,border-color,color,opacity !important;
         }
+        /* 展开持仓详情时暂时收起右下角新增按钮，避免遮住操作行 */
+        #openModalBtn{transition:opacity .22s ease, transform .22s ease !important;}
+        #openModalBtn.hold-fab-hidden{opacity:0 !important;pointer-events:none !important;transform:translateY(8px) scale(.92) !important;}
+        @keyframes holdPanelIn{
+            from{opacity:0;transform:translateY(-4px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+        #holdList .hold-row-actions.hold-panel-in{animation:holdPanelIn .22s cubic-bezier(.22,.61,.36,1) both;}
     </style>
     <!-- 一级页刊头：不使用背景条/白卡，只用眉标、宋体大标题与一条发丝线建立统一层级 -->
     <style>
@@ -185,6 +208,13 @@
             .page-title{font-size:24px;}
         }
         /* 首页 Copilot 式材质：毛玻璃底栏、洞察卡 */
+        /* 目标持仓：比主卡低一级的“安静状态条”，不是第二张主卡 */
+        .goal-strip{
+            position:relative;overflow:hidden;border-radius:14px;
+            background:linear-gradient(100deg,rgba(255,253,249,.92) 0%,rgba(253,248,243,.72) 62%,rgba(250,242,240,.55) 100%);
+            border:1px solid rgba(143,36,55,.085);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.76);
+        }
         .insight-card{
             position:relative;overflow:hidden;border-radius:16px;
             background:linear-gradient(135deg,rgba(255,253,249,.94) 0%,rgba(248,236,239,.72) 100%);
@@ -431,79 +461,35 @@
             background:radial-gradient(circle,rgba(168,45,67,.07),transparent 68%);
             pointer-events:none;
         }
-        /* 总资产详情·资产段位轨道 */
+        /* 总资产详情·资产段位（紧凑徽章 + 一条细进度线） */
         .ah-tier-rail{
-            position:relative;z-index:10;margin-top:13px;padding:10px 11px 9px;
-            border:1px solid rgba(234,223,206,.82);border-radius:14px;
+            position:relative;z-index:10;margin-top:12px;padding:9px 11px 8px;
+            border:1px solid rgba(234,223,206,.82);border-radius:12px;
             background:linear-gradient(180deg,rgba(255,255,255,.78) 0%,rgba(255,251,245,.36) 100%);
             box-shadow:inset 0 1px 0 rgba(255,255,255,.86);
         }
         .ah-tier-rail-head{display:flex;align-items:baseline;gap:7px;min-width:0}
-        .ah-tier-eyebrow{font-size:8.5px;font-weight:600;letter-spacing:.12em;color:#a4937e;white-space:nowrap}
-        .ah-tier-current{display:inline-flex;align-items:center;gap:5px;min-width:0}
-        .ah-tier-current b{
-            font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1;font-weight:700;
-            letter-spacing:.03em;color:#742034;
-        }
-        .ah-tier-current span{font-size:9.5px;color:#6e5a45;letter-spacing:.02em;white-space:nowrap}
+        .ah-tier-eyebrow{font-size:9px;font-weight:600;letter-spacing:.10em;color:#a4937e;white-space:nowrap}
         .ah-tier-count{
             margin-left:auto;font-size:9px;color:#a4937e;white-space:nowrap;
             font-variant-numeric:tabular-nums;letter-spacing:.04em;
         }
-        .ah-tier-track{position:relative;height:22px;margin-top:7px}
+        .ah-tier-track{position:relative;height:2px;margin-top:8px}
         .ah-tier-line{
-            position:absolute;left:0;right:0;top:10px;height:2px;border-radius:999px;
+            position:absolute;left:0;right:0;top:0;height:2px;border-radius:999px;
             background:linear-gradient(90deg,#efe3d2,#f3e9dc);
         }
         .ah-tier-fill{
-            position:absolute;left:0;top:10px;height:2px;width:0;border-radius:999px;
+            position:absolute;left:0;top:0;height:2px;width:0;border-radius:999px;
             background:linear-gradient(90deg,#b98f50,#ecd29a);
-            box-shadow:0 0 7px rgba(236,210,154,.32);
+            box-shadow:0 0 5px rgba(236,210,154,.22);
             transition:width .72s cubic-bezier(.22,1,.36,1);
         }
-        .ah-tier-nodes{position:absolute;inset:0}
-        .ah-tier-codes{position:relative;height:9px;margin-top:1px}
-        .ah-tier-code{
-            position:absolute;top:0;transform:translateX(-50%);
-            font-size:7.5px;line-height:1;letter-spacing:0;
-            color:#b5a38c;font-variant-numeric:tabular-nums;white-space:nowrap;
-        }
-        .ah-tier-code.is-minor{opacity:.55}
-        .ah-tier-code.is-past{color:#9a8469;opacity:.82}
-        .ah-tier-code.is-minor:not(.is-current){opacity:.60}
-        .ah-tier-code.is-current{color:#742034;font-weight:700;opacity:1}
-        .ah-tier-code.is-edge-start{transform:none}
-        .ah-tier-code.is-edge-end{transform:translateX(-100%)}
-        .ah-tier-node{
-            position:absolute;top:11px;transform:translate(-50%,-50%);
-            width:5px;height:5px;border-radius:50%;background:#e8dac8;
-            box-shadow:inset 0 0 0 1px rgba(143,36,55,.06);
-            transition:transform .2s ease,opacity .2s ease;
-        }
-        .ah-tier-node.is-minor{width:4px;height:4px;opacity:.72}
-        .ah-tier-node.is-major{width:6px;height:6px;opacity:.78}
-        .ah-tier-node.is-past{
-            background:linear-gradient(135deg,#c9a45e,#ecd29a);
-            box-shadow:0 0 0 1px rgba(185,143,80,.10),0 1px 3px rgba(185,143,80,.10);
-            opacity:1;
-        }
-        .ah-tier-node.is-current{
-            width:10px;height:10px;z-index:3;opacity:1;
-            background:radial-gradient(circle at 34% 28%,#a82d43 0%,#742034 70%);
-            border:1px solid rgba(236,210,154,.82);
-            box-shadow:0 0 0 3px rgba(236,210,154,.20),0 2px 7px rgba(143,36,55,.28);
-            animation:ahTierArrive .5s cubic-bezier(.22,1,.36,1) both;
-        }
-        .ah-tier-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;font-size:9px;line-height:1.2}
+        .ah-tier-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font-size:9px;line-height:1.2}
         .ah-tier-next{color:#6e5a45;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .ah-tier-gap{color:#a4937e;font-variant-numeric:tabular-nums;white-space:nowrap}
-        @keyframes ahTierArrive{
-            0%{transform:translate(-50%,-50%) scale(.52);opacity:.25}
-            100%{transform:translate(-50%,-50%) scale(1);opacity:1}
-        }
         @media (prefers-reduced-motion: reduce){
             .ah-tier-fill{transition:none}
-            .ah-tier-node.is-current{animation:none}
         }
         /* 交易明细页：做T经营结果卡，沿用年度分红 hero 的「主数字 + 三白格」结构 */
         #tradeLogDayWrap .tl-sum-grid{
@@ -561,10 +547,15 @@
         /* 持仓筛选：紧凑分段控件，仅当前分段保留酒红 */
         #filterGroup .filterTag{
             display:inline-flex; align-items:center; justify-content:center; gap:4px;
-            padding:3px 9px; border-radius:9999px; border:1px solid transparent;
-            font-size:11px; line-height:1.2; font-weight:500;
+            min-height:30px; padding:0 10px; border-radius:9999px; border:1px solid transparent;
+            font-size:11.5px; line-height:1.2; font-weight:500;
             color:#6b7280; background:transparent;
             transition:background-color .18s ease, color .18s ease;
+            position:relative;
+        }
+        /* 视觉保持紧凑，纵向热区扩到 36px */
+        #filterGroup .filterTag::before{
+            content:""; position:absolute; left:0; right:0; top:-3px; bottom:-3px;
         }
         #filterGroup .filterTag + .filterTag{ margin-left:1px; }
         #filterGroup .filterTag.is-active{ background:#8f2437; color:#fff3dd; }
@@ -1953,10 +1944,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <!-- 顶部汇总卡片：墨黑酒红渐变 + 香槟内线，层级更沉稳（首页直接展示资产卡，品牌区移至"我的"页） -->
-        <div class="relative rounded-3xl px-[18px] py-2.5 mb-4 overflow-hidden" style="background:linear-gradient(145deg,#1c1417 0%,#2a1b20 58%,#3a2328 100%);box-shadow:0 14px 32px rgba(38,20,24,.14),0 2px 8px rgba(38,20,24,.08),inset 0 1px 0 rgba(255,255,255,.08);">
-            <div class="absolute -top-20 -right-16 w-64 h-64 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(143,36,55,.22) 0%,transparent 70%);"></div>
-            <div class="absolute -bottom-24 -left-16 w-56 h-56 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(232,200,138,.05) 0%,transparent 70%);"></div>
-            <div class="absolute top-0 left-0 right-0 h-px pointer-events-none" style="background:linear-gradient(90deg,transparent,rgba(232,200,138,.38),transparent);"></div>
+        <div class="relative rounded-3xl px-[18px] py-2.5 mb-4 overflow-hidden" style="background:linear-gradient(155deg,#1a1215 0%,#1f1418 58%,#27171d 100%);box-shadow:0 2px 5px rgba(0,0,0,.55),0 10px 26px rgba(24,12,16,.16),inset 0 1px 0 rgba(255,255,255,.05);">
+            <div class="absolute -top-24 -right-20 w-64 h-64 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(143,36,55,.16) 0%,transparent 72%);"></div>
             <div class="relative z-10">
                 <!-- 第一层：总资产（主数字）｜今日盈亏（金额与百分比同行） -->
                 <div class="pt-3 pb-2.5 flex items-start justify-between gap-3">
@@ -1989,8 +1978,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
                 <div style="height:1px;background:rgba(230,210,163,0.16);transform:scaleY(0.6);"></div>
 
-                <!-- 第二层：磨砂指标面板（两行三列：年度分红收入 / 累计分红 / 预计回本；总市值 / 持仓盈亏 / 现金） -->
-                <div class="mt-3 mb-3 rounded-2xl px-3 pt-3 pb-2.5" style="background:linear-gradient(135deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.035) 100%);border:1px solid rgba(232,200,138,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.10);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);">
+                <!-- 第二层：两行三列，沿用 v376 整卡平铺结构 -->
+                <div class="pt-3 pb-3">
                     <div class="grid items-start" style="grid-template-columns:1.4fr 1.04fr 1.4fr; row-gap:15px;">
                         <!-- 第一行：年度分红收入 / 累计分红 / 预计回本 -->
                         <div class="text-left min-w-0 pr-2">
@@ -2110,24 +2099,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 账户洞察：目标持仓常驻信息 + 主洞察 + 可选的仓位预警 -->
-        <div class="insight-card mb-3">
-            <div id="targetSummaryStrip" class="hidden relative z-10 px-3.5 pt-3 pb-3 border-b" style="border-color:rgba(143,36,55,.10);"></div>
-            <div class="relative z-10 flex items-start gap-2.5 px-3.5 py-3">
-                <span class="insight-rail mt-0.5"></span>
-                <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-[9px] font-semibold tracking-[.14em] text-[#8f2437]">本期洞察</span>
-                        <span class="text-[9px] text-[#a49382]">基于当前持仓</span>
-                    </div>
-                    <div id="holdInsightText" class="mt-1 text-[12px] leading-snug text-[#2f2a27]" aria-live="polite">正在读取持仓数据…</div>
-                </div>
+        <!-- 账户聚焦：目标持仓常驻（标题 + 一句结论），仓位预警仅在存在时追加 -->
+        <div id="accountFocusCard" class="goal-strip mb-4">
+            <div id="targetSummaryStrip" class="relative z-10 px-4 pt-3 pb-2.5">
+                <div class="flex items-center gap-2"><span class="text-[10px] font-semibold tracking-[.12em]" style="color:#8f2437;">目标持仓</span></div>
+                <div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#6f635b;">正在读取目标…</div>
             </div>
+            <div id="holdWarnRow" class="hidden relative z-10 px-4 pt-2.5 pb-3 border-t" style="border-color:rgba(143,36,55,.10);"></div>
         </div>
 
         <!-- 我的持仓头部 -->
         <!-- 全部/A股/港股筛选标签 + 卡片/列表模式切换 -->
-        <div class="flex items-center justify-between mb-0.5">
+        <div class="flex items-center justify-between mb-1.5">
             <div class="inline-flex items-center p-0.5 rounded-full" id="filterGroup" style="background:#f4efe4;border:1px solid #eee5d6;">
                 <button type="button" data-filter="all" class="filterTag is-active">
                     全部 <span id="allCount" class="filter-count">0</span>
@@ -2140,11 +2123,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </button>
             </div>
             <!-- 卡片/列表模式切换 -->
-            <div class="flex items-center bg-[#f4efe4] rounded-full p-0.5 border border-[#eee5d6] h-[27px]">
-                <button type="button" id="cardModeBtn" class="w-9 h-[21px] rounded-full flex items-center justify-center text-xs transition-all bg-white text-[#5f4a38] shadow-sm" title="卡片模式">
+            <div class="flex items-center bg-[#f4efe4] rounded-full p-0.5 border border-[#eee5d6] h-[36px]">
+                <button type="button" id="cardModeBtn" class="w-10 h-[30px] rounded-full flex items-center justify-center text-xs transition-all bg-white text-[#5f4a38] shadow-sm" title="卡片模式">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 </button>
-                <button type="button" id="listModeBtn" class="w-9 h-[21px] rounded-full flex items-center justify-center text-xs transition-all text-[#b6a892]" title="列表模式">
+                <button type="button" id="listModeBtn" class="w-10 h-[30px] rounded-full flex items-center justify-center text-xs transition-all text-[#b6a892]" title="列表模式">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                 </button>
             </div>
@@ -2849,19 +2832,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
             </div>
 
-            <!-- 资产段位轨道：全宽成长线，A1-A5用小点，A6+为大节点 -->
+            <!-- 资产段位：徽章 + 一条细进度线，不再展开 12 节点 -->
             <div id="ahTierJourney" class="ah-tier-rail" aria-label="资产段位进度">
                 <div class="ah-tier-rail-head">
                     <span class="ah-tier-eyebrow">资产段位</span>
-                    <span class="ah-tier-current"><b id="ahTierRailCode">A1</b><span id="ahTierRailName">初启</span></span>
                     <span id="ahTierRailCount" class="ah-tier-count">1 / 12</span>
                 </div>
-                <div id="ahTierTrack" class="ah-tier-track" role="progressbar" aria-valuemin="1" aria-valuemax="12" aria-valuenow="1" aria-label="资产段位轨道">
+                <div id="ahTierTrack" class="ah-tier-track" role="progressbar" aria-valuemin="1" aria-valuemax="12" aria-valuenow="1" aria-label="资产段位进度">
                     <div class="ah-tier-line"></div>
                     <div id="ahTierFill" class="ah-tier-fill"></div>
-                    <div id="ahTierNodes" class="ah-tier-nodes"></div>
                 </div>
-                <div id="ahTierCodes" class="ah-tier-codes" aria-hidden="true"></div>
                 <div class="ah-tier-foot">
                     <span id="ahTierRailNext" class="ah-tier-next">下一站 A2 · 萌芽</span>
                     <span id="ahTierRailGap" class="ah-tier-gap">还差 ¥10</span>
@@ -2900,20 +2880,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-baseline gap-2">
-                            <span id="ahTrendTitle" class="text-[15px] font-semibold text-gray-800 tracking-wide">收益率轨迹</span>
+                            <span id="ahTrendTitle" class="text-[15px] font-semibold text-gray-800 tracking-wide">资产轨迹</span>
                             <span id="ahTrendMeta" class="text-[9.5px] text-[#a8987e] ml-auto tabular-nums">--</span>
                         </div>
                         <div id="ahTrendSub" class="text-[9.5px] text-[#b3a48f] mt-0.5">快照表原值 · 今日首页实时</div>
                     </div>
                 </div>
                 <div class="mt-3 grid grid-cols-3 gap-1 rounded-[12px] p-1 border border-[#efe4d2]" style="background:#f6eee0;">
-                    <button id="assetTabReturn" type="button" onclick="setAssetTrackMode('return')" aria-selected="true" class="py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#742034] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors">收益率</button>
-                    <button id="assetTabDaily" type="button" onclick="setAssetTrackMode('daily')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">资产轨迹</button>
+                    <button id="assetTabDaily" type="button" onclick="setAssetTrackMode('daily')" aria-selected="true" class="py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#742034] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors">资产轨迹</button>
+                    <button id="assetTabReturn" type="button" onclick="setAssetTrackMode('return')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">收益率</button>
                     <button id="assetTabYear" type="button" onclick="setAssetTrackMode('year')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">年度收益</button>
                 </div>
             </div>
 
-            <div id="assetReturnPanel" class="px-2 pt-2.5 pb-1">
+            <div id="assetReturnPanel" class="hidden px-2 pt-2.5 pb-1">
                 <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
                     <button id="returnRangeYear" type="button" onclick="setReturnRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
                     <button id="returnRangeAll" type="button" onclick="setReturnRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
@@ -2940,7 +2920,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="ahReturnNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">按今年口径计算 · 今日首页实时</div>
             </div>
 
-            <div id="assetTrackPanel" class="hidden px-2 pt-2.5 pb-1">
+            <div id="assetTrackPanel" class="px-2 pt-2.5 pb-1">
                 <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
                     <button id="assetRangeYear" type="button" onclick="setAssetTrackRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
                     <button id="assetRange1y" type="button" onclick="setAssetTrackRange('1y')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">近一年</button>
@@ -10338,7 +10318,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var assetTrendChart = null;
         var assetTrendResizeBound = false;
         var assetTrackChart = null;
-        var assetTrackMode = 'return';
+        var assetTrackMode = 'daily';
         var assetTrackRange = 'year';
         var _assetYearSeriesCache = null;
         var _assetTrackRowsCache = null;
@@ -10634,8 +10614,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderAssetTierRail(amount, tier, idx, next);
         }
         function renderAssetTierRail(amount, tier, idx, next){
-            const nodesEl = document.querySelector('#ahTierNodes');
-            const codesEl = document.querySelector('#ahTierCodes');
             const fillEl = document.querySelector('#ahTierFill');
             const trackEl = document.querySelector('#ahTierTrack');
             const codeEl = document.querySelector('#ahTierRailCode');
@@ -10643,21 +10621,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const countEl = document.querySelector('#ahTierRailCount');
             const nextEl = document.querySelector('#ahTierRailNext');
             const gapEl = document.querySelector('#ahTierRailGap');
-            if(!nodesEl || !fillEl || !trackEl) return;
             const n = ASSET_TIERS.length;
-            let nodes = '', codes = '';
-            for(let i = 0; i < n; i++){
-                const t = ASSET_TIERS[i];
-                const state = i < idx ? 'is-past' : (i === idx ? 'is-current' : 'is-future');
-                const size = i <= 4 ? 'is-minor' : 'is-major';
-                const left = n > 1 ? (i / (n - 1) * 100) : 0;
-                const start = i === 0 ? '起点' : ('起步 ' + fmtTierGap(t.min));
-                nodes += '<span class="ah-tier-node ' + size + ' ' + state + '" style="left:' + left.toFixed(4) + '%" title="' + t.code + ' · ' + t.name + ' · ' + start + '"></span>';
-                const edge = i === 0 ? ' is-edge-start' : (i === n - 1 ? ' is-edge-end' : '');
-                codes += '<span class="ah-tier-code ' + size + ' ' + state + edge + '" style="left:' + left.toFixed(4) + '%">' + t.code + '</span>';
-            }
-            nodesEl.innerHTML = nodes;
-            if(codesEl) codesEl.innerHTML = codes;
+            if(!fillEl || !trackEl) return;
             if(codeEl) codeEl.innerText = tier.code;
             if(nameEl) nameEl.innerText = tier.name;
             if(countEl) countEl.innerText = (idx + 1) + ' / ' + n;
@@ -11696,7 +11661,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#openModalBtn').classList.add('hidden');
             window.scrollTo(0, 0);
             assetTrendYearPageCount = 10;
-            assetTrackMode = 'return';
+            assetTrackMode = 'daily';
             assetTrackRange = 'year';
             assetReturnRange = 'year';
             renderAssetTrendPage();
@@ -18487,7 +18452,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const el = document.querySelector('#targetSummaryStrip');
             if(!el) return;
             const rows = targetRows();
-            if(!rows.length){ el.classList.add('hidden'); el.innerHTML = ''; return; }
+            if(!rows.length){
+                el.classList.remove('hidden');
+                el.innerHTML = '<div class="min-w-0">'
+                    + '<div class="flex items-center gap-2"><span class="text-[10px] font-semibold tracking-[.12em]" style="color:#8f2437;">目标持仓</span></div>'
+                    + '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#6f635b;">暂未设置目标持仓</div>'
+                    + '</div>';
+                return;
+            }
             const done = rows.filter(function(r){ return r.achieved; }).length;
             const allDone = done === rows.length;
             const rail = allDone ? '#4f8a6e' : '#742034';
@@ -18501,24 +18473,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             })[0] : null;
             const focusRow = allDone ? null : (priorityRow || nearestRow);
             const focusLabel = allDone ? '全部达成' : (priorityRow ? '最高优先' : '最近可达成');
-            const focusChipBg = allDone ? 'rgba(47,125,90,.08)' : 'rgba(143,36,55,.07)';
-            const focusChipBorder = allDone ? 'rgba(79,138,110,.24)' : 'rgba(143,36,55,.16)';
-            const focusChipColor = allDone ? '#2f7d5a' : '#8f2437';
-            const focusBadge = '<span class="text-[9px] font-semibold rounded-full px-1.5 py-[2px] leading-none flex-shrink-0" style="color:' + focusChipColor + ';background:' + focusChipBg + ';box-shadow:inset 0 0 0 1px ' + focusChipBorder + ';">' + focusLabel + '</span>';
-            let focusLine = '';
-            if(allDone){
-                focusLine = '<div class="mt-2 flex items-center gap-1.5 min-w-0 text-[10.5px] leading-snug">'
-                    + focusBadge
-                    + '<span class="font-semibold" style="color:#2f2a27;">全部目标已达成</span>'
-                    + '</div>';
-            } else if(focusRow){
-                focusLine = '<div class="mt-2 flex items-center gap-1.5 min-w-0 text-[10.5px] leading-snug">'
-                    + focusBadge
-                    + '<span class="font-semibold truncate" style="color:#2f2a27;">' + targetEsc(focusRow.item.name) + '</span>'
-                    + '<span class="tabular-nums flex-shrink-0" style="color:#6f635b;">' + targetFmtShares(focusRow.current) + '/' + targetFmtShares(focusRow.target) + '</span>'
-                    + '<span class="font-semibold flex-shrink-0" style="color:#2f2a27;">还差 ' + targetFmtShares(focusRow.gap) + ' 股</span>'
-                    + '</div>';
-            }
+            const focusName = allDone ? '全部达成' : (focusRow ? String(focusRow.item.name || '').trim() : '');
+            const focusGap = (!allDone && focusRow) ? targetFmtShares(focusRow.gap) : '';
             // 沿用旧目标卡逻辑：最后一行看最高优先股票；无最高优先或全部达成时看第一重仓
             const topPositionRow = (holdDataList || []).slice()
                 .filter(function(it){ return Number(it.count) > 0 && getMarketValue(it) > 0; })
@@ -18547,17 +18503,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '</div>';
             }
             el.classList.remove('hidden');
-            el.innerHTML = '<div class="flex items-start gap-2.5 cursor-pointer active:opacity-70 transition-opacity" onclick="openTargetOverview()">'
-                + '<span class="w-[2px] h-4 rounded-full flex-shrink-0 mt-0.5" style="background:' + rail + ';"></span>'
-                + '<div class="min-w-0 flex-1">'
+            // 目标区只保留“标题 + 一句结论”；完整进度和股价进入目标总览/个股详情。
+            const bodyLine = allDone
+                ? '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#2f2a27;">全部目标已达成</div>'
+                : '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#2f2a27;">'
+                    + '<span class="text-[9.5px] mr-1" style="color:#a49382;">' + focusLabel + '</span>'
+                    + '<span class="font-semibold">' + targetEsc(focusName || '--') + '</span>'
+                    + '<span class="ml-1.5 text-[12px] tabular-nums" style="color:#6f635b;">' + targetFmtShares(focusRow.current) + '/' + targetFmtShares(focusRow.target) + '</span>'
+                    + '<span class="mx-1" style="color:#a49382;">·</span>'
+                    + '<span>还差 ' + focusGap + ' 股</span>'
+                    + '</div>';
+            el.innerHTML = '<div class="min-w-0 cursor-pointer active:opacity-70 transition-opacity" onclick="openTargetOverview()" title="查看目标持仓">'
                 + '<div class="flex items-center gap-2 min-w-0">'
-                + '<span class="text-[9px] font-semibold tracking-[.14em] flex-shrink-0" style="color:#8f2437;">目标持仓</span>'
-                + '<span class="text-[9px] flex-shrink-0" style="color:#a49382;">待完成 ' + (rows.length - done) + '</span>'
-                + '<svg class="w-3 h-3 flex-shrink-0 ml-auto" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
+                + '<span class="text-[10px] font-semibold tracking-[.12em] flex-shrink-0" style="color:#8f2437;">目标持仓</span>'
+                + (allDone ? '' : '<span class="ml-auto text-[9.5px] flex-shrink-0" style="color:#a49382;">' + done + '/' + rows.length + ' 达成</span>')
+                + '<svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
                 + '</div>'
-                + focusLine
-                + quoteLine
-                + '</div>'
+                + bodyLine
                 + '</div>';
         }
         function renderStockTargetCard(){
@@ -32474,7 +32436,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ============ 回本里程碑（已并入成本回收进度条，本函数保留空转兼容旧调用） ============
         function renderRecoverMilestone(){}
 
-        // ============ 个股仓位预警：并入首页“本期洞察”的第二条信息 ============
+        // ============ 个股仓位预警：追加到首页账户聚焦卡的目标结论下方 ============
         const POSITION_WARN_LIMIT = 30;   // 个股仓位上限（%）
         function updatePositionWarn(){
             // 用户点过忽略：本次会话不再自动出现（刷新页面后恢复）
@@ -32615,7 +32577,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const stNumEl = document.querySelector('#stockNum');
             if(stNumEl) stNumEl.innerText = sum.holdLen;
             updateSummaryCard(sum);
-            // 目标持仓摘要：有目标才显示；空仓/无目标时隐藏
+            // 目标持仓摘要常驻：无目标时显示简单空态，有预警时在下方追加一行。
             updateTargetSummaryStrip();
             // 回本里程碑（成本为负的股票汇总统计，并入成本回收进度条副文字）
             renderRecoverMilestone();
@@ -33386,35 +33348,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 contributors: contributors
             };
         }
-        // 首页账户洞察：只用现有汇总字段生成一条事实型文案，不新增计算口径
+        // 首页账户聚焦：预警仅在有真实预警时追加到目标结论下方
         var positionWarnMessage = '';
         var _todayPnlLoadStartedAt = 0;
         var _todayPnlLoadTimer = null;
         function updateHoldInsight(sum){
-            const el = document.querySelector('#holdInsightText');
-            if(!el || !sum) return;
-            const holds = Number(sum.holdLen) || 0;
-            const yearDiv = Number(sum.totalYearDiv) || 0;
-            const totalDiv = Number(sum.totalDivReceived) || 0;
-            let text = '';
-            if(holds <= 0){
-                text = '暂无持仓；添加第一只股票后，这里会生成一条账户洞察。';
-            } else if(yearDiv > 0){
-                text = '今年已收分红 ' + fmtMoney(yearDiv) + '，累计 ' + fmtMoney(totalDiv) + '；分红现金流正在积累。';
-            } else if(totalDiv > 0){
-                text = '今年分红尚未到账，累计已收 ' + fmtMoney(totalDiv) + '；下一笔派息值得关注。';
-            } else {
-                text = '今年与累计分红尚未到账；先让持仓慢慢生长。';
+            const el = document.querySelector('#holdWarnRow');
+            if(!el) return;
+            const warnText = String(positionWarnMessage || '').replace(/^个股仓位预警：/, '');
+            if(!warnText){
+                el.classList.add('hidden');
+                el.innerHTML = '';
+                return;
             }
-            const warnHtml = positionWarnMessage
-                ? '<div class="mt-2 pt-2 flex items-start gap-2 border-t" style="border-color:rgba(143,36,55,.10);">'
-                    + '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[5px]" style="background:#a82d43;"></span>'
-                    + '<span class="flex-1 min-w-0 text-[11.5px] leading-snug font-medium" style="color:#2f2a27;">' + targetEsc(positionWarnMessage) + '</span>'
-                    + '<button type="button" onclick="closePositionWarn()" class="flex-shrink-0 text-[9px] active:opacity-60 transition-opacity" style="color:#a49382;">忽略</button>'
-                    + '</div>'
-                : '';
-            const html = '<span>' + targetEsc(text) + '</span>' + warnHtml;
-            if(el.innerHTML !== html) el.innerHTML = html;
+            el.classList.remove('hidden');
+            el.innerHTML = '<div class="flex items-start gap-2">'
+                + '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[4px]" style="background:#a82d43;"></span>'
+                + '<span class="flex-1 min-w-0 text-[10px] leading-[1.45]" style="color:#6f635b;">' + targetEsc(warnText) + '</span>'
+                + '<button type="button" onclick="closePositionWarn()" class="flex-shrink-0 text-[8.5px] active:opacity-60 transition-opacity" style="color:#a49382;">忽略</button>'
+                + '</div>';
         }
 
         function updateSummaryCard(sum){
@@ -33710,14 +33662,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         dayPnlPctText = (pct != null && !isNaN(pct)) ? ((pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%') : '--';
                     }
                 }
-                setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal), isCostRecovered ? 'hold-recovered-sub' : 'text-gray-500');
+                setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal));
                 setNumText(row.querySelector('[data-field="holdPct"]'), holdPct + '%', 'text-gray-500');
-                setNumText(row.querySelector('[data-field="price"]'), fmtListPrice(item.nowPrice), 'text-gray-700');
                 setNumText(row.querySelector('[data-field="dayPnl"]'), dayPnlText, dayPnlClass);
                 const dayPnlPctEl = row.querySelector('[data-field="dayPnlPct"]');
                 setNumText(dayPnlPctEl, dayPnlPctText, dayPnlClass);
-                setNumText(row.querySelector('[data-field="pnl"]'), formatPnl(itemPnl2), itemPnlClass2);
-                setNumText(row.querySelector('[data-field="pnlPct"]'), pnlPctText2, itemPnlClass2);
+                // 完整指标在点开的操作层里，随行情一起更新价格与累计盈亏。
+                const actionEl = row.parentElement ? row.parentElement.querySelector('.hold-row-actions[data-hold-id="' + row.getAttribute('data-hold-id') + '"]') : null;
+                if(actionEl){
+                    setNumText(actionEl.querySelector('[data-field="price"]'), fmtListPrice(item.nowPrice));
+                    setNumText(actionEl.querySelector('[data-field="pnl"]'), formatPnl(itemPnl2), itemPnlClass2);
+                    setNumText(actionEl.querySelector('[data-field="pnlPct"]'), pnlPctText2, itemPnlClass2);
+                }
                 // 当日盈亏百分比闪烁（与全量渲染一致：东方财富通风格）
                 const code = item.code;
                 if(dayPnlPctEl && listPrevValues.dayPnlPct[code] != null && listPrevValues.dayPnlPct[code] !== pct){
@@ -33967,69 +33923,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             fitCardPnlOverflowFonts(holdListDom);
         }
 
-        // 列表模式渲染（卡片风格：整个表格在一个白色卡片上，按行业分组显示）
+        // 列表模式渲染（极简两行列表：按总市值倒序，详情点开后在嵌套面板出现）
         function renderHoldListMode(sorted, sum){
             const holdListDom = document.querySelector('#holdList');
             const totalMarketForPct = Number(sum.totalMarket) || 1;
             let htmlStr = '';
-            // 文本宽度估算（12px基准）：中文≈12px/字，ASCII数字/符号≈6.5px/字符，点号/省略号≈4px
-            function estListTextW(s){
-                let w = 0;
-                for(let i = 0; i < s.length; i++){
-                    const c = s.charAt(i);
-                    if(c === '.' || c === '…') w += 4;
-                    else if(s.charCodeAt(i) > 0x2E80) w += 12;
-                    else w += 6.5;
-                }
-                return w;
-            }
-            // 行业颜色调色板（持仓页列表模式的行业分组色，独立于仓位分布环形图，两者不必强求一致）
-            const industryColors = ['#3B82F6', '#EF4444', '#10B981', '#60A5FA', '#84CC16', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
-            // 按行业分组
-            const industryMap = {};
-            sorted.forEach(function(item){
-                const ind = getStockIndustry(item);
-                if(!industryMap[ind]) industryMap[ind] = { name: ind, stocks: [], totalMV: 0 };
-                industryMap[ind].stocks.push(item);
-                industryMap[ind].totalMV += getMarketValue(item);
-            });
-            // 行业按总市值降序排列，行业内股票按市值降序
-            const industryArr = Object.values(industryMap).sort(function(a, b){ return b.totalMV - a.totalMV; });
-            industryArr.forEach(function(ind){
-                ind.stocks.sort(function(a, b){ return getMarketValue(b) - getMarketValue(a); });
-            });
-            // 外层白色卡片（去掉overflow-hidden，让表头sticky相对于视口定位）
+            // 去掉行业分节：列表直接按市值降序排列，行业信息留在统计页，不再占据首页列表的阅读动线。
             htmlStr += `
-            <div class="bg-white overflow-visible" style="margin:0 -0.75rem;">
-                <!-- 表头：sticky固定在顶部，滚动时一直可见 -->
-                <div class="sticky top-0 z-20 grid pl-4 pr-4 pt-3 pb-2.5 bg-white border-b border-gray-100 shadow-sm rounded-t-lg" style="grid-template-columns:1.38fr 0.90fr 1.18fr 1.28fr 1.16fr">
-                    <div class="text-left text-[12px] text-gray-400 font-medium">名称/市值</div>
-                    <div class="text-right text-[12px] text-gray-400 font-medium">个股仓位</div>
-                    <div class="text-right text-[12px] text-gray-400 font-medium">现价/成本</div>
-                    <div class="text-right text-[12px] text-gray-400 font-medium">累计盈亏</div>
-                    <div class="text-right text-[12px] text-gray-400 font-medium">当日盈亏</div>
-                </div>
+            <div class="hold-list-shell bg-white overflow-hidden rounded-xl">
             `;
-            // 全局序号
-            let globalIndex = 0;
-            industryArr.forEach(function(ind, indIdx){
-                const indColor = industryColors[indIdx % industryColors.length];
-                const indPct = totalMarketForPct > 0 ? (ind.totalMV / totalMarketForPct * 100).toFixed(1) : 0;
-                // 行业标题行：左侧彩色竖条 + 行业名 + 股票数 + 仓位百分比（靠着标题右边）
-                htmlStr += `
-                <div class="grid grid-cols-12 mx-0 mt-3 mb-1.5 rounded-none overflow-hidden items-center" style="background:#faf5e9;border:1px solid rgba(176,101,47,.18)">
-                    <div class="col-span-12 flex items-center gap-2 pl-[15px] pr-3 py-2.5">
-                        <span class="w-1 h-4 rounded-full flex-shrink-0" style="background:${indColor}"></span>
-                        <span class="text-[12px] font-medium text-gray-700">${ind.name}</span>
-                        <span class="text-[12px] text-gray-400">${ind.stocks.length}只</span>
-                        <span class="text-[13px] font-semibold text-accent tabular-nums">${indPct}%</span>
-                    </div>
-                </div>
-                `;
-                // 该行业的股票列表
-                ind.stocks.forEach(function(item, idx){
-                    globalIndex++;
-                    const index = globalIndex - 1;
+            sorted.forEach(function(item, idx){
                     const isHk = item.marketType === 'HK';
                     const pricePrefix = isHk ? 'HK$' : '';
                     const itemMarketTotal = getMarketValue(item);
@@ -34066,76 +33969,67 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const costTotal2 = (Number(item.count)||0) * (Number(item.costPrice)||0) * (isHk ? hkFxRate : 1);
                     const pnlPct2 = costTotal2 !== 0 ? (itemPnl2 / costTotal2 * 100) : 0;
                     const pnlPctText2 = (pnlPct2>0?'+':(pnlPct2<0?'-':'')) + Math.abs(pnlPct2).toFixed(2) + '%';
-                    // 序号样式：统一简洁优雅的浅灰色圆形（按行业分组后全局序号无排名意义，去掉前三名特殊颜色）
-                    // 已回本股票（成本<0）：紫色渐变序号，更加醒目
                     const isCostRecovered = item.costPrice < 0;
-                    const rankClass = isCostRecovered
-                        ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-sm shadow-purple-300'
-                        : 'bg-gray-100 text-gray-400';
-                    // 股票名称：按显示宽度判断（12px基准估算，4个汉字宽度48以内完整显示）；
-                    // 宽度>52才截断为3字+…（省字防手机端换行）。修复含字母名称如"红利ETF"、
-                    // 以及3字名带空格/后缀被 length 误截断的问题；PICC(约96宽)仍截断。
-                    const shortName = estListTextW(item.name) > 52 ? item.name.substring(0, 3) + '…' : item.name;
-                    // 已回本徽章：已去掉（港股名字过长导致换行）
-                    const recoveredBadge = '';
-                    // 行风格：已回本股票使用淡紫色渐变背景，更加醒目；普通股票使用bg-pageBg
-                    const rowBgClass = isCostRecovered
-                        ? 'bg-gradient-to-r from-purple-50 via-purple-100/40 to-purple-50 border border-purple-200/60'
-                        : 'bg-white';
-                    // 市值颜色：已回本股票显示紫色
-                    const marketValueSubClass = isCostRecovered ? 'hold-recovered-sub' : 'text-gray-500';
-                    // 市值数字与股票名左对齐（名称行左对齐贴序号后，数字固定缩进logo+gap宽度）
                     const mvText = fmtMoney(itemMarketTotal);
-                    // 行风格：和卡片视图的两行一致（bg-pageBg rounded-xl），列表模式不可点击编辑
-                    // 行间分割线：淡细线（与汇总卡横线同风格）；已回本紫色行上下均不加
-                    const lastInGroup = idx + 1 >= ind.stocks.length;
-                    const nextIsPurple = !lastInGroup && ind.stocks[idx + 1].costPrice < 0;
-                    const rowDivider = (!isCostRecovered && !lastInGroup && !nextIsPurple)
-                        ? ';border-bottom:0.6px solid #F0EDE7'
-                        : '';
+                    const sharesText = (Number(item.count) || 0).toLocaleString('zh-CN');
+                    const rowBorder = idx === 0 ? '' : 'border-top:1px solid #f2ede5;';
                     htmlStr += `
-                    <div class="hold-row ${rowBgClass} mx-2 mt-[5px] mb-[5px] rounded-xl grid px-[4px] py-2.5 items-center transition-all duration-300 cursor-pointer" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="grid-template-columns:1.38fr 0.90fr 1.18fr 1.28fr 1.16fr;padding-top:11.5px;padding-bottom:11.5px;padding-left:4px;padding-right:4px${rowDivider}">
-                        <div class="text-left pl-[1px]">
-                            <div class="flex items-center justify-start gap-0.5 flex-wrap">
-                                ${stockLogoHtml(item, 16)}
-                                <span class="hold-list-val font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'}">${shortName}</span>
-                                ${recoveredBadge}
+                    <div class="hold-row ${isCostRecovered ? 'bg-[#faf7fd]' : 'bg-white'} px-3.5 py-3 cursor-pointer transition-all duration-300" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="${rowBorder}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-start gap-2.5 min-w-0">
+                                ${stockLogoHtml(item, 22)}
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="text-[16px] font-semibold truncate ${isCostRecovered ? 'text-purple-600' : 'text-[#2f2a27]'}">${item.name}</span>
+                                        <span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none ${tagBg} flex-shrink-0">${tagText}</span>
+                                        ${isCostRecovered ? `<span class="inline-flex items-center h-[14px] px-1 rounded-[3px] text-[8px] font-medium flex-shrink-0" style="color:#7c3aed;background:#f4edff;border:1px solid #e4d4fb;">已回本</span>` : ''}
+                                    </div>
+                                    <div class="mt-1 text-[11px] leading-[1.45] tabular-nums truncate" style="color:#a49382;">
+                                        <span style="color:#6f635b;" data-field="shares">${sharesText}</span> 股
+                                        <span class="mx-1">·</span> 成本 <span style="color:#6f635b;">${pricePrefix}${fmtListCost(item.costPrice)}</span>
+                                        <span class="mx-1">·</span> 仓位 <span style="color:#6f635b;" data-field="holdPct">${holdPct}%</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1 mt-1">
-                                <span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none ${tagBg} flex-shrink-0">${tagText}</span>
-                                <div class="hold-list-val hold-list-sub font-medium ${marketValueSubClass} tabular-nums list-num" data-code="${item.code}" data-field="market">${mvText}</div>
+                            <div class="text-right flex-shrink-0">
+                                <div class="text-[16px] font-semibold tabular-nums" data-code="${item.code}" data-field="market" style="color:${isCostRecovered ? '#7c3aed' : '#2f2a27'};">${mvText}</div>
+                                <div class="mt-1 text-[12px] font-medium tabular-nums ${dayPnlClass}">
+                                    <span class="list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</span>
+                                    <span class="ml-1 list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="hold-list-val font-medium text-gray-700 tabular-nums">${item.count}</div>
-                            <div class="hold-list-val hold-list-sub font-medium text-gray-500 mt-1 tabular-nums list-num" data-field="holdPct">${holdPct}%</div>
-                        </div>
-                        <div class="text-right hold-cost-cell">
-                            <div class="hold-list-val font-medium text-gray-700 tabular-nums" data-code="${item.code}" data-field="price"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtListPrice(item.nowPrice)}</div>
-                            <div class="hold-list-val hold-list-sub font-medium text-gray-500 mt-1 tabular-nums" data-field="cost"><span class="text-[7px] text-gray-400">${pricePrefix}</span>${fmtListCost(item.costPrice)}</div>
-                        </div>
-                        <div class="text-right hold-pnl-cell">
-                            <div class="hold-list-val font-medium ${itemPnlClass2} tabular-nums list-num" data-field="pnl">${formatPnl(itemPnl2)}</div>
-                            <div class="hold-list-val hold-list-sub font-medium ${itemPnlClass2} mt-1 tabular-nums list-num" data-field="pnlPct">${pnlPctText2}</div>
-                        </div>
-                        <div class="text-right pr-[1px]">
-                            <div class="hold-list-val font-medium ${dayPnlClass} tabular-nums list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</div>
-                            <div class="hold-list-val hold-list-sub font-medium ${dayPnlClass} mt-1 tabular-nums list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</div>
                         </div>
                     </div>
-                    <!-- 列表模式点击行展开的操作层：买入/卖出/编辑/明细（与卡片模式功能一致；再点行收起） -->
-                    <div class="hold-row-actions hidden mx-2 mb-[4px] px-1.5 py-1 rounded-lg grid grid-cols-5 gap-1" data-hold-id="${item.id}" style="background:#faf5e9;border:1px solid #eedfc0">
-                        <button type="button" onclick="openTradeModal(${item.id},'buy')" class="py-1 rounded-md text-[#e03131] text-xs font-semibold active:scale-95 transition-transform">买入</button>
-                        <button type="button" onclick="openTradeModal(${item.id},'sell')" class="py-1 rounded-md text-[#00b57a] text-xs font-semibold active:scale-95 transition-transform">卖出</button>
-                        <button type="button" onclick="editItem(${item.id})" class="py-1 rounded-md text-gray-500 text-xs font-medium active:scale-95 transition-transform">编辑</button>
-                        <button type="button" onclick="openHoldStockDetail('${item.id}')" class="py-1 rounded-md text-accent text-xs font-semibold active:scale-95 transition-transform">行情</button>
-                        <button type="button" onclick="openTradeLogPage(${item.id})" class="py-1 rounded-md text-gray-500 text-xs font-medium active:scale-95 transition-transform">明细</button>
+                    <!-- 点开后出现的是嵌套详情面板：标题、完整指标与操作分层，不再延续股票行的底色 -->
+                    <div class="hold-row-actions hidden mx-2.5 mb-2.5 rounded-[10px] overflow-hidden" data-hold-id="${item.id}" style="background:#f8f3ec;border:1px solid #ebdfd2;">
+                        <div class="px-3 pt-2.5 pb-1.5 flex items-baseline gap-2">
+                            <span class="text-[9px] font-semibold tracking-[.12em]" style="color:#8f5f67;">持仓详情</span>
+                            <span class="text-[10px] tabular-nums" style="color:#a49382;">${item.code}</span>
+                        </div>
+                        <div class="px-3 pb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] leading-[1.55]" style="color:#a49382;">
+                            <span>现价 <span style="color:#2f2a27;" data-field="price">${pricePrefix}${fmtListPrice(item.nowPrice)}</span></span>
+                            <span>·</span>
+                            <span>成本 <span style="color:#2f2a27;">${pricePrefix}${fmtListCost(item.costPrice)}</span></span>
+                            <span>·</span>
+                            <span>累计 <span class="${itemPnlClass2}" data-field="pnl">${formatPnl(itemPnl2)}</span> <span class="${itemPnlClass2}" data-field="pnlPct">${pnlPctText2}</span></span>
+                        </div>
+                        <div class="mx-3 mt-0.5" style="border-top:1px solid #e6d9cc;"></div>
+                        <div class="px-2.5 pt-2 pb-2.5">
+                            <div class="grid grid-cols-5 rounded-[8px] overflow-hidden" style="height:34px;background:#fffdfb;border:1px solid #e6d9cc;">
+                                <button type="button" onclick="openTradeModal(${item.id},'buy')" class="h-full text-[11px] font-semibold active:bg-[#fff4f2] transition-colors" style="color:#d92d20;">买入</button>
+                                <button type="button" onclick="openTradeModal(${item.id},'sell')" class="h-full text-[11px] font-semibold active:bg-[#effaf4] transition-colors" style="color:#00875a;border-left:1px solid #eee4d9;">卖出</button>
+                                <button type="button" onclick="editItem(${item.id})" class="h-full text-[11px] font-medium active:bg-[#faf5ef] transition-colors" style="color:#756456;border-left:1px solid #eee4d9;">编辑</button>
+                                <button type="button" onclick="openHoldStockDetail('${item.id}')" class="h-full text-[11px] font-semibold active:bg-[#fbf3f5] transition-colors" style="color:#8f2437;border-left:1px solid #eee4d9;">行情</button>
+                                <button type="button" onclick="openTradeLogPage(${item.id})" class="h-full text-[11px] font-medium active:bg-[#faf5ef] transition-colors" style="color:#756456;border-left:1px solid #eee4d9;">明细</button>
+                            </div>
+                        </div>
                     </div>
                     `
-                });
             });
             htmlStr += '<div class="h-2"></div></div>';
             holdListDom.innerHTML = htmlStr;
+            const holdFab = document.querySelector('#openModalBtn');
+            if(holdFab) holdFab.classList.remove('hold-fab-hidden');
             fitListOverflowFonts(holdListDom);
 
             // 渲染后仅检测当日盈亏百分比变化，触发柔和闪烁（东方财富通风格）
@@ -34167,7 +34061,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 先收起所有展开层（点任意行都只保留一行展开）
             container.querySelectorAll('.hold-row-actions').forEach(function(a){ a.classList.add('hidden'); });
             // 点击的是未展开行 → 展开其操作层
-            if(!isOpen && actionEl) actionEl.classList.remove('hidden');
+            if(!isOpen && actionEl){
+                actionEl.classList.remove('hidden');
+                actionEl.classList.remove('hold-panel-in');
+                void actionEl.offsetWidth;
+                actionEl.classList.add('hold-panel-in');
+                setTimeout(function(){ actionEl.classList.remove('hold-panel-in'); }, 260);
+            }
+            const fab = document.querySelector('#openModalBtn');
+            if(fab){
+                const anyOpen = !!container.querySelector('.hold-row-actions:not(.hidden)');
+                fab.classList.toggle('hold-fab-hidden', anyOpen);
+            }
         }
 
         // ==================== 财务数据（东方财富 F10 主要财务指标，7天缓存） ====================
@@ -36077,11 +35982,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cardBtn = document.querySelector('#cardModeBtn');
             const listBtn = document.querySelector('#listModeBtn');
             if(holdViewMode === 'card'){
-                cardBtn.className = 'w-9 h-[21px] rounded-full flex items-center justify-center text-xs transition-all bg-white text-[#5f4a38] shadow-sm';
-                listBtn.className = 'w-9 h-[21px] rounded-full flex items-center justify-center text-xs transition-all text-[#b6a892]';
+                cardBtn.className = 'w-10 h-[30px] rounded-full flex items-center justify-center text-xs transition-all bg-white text-[#5f4a38] shadow-sm';
+                listBtn.className = 'w-10 h-[30px] rounded-full flex items-center justify-center text-xs transition-all text-[#b6a892]';
             } else {
-                cardBtn.className = 'w-9 h-[21px] rounded-full flex items-center justify-center text-xs transition-all text-[#b6a892]';
-                listBtn.className = 'w-9 h-[21px] rounded-full flex items-center justify-center text-xs transition-all bg-white text-[#5f4a38] shadow-sm';
+                cardBtn.className = 'w-10 h-[30px] rounded-full flex items-center justify-center text-xs transition-all text-[#b6a892]';
+                listBtn.className = 'w-10 h-[30px] rounded-full flex items-center justify-center text-xs transition-all bg-white text-[#5f4a38] shadow-sm';
             }
         }
         document.querySelector('#cardModeBtn').addEventListener('click', function(){

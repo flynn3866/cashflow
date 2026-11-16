@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261116.396';</script>
+    <script>window.APP_VERSION = '20261116.400';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -153,14 +153,14 @@
             margin-left:auto;margin-right:auto;
             padding-left:.75rem;padding-right:.75rem;
         }
-        /* 列表宽度：桌面与主卡同栏；手机端明确做成左右对称的 full-bleed */
+        /* 列表宽度：桌面与主卡同栏；手机端同样 contained，不做 full-bleed */
         #holdList .hold-list-shell{
             margin-left:0 !important;margin-right:0 !important;
         }
         @media (max-width:480px){
             #holdList .hold-list-shell{
-                margin-left:-.75rem !important;margin-right:-.75rem !important;
-                border-radius:0 !important;
+                margin-left:0 !important;margin-right:0 !important;
+                border-radius:12px !important;
             }
         }
         /* 底栏未选中项：提高到可在 390px 看清的暖灰，不做成纯浅灰 */
@@ -491,6 +491,10 @@
         @media (prefers-reduced-motion: reduce){
             .ah-tier-fill{transition:none}
         }
+        /* 总资产详情·图表区间 */
+        #ahAssetRangeGroup, #ahReturnRangeGroup, #ahProfitRangeGroup{display:flex;align-items:center;gap:4px}
+        #ahAssetRangeGroup.hidden, #ahReturnRangeGroup.hidden, #ahProfitRangeGroup.hidden{display:none}
+        #ahChartModeTabs.hidden{display:none}
         /* 交易明细页：做T经营结果卡，沿用年度分红 hero 的「主数字 + 三白格」结构 */
         #tradeLogDayWrap .tl-sum-grid{
             display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; align-items:stretch;
@@ -2870,7 +2874,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 主图：收益率 / 资产轨迹 / 年度收益 -->
+        <!-- 主图：资产轨迹 / 收益率 / 盈利（三视角，年度账本口径不变） -->
         <div class="relative bg-white rounded-2xl card-shadow overflow-hidden mb-4">
             <div class="h-[3px]" style="background:linear-gradient(90deg,#f8ecef,#8f2437 20%,#742034 50%,#8f2437 80%,#f8ecef);"></div>
             <div class="px-5 pt-3.5 pb-3 border-b border-[#f4ecdd]">
@@ -2878,28 +2882,42 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="card-mark mt-0.5">
                         <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="#f2d492" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
                     </div>
-                    <div class="min-w-0">
-                        <div class="flex items-baseline gap-2">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-start justify-between gap-2.5">
                             <span id="ahTrendTitle" class="text-[15px] font-semibold text-gray-800 tracking-wide">资产轨迹</span>
-                            <span id="ahTrendMeta" class="text-[9.5px] text-[#a8987e] ml-auto tabular-nums">--</span>
+                            <div id="ahRangeWrap" class="flex flex-wrap items-center justify-end gap-1 flex-shrink-0">
+                                <div id="ahAssetRangeGroup" class="flex items-center gap-1">
+                                    <button id="assetRangeYear" type="button" onclick="setAssetTrackRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
+                                    <button id="assetRange1y" type="button" onclick="setAssetTrackRange('1y')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">近一年</button>
+                                    <button id="assetRangeAll" type="button" onclick="setAssetTrackRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
+                                </div>
+                                <div id="ahReturnRangeGroup" class="hidden items-center gap-1">
+                                    <button id="returnRangeYear" type="button" onclick="setReturnRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
+                                    <button id="returnRangeAll" type="button" onclick="setReturnRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
+                                </div>
+                                <div id="ahProfitRangeGroup" class="hidden items-center gap-1">
+                                    <button id="profitRangeYear" type="button" onclick="setProfitRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
+                                    <button id="profitRangeAll" type="button" onclick="setProfitRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
+                                </div>
+                            </div>
                         </div>
-                        <div id="ahTrendSub" class="text-[9.5px] text-[#b3a48f] mt-0.5">快照表原值 · 今日首页实时</div>
+                        <div class="mt-1 flex items-center flex-wrap gap-x-1.5 gap-y-0.5">
+                            <span id="ahTrendSub" class="text-[9.5px] text-[#b3a48f]">快照表原值 · 今日首页实时</span>
+                            <span class="w-px h-2.5" style="background:#e8dcc9;"></span>
+                            <span id="ahTrendMeta" class="text-[9.5px] text-[#a8987e] tabular-nums">--</span>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-3 grid grid-cols-3 gap-1 rounded-[12px] p-1 border border-[#efe4d2]" style="background:#f6eee0;">
+                <div id="ahChartModeTabs" class="mt-3 grid grid-cols-3 gap-1 rounded-[12px] p-1 border border-[#efe4d2]" style="background:#f6eee0;">
                     <button id="assetTabDaily" type="button" onclick="setAssetTrackMode('daily')" aria-selected="true" class="py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#742034] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors">资产轨迹</button>
                     <button id="assetTabReturn" type="button" onclick="setAssetTrackMode('return')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">收益率</button>
-                    <button id="assetTabYear" type="button" onclick="setAssetTrackMode('year')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">年度收益</button>
+                    <button id="assetTabProfit" type="button" onclick="setAssetTrackMode('profit')" aria-selected="false" class="py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors">盈利</button>
                 </div>
             </div>
 
             <div id="assetReturnPanel" class="hidden px-2 pt-2.5 pb-1">
-                <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
-                    <button id="returnRangeYear" type="button" onclick="setReturnRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
-                    <button id="returnRangeAll" type="button" onclick="setReturnRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
-                </div>
                 <div class="relative">
-                    <div id="chartAssetReturn" style="width:100%;height:238px;"></div>
+                    <div id="chartAssetReturn" style="width:100%;height:190px;"></div>
                     <div id="ahAssetReturnEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">暂无总收益率记录</div>
                 </div>
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
@@ -2921,13 +2939,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <div id="assetTrackPanel" class="px-2 pt-2.5 pb-1">
-                <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
-                    <button id="assetRangeYear" type="button" onclick="setAssetTrackRange('year')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437] transition-colors">今年</button>
-                    <button id="assetRange1y" type="button" onclick="setAssetTrackRange('1y')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">近一年</button>
-                    <button id="assetRangeAll" type="button" onclick="setAssetTrackRange('all')" class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-white text-[#9a8a73] border-[#eee5d6] transition-colors">全部</button>
-                </div>
                 <div class="relative">
-                    <div id="chartAssetTrack" style="width:100%;height:238px;"></div>
+                    <div id="chartAssetTrack" style="width:100%;height:190px;"></div>
                     <div id="ahAssetTrackEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">暂无每日总资产记录</div>
                 </div>
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
@@ -2949,28 +2962,30 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <div id="assetYearPanel" class="hidden px-2 pt-2.5 pb-1">
-                <div class="flex items-center gap-1.5 px-2 pb-1 overflow-x-auto">
-                    <span class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border bg-[#8f2437] text-[#fff3dd] border-[#8f2437]">全部年度</span>
-                    <span class="ml-auto pr-1 text-[10px] text-[#b8ab98] whitespace-nowrap">年度盈利 · 净流入已剔除</span>
+                <div class="relative">
+                    <div id="chartAssetProfitMonth" style="display:none;width:100%;height:190px;"></div>
+                    <div id="ahProfitMonthEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">今年还没有可计算的月度盈利</div>
                 </div>
-                <div id="chartAssetTrend" style="width:100%;height:238px;"></div>
-                <div id="ahTrendEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">暂无年度盈利数据</div>
+                <div class="relative">
+                    <div id="chartAssetTrend" style="width:100%;height:190px;"></div>
+                    <div id="ahTrendEmpty" class="hidden px-4 py-10 text-center text-gray-400 text-[13px]">暂无年度盈利数据</div>
+                </div>
                 <div class="mx-4 mt-2 pt-3 border-t border-[#f0e6d4] flex items-end gap-3">
                     <div class="min-w-0 flex-1">
-                        <div class="text-[9px] text-[#a8987e]">最近年度盈利</div>
+                        <div id="ahYearLastLabel" class="text-[9px] text-[#a8987e]">最近年度盈利</div>
                         <div id="ahYearLast" class="mt-1 text-[19px] font-bold tabular-nums leading-none" style="color:#742034">--</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-[9px] text-[#a8987e]">年均盈利</div>
+                        <div id="ahYearAvgLabel" class="text-[9px] text-[#a8987e]">年均盈利</div>
                         <div id="ahYearCagr" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                     <div class="w-px h-8" style="background:#eee5d6;"></div>
                     <div class="text-right">
-                        <div class="text-[9px] text-[#a8987e]">累计盈利</div>
+                        <div id="ahYearCumLabel" class="text-[9px] text-[#a8987e]">累计盈利</div>
                         <div id="ahYearCum" class="mt-1 text-[11.5px] font-semibold tabular-nums whitespace-nowrap text-[#742034]">--</div>
                     </div>
                 </div>
-                <div class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">历史年份按「年末资产 − 上年末资产 − 当年净流入」自动补算并写入年度收益账本；今年实时，改年末资产后整表重算</div>
+                <div id="ahProfitNote" class="px-4 pt-2 pb-3 text-[10px] text-[#a8987e] leading-relaxed">历史年份按「年末资产 − 上年末资产 − 当年净流入」自动补算并写入年度收益账本；今年实时，改年末资产后整表重算</div>
             </div>
         </div>
 
@@ -8749,6 +8764,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 historyData.yearStart = { year: curY, cost: tc, market: tm, cash: Number(historyData.cashBalance) || 0 };
                 saveHistory();
             }
+            ensureMonthlyStartAssets();
             // 港股税率口径迁移完成后：重算当年分红收入（覆盖历史百分数税率造成的负数脏值）
             // computeYearlyDiv 在已计算状态下只更新当年，不影响历史年份固定数据
             const migratedTax = holdDataList.some(function(it){
@@ -8825,7 +8841,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ==================== 资产分析历史数据 ====================
         // 存储：每日总资产快照、每月归档总资产、每年分红、每年收益率
         const HISTORY_KEY = 'dividendHistory';
-        let historyData = { dailyAssets: {}, monthlyAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, initialCost: 0, initialCostDate: '2020-01-01', fundInflows: [], navAlgoVer: 0, yearlyNav: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], closedStocks: [], portfolioStartYear: null, cashFlowLog: [], cashBalance: 0 };
+        let historyData = { dailyAssets: {}, monthlyAssets: {}, monthlyStartAssets: {}, yearlyAssets: {}, yearlyDiv: {}, yearlyReturn: {}, yearlyNetInflow: {}, initialCost: 0, initialCostDate: '2020-01-01', fundInflows: [], navAlgoVer: 0, yearlyNav: {}, manualYearlyAssets: {}, manualYearlyDiv: {}, manualYearlyReturn: {}, manualYearlyDivAsOf: {}, assetHighs: [], closedStocks: [], portfolioStartYear: null, cashFlowLog: [], cashBalance: 0 };
         let historyYearlyComputed = false; // 每年分红/收益率只需在首次分红数据就绪后算一次
         let analysisChartsRendered = false; // 分析页图表只需渲染一次，之后切换tab不重复渲染
 
@@ -9335,6 +9351,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const parsed = JSON.parse(s);
                     historyData.dailyAssets = parsed.dailyAssets || {};
                     historyData.monthlyAssets = parsed.monthlyAssets || {};
+                    historyData.monthlyStartAssets = parsed.monthlyStartAssets || {};
                     historyData.yearlyAssets = parsed.yearlyAssets || {};
                     historyData.yearlyDiv = parsed.yearlyDiv || {};
                     historyData.yearlyReturn = parsed.yearlyReturn || {};
@@ -10329,6 +10346,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var assetReturnRange = 'year';
         var _assetReturnToken = 0;
         var _assetReturnResizeBound = false;
+        var assetProfitMonthChart = null;
+        var profitRange = 'year';
+        var _profitMonthResizeBound = false;
 
         // 总盈利 / 总收益率（我的页顶部卡与本页共用，口径唯一）
         // 总盈利 = 总资产 − (初始投入 + 全部转入 − 转出)
@@ -10411,7 +10431,100 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return ys.profits;
         }
 
-        // ===== 历史年末补录：只写 assetDaily 的 YYYY-12-31 一行，一次写入、后续只比对签名 =====
+        // 月度盈利：与年度同一公式（月末资产 − 月初资产 − 当月净流入）。
+        // 只返回月初、月末都有资产依据的月份；不补空月，也不写入年度账本。
+        function getProfitYearStartAsset(year){
+            const y = String(year);
+            let v = Number(getYearStartMarket(y)) || 0;
+            if(!(v > 0) && y === String(new Date().getFullYear()) && historyData.yearStart && Number(historyData.yearStart.market) > 0){
+                v = Number(historyData.yearStart.market) + (Number(historyData.yearStart.cash) || 0);
+            }
+            return v;
+        }
+
+        function getProfitMonthEndAsset(year, month){
+            const y = String(year);
+            const m = Number(month);
+            const ym = y + '-' + String(m).padStart(2, '0');
+            const now = new Date();
+            const isCurrentMonth = y === String(now.getFullYear()) && m === (now.getMonth() + 1);
+            if(isCurrentMonth){
+                const live = Number(calcSummary().totalAsset) || 0;
+                if(live > 0) return live;
+            }
+            const archived = Number((historyData.monthlyAssets || {})[ym]) || 0;
+            if(archived > 0) return archived;
+            // 月度归档缺失时，用该月最后一条日快照兜底；仍没有则视为不可计算。
+            const prefix = ym + '-';
+            let bestDate = '', bestVal = 0;
+            Object.keys(historyData.dailyAssets || {}).forEach(function(d){
+                if(String(d).indexOf(prefix) !== 0) return;
+                if(d < bestDate) return;
+                const v = Number(historyData.dailyAssets[d]) || 0;
+                if(v > 0){ bestDate = d; bestVal = v; }
+            });
+            return bestVal;
+        }
+
+        function getProfitMonthNetInflow(year, month, endDate){
+            const y = String(year);
+            const m = Number(month);
+            const startDate = y + '-' + String(m).padStart(2, '0') + '-01';
+            let inflow = 0;
+            (historyData.fundInflows || []).forEach(function(f){
+                const d = String(f.date || '');
+                const amt = Number(f.amount) || 0;
+                if(!(d >= startDate) || !(d <= endDate) || amt === 0) return;
+                inflow += amt;
+            });
+            return Number(inflow.toFixed(2));
+        }
+
+        function getProfitMonthStartAsset(year, month){
+            const y = String(year);
+            const m = Number(month);
+            const ym = y + '-' + String(m).padStart(2, '0');
+            const archived = Number((historyData.monthlyStartAssets || {})[ym]) || 0;
+            if(archived > 0) return archived;
+            if(m === 1) return getProfitYearStartAsset(y);
+            return getProfitMonthEndAsset(y, m - 1);
+        }
+
+        function buildMonthlyProfitSeries(year){
+            const y = String(year || new Date().getFullYear());
+            const now = new Date();
+            const currentYear = String(now.getFullYear());
+            const currentMonth = now.getMonth() + 1;
+            const months = [];
+            for(let m = 1; m <= 12; m++){
+                if(y === currentYear && m > currentMonth) break;
+                const isCurrentMonth = y === currentYear && m === currentMonth;
+                const lastDay = new Date(Number(y), m, 0).getDate();
+                const endDate = isCurrentMonth ? todayStr() : (y + '-' + String(m).padStart(2, '0') + '-' + String(lastDay).padStart(2, '0'));
+                const endAsset = getProfitMonthEndAsset(y, m);
+                const startAsset = getProfitMonthStartAsset(y, m);
+                if(!(startAsset > 0) || !(endAsset > 0)) continue;
+                const netInflow = getProfitMonthNetInflow(y, m, endDate);
+                const profit = Number((endAsset - startAsset - netInflow).toFixed(2));
+                months.push({
+                    month: m,
+                    label: String(m) + '月',
+                    value: profit,
+                    startAsset: Number(startAsset.toFixed(2)),
+                    endAsset: Number(endAsset.toFixed(2)),
+                    netInflow: netInflow,
+                    date: y + '-' + String(m).padStart(2, '0')
+                });
+            }
+            return {
+                year: y,
+                months: months,
+                labels: months.map(function(x){ return x.label; }),
+                values: months.map(function(x){ return x.value; }),
+                profits: months.map(function(x){ return x.value; })
+            };
+        }
+
         let _historicalYearEndSeedPromise = null;
         let _historicalYearEndSeedSig = null;
 
@@ -10532,10 +10645,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return _historicalYearEndSeedPromise;
         }
 
-        function renderYearStats(ys){
+        function renderYearStats(ys, period){
             const lastEl = document.querySelector('#ahYearLast');
             const cagrEl = document.querySelector('#ahYearCagr');
             const cumEl = document.querySelector('#ahYearCum');
+            const lastLabel = document.querySelector('#ahYearLastLabel');
+            const avgLabel = document.querySelector('#ahYearAvgLabel');
+            const cumLabel = document.querySelector('#ahYearCumLabel');
+            const isMonth = period === 'month';
+            if(lastLabel) lastLabel.innerText = isMonth ? '最近月度盈利' : '最近年度盈利';
+            if(avgLabel) avgLabel.innerText = isMonth ? '月均盈利' : '年均盈利';
+            if(cumLabel) cumLabel.innerText = '累计盈利';
             if(!lastEl || !cagrEl || !cumEl) return;
             const profits = (ys && ys.profits) ? ys.profits : [];
             const valid = profits.map(function(v, i){
@@ -10694,10 +10814,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const ys = buildYearlyAssetSeries();
             ys.profits = buildYearlyProfitSeries(ys);
             _assetYearSeriesCache = ys;
-            renderYearStats(ys);
+            if(assetTrackMode === 'profit' && profitRange === 'all') renderYearStats(ys);
             const hasData = ys.profits.some(function(v){ return v != null && isFinite(Number(v)) && Math.abs(Number(v)) > 0.004; });
             const meta = document.querySelector('#ahTrendMeta');
-            if(meta) meta.innerText = assetTrackMode === 'year' ? (ys.years.length + ' 个年度') : '加载中';
+            if(meta) meta.innerText = '加载中';
 
             const listEl = document.querySelector('#assetTrendYearList');
             if(listEl) renderAssetTrendYearList(ys, listEl);
@@ -10718,23 +10838,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             const returnPanel = document.querySelector('#assetReturnPanel');
             const trackPanel = document.querySelector('#assetTrackPanel');
-            const yearPanel = document.querySelector('#assetYearPanel');
+            const profitPanel = document.querySelector('#assetYearPanel');
             if(returnPanel) returnPanel.classList.toggle('hidden', assetTrackMode !== 'return');
             if(trackPanel) trackPanel.classList.toggle('hidden', assetTrackMode !== 'daily');
-            if(yearPanel) yearPanel.classList.toggle('hidden', assetTrackMode !== 'year');
+            if(profitPanel) profitPanel.classList.toggle('hidden', assetTrackMode !== 'profit');
             syncAssetTrackTabs();
             syncReturnTabs();
+            syncProfitTabs();
             if(assetTrackMode === 'return'){
                 loadAndRenderReturnRate();
             }else if(assetTrackMode === 'daily'){
                 loadAndRenderAssetTrack();
-            }else if(hasData){
-                drawAssetTrendChart(ys);
+            }else if(assetTrackMode === 'profit'){
+                loadAndRenderProfit();
             }
             setTimeout(function(){
                 try{ if(assetTrendChart && !assetTrendChart.isDisposed()) assetTrendChart.resize(); }catch(e){}
                 try{ if(assetTrackChart && !assetTrackChart.isDisposed()) assetTrackChart.resize(); }catch(e){}
                 try{ if(assetReturnChart && !assetReturnChart.isDisposed()) assetReturnChart.resize(); }catch(e){}
+                try{ if(assetProfitMonthChart && !assetProfitMonthChart.isDisposed()) assetProfitMonthChart.resize(); }catch(e){}
             }, 60);
         }
 
@@ -10948,7 +11070,103 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             setTimeout(function(){ try{ if(assetTrendChart && !assetTrendChart.isDisposed()) assetTrendChart.resize(); }catch(e){} }, 60);
         }
 
-        // ==================== 资产轨迹：按日总资产走势 ====================
+        // 盈利·今年：按月盈利柱形图（只绘制可计算月份）
+        function drawMonthlyProfitChart(series){
+            if(typeof echarts === 'undefined') return;
+            const el = document.querySelector('#chartAssetProfitMonth');
+            if(!el) return;
+            const months = (series && series.months) ? series.months : [];
+            if(!months.length) return;
+            const n = months.length;
+            el.style.height = '190px';
+            if(!assetProfitMonthChart || assetProfitMonthChart.isDisposed()){
+                assetProfitMonthChart = echarts.init(el);
+            }
+            const vals = months.map(function(x){ return Math.round(Number(x.value) * 100) / 100; });
+            const showBarLabel = n <= 6;
+            assetProfitMonthChart.setOption({
+                animationDuration: 600,
+                animationEasing: 'cubicOut',
+                grid: { left: 44, right: 16, top: 28, bottom: 24 },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(116,32,52,0.06)' } },
+                    backgroundColor: 'rgba(58,24,32,0.95)',
+                    borderWidth: 0,
+                    padding: [7, 10],
+                    textStyle: { color: '#fff3dd', fontSize: 11 },
+                    extraCssText: 'border-radius:10px;box-shadow:0 8px 24px rgba(58,24,32,.25);',
+                    formatter: function(ps){
+                        const p = ps && ps[0];
+                        if(!p) return '';
+                        return p.axisValue + '<br/>当月盈利 ' + fmtPnlNum(p.data);
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: months.map(function(x){ return x.label; }),
+                    axisLine: { lineStyle: { color: '#e8dcc9' } },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#8a7a67', fontSize: 9.5, margin: 8, interval: 0 }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    splitLine: { lineStyle: { color: 'rgba(169,100,42,0.09)', type: 'dashed' } },
+                    axisLabel: {
+                        color: '#a8987e', fontSize: 9.5,
+                        formatter: function(v){
+                            const a = Math.abs(Number(v));
+                            const sign = Number(v) < 0 ? '-' : '';
+                            return sign + (a >= 10000 ? (a / 10000).toFixed(1) + '万' : a);
+                        }
+                    }
+                },
+                series: [{
+                    name: '当月盈利',
+                    type: 'bar',
+                    data: vals,
+                    barWidth: n === 1 ? '26%' : (n <= 4 ? '40%' : (n <= 6 ? '32%' : '22%')),
+                    barMaxWidth: n === 1 ? 72 : 28,
+                    itemStyle: {
+                        borderRadius: [3, 3, 3, 3],
+                        color: function(p){
+                            const v = Number(p.value);
+                            if(v < 0){
+                                return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#2bb783' },
+                                    { offset: 1, color: '#00a05c' }
+                                ]);
+                            }
+                            return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#b3384a' },
+                                { offset: 1, color: '#742034' }
+                            ]);
+                        }
+                    },
+                    label: {
+                        show: showBarLabel, position: 'top', distance: 4,
+                        color: '#8a7a67', fontSize: 9,
+                        formatter: function(p){
+                            if(p.data == null) return '';
+                            const v = Number(p.data);
+                            if(!v) return '';
+                            return fmtPnlNum(v);
+                        }
+                    }
+                }]
+            }, true);
+            if(!_profitMonthResizeBound){
+                _profitMonthResizeBound = true;
+                window.addEventListener('resize', function(){
+                    try{ if(assetProfitMonthChart && !assetProfitMonthChart.isDisposed()) assetProfitMonthChart.resize(); }catch(e){}
+                });
+            }
+            setTimeout(function(){ try{ if(assetProfitMonthChart && !assetProfitMonthChart.isDisposed()) assetProfitMonthChart.resize(); }catch(e){} }, 60);
+        }
+
+
         function assetTrackStartDate(range){
             const d = new Date();
             d.setHours(0, 0, 0, 0);
@@ -11109,9 +11327,43 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + line('总资产', totalText, 'total')
                 + '<br/>' + line('总收益率', rateText, 'rate');
         }
+        // 记录不足或起始点远晚于区间起点时，横轴改用「起始至今」窗口，
+        // 不强行拉满 12 个月空轴；只影响绘图范围，不改统计口径。
+        function assetChartWindow(rows, range){
+            const n = (rows || []).length;
+            const parseDateTs = function(s){
+                const a = String(s || '').split('-').map(Number);
+                if(a.length < 3 || !isFinite(a[0]) || !isFinite(a[1]) || !isFinite(a[2])) return NaN;
+                return new Date(a[0], a[1] - 1, a[2]).getTime();
+            };
+            const firstTs = n ? parseDateTs(rows[0].date) : NaN;
+            const lastTs = n ? parseDateTs(rows[n - 1].date) : NaN;
+            const yearStart = String(new Date().getFullYear()) + '-01-01';
+            const requestedStart = range === 'year' ? yearStart : (range === '1y' ? assetTrackStartDate('1y') : (n ? String(rows[0].date) : String(todayStr())));
+            const startTs = parseDateTs(requestedStart);
+            const todayTs = parseDateTs(todayStr());
+            const spanDays = (lastTs - firstTs) / 86400000;
+            const earlyGapDays = (firstTs - startTs) / 86400000;
+            const compact = n < 12 || (isFinite(spanDays) && spanDays < 45) || (range !== 'all' && isFinite(earlyGapDays) && earlyGapDays > 30);
+            let xMin = compact ? firstTs : startTs;
+            let xMax = isFinite(lastTs) ? Math.max(todayTs, lastTs) : todayTs;
+            if(!isFinite(xMin) || !isFinite(xMax)){ xMin = firstTs; xMax = lastTs; }
+            if(!(xMax > xMin)) xMin = xMin - 86400000;
+            return {
+                xMin: xMin,
+                xMax: xMax,
+                compact: compact,
+                spanDays: (xMax - xMin) / 86400000,
+                firstDate: n ? String(rows[0].date) : '',
+                lastDate: n ? String(rows[n - 1].date) : ''
+            };
+        }
+
         function drawAssetTrackChart(rows, grain){
             const el = document.querySelector('#chartAssetTrack');
             if(!el || !rows || !rows.length) return;
+            const win = assetChartWindow(rows, assetTrackRange);
+            el.style.height = '190px';
             if(!assetTrackChart || assetTrackChart.isDisposed()){
                 assetTrackChart = echarts.init(el);
             }
@@ -11126,47 +11378,41 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let yMin = Math.max(0, Math.floor((minV - span * 0.15) / niceStep) * niceStep);
             let yMax = Math.ceil((maxV + span * 0.15) / niceStep) * niceStep;
             if(yMax <= yMin){ yMax = yMin + niceStep; }
-            // 时间轴：今年从年初、近一年从一年前、全部从首条快照起；终点统一到今天。
-            // 只影响横轴显示范围，不改 rows / 快照原值 / 区间统计口径。
+            // 时间轴：数据充足时按区间起点；记录不足时从首条记录直接到当前，避免空轴。
+            const xMin = win.xMin, xMax = win.xMax;
             const dateTs = function(s){
                 const a = String(s || '').split('-').map(Number);
                 if(a.length < 3 || !isFinite(a[0]) || !isFinite(a[1]) || !isFinite(a[2])) return NaN;
                 return new Date(a[0], a[1] - 1, a[2]).getTime();
             };
-            const axisStartDate = assetTrackRange === 'year'
-                ? (String(new Date().getFullYear()) + '-01-01')
-                : (assetTrackRange === '1y' ? assetTrackStartDate('1y') : String(rows[0].date));
-            let xMin = dateTs(axisStartDate), xMax = dateTs(todayStr());
-            const firstTs = dateTs(rows[0].date), lastTs = dateTs(rows[n - 1].date);
-            if(isFinite(firstTs)) xMin = Math.min(xMin, firstTs);
-            if(isFinite(lastTs)) xMax = Math.max(xMax, lastTs);
-            if(!isFinite(xMin) || !isFinite(xMax)){ xMin = dateTs(rows[0].date); xMax = dateTs(rows[n - 1].date); }
-            if(!(xMax > xMin)) xMin = xMin - 86400000;
             const labelFmt = function(v){
                 const d = new Date(Number(v));
                 if(isNaN(d.getTime())) return String(v);
                 const yy = String(d.getFullYear());
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
-                // 窄屏时一年内按两个月显示一个刻度，避免月份标签挤在一起；首尾标签仍保留。
-                const compact = (el.clientWidth || 0) < 520;
-                const spanDays = (xMax - xMin) / 86400000;
-                const isEndLabel = Math.abs(d.getTime() - xMax) < 86400000 / 2;
+                const narrow = (el.clientWidth || 0) < 520;
+                const shortSpan = win.spanDays <= 45;
+                const isStart = Math.abs(d.getTime() - xMin) < 86400000 / 2;
+                const isEnd = Math.abs(d.getTime() - xMax) < 86400000 / 2;
                 const fullDate = function(s){
                     const a = String(s || '').split('-');
                     return a.length >= 3 ? a[0] + '.' + a[1] + '.' + a[2] : String(s || '');
                 };
+                // 起始至今的短窗口只保留首尾两个日期，给折线留出完整呼吸空间。
+                if(shortSpan){
+                    if(isStart || isEnd) return mm + '.' + dd;
+                    return '';
+                }
                 if(assetTrackRange === 'all'){
-                    const isStart = d.getTime() === xMin;
-                    const isEnd = d.getTime() === xMax;
                     const firstDate = String(rows[0].date), lastDate = String(rows[n - 1].date);
                     if(firstDate === lastDate) return isEnd ? fullDate(lastDate) : '';
                     if(isStart) return fullDate(firstDate);
                     if(isEnd) return fullDate(lastDate);
                     return '';
                 }
-                if(compact && spanDays <= 420 && !isEndLabel && d.getMonth() % 2 !== 0) return '';
-                if(spanDays <= 2 && d.getTime() !== xMin && d.getTime() !== xMax) return '';
+                if(narrow && win.spanDays <= 420 && !isEnd && d.getMonth() % 2 !== 0) return '';
+                if(win.spanDays <= 2 && !isStart && !isEnd) return '';
                 if(grain === 'month') return yy + '.' + mm;
                 if(assetTrackRange === 'year') return mm + '.' + dd;
                 if(assetTrackRange === '1y') return yy.substring(2) + '.' + mm;
@@ -11174,6 +11420,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             };
             const seriesData = rows.map(function(r, i){ return [dateTs(r.date), vals[i]]; });
             const lastVal = vals[n - 1];
+            const lastTs = dateTs(rows[n - 1].date);
             const lastNearLeft = isFinite(lastTs) && (lastTs - xMin) / (xMax - xMin) < 0.22;
             assetTrackChart.setOption({
                 animationDuration: 650,
@@ -11194,9 +11441,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const i = ps[0].dataIndex;
                         const row = rows[i];
                         if(!row) return '';
-                        return assetTrendTooltipHtml(row, row.value,
-                            assetTrackMode === 'year' ? '逐年总资产' : '资产轨迹',
-                            grain, 'total');
+                        return assetTrendTooltipHtml(row, row.value, '资产轨迹', grain, 'total');
                     }
                 },
                 xAxis: {
@@ -11273,12 +11518,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function syncAssetTrackTabs(){
             const r = document.querySelector('#assetTabReturn');
             const d = document.querySelector('#assetTabDaily');
-            const y = document.querySelector('#assetTabYear');
+            const p = document.querySelector('#assetTabProfit');
             const active = 'py-2 rounded-[9px] text-[11.5px] font-semibold bg-white text-[#742034] shadow-[0_1px_2px_rgba(93,72,38,0.10)] transition-colors';
             const idle = 'py-2 rounded-[9px] text-[11.5px] font-semibold text-[#9a8a73] transition-colors';
             if(r){ r.className = assetTrackMode === 'return' ? active : idle; r.setAttribute('aria-selected', assetTrackMode === 'return' ? 'true' : 'false'); }
             if(d){ d.className = assetTrackMode === 'daily' ? active : idle; d.setAttribute('aria-selected', assetTrackMode === 'daily' ? 'true' : 'false'); }
-            if(y){ y.className = assetTrackMode === 'year' ? active : idle; y.setAttribute('aria-selected', assetTrackMode === 'year' ? 'true' : 'false'); }
+            if(p){ p.className = assetTrackMode === 'profit' ? active : idle; p.setAttribute('aria-selected', assetTrackMode === 'profit' ? 'true' : 'false'); }
             const ranges = [['year', '#assetRangeYear'], ['1y', '#assetRange1y'], ['all', '#assetRangeAll']];
             ranges.forEach(function(item){
                 const b = document.querySelector(item[1]);
@@ -11286,10 +11531,96 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 b.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border transition-colors ' +
                     (assetTrackRange === item[0] ? 'bg-[#8f2437] text-[#fff3dd] border-[#8f2437]' : 'bg-white text-[#9a8a73] border-[#eee5d6]');
             });
+            const assetRangeGroup = document.querySelector('#ahAssetRangeGroup');
+            const returnRangeGroup = document.querySelector('#ahReturnRangeGroup');
+            const profitRangeGroup = document.querySelector('#ahProfitRangeGroup');
+            if(assetRangeGroup) assetRangeGroup.classList.toggle('hidden', assetTrackMode !== 'daily');
+            if(returnRangeGroup) returnRangeGroup.classList.toggle('hidden', assetTrackMode !== 'return');
+            if(profitRangeGroup) profitRangeGroup.classList.toggle('hidden', assetTrackMode !== 'profit');
+            const tabs = document.querySelector('#ahChartModeTabs');
+            if(tabs) tabs.classList.remove('hidden');
             const title = document.querySelector('#ahTrendTitle');
-            if(title) title.innerText = assetTrackMode === 'year' ? '逐年盈利总览' : (assetTrackMode === 'return' ? '收益率轨迹' : '资产轨迹');
+            if(title) title.innerText = assetTrackMode === 'profit' ? '盈利轨迹' : (assetTrackMode === 'return' ? '收益率轨迹' : '资产轨迹');
             const sub = document.querySelector('#ahTrendSub');
-            if(sub) sub.innerText = assetTrackMode === 'year' ? '历史年度自动补算 · 当年实时' : '快照表原值 · 今日首页实时';
+            if(sub) sub.innerText = assetTrackMode === 'profit' ? '月度盈利 · 今年按月' : (assetTrackMode === 'return' ? '快照表原值 · 今日首页实时' : '快照表原值 · 今日首页实时');
+        }
+
+        function syncProfitTabs(){
+            const ranges = [['year', '#profitRangeYear'], ['all', '#profitRangeAll']];
+            ranges.forEach(function(item){
+                const b = document.querySelector(item[1]);
+                if(!b) return;
+                b.className = 'px-2.5 py-1 rounded-full text-[10.5px] font-semibold whitespace-nowrap border transition-colors ' +
+                    (profitRange === item[0] ? 'bg-[#8f2437] text-[#fff3dd] border-[#8f2437]' : 'bg-white text-[#9a8a73] border-[#eee5d6]');
+            });
+        }
+
+        async function loadAndRenderProfit(){
+            if(assetTrackMode !== 'profit') return;
+            const range = profitRange;
+            const meta = document.querySelector('#ahTrendMeta');
+            const sub = document.querySelector('#ahTrendSub');
+            const note = document.querySelector('#ahProfitNote');
+            const monthChart = document.querySelector('#chartAssetProfitMonth');
+            const monthEmpty = document.querySelector('#ahProfitMonthEmpty');
+            const annualChart = document.querySelector('#chartAssetTrend');
+            const annualEmpty = document.querySelector('#ahTrendEmpty');
+            const currentYear = String(new Date().getFullYear());
+            if(range === 'year'){
+                if(sub) sub.innerText = '月度盈利 · 今年按月';
+                const series = buildMonthlyProfitSeries(currentYear);
+                renderYearStats(series, 'month');
+                if(annualChart) annualChart.style.display = 'none';
+                if(annualEmpty) annualEmpty.classList.add('hidden');
+                if(!series.months.length){
+                    if(monthChart) monthChart.style.display = 'none';
+                    if(monthEmpty){
+                        monthEmpty.innerText = '今年还没有可计算的月度盈利';
+                        monthEmpty.classList.remove('hidden');
+                    }
+                    if(meta) meta.innerText = '今年 · 暂无月度数据';
+                    if(note) note.innerText = '月度盈利看资产快照，不依赖每日资金流水；月末资产下月初自动归档，月初取上月月末或年初快照';
+                    return;
+                }
+                if(monthChart) monthChart.style.display = '';
+                if(monthEmpty) monthEmpty.classList.add('hidden');
+                if(meta) meta.innerText = '今年 · ' + series.months.length + ' 个月';
+                if(note) note.innerText = '月度盈利 = 月末资产 − 月初资产 − 当月净流入；只显示可计算月份，不补空月';
+                drawMonthlyProfitChart(series);
+                return;
+            }
+            if(sub) sub.innerText = '年度账本 · 全部按年';
+            const ys = _assetYearSeriesCache || buildYearlyAssetSeries();
+            _assetYearSeriesCache = ys;
+            ys.profits = buildYearlyProfitSeries(ys);
+            renderYearStats(ys);
+            if(monthChart) monthChart.style.display = 'none';
+            if(monthEmpty) monthEmpty.classList.add('hidden');
+            const hasData = ys.profits.some(function(v){ return v != null && isFinite(Number(v)) && Math.abs(Number(v)) > 0.004; });
+            if(!hasData){
+                if(annualChart) annualChart.style.display = 'none';
+                if(annualEmpty){
+                    const hasAny = ys.profits.some(function(v){ return v != null && isFinite(Number(v)); });
+                    annualEmpty.innerText = hasAny ? '年度盈利均为 0.00 · 暂无可视化波动' : '暂无年度盈利数据';
+                    annualEmpty.classList.remove('hidden');
+                }
+                if(meta) meta.innerText = '全部 · 暂无年度数据';
+                if(note) note.innerText = '历史年份按「年末资产 − 上年末资产 − 当年净流入」自动补算并写入年度收益账本';
+                return;
+            }
+            if(annualChart) annualChart.style.display = '';
+            if(annualEmpty) annualEmpty.classList.add('hidden');
+            if(meta) meta.innerText = '全部 · ' + ys.years.length + ' 个年度';
+            if(note) note.innerText = '历史年份按「年末资产 − 上年末资产 − 当年净流入」自动补算并写入年度收益账本；今年实时';
+            drawAssetTrendChart(ys);
+        }
+
+        function setProfitRange(range){
+            if(range !== 'year' && range !== 'all') return;
+            if(assetTrackMode !== 'profit') return;
+            profitRange = range;
+            syncProfitTabs();
+            loadAndRenderProfit();
         }
 
         async function loadAndRenderAssetTrack(){
@@ -11304,47 +11635,50 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const chartEl = document.querySelector('#chartAssetTrack');
             const emptyEl = document.querySelector('#ahAssetTrackEmpty');
             renderAssetTrackStats(data.rows);
-            if(!data.rows.length){
+            if(!data.rows.length || data.rows.length < 2){
                 if(chartEl) chartEl.style.display = 'none';
-                if(emptyEl) emptyEl.classList.remove('hidden');
-                if(meta) meta.innerText = '--';
+                if(emptyEl){
+                    emptyEl.innerText = data.rows.length ? '记录不足 2 天 · 暂不绘制趋势' : '暂无每日总资产记录';
+                    emptyEl.classList.remove('hidden');
+                }
+                if(meta) meta.innerText = data.rows.length ? '记录不足' : '--';
+                const emptyNote = document.querySelector('#ahTrackNote');
+                if(emptyNote) emptyNote.innerText = data.rows.length ? '记录不足 2 天 · 暂不绘制趋势' : '读取快照表 · 暂无记录';
                 return;
             }
             if(chartEl) chartEl.style.display = '';
             if(emptyEl) emptyEl.classList.add('hidden');
-            const label = _assetTrackRangeLabels[range] || '';
+            const win = assetChartWindow(data.rows, range);
+            const label = (win.compact && range === 'year') ? '起始至今' : (_assetTrackRangeLabels[range] || '');
             const unit = data.grain === 'day-sample' ? '个抽样点' : '个记录日';
             if(meta) meta.innerText = label + ' · ' + data.rows.length + ' ' + unit;
             const note = document.querySelector('#ahTrackNote');
             const hasToday = (data.rows || []).some(function(r){ return r && r.today; });
             if(note){
-                note.innerText = data.grain === 'day-sample' ? '读取快照表 · 抽样展示 · 历史原值'
-                    : (hasToday ? '读取快照表 · 历史原值 · 今日首页实时' : '读取快照表 · 历史原值');
+                note.innerText = win.compact ? (range === 'all' ? '记录尚少 · 按首条至今展示' : '按起始至今窗口展示 · 记录尚少')
+                    : (data.grain === 'day-sample' ? '读取快照表 · 抽样展示 · 历史原值'
+                    : (hasToday ? '读取快照表 · 历史原值 · 今日首页实时' : '读取快照表 · 历史原值'));
             }
             const sub = document.querySelector('#ahTrendSub');
-            if(sub && assetTrackMode !== 'year') sub.innerText = hasToday ? '快照表原值 · 今日首页实时' : '快照表原值 · 历史记录';
+            if(sub && assetTrackMode !== 'profit') sub.innerText = hasToday ? '快照表原值 · 今日首页实时' : '快照表原值 · 历史记录';
             drawAssetTrackChart(data.rows, data.grain);
         }
 
         function setAssetTrackMode(mode){
-            if(mode !== 'return' && mode !== 'daily' && mode !== 'year') return;
+            if(mode !== 'return' && mode !== 'daily' && mode !== 'profit' && mode !== 'year') return;
+            if(mode === 'year'){ mode = 'profit'; profitRange = 'all'; }
             assetTrackMode = mode;
             const returnPanel = document.querySelector('#assetReturnPanel');
             const dailyPanel = document.querySelector('#assetTrackPanel');
-            const yearPanel = document.querySelector('#assetYearPanel');
+            const profitPanel = document.querySelector('#assetYearPanel');
             if(returnPanel) returnPanel.classList.toggle('hidden', mode !== 'return');
             if(dailyPanel) dailyPanel.classList.toggle('hidden', mode !== 'daily');
-            if(yearPanel) yearPanel.classList.toggle('hidden', mode !== 'year');
+            if(profitPanel) profitPanel.classList.toggle('hidden', mode !== 'profit');
             syncAssetTrackTabs();
             syncReturnTabs();
-            if(mode === 'year'){
-                const ys = _assetYearSeriesCache || buildYearlyAssetSeries();
-                _assetYearSeriesCache = ys;
-                renderYearStats(ys);
-                const hasData = ys.values.some(function(v){ return Number(v) > 0; });
-                const meta = document.querySelector('#ahTrendMeta');
-                if(meta) meta.innerText = hasData ? (ys.years.length + ' 个年度') : '--';
-                if(hasData) drawAssetTrendChart(ys);
+            syncProfitTabs();
+            if(mode === 'profit'){
+                loadAndRenderProfit();
             }else if(mode === 'return'){
                 loadAndRenderReturnRate();
             }else{
@@ -11354,6 +11688,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 try{ if(assetTrendChart && !assetTrendChart.isDisposed()) assetTrendChart.resize(); }catch(e){}
                 try{ if(assetTrackChart && !assetTrackChart.isDisposed()) assetTrackChart.resize(); }catch(e){}
                 try{ if(assetReturnChart && !assetReturnChart.isDisposed()) assetReturnChart.resize(); }catch(e){}
+                try{ if(assetProfitMonthChart && !assetProfitMonthChart.isDisposed()) assetProfitMonthChart.resize(); }catch(e){}
             }, 80);
         }
 
@@ -11436,6 +11771,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function drawReturnChart(rows, grain){
             const el = document.querySelector('#chartAssetReturn');
             if(!el || !rows || !rows.length) return;
+            const win = assetChartWindow(rows, assetReturnRange);
+            el.style.height = '190px';
             if(!assetReturnChart || assetReturnChart.isDisposed()){
                 assetReturnChart = echarts.init(el);
             }
@@ -11450,44 +11787,39 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let yMin = Math.floor((minV - span * 0.15) / niceStep) * niceStep;
             let yMax = Math.ceil((maxV + span * 0.15) / niceStep) * niceStep;
             if(yMax <= yMin){ yMax = yMin + niceStep; }
-            // 时间轴：今年固定从年初起，全部从首条快照起；终点统一到今天。
-            // 只影响横轴显示范围，不改变 rows / rate / 取数与统计口径。
+            // 与资产轨迹共用窗口规则：记录不足时用起始至今，不画 12 个月空轴。
+            let xMin = win.xMin, xMax = win.xMax;
             const dateTs = function(s){
                 const a = String(s || '').split('-').map(Number);
                 if(a.length < 3 || !isFinite(a[0]) || !isFinite(a[1]) || !isFinite(a[2])) return NaN;
                 return new Date(a[0], a[1] - 1, a[2]).getTime();
             };
-            const axisStartDate = assetReturnRange === 'year' ? (String(new Date().getFullYear()) + '-01-01') : String(rows[0].date);
-            let xMin = dateTs(axisStartDate), xMax = dateTs(todayStr());
-            const firstTs = dateTs(rows[0].date), lastTs = dateTs(rows[n - 1].date);
-            if(isFinite(firstTs)) xMin = Math.min(xMin, firstTs);
-            if(isFinite(lastTs)) xMax = Math.max(xMax, lastTs);
-            if(!isFinite(xMin) || !isFinite(xMax)){ xMin = dateTs(rows[0].date); xMax = dateTs(rows[n - 1].date); }
-            if(!(xMax > xMin)) xMin = xMin - 86400000;
             const labelFmt = function(v){
                 const d = new Date(Number(v));
                 if(isNaN(d.getTime())) return String(v);
                 const yy = String(d.getFullYear());
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
-                // 窄屏时半年内按两个月显示一个刻度，避免 10 个月份标签挤在一起；首尾标签仍保留。
-                const compact = (el.clientWidth || 0) < 520;
-                const spanDays = (xMax - xMin) / 86400000;
-                const isEndLabel = Math.abs(d.getTime() - xMax) < 86400000 / 2;
+                const narrow = (el.clientWidth || 0) < 520;
+                const shortSpan = win.spanDays <= 45;
+                const isStart = Math.abs(d.getTime() - xMin) < 86400000 / 2;
+                const isEnd = Math.abs(d.getTime() - xMax) < 86400000 / 2;
                 const fullDate = function(s){
                     const a = String(s || '').split('-');
                     return a.length >= 3 ? a[0] + '.' + a[1] + '.' + a[2] : String(s || '');
                 };
+                if(shortSpan){
+                    if(isStart || isEnd) return mm + '.' + dd;
+                    return '';
+                }
                 if(assetReturnRange === 'all'){
-                    const isStart = d.getTime() === xMin;
-                    const isEnd = d.getTime() === xMax;
                     const firstDate = String(rows[0].date), lastDate = String(rows[n - 1].date);
                     if(firstDate === lastDate) return isEnd ? fullDate(lastDate) : '';
                     if(isStart) return fullDate(firstDate);
                     if(isEnd) return fullDate(lastDate);
                     return '';
                 }
-                if(compact && spanDays <= 420 && !isEndLabel && d.getMonth() % 2 !== 0) return '';
+                if(narrow && win.spanDays <= 420 && !isEnd && d.getMonth() % 2 !== 0) return '';
                 if(grain === 'month') return yy + '.' + mm;
                 if(assetReturnRange === 'year') return mm + '.' + dd;
                 return yy.substring(2) + '.' + mm + '.' + dd;
@@ -11608,33 +11940,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const note = document.querySelector('#ahReturnNote');
             const sub = document.querySelector('#ahTrendSub');
             renderReturnStats(data.rows);
-            if(!data.rows.length){
+            if(!data.rows.length || data.rows.length < 2){
                 if(chartEl) chartEl.style.display = 'none';
                 if(emptyEl){
-                    emptyEl.innerText = range === 'year' ? '暂无今年收益率记录' : '暂无总收益率记录';
+                    emptyEl.innerText = data.rows.length ? '记录不足 2 天 · 暂不绘制收益率' : (range === 'year' ? '暂无今年收益率记录' : '暂无总收益率记录');
                     emptyEl.classList.remove('hidden');
                 }
-                if(meta) meta.innerText = '--';
+                if(meta) meta.innerText = data.rows.length ? '记录不足' : '--';
                 if(note) note.innerText = range === 'year' ? '按今年口径计算 · 暂无记录' : '读取快照表 · 暂无记录';
-                if(sub && assetTrackMode !== 'year') sub.innerText = range === 'year' ? '按年初基准逐日计算' : '快照表原值 · 历史记录';
+                if(sub && assetTrackMode !== 'profit') sub.innerText = range === 'year' ? '按年初基准逐日计算' : '快照表原值 · 历史记录';
                 return;
             }
             if(chartEl) chartEl.style.display = '';
             if(emptyEl) emptyEl.classList.add('hidden');
-            const label = _assetTrackRangeLabels[range] || '';
+            const win = assetChartWindow(data.rows, range);
+            const label = (win.compact && range === 'year') ? '起始至今' : (_assetTrackRangeLabels[range] || '');
             const unit = data.grain === 'day-sample' ? '个抽样点' : '个记录日';
             if(meta) meta.innerText = label + ' · ' + data.rows.length + ' ' + unit;
             const hasToday = (data.rows || []).some(function(r){ return r && r.today; });
             if(note){
-                if(range === 'year'){
-                    note.innerText = data.grain === 'day-sample' ? '按今年口径计算 · 抽样展示'
-                        : (hasToday ? '按今年口径计算 · 今日首页实时' : '按今年口径计算 · 历史逐日');
-                }else{
-                    note.innerText = data.grain === 'day-sample' ? '读取快照表 · 抽样展示 · 历史原值'
-                        : (hasToday ? '读取快照表 · 历史原值 · 今日首页实时' : '读取快照表 · 历史原值');
-                }
+                note.innerText = win.compact ? (range === 'all' ? '记录尚少 · 按首条至今展示' : '按起始至今窗口展示 · 记录尚少')
+                    : (range === 'year'
+                    ? (data.grain === 'day-sample' ? '按今年口径计算 · 抽样展示' : (hasToday ? '按今年口径计算 · 今日首页实时' : '按今年口径计算 · 历史逐日'))
+                    : (data.grain === 'day-sample' ? '读取快照表 · 抽样展示 · 历史原值' : (hasToday ? '读取快照表 · 历史原值 · 今日首页实时' : '读取快照表 · 历史原值')));
             }
-            if(sub && assetTrackMode !== 'year') sub.innerText = range === 'year' ? '按年初基准逐日计算' : (hasToday ? '快照表原值 · 今日首页实时' : '快照表原值 · 历史记录');
+            if(sub && assetTrackMode !== 'profit') sub.innerText = range === 'year' ? '按年初基准逐日计算' : (hasToday ? '快照表原值 · 今日首页实时' : '快照表原值 · 历史记录');
             drawReturnChart(data.rows, data.grain);
         }
 
@@ -11664,11 +11994,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             assetTrackMode = 'daily';
             assetTrackRange = 'year';
             assetReturnRange = 'year';
+            profitRange = 'year';
             renderAssetTrendPage();
             setTimeout(function(){
                 try{ if(assetTrendChart && !assetTrendChart.isDisposed()) assetTrendChart.resize(); }catch(e){}
                 try{ if(assetTrackChart && !assetTrackChart.isDisposed()) assetTrackChart.resize(); }catch(e){}
                 try{ if(assetReturnChart && !assetReturnChart.isDisposed()) assetReturnChart.resize(); }catch(e){}
+                try{ if(assetProfitMonthChart && !assetProfitMonthChart.isDisposed()) assetProfitMonthChart.resize(); }catch(e){}
             }, 60);
         }
         function closeAssetHighModal(){
@@ -11698,6 +12030,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     changed = true;
                 }
             });
+            if(changed) saveHistory();
+        }
+
+        // 月度口径：月末存 monthlyAssets；月初只为“上月月末 / 年初快照”的显式副本，
+        // 方便跨月后直接取用。资金流水只用于扣减当月净流入，不是盈利来源。
+        function ensureMonthlyStartAssets(){
+            const map = historyData.monthlyStartAssets || (historyData.monthlyStartAssets = {});
+            const now = new Date();
+            const y = String(now.getFullYear());
+            const currentMonth = now.getMonth() + 1;
+            let changed = false;
+            for(let m = 1; m <= currentMonth; m++){
+                const ym = y + '-' + String(m).padStart(2, '0');
+                if(Number(map[ym]) > 0) continue;
+                const start = m === 1 ? getProfitYearStartAsset(y) : getProfitMonthEndAsset(y, m - 1);
+                if(start > 0){
+                    map[ym] = Number(start.toFixed(2));
+                    changed = true;
+                }
+            }
             if(changed) saveHistory();
         }
         // 计算每年分红收入（从组合建立年起算，仅统计真实已发放的分红）

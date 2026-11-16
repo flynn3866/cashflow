@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261115.376';</script>
+    <script>window.APP_VERSION = '20261116.383';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -184,6 +184,41 @@
         @media (max-width:360px){
             .page-title{font-size:24px;}
         }
+        /* 首页 Copilot 式材质：毛玻璃底栏、洞察卡 */
+        .insight-card{
+            position:relative;overflow:hidden;border-radius:16px;
+            background:linear-gradient(135deg,rgba(255,253,249,.94) 0%,rgba(248,236,239,.72) 100%);
+            border:1px solid rgba(143,36,55,.10);
+            box-shadow:0 8px 24px rgba(93,72,38,.06),inset 0 1px 0 rgba(255,255,255,.82);
+            animation:insightIn .45s cubic-bezier(.22,.61,.36,1) both;
+        }
+        .insight-card::after{
+            content:"";position:absolute;right:-34px;top:-46px;width:132px;height:132px;
+            background:radial-gradient(circle,rgba(168,45,67,.10) 0%,transparent 70%);pointer-events:none;
+        }
+        .insight-rail{
+            width:2px;height:16px;border-radius:999px;flex-shrink:0;
+            background:linear-gradient(180deg,#a82d43 0%,#742034 100%);
+        }
+        @keyframes insightIn{
+            from{opacity:0;transform:translateY(6px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+        .nav-glass{
+            background:rgba(255,252,247,.94) !important;
+            border-top:1px solid rgba(238,223,192,.55);
+            box-shadow:0 -8px 28px rgba(74,54,34,.08);
+        }
+        @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+            .nav-glass{
+                background:rgba(255,252,247,.78) !important;
+                -webkit-backdrop-filter:blur(18px) saturate(1.15);
+                backdrop-filter:blur(18px) saturate(1.15);
+            }
+        }
+        @media (prefers-reduced-motion:reduce){
+            .insight-card{animation:none !important;}
+        }
     </style>
     <style type="text/tailwindcss">
         @layer base {
@@ -295,6 +330,28 @@
             /* 数字变化平滑过渡 */
             .num-transition {
                 transition: color 0.3s ease;
+            }
+            /* 行情未就绪：用香槟色骨架替代裸“--”，避免首屏像数据缺失 */
+            #todayPnl.is-loading,
+            #todayPnlPct.is-loading {
+                display: inline-block;
+                vertical-align: middle;
+                color: transparent !important;
+                border-radius: 6px;
+                background: linear-gradient(90deg, rgba(232,200,138,.10) 0%, rgba(232,200,138,.24) 48%, rgba(232,200,138,.10) 100%);
+                background-size: 200% 100%;
+                animation: numSkeleton 1.4s ease-in-out infinite;
+                overflow: hidden;
+            }
+            #todayPnl.is-loading { width: 96px; height: 22px; }
+            #todayPnlPct.is-loading { width: 42px; height: 12px; }
+            @keyframes numSkeleton {
+                0% { background-position: 100% 0; }
+                100% { background-position: -100% 0; }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                #todayPnl.is-loading,
+                #todayPnlPct.is-loading { animation: none !important; }
             }
             /* 二级详情页统一过渡：入场 0.35s push（由上方 [id^=pageStats] 等规则统一驱动）；
                .detail-page 仅作详情页标识（供 findVisibleDetailPage 定位）；退场 0.25s 右滑淡出 */
@@ -477,8 +534,6 @@
             #tradeLogDayWrap .tl-sum-label{ font-size:8px; }
             #tradeLogDayWrap .tl-sum-value{ font-size:12px; }
         }
-        /* 个股仓位预警条：改为持仓卡后的上下文提示，不再固定吸顶占位 */
-        body.sd-detail-open #positionWarnBar { display: none !important; }
     
         /* ==================== 移动端交互体验升级（页面切换 / Tab 弹跳 / 弹窗动画 / 吸顶毛玻璃） ==================== */
         #pageHold, #pageStats, #pageAnalysis, #pageMilestone, #pageMine{
@@ -1897,9 +1952,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </button>
             </div>
         </div>
-        <!-- 顶部汇总卡片 - 暖色调渐变，紧凑精致设计（首页直接展示资产卡，品牌区移至"我的"页） -->
-        <div class="relative rounded-3xl px-[18px] py-2.5 mb-4 overflow-hidden" style="background:#171717;box-shadow:0 2px 5px rgba(0,0,0,0.62), 0 1px 3px rgba(0,0,0,0.50), 0 0 5px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06);">
-
+        <!-- 顶部汇总卡片：墨黑酒红渐变 + 香槟内线，层级更沉稳（首页直接展示资产卡，品牌区移至"我的"页） -->
+        <div class="relative rounded-3xl px-[18px] py-2.5 mb-4 overflow-hidden" style="background:linear-gradient(145deg,#1c1417 0%,#2a1b20 58%,#3a2328 100%);box-shadow:0 14px 32px rgba(38,20,24,.14),0 2px 8px rgba(38,20,24,.08),inset 0 1px 0 rgba(255,255,255,.08);">
+            <div class="absolute -top-20 -right-16 w-64 h-64 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(143,36,55,.22) 0%,transparent 70%);"></div>
+            <div class="absolute -bottom-24 -left-16 w-56 h-56 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(232,200,138,.05) 0%,transparent 70%);"></div>
+            <div class="absolute top-0 left-0 right-0 h-px pointer-events-none" style="background:linear-gradient(90deg,transparent,rgba(232,200,138,.38),transparent);"></div>
             <div class="relative z-10">
                 <!-- 第一层：总资产（主数字）｜今日盈亏（金额与百分比同行） -->
                 <div class="pt-3 pb-2.5 flex items-start justify-between gap-3">
@@ -1932,8 +1989,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
                 <div style="height:1px;background:rgba(230,210,163,0.16);transform:scaleY(0.6);"></div>
 
-                <!-- 第二层：两行三列（第一行 年度分红收入 / 累计分红 / 预计回本；第二行 总市值 / 持仓盈亏 / 现金） -->
-                <div class="pt-3 pb-3">
+                <!-- 第二层：磨砂指标面板（两行三列：年度分红收入 / 累计分红 / 预计回本；总市值 / 持仓盈亏 / 现金） -->
+                <div class="mt-3 mb-3 rounded-2xl px-3 pt-3 pb-2.5" style="background:linear-gradient(135deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.035) 100%);border:1px solid rgba(232,200,138,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 18px rgba(0,0,0,.10);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);">
                     <div class="grid items-start" style="grid-template-columns:1.4fr 1.04fr 1.4fr; row-gap:15px;">
                         <!-- 第一行：年度分红收入 / 累计分红 / 预计回本 -->
                         <div class="text-left min-w-0 pr-2">
@@ -2053,17 +2110,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 个股仓位预警：持仓卡后的上下文提示，仅超限时显示，不占用页面顶部 -->
-        <div id="positionWarnBar" class="hidden mb-3 rounded-xl" style="background:#fdf6e6;border:1px solid #efe2c6;">
-            <div class="flex items-center gap-2.5 px-3 py-2">
-                <span class="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0" style="background:#fff3d6;"><i class="fa fa-exclamation-triangle text-[9px] text-amber-600"></i></span>
-                <div class="flex-1 min-w-0 text-[11px] text-gray-700 leading-snug" id="positionWarnText"></div>
-                <button type="button" onclick="closePositionWarn()" class="w-[18px] h-[18px] rounded-full bg-white border border-amber-200 flex items-center justify-center text-amber-700 flex-shrink-0 active:scale-90 transition-transform" title="本次不再提示"><i class="fa fa-times text-[8px]"></i></button>
+        <!-- 账户洞察：目标持仓常驻信息 + 主洞察 + 可选的仓位预警 -->
+        <div class="insight-card mb-3">
+            <div id="targetSummaryStrip" class="hidden relative z-10 px-3.5 pt-3 pb-3 border-b" style="border-color:rgba(143,36,55,.10);"></div>
+            <div class="relative z-10 flex items-start gap-2.5 px-3.5 py-3">
+                <span class="insight-rail mt-0.5"></span>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-semibold tracking-[.14em] text-[#8f2437]">本期洞察</span>
+                        <span class="text-[9px] text-[#a49382]">基于当前持仓</span>
+                    </div>
+                    <div id="holdInsightText" class="mt-1 text-[12px] leading-snug text-[#2f2a27]" aria-live="polite">正在读取持仓数据…</div>
+                </div>
             </div>
         </div>
-
-        <!-- 目标持仓摘要：只在设置过目标后出现，点击打开全部目标抽屉；无目标时完全隐藏 -->
-        <div id="targetSummaryStrip" class="hidden mb-3"></div>
 
         <!-- 我的持仓头部 -->
         <!-- 全部/A股/港股筛选标签 + 卡片/列表模式切换 -->
@@ -6787,7 +6847,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </button>
 
     <!-- 底部导航条 -->
-    <nav id="bottomNav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 shadow-[0_-2px_10px_rgba(0,0,0,0.04)]" style="padding-bottom: env(safe-area-inset-bottom);">
+    <nav id="bottomNav" class="fixed bottom-0 left-0 right-0 nav-glass z-40" style="padding-bottom: env(safe-area-inset-bottom);">
         <div class="max-w-2xl mx-auto flex">
             <button data-tab="hold" class="bottomTab active flex-1 py-2.5 flex flex-col items-center gap-1 text-accent relative transition-colors">
                 <div class="absolute top-0 w-8 h-[3px] bg-accent rounded-full"></div>
@@ -13812,6 +13872,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const target = Number(to);
             if(!isFinite(target)){ el.innerText = fmt ? fmt(to) : String(to); return; }
             const key = el.id || ('_' + Math.random());
+            if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches){
+                _numAnims[key] = target;
+                el.innerText = fmt ? fmt(target) : String(Math.round(target));
+                return;
+            }
             if(!(key in _numAnims)){
                 // 首次渲染：从 0 平滑滚到目标，让数字带"跳动质感"
                 const _t0 = performance.now();
@@ -18424,43 +18489,42 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const rows = targetRows();
             if(!rows.length){ el.classList.add('hidden'); el.innerHTML = ''; return; }
             const done = rows.filter(function(r){ return r.achieved; }).length;
-            const pending = rows.length - done;
-            const allDone = pending === 0;
-            const accent = allDone ? '#2f7d5a' : '#a82d43';
-            const accentSoft = allDone ? '#6fb894' : '#a82d43';
-            const border = allDone ? '#c8dfd2' : '#e4c7cb';
+            const allDone = done === rows.length;
             const rail = allDone ? '#4f8a6e' : '#742034';
-            const iconBg = allDone ? '#2f5d49' : '#742034';
-            const iconColor = allDone ? '#d9eee1' : '#ffe5bb';
-            const muted = allDone ? '#6f8f7d' : '#8e7464';
-            const ratioSub = allDone ? '#9ab7a7' : '#c8a5a0';
             const chevron = allDone ? '#547a65' : '#8f5f67';
-            const track = allDone ? '#e1eee7' : '#f1e1e4';
-            const shadow = allDone ? 'rgba(47,125,90,0.08)' : 'rgba(116,32,52,0.10)';
-            const chip = allDone
-                ? '<span class="text-[9.5px] font-semibold text-[#2f7d5a] bg-[#e8f5ee] ring-1 ring-[#cde7db] rounded-full px-2 py-0.5 flex-shrink-0">全部达成</span>'
-                : '<span class="text-[9.5px] font-semibold text-[#8f2437] bg-[#fdf0f1] ring-1 ring-[#e4c6ca] rounded-full px-2 py-0.5 flex-shrink-0">待完成 ' + pending + '</span>';
+            // 沿用旧目标卡逻辑：最高优先优先；没有最高优先时取“最近可达成”
             const priorityRow = rows.find(function(r){ return r.goal.priority === true; }) || null;
             const nearestRow = !allDone ? rows.filter(function(r){ return !r.achieved; }).sort(function(a, b){
                 if(a.gap !== b.gap) return a.gap - b.gap;
                 if(a.pct !== b.pct) return b.pct - a.pct;
                 return a.item.name.localeCompare(b.item.name, 'zh-CN');
             })[0] : null;
-            const priorityChip = priorityRow
-                ? '<div class="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-full px-2.5 py-[3px]" style="background:#742034;color:#ffe5bb;box-shadow:0 2px 6px rgba(116,32,52,0.22);"><i class="fa fa-bolt text-[8.5px] flex-shrink-0"></i><span class="text-[10px] font-semibold whitespace-nowrap flex-shrink-0">最高优先</span><span class="text-[10px] opacity-90 truncate">· ' + targetEsc(priorityRow.item.name) + '</span></div>'
-                : '';
-            const nearestChip = nearestRow
-                ? '<div class="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-full px-2.5 py-[3px] ring-1 ring-[#e8cdd4]" style="background:#f8ecef;color:#742034;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);"><i class="fa fa-flag text-[8.5px] flex-shrink-0" style="color:#a82d43;"></i><span class="text-[9.5px] font-semibold whitespace-nowrap flex-shrink-0">最近可达成</span><span class="text-[9.5px] opacity-80 truncate">· ' + targetEsc(nearestRow.item.name) + '</span><span class="text-[9.5px] font-semibold whitespace-nowrap flex-shrink-0">还差 ' + targetFmtShares(nearestRow.gap) + ' 股</span></div>'
-                : '';
-            const allDoneChip = allDone
-                ? '<div class="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-full px-2.5 py-[3px] ring-1 ring-[#cde7db]" style="background:#e8f5ee;color:#2f7d5a;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);"><i class="fa fa-check-circle text-[8.5px] flex-shrink-0"></i><span class="text-[9.5px] font-semibold whitespace-nowrap flex-shrink-0">已完成全部目标</span></div>'
-                : '';
-            const focusChip = allDone ? allDoneChip : (priorityChip || nearestChip);
+            const focusRow = allDone ? null : (priorityRow || nearestRow);
+            const focusLabel = allDone ? '全部达成' : (priorityRow ? '最高优先' : '最近可达成');
+            const focusChipBg = allDone ? 'rgba(47,125,90,.08)' : 'rgba(143,36,55,.07)';
+            const focusChipBorder = allDone ? 'rgba(79,138,110,.24)' : 'rgba(143,36,55,.16)';
+            const focusChipColor = allDone ? '#2f7d5a' : '#8f2437';
+            const focusBadge = '<span class="text-[9px] font-semibold rounded-full px-1.5 py-[2px] leading-none flex-shrink-0" style="color:' + focusChipColor + ';background:' + focusChipBg + ';box-shadow:inset 0 0 0 1px ' + focusChipBorder + ';">' + focusLabel + '</span>';
+            let focusLine = '';
+            if(allDone){
+                focusLine = '<div class="mt-2 flex items-center gap-1.5 min-w-0 text-[10.5px] leading-snug">'
+                    + focusBadge
+                    + '<span class="font-semibold" style="color:#2f2a27;">全部目标已达成</span>'
+                    + '</div>';
+            } else if(focusRow){
+                focusLine = '<div class="mt-2 flex items-center gap-1.5 min-w-0 text-[10.5px] leading-snug">'
+                    + focusBadge
+                    + '<span class="font-semibold truncate" style="color:#2f2a27;">' + targetEsc(focusRow.item.name) + '</span>'
+                    + '<span class="tabular-nums flex-shrink-0" style="color:#6f635b;">' + targetFmtShares(focusRow.current) + '/' + targetFmtShares(focusRow.target) + '</span>'
+                    + '<span class="font-semibold flex-shrink-0" style="color:#2f2a27;">还差 ' + targetFmtShares(focusRow.gap) + ' 股</span>'
+                    + '</div>';
+            }
+            // 沿用旧目标卡逻辑：最后一行看最高优先股票；无最高优先或全部达成时看第一重仓
             const topPositionRow = (holdDataList || []).slice()
                 .filter(function(it){ return Number(it.count) > 0 && getMarketValue(it) > 0; })
                 .sort(function(a, b){ return getMarketValue(b) - getMarketValue(a); })[0] || null;
             const quoteItem = (!allDone && priorityRow) ? priorityRow.item : topPositionRow;
-            let focusQuote = '';
+            let quoteLine = '';
             if(quoteItem){
                 const quotePct = getEffectiveChangePct(quoteItem.changePct);
                 const quoteChg = getEffectiveChange(quoteItem.change);
@@ -18472,33 +18536,28 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const quoteTone = (quotePct == null || isNaN(quotePct))
                     ? ((quoteChg == null || isNaN(quoteChg)) ? '#8a7a67' : (quoteChg > 0 ? '#e03131' : (quoteChg < 0 ? '#00a05c' : '#8a7a67')))
                     : (quotePct > 0 ? '#e03131' : (quotePct < 0 ? '#00a05c' : '#8a7a67'));
-                focusQuote = '<div class="mt-2.5 pt-2 flex items-center gap-1.5 text-[9.5px] leading-none border-t" style="border-color:rgba(143,36,55,.10)">'
-                    + '<span class="font-semibold truncate" style="color:#3a302b;max-width:92px">' + targetEsc(quoteName) + '</span>'
-                    + '<span style="color:#a4937e">现价</span>'
-                    + '<span class="font-semibold tabular-nums" style="color:#3a302b">' + quotePriceText + '</span>'
-                    + '<span class="ml-auto" style="color:#a4937e">今日</span>'
+                quoteLine = '<div class="mt-2 flex items-center gap-1.5 text-[10.5px] leading-none">'
+                    + '<span class="font-medium truncate" style="color:#6f635b;max-width:88px">' + targetEsc(quoteName) + '</span>'
+                    + '<span style="color:#a49382">现价</span>'
+                    + '<span class="font-semibold tabular-nums" style="color:#2f2a27">' + quotePriceText + '</span>'
+                    + '<span class="ml-auto" style="color:#a49382">今日</span>'
                     + '<span class="font-semibold tabular-nums" style="color:' + quoteTone + '">' + quoteChgText + '</span>'
                     + '<span style="color:#c8b6a4">·</span>'
                     + '<span class="font-medium tabular-nums" style="color:' + quoteTone + '">' + quotePctText + '</span>'
                     + '</div>';
             }
             el.classList.remove('hidden');
-            el.innerHTML = '<div class="relative overflow-hidden rounded-2xl border px-4 py-3 cursor-pointer active:scale-[0.99] transition-transform" style="background:linear-gradient(135deg,#fffdf8 0%,#f7ecd8 100%);border-color:' + border + ';border-left:3px solid ' + rail + ';box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 4px 14px ' + shadow + ';" onclick="openTargetOverview()">'
-                + '<div class="flex items-center gap-3">'
-                + '<div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:' + iconBg + ';box-shadow:0 3px 8px ' + (allDone ? 'rgba(47,93,73,0.20)' : 'rgba(58,42,28,0.18)') + ';">'
-                + '<i class="fa fa-bullseye text-[14px]" style="color:' + iconColor + ';"></i></div>'
+            el.innerHTML = '<div class="flex items-start gap-2.5 cursor-pointer active:opacity-70 transition-opacity" onclick="openTargetOverview()">'
+                + '<span class="w-[2px] h-4 rounded-full flex-shrink-0 mt-0.5" style="background:' + rail + ';"></span>'
                 + '<div class="min-w-0 flex-1">'
-                + '<div class="flex items-center gap-2 min-w-0"><span class="text-[16px] font-semibold text-[#3a302b] truncate">目标持仓</span>' + chip + '</div>'
-                + focusChip
-                + '<div class="mt-2 h-[3px] rounded-full overflow-hidden" style="background:' + track + ';"><div style="width:' + (done / rows.length * 100).toFixed(1) + '%;height:100%;border-radius:3px;background:linear-gradient(90deg,' + accentSoft + ',' + accent + ');"></div></div>'
+                + '<div class="flex items-center gap-2 min-w-0">'
+                + '<span class="text-[9px] font-semibold tracking-[.14em] flex-shrink-0" style="color:#8f2437;">目标持仓</span>'
+                + '<span class="text-[9px] flex-shrink-0" style="color:#a49382;">待完成 ' + (rows.length - done) + '</span>'
+                + '<svg class="w-3 h-3 flex-shrink-0 ml-auto" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
                 + '</div>'
-                + '<div class="flex-shrink-0 text-right pl-0.5">'
-                + '<div class="text-[21px] font-bold leading-none tabular-nums" style="color:' + accent + ';">' + done + '<span class="text-[12px] font-semibold" style="color:' + ratioSub + ';">/' + rows.length + '</span></div>'
-                + '<div class="text-[9.5px] mt-1" style="color:' + muted + ';">已达成</div>'
+                + focusLine
+                + quoteLine
                 + '</div>'
-                + '<svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
-                + '</div>'
-                + focusQuote
                 + '</div>';
         }
         function renderStockTargetCard(){
@@ -22343,7 +22402,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 详情页需要保留底部导航条；只隐藏会压住详情内容的 FAB 与顶部预警条
             const nav = document.querySelector('#bottomNav');
             if(nav) nav.classList.remove('hidden');
-            const sels = ['#openModalBtn', '#cfAddFab', '#positionWarnBar'];
+            const sels = ['#openModalBtn', '#cfAddFab'];
             const state = {};
             sels.forEach(function(sel){
                 const el = document.querySelector(sel);
@@ -32415,16 +32474,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ============ 回本里程碑（已并入成本回收进度条，本函数保留空转兼容旧调用） ============
         function renderRecoverMilestone(){}
 
-        // ============ 个股仓位预警：个股市值占比 > 30% 时全局吸顶提示 ============
+        // ============ 个股仓位预警：并入首页“本期洞察”的第二条信息 ============
         const POSITION_WARN_LIMIT = 30;   // 个股仓位上限（%）
         function updatePositionWarn(){
-            const bar = document.querySelector('#positionWarnBar');
-            if(!bar) return;
-            // 用户点过关闭：本次会话不再自动弹出（刷新页面后恢复）
+            // 用户点过忽略：本次会话不再自动出现（刷新页面后恢复）
             try{
                 if(sessionStorage.getItem('positionWarnDismissed') === '1'){
-                    bar.classList.add('hidden');
+                    positionWarnMessage = '';
                     document.body.classList.remove('has-position-warn');
+                    updateHoldInsight(calcSummary());
                     return;
                 }
             }catch(e){}
@@ -32441,22 +32499,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             });
             if(!warns.length){
-                bar.classList.add('hidden');
+                positionWarnMessage = '';
                 document.body.classList.remove('has-position-warn');
+                updateHoldInsight(sum);
                 return;
             }
             warns.sort(function(a, b){ return b.pct - a.pct; });
-            const txt = warns.map(function(w){
-                return '<span class="font-semibold text-gray-800">' + w.name + '</span> <span class="text-amber-700 font-semibold tabular-nums">' + w.pct.toFixed(1) + '%</span>';
-            }).join('<span class="text-gray-400 mx-0.5">·</span>');
-            document.querySelector('#positionWarnText').innerHTML = '<span class="font-medium">个股仓位预警：</span>' + txt + ' 已超 ' + POSITION_WARN_LIMIT + '% 上限';
-            bar.classList.remove('hidden');
+            positionWarnMessage = '个股仓位预警：' + warns.map(function(w){
+                return w.name + ' ' + w.pct.toFixed(1) + '%';
+            }).join('、') + ' 已超 ' + POSITION_WARN_LIMIT + '% 上限。';
             document.body.classList.add('has-position-warn');
+            updateHoldInsight(sum);
         }
         function closePositionWarn(){
             try{ sessionStorage.setItem('positionWarnDismissed', '1'); }catch(e){}
-            const bar = document.querySelector('#positionWarnBar');
-            if(bar){ bar.classList.add('hidden'); document.body.classList.remove('has-position-warn'); }
+            positionWarnMessage = '';
+            document.body.classList.remove('has-position-warn');
+            updateHoldInsight(calcSummary());
         }
         // ============ 最大回撤（每年年末资产快照序列，经典"创新高点"算法） ============
         // ① 遍历每条快照作为候选高点（仅创出新高的点才参与配对） ② 高点之后找最小总资产
@@ -33327,6 +33386,37 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 contributors: contributors
             };
         }
+        // 首页账户洞察：只用现有汇总字段生成一条事实型文案，不新增计算口径
+        var positionWarnMessage = '';
+        var _todayPnlLoadStartedAt = 0;
+        var _todayPnlLoadTimer = null;
+        function updateHoldInsight(sum){
+            const el = document.querySelector('#holdInsightText');
+            if(!el || !sum) return;
+            const holds = Number(sum.holdLen) || 0;
+            const yearDiv = Number(sum.totalYearDiv) || 0;
+            const totalDiv = Number(sum.totalDivReceived) || 0;
+            let text = '';
+            if(holds <= 0){
+                text = '暂无持仓；添加第一只股票后，这里会生成一条账户洞察。';
+            } else if(yearDiv > 0){
+                text = '今年已收分红 ' + fmtMoney(yearDiv) + '，累计 ' + fmtMoney(totalDiv) + '；分红现金流正在积累。';
+            } else if(totalDiv > 0){
+                text = '今年分红尚未到账，累计已收 ' + fmtMoney(totalDiv) + '；下一笔派息值得关注。';
+            } else {
+                text = '今年与累计分红尚未到账；先让持仓慢慢生长。';
+            }
+            const warnHtml = positionWarnMessage
+                ? '<div class="mt-2 pt-2 flex items-start gap-2 border-t" style="border-color:rgba(143,36,55,.10);">'
+                    + '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-[5px]" style="background:#a82d43;"></span>'
+                    + '<span class="flex-1 min-w-0 text-[11.5px] leading-snug font-medium" style="color:#2f2a27;">' + targetEsc(positionWarnMessage) + '</span>'
+                    + '<button type="button" onclick="closePositionWarn()" class="flex-shrink-0 text-[9px] active:opacity-60 transition-opacity" style="color:#a49382;">忽略</button>'
+                    + '</div>'
+                : '';
+            const html = '<span>' + targetEsc(text) + '</span>' + warnHtml;
+            if(el.innerHTML !== html) el.innerHTML = html;
+        }
+
         function updateSummaryCard(sum){
             const stNumEl = document.querySelector('#stockNum');
             if(stNumEl) stNumEl.innerText = sum.holdLen;
@@ -33418,17 +33508,37 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const totalDayPnl = todaySnap.totalDayPnl;
                 const hasValidDayPct = todaySnap.hasValidDayPct;
                 if(!hasValidDayPct){
-                    todayPnlEl.innerText = '--';
-                    todayPnlEl.className = 'text-[28px] font-semibold tabular-nums num-transition text-gray-400 leading-none';
-                    todayPnlEl.style.fontSize = todayBase + 'px';
-                    todayPnlPctEl.innerText = '--';
-                    todayPnlPctEl.className = 'text-[13px] font-medium tabular-nums num-transition text-gray-400 leading-none';
+                    const hasHoldings = (holdDataList || []).some(function(it){ return Number(it.count) > 0; });
+                    if(!_todayPnlLoadStartedAt) _todayPnlLoadStartedAt = performance.now();
+                    const stillLoading = hasHoldings && (performance.now() - _todayPnlLoadStartedAt < 6000);
+                    if(stillLoading){
+                        todayPnlEl.innerText = '0.00';
+                        todayPnlEl.className = 'text-[28px] font-semibold tabular-nums num-transition leading-none is-loading';
+                        todayPnlEl.style.fontSize = todayBase + 'px';
+                        todayPnlPctEl.innerText = '0.00%';
+                        todayPnlPctEl.className = 'text-[13px] font-medium tabular-nums num-transition leading-none is-loading';
+                        if(!_todayPnlLoadTimer){
+                            _todayPnlLoadTimer = setTimeout(function(){
+                                _todayPnlLoadTimer = null;
+                                updateSummaryCard(calcSummary());
+                            }, 6000);
+                        }
+                    } else {
+                        if(_todayPnlLoadTimer){ clearTimeout(_todayPnlLoadTimer); _todayPnlLoadTimer = null; }
+                        todayPnlEl.innerText = '--';
+                        todayPnlEl.className = 'text-[28px] font-semibold tabular-nums num-transition text-gray-400 leading-none';
+                        todayPnlEl.style.fontSize = todayBase + 'px';
+                        todayPnlPctEl.innerText = '--';
+                        todayPnlPctEl.className = 'text-[13px] font-medium tabular-nums num-transition text-gray-400 leading-none';
+                    }
                 } else {
+                    if(_todayPnlLoadTimer){ clearTimeout(_todayPnlLoadTimer); _todayPnlLoadTimer = null; }
+                    _todayPnlLoadStartedAt = 0;
                     const hasPct = todaySnap.dayPnlPct != null && !isNaN(Number(todaySnap.dayPnlPct));
                     const dayPnlPct = hasPct ? Number(todaySnap.dayPnlPct) : null;
                     // 金额主色：涨红跌绿
                     const amtCls = totalDayPnl > 0.005 ? 'text-[#e03131]' : (totalDayPnl < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
-                    todayPnlEl.innerText = fmtPnlNum(totalDayPnl);
+                    numTween(todayPnlEl, totalDayPnl, fmtPnlNum, 420);
                     todayPnlEl.className = 'text-[28px] font-semibold tabular-nums num-transition leading-none ' + amtCls;
                     todayPnlEl.style.fontSize = todayBase + 'px';
                     // 百分比副色：与金额一致涨红跌绿；无昨日市值基准时显示 --，避免 0.00% 误导
@@ -33438,6 +33548,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     todayPnlPctEl.className = 'text-[13px] font-medium tabular-nums num-transition leading-none ' + pctCls;
                 }
             }
+            updateHoldInsight(sum);
         }
 
         // 节点文本/颜色更新助手：保留节点内前缀货币符号 span，只替换尾部文本与颜色 class

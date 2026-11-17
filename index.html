@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261116.500';</script>
+    <script>window.APP_VERSION = '20261117.502';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -3709,7 +3709,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <div class="text-[11px] text-gray-400 mt-4 leading-relaxed">
-            涨跌幅数据交易时间每3秒自动刷新；分红派发日程基于公开分红数据，按天更新。未来 12 个月为已公布方案 + 未公布按去年同期推算，预估部分仅供参考。
+            涨跌幅数据交易时间每 6–10 秒随机刷新；分红派发日程基于公开分红数据，按天更新。未来 12 个月为已公布方案 + 未公布按去年同期推算，预估部分仅供参考。
         </div>
 
     </div>
@@ -3752,7 +3752,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="shrink-0 text-right pt-0.5">
                         <div class="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style="background:#f8ecef;border:1px solid #e8cdd4;">
                             <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background:#8f2437"></span>
-                            <span class="text-[8.5px]" style="color:#742034">每 3 秒刷新</span>
+                            <span class="text-[8.5px]" style="color:#742034">6–10 秒刷新</span>
                         </div>
                     </div>
                 </div>
@@ -8022,7 +8022,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         });
 
-        // ============ 交易时段每3秒自动刷新最新行情 / 分红 / 汇率 ============
+        // ============ 交易时段每 6–10 秒随机刷新最新行情 / 分红 / 汇率 ============
         const divCacheMap = {};     // A股分红记录缓存：code -> {t, period, records}，每天刷新一次（键=当天日期，含周末）
         const DIV_CACHE_KEY = 'dividendDivCache'; // 分红缓存持久化：当天其余时间直接读存储，不重复请求
         function loadDivCache(){
@@ -8051,7 +8051,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let _assetDailyDataLoaded = false;     // init 全部数据加载完成后置 true
         let _assetDailyWriteArmedAt = 0;       // 启动保护期结束时间戳；此前一律不写
         // ==================== 仓位分布收盘快照机制 ====================
-        // 仓位分布数据不需要每3秒刷新，每天收盘后更新一次，交易时间内使用上一交易日快照
+        // 仓位分布数据不需要每 6–10 秒刷新，每天收盘后更新一次，交易时间内使用上一交易日快照
         const POSITION_SNAPSHOT_KEY = 'dividendPositionSnapshot';
         let positionSnapshot = null; // { date: "2026-09-07", stocks: { code: {nowPrice, name, marketType, count, industry} } }
 
@@ -8072,7 +8072,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // ==================== 今年涨幅（年初至今 YTD）机制 ====================
         // 基础价 = 今年第一个交易日收盘价（前复权，东财K线接口每天拉一次缓存），
-        // YTD = 当前现价 / 基础价 - 1（盘中随现价每3秒实时变化，基础价每天只拉一次）
+        // YTD = 当前现价 / 基础价 - 1（盘中随现价每 6–10 秒实时变化，基础价每天只拉一次）
         const YTD_BASE_KEY = 'dividendYtdBase';
         let ytdBaseMap = null; // { year: "2026", stocks: { code: { close: 年初收盘价 } } }
 
@@ -8533,7 +8533,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                     // B：统计页不跟随持仓行情整页重建；今日排行直接复用本次持仓行情刷新结果，
                     //    只增量重绘排行；其余按天/快照板块只在进入页面、退出详情页、收盘快照后整页刷新一次
-                    //    今日涨跌幅详情页（activeStatsSection='today'）本身就是排行，必须继续跟随3秒刷新；
+                    //    今日涨跌幅详情页（activeStatsSection='today'）本身就是排行，必须继续跟随 6–10 秒随机刷新；
                     //    首页“今日盈亏”入口也打开同一详情页，按页面真实可见性统一处理，不依赖 activeTab。
                     if(isStatsTodayRankingVisible() || (activeTab === 'stats' && (!activeStatsSection || activeStatsSection === 'today'))){
                         if(window.__pageScrolling){
@@ -8553,7 +8553,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const sumA = calcSummary();
                         renderAnalysisOverview(sumA);
                         renderMaxDrawdown();
-                        // 只有月度数据新增时才重新渲染图表（避免每3秒重复渲染）
+                        // 只有月度数据新增时才重新渲染图表（避免每 6–10 秒重复渲染）
                         if(monthlyAfter > monthlyBefore){
                             renderAnalysisCharts();
                         }
@@ -8564,7 +8564,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     }
                     // 如果当前在里程碑页：本周期拉取了新分红数据（6:00/20:00 分红缓存刷新）
                     // 或分红数据指纹变化（除权到账、持股/股息修改等）→ 即时重渲染一次；
-                    // 未变化不渲染（分红按天更新，不随每3秒行情刷新）
+                    // 未变化不渲染（分红按天更新，不随每 6–10 秒行情刷新）
                     if(activeTab === 'milestone'){
                         const _fp = milestoneDataFingerprint();
                         if(divTasks.length || _fp !== _msDataFp){
@@ -21071,7 +21071,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 updateWatchSelQuotes();
             });
         }
-        // 增量更新自选列表全部字段（交易时间每 3 秒，只更新数字与颜色，不重建列表 DOM，仿持仓页增量更新）
+        // 增量更新自选列表全部字段（交易时间每 6–10 秒，只更新数字与颜色，不重建列表 DOM，仿持仓页增量更新）
         function updateWatchSelQuotes(){
             if(!document.querySelector('#pageWatchSel') || document.querySelector('#pageWatchSel').classList.contains('hidden')) return;
             const list = loadWatchList();
@@ -21094,7 +21094,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     pctEl.innerText = (!preOpenWide && pct != null) ? (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' : '--';
                     pctEl.style.color = (!preOpenWide && pct != null) ? color : '#b8b8b8';
                 }
-                // 股息率：近1年每股分红 ÷ 最新价（现算，与现价股息排行同口径，随行情每 3 秒更新）
+                // 股息率：近1年每股分红 ÷ 最新价（现算，与现价股息排行同口径，随行情每 6–10 秒更新）
                 let divYield = null;
                 if(w.market === 'A'){
                     const cache = divCacheMap[w.code];
@@ -21859,7 +21859,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdKlineFetch(code, market, klt, function(err, pack){
                 if(seq !== sdKlineSeq) return;
                 if(err || !pack || !pack.rows || !pack.rows.length){
-                    // 9:15后当日分时接口偶尔还没出数据：保持空盘，3秒后自动重试，不再进入错误态
+                    // 9:15后当日分时接口偶尔还没出数据：保持空盘，15秒后自动重试，不再进入错误态
                     if(klt === 0 && mode !== 'prev'){
                         sdKlineBlank();
                         return;
@@ -22953,10 +22953,38 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             });
         }
-        // ===== 详情页实时刷新（对齐东财节奏：行情/分时 3 秒，K 线 6 秒；非交易时段自动停） =====
-        let sdLiveTimer = null, sdLiveTicks = 0;
+        // ===== 详情页实时刷新（报价/盘口合并，6–10 秒随机；K 线/成交明细 15 秒；非交易时段自动停） =====
+        let sdLiveTimer = null, sdLiveSeq = 0, sdLiveBusy = false, sdKlineTimer = null, sdKlineRefreshSeq = 0;
+        function sdDetailJitterDelay(){
+            return 6000 + Math.floor(Math.random() * 4001); // 6–10 秒
+        }
+        function sdDetailVisible(){
+            const page = document.querySelector('#pageStockDetail');
+            return !!page && !page.classList.contains('hidden');
+        }
+        function sdKlineStop(){
+            sdKlineRefreshSeq++;
+            if(sdKlineTimer){ clearTimeout(sdKlineTimer); sdKlineTimer = null; }
+        }
+        function sdKlineSchedule(){
+            if(sdKlineTimer || document.hidden) return;
+            if(!sdDetailVisible() || !isTradingTime()) return;
+            const seq = sdKlineRefreshSeq;
+            sdKlineTimer = setTimeout(function(){
+                sdKlineTimer = null;
+                if(seq !== sdKlineRefreshSeq || document.hidden) return;
+                if(!sdDetailVisible() || !isTradingTime()) return;
+                try{ sdKlineLoad(true); }catch(e){}
+                // 盘口已由报价一次带回；这里只补“分时成交明细”，避免第三列空掉
+                if(sdKlineKlt === 0){ try{ sdBookFetch(sdKlineCode, sdKlineMarket); }catch(e){} }
+                if(seq === sdKlineRefreshSeq) sdKlineSchedule();
+            }, 15000);
+        }
         function sdLiveStop(){
-            if(sdLiveTimer){ clearInterval(sdLiveTimer); sdLiveTimer = null; }
+            sdLiveSeq++;
+            if(sdLiveTimer){ clearTimeout(sdLiveTimer); sdLiveTimer = null; }
+            sdLiveBusy = false;
+            sdKlineStop();
             try{ sdBookSeq++; }catch(e){}
         }
         let sdQuoteLatestSnapshot = null;
@@ -23046,31 +23074,44 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 sdBookBids = v.bids;
                 sdBookAsks = v.asks;
                 if(v.prevClose > 0) sdBookPreClose = v.prevClose;
+                sdBookLastAt = hm + ':' + ('0' + nowD.getSeconds()).slice(-2);
                 sdBookPaint();
             }
         }
         function sdLiveStart(code, market){
             sdLiveStop();
-            sdLiveTicks = 0;
             if(sdKlineKlt === 0) sdBookFetch(code, market);
+            function schedule(){
+                if(sdLiveTimer || sdLiveBusy || document.hidden) return;
+                if(!sdDetailVisible() || !isTradingTime()) return;
+                const seq = sdLiveSeq;
+                sdLiveTimer = setTimeout(function(){
+                    sdLiveTimer = null;
+                    if(seq !== sdLiveSeq || document.hidden) return;
+                    if(!sdDetailVisible() || !isTradingTime()) return;
+                    tick(false);
+                }, sdDetailJitterDelay());
+            }
             const tick = function(force){
-                const page = document.querySelector('#pageStockDetail');
-                if(!page || page.classList.contains('hidden')){ sdLiveStop(); return; }
-                if(document.hidden) return;
+                if(document.hidden || !sdDetailVisible()){ sdLiveStop(); return; }
                 if(!force && !isTradingTime()) return;
-                sdLiveTicks++;
+                if(sdLiveBusy) return;
+                sdLiveBusy = true;
+                const seq = sdLiveSeq;
                 fetchQuotesBatch([{ market: market, code: code }], function(res){
-                    const v = res[getTencentPrefix(market, code)];
-                    if(v) sdQuotePatch(code, market, v);
-                    const contained = document.querySelector('#pageStockDetail');
-                    if(!contained || contained.classList.contains('hidden')) return;
-                    if(sdKlineCode !== code) return;
-                    if(sdKlineKlt === 0){ sdKlineLoad(true); if(!force) sdBookFetch(code, market); }
-                    else if(sdLiveTicks % 2 === 0) sdKlineLoad(true);
+                    if(seq !== sdLiveSeq){ sdLiveBusy = false; return; }
+                    try{
+                        const v = res[getTencentPrefix(market, code)];
+                        if(v) sdQuotePatch(code, market, v);
+                    }catch(e){
+                    }finally{
+                        sdLiveBusy = false;
+                        if(seq === sdLiveSeq) schedule();
+                    }
                 });
             };
             tick(true);
-            sdLiveTimer = setInterval(function(){ tick(false); }, 3000);
+            sdKlineSchedule();
         }
 
         function loadStockDetailData(code, market, name){
@@ -25288,7 +25329,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         // 按天数据（统计页四板块 / 分红 / 我的页等）的刷新期键：
         // 每个交易日两个刷新点——早上 6:00 与晚上 20:00（拉取/计算并覆盖存储），
-        // 其他时间直接读取对应刷新期已存储的数据展示，不随每3秒刷新或点击导航变化。
+        // 其他时间直接读取对应刷新期已存储的数据展示，不随每 6–10 秒刷新或点击导航变化。
         // 返回如 "2026-09-17#06" / "2026-09-17#20"；非交易日或今天6点前沿用最近一个交易日20点期。
         function getStatsPeriodKey(){
             const now = new Date();
@@ -29570,7 +29611,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     statsPrevValues.ranks = newRanks;
                 }, 50);
             }
-            // 更新时间（秒级，和 3 秒行情刷新节奏一致）
+            // 更新时间（秒级，和 6–10 秒行情刷新节奏一致）
             const now = new Date();
             const updateTimeText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' 更新';
             document.querySelector('#statsUpdateTime').innerText = updateTimeText;
@@ -30110,7 +30151,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const pieEl = document.querySelector('#industryPieChart');
                         if(pieEl){
                             // 缓存键：刷新期 + 行业市值数据。数据未变化只 resize 不重建，
-                            // 避免每3秒行情刷新/判断条件反复为真时反复渲染饼图
+                            // 避免每 6–10 秒行情刷新/判断条件反复为真时反复渲染饼图
                             const pieKey = posPeriodKey + '|' + pieData.map(function(p){ return p.name + ':' + Math.round(p.value); }).join(',');
                             renderPositionPie(pieEl, pieData, pieKey);
                         }
@@ -30172,13 +30213,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const snapF = loadStatsDaily();
                     snapF.position = { v: STATS_SNAP_VERSION, layout: POSITION_LAYOUT_VERSION, key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, fp: statsSnapFingerprint(), indHtml: indHtml, stockHtml: stockHtml, pieData: pieData, totalMV: totalMV, denom: posDenom, count: stockMV.length, maxPct: maxStockPct, industryCount: industryArr.length };
                     saveStatsDaily(snapF);
-                    // 标记当天已渲染完成：此后每3秒刷新只更新实时板块，饼图不再重复渲染
+                    // 标记当天已渲染完成：此后每 6–10 秒刷新只更新实时板块，饼图不再重复渲染
                     positionRendered = true;
                     positionRenderDate = posTodayStr;
                 }
             } else if(posSnapC.hasData){
                 // ---- 当天已有快照：直接读取存储渲染（不再请求/重算）----
-                // 当天已渲染过则跳过（DOM与canvas保持，每3秒刷新不重复渲染饼图，避免闪烁与性能消耗）
+                // 当天已渲染过则跳过（DOM与canvas保持，每 6–10 秒刷新不重复渲染饼图，避免闪烁与性能消耗）
                 if(positionRendered && positionRenderDate === posTodayStr){
                     // 已渲染，跳过
                 } else {
@@ -30832,7 +30873,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         mcEl.innerHTML = '<div style="height:88px;display:flex;align-items:center;justify-content:center;color:#9CA3AF;font-size:12px;letter-spacing:1px;">今年暂无已公布分红方案</div>';
                         mcEl._empty = true;
                     }
-                    // 缓存键：月度分红数据 + 持仓代码/股数（金额变化时才重建，避免每3秒行情刷新反复渲染）
+                    // 缓存键：月度分红数据 + 持仓代码/股数（金额变化时才重建，避免每 6–10 秒行情刷新反复渲染）
                     const monthKey = JSON.stringify(monthMap) + '|' + holdDataList.map(function(h){ return h.code + ':' + h.count; }).join(',');
                     if(mcEl._chart && mcEl._chart._monthKey === monthKey){
                         // 数据未变：仅 resize（容器尺寸可能变化），不重建
@@ -31811,7 +31852,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             };
         }
 
-        // 顶部 Hero / 账户体检 / 资产构成：每 3 秒也调用，只更新文本，不重绘图表
+        // 顶部 Hero / 账户体检 / 资产构成：每 6–10 秒也调用，只更新文本，不重绘图表
         function renderAnalysisOverview(sumArg){
             const sum = sumArg || calcSummary();
             const total = Number(sum.totalAsset) || 0;
@@ -33518,7 +33559,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             closeCashEdit();
             renderPage();
             renderMinePage();
-            // 全站联动：若统计页/资产分析详情页可见，同步刷新（修改现金后无需等待交易时段3秒或30分钟轮询）
+            // 全站联动：若统计页/资产分析详情页可见，同步刷新（修改现金后无需等待交易时段 6–10 秒或 30 分钟轮询）
             try{
                 if(!document.querySelector('#pageStats').classList.contains('hidden')) refreshStatsCardSummaries();
                 if(!document.querySelector('#pageStatsCashFlow').classList.contains('hidden')) renderStatsCashFlow();
@@ -37103,24 +37144,52 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(activeTab !== 'stats' || activeStatsSection) return;
             try{ renderStatsPage(); }catch(e){}
         }
-        // 智能刷新管理：交易时间每3秒刷新，非交易时间停止；自选行情只在自选页可见时单独刷新
+        // 智能刷新管理：交易时间 6–10 秒随机刷新（8s ±2s），非交易时间停止；自选行情只在自选页可见时单独刷新
         let refreshTimer = null;
         let watchRefreshTimer = null;
-        function startSmartRefresh(){
-            if(refreshTimer){
-                clearInterval(refreshTimer);
+        let refreshSchedulerSeq = 0;
+        let watchSchedulerSeq = 0;
+        function refreshJitterDelay(){
+            return 6000 + Math.floor(Math.random() * 4001); // 6–10 秒
+        }
+        function scheduleRefreshTick(){
+            if(refreshTimer || refreshing || document.hidden) return;
+            if(!isTradingTime() || !holdDataList.length) return;
+            const seq = refreshSchedulerSeq;
+            refreshTimer = setTimeout(function(){
                 refreshTimer = null;
-            }
-            if(watchRefreshTimer){
-                clearInterval(watchRefreshTimer);
+                if(seq !== refreshSchedulerSeq || document.hidden) return;
+                if(!isTradingTime() || !holdDataList.length) return;
+                Promise.resolve(refreshAll()).catch(function(){}).then(function(){
+                    if(seq === refreshSchedulerSeq) scheduleRefreshTick();
+                });
+            }, refreshJitterDelay());
+        }
+        function stopRefreshTick(){
+            refreshSchedulerSeq++;
+            if(refreshTimer){ clearTimeout(refreshTimer); refreshTimer = null; }
+        }
+        function scheduleWatchTick(){
+            if(watchRefreshTimer || document.hidden) return;
+            if(!isTradingTime() || !isWatchPageVisible()) return;
+            const seq = watchSchedulerSeq;
+            watchRefreshTimer = setTimeout(function(){
                 watchRefreshTimer = null;
-            }
-            if(isTradingTime() && holdDataList.length){
-                refreshTimer = setInterval(refreshAll, 3000);
-            }
-            if(isTradingTime() && isWatchPageVisible()){
-                watchRefreshTimer = setInterval(refreshWatchQuotesOnly, 3000);
-            }
+                if(seq !== watchSchedulerSeq || document.hidden) return;
+                if(!isTradingTime() || !isWatchPageVisible()) return;
+                try{ refreshWatchQuotesOnly(); }catch(e){}
+                if(seq === watchSchedulerSeq) scheduleWatchTick();
+            }, refreshJitterDelay());
+        }
+        function stopWatchTick(){
+            watchSchedulerSeq++;
+            if(watchRefreshTimer){ clearTimeout(watchRefreshTimer); watchRefreshTimer = null; }
+        }
+        function startSmartRefresh(){
+            if(isTradingTime() && holdDataList.length) scheduleRefreshTick();
+            else stopRefreshTick();
+            if(isTradingTime() && isWatchPageVisible()) scheduleWatchTick();
+            else stopWatchTick();
         }
 
         // 页面加载后立即刷新一次（获取最新收盘价）
@@ -37171,13 +37240,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }, 10000);
         // 非交易时段不轮询指数（打开自选页时拉取一次收盘值即可，节约资源）
         // 非交易时段失败补偿：每天一次类数据（分红/YTD/汇率）在交易时段拉取失败后，
-        // 交易时段的3秒刷新会重试；但非交易时段刷新已停止，这里每30分钟补拉一次，
+        // 交易时段的随机刷新会重试；但非交易时段刷新已停止，这里每30分钟补拉一次，
         // 直到成功（refreshAll 内部自带失败条件判断与防并发，幂等安全）
         let offHoursTimer = null;
         setInterval(function(){
             if(document.hidden) return; // 耗电优化：后台暂停
             if(!holdDataList.length) return;
-            if(isTradingTime()) return; // 交易时段由3秒刷新负责
+            if(isTradingTime()) return; // 交易时段由随机刷新负责
             refreshAll();
         }, 30 * 60 * 1000);
         // 分红派发日程每日18:00刷新点（非交易日也刷新）：到点且今天尚未刷新则刷新一次；
@@ -37196,18 +37265,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }, 60 * 1000);
         // 每10秒检查一次交易时间，动态启停刷新（及时响应开盘/收盘/午休）；后台暂停
-        setInterval(function(){ if(document.hidden) return; startSmartRefresh(); }, 10000);
+        setInterval(function(){
+            if(document.hidden) return;
+            startSmartRefresh();
+            // 详情页跨越开盘时：若页面仍可见且没有定时器，重新拉起 6–10 秒随机刷新与 15 秒 K 线
+            if(sdKlineCode && sdDetailVisible() && isTradingTime() && !sdLiveTimer && !sdLiveBusy){
+                try{ sdLiveStart(sdKlineCode, sdKlineMarket); }catch(e){}
+            }
+        }, 10000);
         // 统计页今日涨跌幅不再单独起定时器：refreshAll 持仓行情刷新成功后按当前页面增量重绘
         // ===== 耗电优化：切后台暂停行情刷新，回前台立即刷新并恢复（页面行为完全不变） =====
         document.addEventListener('visibilitychange', function(){
             if(document.hidden){
-                if(refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; }
-                if(watchRefreshTimer){ clearInterval(watchRefreshTimer); watchRefreshTimer = null; }
+                stopRefreshTick();
+                stopWatchTick();
+                try{ sdLiveStop(); }catch(e){}
             } else {
                 if(holdDataList.length && !refreshing){
                     setTimeout(function(){ refreshAll(); }, 200);
                 }
                 if(isWatchPageVisible()) refreshWatchQuotesOnly();
+                if(sdKlineCode && sdDetailVisible()){
+                    try{ sdLiveStart(sdKlineCode, sdKlineMarket); }catch(e){}
+                }
                 startSmartRefresh();
             }
         });

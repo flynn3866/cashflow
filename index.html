@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261117.502';</script>
+    <script>window.APP_VERSION = '20261118.509';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -175,6 +175,23 @@
             margin-left:0 !important;
             margin-right:0 !important;
             transition-property:background-color,border-color,color,opacity !important;
+        }
+        #holdList .hold-row.hold-recovered{
+            background:linear-gradient(135deg,#fdfaff 0%,#fff 52%,#fbf7ff 100%) !important;
+        }
+        #holdList .hold-recovered-badge{
+            display:inline-flex;
+            align-items:center;
+            height:14px;
+            padding:0 5px;
+            border-radius:999px;
+            font-size:8.5px;
+            line-height:1;
+            font-weight:600;
+            color:#7c3aed;
+            background:#f4edff;
+            border:1px solid #e4d4fb;
+            flex-shrink:0;
         }
         /* 展开持仓详情时暂时收起右下角新增按钮，避免遮住操作行 */
         #openModalBtn{transition:opacity .22s ease, transform .22s ease !important;}
@@ -356,6 +373,452 @@
             #holdList .hold-cost-cell,
             #holdList .hold-pnl-cell {
                 min-width: 0;
+            }
+
+            /* ===== 卡片模式 v3：Robinhood 式横向扁卡 ===== */
+            #holdList.hold-card-mode{
+                display:flex;
+                flex-direction:column;
+                gap:11px;
+            }
+            #holdList.hold-card-mode > .hold-card{
+                margin-top:0 !important;
+            }
+            #holdList .hold-card-v2{
+                position:relative;
+                display:grid;
+                grid-template-columns:minmax(0,1fr) 74px 68px;
+                align-items:center;
+                gap:10px;
+                height:88px;
+                padding:0 14px;
+                border-radius:16px;
+                background:#fff;
+                border:1px solid rgba(126,102,80,.09);
+                box-shadow:0 5px 16px rgba(72,49,31,.065), 0 1px 2px rgba(72,49,31,.035);
+                cursor:pointer;
+                overflow:hidden;
+                -webkit-tap-highlight-color:transparent;
+                transition:transform .16s ease, box-shadow .2s ease, border-color .2s ease;
+            }
+            #holdList .hold-card-v2:active{
+                transform:scale(.992);
+                box-shadow:0 2px 8px rgba(72,49,31,.06);
+            }
+            #holdList .hold-card-v2.is-recovered{
+                background:linear-gradient(135deg,#fdfaff 0%,#fff 52%,#fbf7ff 100%);
+                border-color:#e7d9fb;
+                box-shadow:0 5px 16px rgba(124,58,237,.075), 0 1px 2px rgba(72,49,31,.03);
+            }
+            #holdList .hold-card-v2-id{
+                display:flex;
+                align-items:center;
+                gap:9px;
+                min-width:0;
+            }
+            #holdList .hold-card-v2-title{
+                display:flex;
+                align-items:center;
+                gap:5px;
+                min-width:0;
+            }
+            #holdList .hold-card-v2-name{
+                font-size:16px;
+                font-weight:600;
+                line-height:1.15;
+                letter-spacing:-.01em;
+                color:#2d2925;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                min-width:0;
+                flex-shrink:1;
+            }
+            #holdList .hold-card-v2.is-recovered .hold-card-v2-name{
+                color:#6f3bd4;
+            }
+            #holdList .hold-card-v2-meta{
+                margin-top:4px;
+                font-size:10px;
+                line-height:1.2;
+                color:#a49382;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                font-variant-numeric:tabular-nums;
+            }
+            #holdList .hold-card-v2-meta .hcm-code{
+                color:#7a6a5d;
+                font-weight:500;
+            }
+            #holdList .hold-card-v2-tag{
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                height:13px;
+                min-width:15px;
+                padding:0 3px;
+                border-radius:3px;
+                font-size:8px;
+                line-height:1;
+                color:#fff;
+                flex-shrink:0;
+            }
+            #holdList .hold-card-v2-tag.a{background:#e03131}
+            #holdList .hold-card-v2-tag.hk{background:#3976d9}
+            #holdList .hold-card-v2-badge{
+                display:inline-flex;
+                align-items:center;
+                height:14px;
+                padding:0 5px;
+                border-radius:999px;
+                font-size:8.5px;
+                line-height:1;
+                font-weight:600;
+                color:#7c3aed;
+                background:#f4edff;
+                border:1px solid #e4d4fb;
+                flex-shrink:0;
+            }
+            #holdList .hold-card-v2-chart{
+                height:36px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                overflow:hidden;
+            }
+            #holdList .hold-card-v2-chart svg{
+                display:block;
+                width:100%;
+                height:36px;
+            }
+            #holdList .hold-card-v2-quote{
+                text-align:right;
+                min-width:0;
+                font-variant-numeric:tabular-nums;
+                font-feature-settings:"tnum" 1;
+            }
+            #holdList .hold-card-v2-price{
+                font-family:"Space Grotesk",Bahnschrift,system-ui,sans-serif;
+                font-size:18px;
+                line-height:1;
+                font-weight:650;
+                letter-spacing:-.02em;
+                color:#2b2723;
+                white-space:nowrap;
+            }
+            #holdList .hold-card-v2-price .hcm-cur{
+                font-size:8px;
+                font-weight:500;
+                color:#a49382;
+                margin-right:1px;
+                vertical-align:2px;
+            }
+            #holdList .hold-card-v2-pct{
+                margin-top:6px;
+                font-size:12px;
+                line-height:1;
+                font-weight:600;
+                white-space:nowrap;
+            }
+            @media (max-width:380px){
+                #holdList .hold-card-v2{
+                    grid-template-columns:minmax(0,1fr) 58px 64px;
+                    gap:8px;
+                    padding:0 12px;
+                }
+                #holdList .hold-card-v2-name{font-size:15px}
+                #holdList .hold-card-v2-meta{font-size:9.5px}
+                #holdList .hold-card-v2-price{font-size:17px}
+            }
+
+            /* ===== 卡片点击后的全屏持仓详情（Peek/Pop） ===== */
+            #pageHoldCardDetail{
+                bottom:var(--app-bottom-nav-h,58px);
+                background-color:#f5efe3;
+                padding-bottom:110px;
+                background-image:
+                    url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'120'%20height%3D'120'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.85'%20numOctaves%3D'2'%20stitchTiles%3D'stitch'/%3E%3C/filter%3E%3Crect%20width%3D'120'%20height%3D'120'%20filter%3D'url(%23n)'%20opacity%3D'0.05'/%3E%3C/svg%3E");
+                transform-origin:center center;
+                will-change:transform,opacity;
+            }
+            .hcd-topbar{
+                position:sticky;
+                top:0;
+                z-index:30;
+                display:flex;
+                align-items:center;
+                gap:10px;
+                padding:calc(env(safe-area-inset-top) + 12px) 14px 10px;
+                background:rgba(245,239,227,.9);
+                backdrop-filter:blur(18px);
+                -webkit-backdrop-filter:blur(18px);
+                border-bottom:1px solid rgba(126,102,80,.1);
+            }
+            .hcd-back{
+                width:34px;
+                height:34px;
+                border-radius:11px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                background:#fff;
+                color:#7a6251;
+                border:1px solid rgba(126,102,80,.12);
+                box-shadow:0 2px 8px rgba(72,49,31,.05);
+                flex-shrink:0;
+            }
+            .hcd-topbar-title{
+                font-size:14px;
+                font-weight:600;
+                color:#2d2925;
+                letter-spacing:.02em;
+            }
+            .hcd-topbar-sub{
+                margin-top:2px;
+                font-size:10px;
+                color:#a49382;
+                font-variant-numeric:tabular-nums;
+            }
+            .hcd-topbar-tag{
+                margin-left:auto;
+                font-size:9px;
+                font-weight:600;
+                letter-spacing:.08em;
+                color:#8f5f67;
+                border:1px solid #e5d4d7;
+                background:#fffafb;
+                border-radius:999px;
+                padding:4px 7px;
+                white-space:nowrap;
+            }
+            .hcd-hero{
+                position:relative;
+                margin:12px 12px 0;
+                padding:16px 16px 14px;
+                border-radius:20px;
+                background:linear-gradient(180deg,#fffdf9 0%,#fffaf3 100%);
+                border:1px solid rgba(126,102,80,.1);
+                border-top:2px solid #8f2437;
+                box-shadow:0 10px 26px rgba(72,49,31,.06), inset 0 1px 0 rgba(255,255,255,.8);
+                overflow:hidden;
+            }
+            .hcd-hero-head{
+                display:flex;
+                align-items:center;
+                gap:10px;
+                min-width:0;
+            }
+            .hcd-hero-name{
+                font-size:16px;
+                font-weight:650;
+                color:#2b2723;
+                letter-spacing:-.01em;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+            .hcd-hero-sub{
+                margin-top:3px;
+                font-size:10px;
+                color:#a49382;
+                font-variant-numeric:tabular-nums;
+            }
+            .hcd-hero-price-row{
+                display:flex;
+                align-items:flex-end;
+                justify-content:space-between;
+                gap:12px;
+                margin-top:17px;
+            }
+            .hcd-price{
+                font-family:"Space Grotesk",Bahnschrift,system-ui,sans-serif;
+                font-size:32px;
+                line-height:1;
+                font-weight:650;
+                letter-spacing:-.035em;
+                color:#28231f;
+                font-variant-numeric:tabular-nums;
+            }
+            .hcd-price .hcd-cur{
+                font-size:10px;
+                font-weight:500;
+                color:#a49382;
+                margin-right:2px;
+                vertical-align:4px;
+            }
+            .hcd-change{
+                text-align:right;
+                font-variant-numeric:tabular-nums;
+                padding-bottom:2px;
+            }
+            .hcd-change-amt{
+                font-family:"Space Grotesk",Bahnschrift,system-ui,sans-serif;
+                font-size:14px;
+                line-height:1;
+                font-weight:600;
+            }
+            .hcd-change-pct{
+                margin-top:5px;
+                font-size:12px;
+                line-height:1;
+                font-weight:600;
+            }
+            .hcd-ledger{
+                margin:12px 12px 0;
+                overflow:hidden;
+                border-radius:18px;
+                background:#fff;
+                border:1px solid rgba(126,102,80,.09);
+                box-shadow:0 8px 22px rgba(72,49,31,.05);
+            }
+            .hcd-section{
+                margin:0;
+                overflow:visible;
+                border-radius:0;
+                background:transparent;
+                border:0;
+                box-shadow:none;
+            }
+            .hcd-ledger .hcd-section + .hcd-section{
+                border-top:1px solid #f0e8dd;
+            }
+            .hcd-section-head{
+                display:flex;
+                align-items:center;
+                gap:8px;
+                padding:12px 14px 9px;
+            }
+            .hcd-section-title{
+                font-size:12px;
+                font-weight:650;
+                color:#2f2a27;
+                letter-spacing:.02em;
+            }
+            .hcd-section-line{
+                display:none;
+            }
+            .hcd-grid{
+                display:grid;
+                grid-template-columns:repeat(2,minmax(0,1fr));
+            }
+            .hcd-cell{
+                min-width:0;
+                padding:10px 14px 12px;
+                border-top:1px solid #f7f1e9;
+            }
+            .hcd-cell:nth-child(odd){
+                border-right:0;
+            }
+            .hcd-cell.wide{
+                grid-column:1 / -1;
+                border-right:0;
+            }
+            .hcd-label{
+                font-size:10px;
+                line-height:1.2;
+                color:#a49382;
+                white-space:nowrap;
+            }
+            .hcd-value{
+                margin-top:5px;
+                font-family:"Space Grotesk",Bahnschrift,system-ui,sans-serif;
+                font-size:16px;
+                line-height:1.08;
+                font-weight:600;
+                color:#2f2a27;
+                font-variant-numeric:tabular-nums;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+            .hcd-value small{
+                font-size:10px;
+                font-weight:500;
+                color:#9f8f7e;
+                margin-left:2px;
+            }
+            .hcd-value.purple{color:#7c3aed}
+            .hcd-cell.primary .hcd-value{font-size:18px}
+            .hcd-footnote{
+                margin:12px 16px 0;
+                font-size:9px;
+                line-height:1.6;
+                color:#b3a294;
+            }
+            .hcd-action-bar{
+                position:fixed;
+                left:0;
+                right:0;
+                bottom:var(--app-bottom-nav-h,58px);
+                z-index:70;
+                width:100%;
+                max-width:672px;
+                margin-left:auto;
+                margin-right:auto;
+                padding:8px 12px;
+                background:rgba(255,253,249,.96);
+                border-top:1px solid #e8dccb;
+                box-shadow:0 -10px 24px rgba(74,54,34,.07);
+                backdrop-filter:blur(16px);
+                -webkit-backdrop-filter:blur(16px);
+            }
+            .hcd-actions{
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:9px;
+            }
+            .hcd-btn{
+                height:40px;
+                width:100%;
+                padding:0;
+                border:0;
+                border-radius:11px;
+                font-size:13px;
+                font-weight:650;
+                letter-spacing:.02em;
+                transition:transform .15s ease,filter .15s ease;
+            }
+            .hcd-btn:active{transform:scale(.985);filter:brightness(.97)}
+            .hcd-btn.buy{
+                color:#fff;
+                background:linear-gradient(135deg,#a12c40,#7e1e30);
+                box-shadow:0 5px 12px rgba(143,36,55,.18);
+            }
+            .hcd-btn.sell{
+                color:#087a55;
+                background:#f3fbf6;
+                border:1px solid #d3eadf;
+            }
+            .hcd-links{
+                display:grid;
+                grid-template-columns:repeat(4,1fr);
+                gap:4px;
+                margin-top:7px;
+                padding-top:6px;
+                border-top:1px solid #eee3d4;
+            }
+            .hcd-link{
+                height:36px;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                gap:2px;
+                padding:0;
+                border:0;
+                background:transparent;
+                font-size:9.5px;
+                font-weight:500;
+                color:#8f7b69;
+                border-radius:9px;
+                white-space:nowrap;
+            }
+            .hcd-link svg{width:15px;height:15px;stroke-width:1.7;opacity:.78}
+            .hcd-link:active{background:#f6efe5}
+            @media (min-width:768px){
+                .hcd-hero,.hcd-section{margin-left:0;margin-right:0}
+                .hcd-footnote{margin-left:4px;margin-right:4px}
             }
             /* 数字变化平滑过渡 */
             .num-transition {
@@ -2142,6 +2605,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="flex flex-col items-center justify-center text-center py-14 px-6"><svg viewBox="0 0 96 96" class="w-16 h-16 mb-3" fill="none" stroke="#b0893f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="48" cy="48" r="38" stroke="#e8d9bc" stroke-width="1.5"/><path d="M48 27v30" stroke="#b0893f"/><path d="M48 55c-5-7-16-9-21-15" stroke="#b0893f"/><path d="M48 55c5-7 16-9 21-15" stroke="#b0893f"/><path d="M48 27c-2-7-9-11-15-13" stroke="#c8a24f"/><path d="M48 27c2-7 9-11 15-13" stroke="#c8a24f"/><circle cx="48" cy="19" r="2.2" fill="#c8a24f" stroke="none"/></svg><div class="text-[14px] font-medium text-gray-600">暂无持仓</div><div class="text-[11px] text-gray-400 mt-1.5 leading-relaxed">点击右上角 + 添加第一只股票<br/>每一笔分红，都会在这里生根发芽</div></div>
         </div>
     </div>
+
+    <!-- 卡片点击后的全屏持仓详情：轻量、非 K 线页，承接原卡片里的持仓关键字段 -->
+    <div id="pageHoldCardDetail" class="hidden detail-page fixed inset-0 z-[60] overflow-y-auto overscroll-none max-w-2xl mx-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
+        <div id="holdCardDetailBody" class="min-h-full pb-4"></div>
+    </div>
+    <!-- 详情页操作栏独立于滚动/缩放容器，避免被页面层级吞掉 -->
+    <div id="holdCardDetailActions" class="hidden hcd-action-bar"></div>
 
     <!-- 新增股票弹窗，max‑2xl同步加宽弹窗最大宽度；背景与主页一致，高度可控可滚动 -->
     <!-- 新增/编辑持仓独立页面 -->
@@ -8317,12 +8787,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         quoteFetchLastOk = true;
                         quoteUpdatedTs = Date.now();
                         it.nowPrice = q.price;
+                        recordHoldSparkPoint(it.marketType, it.code, q.price);
                         if(q.changePct != null && !isNaN(q.changePct)){
                             it.changePct = q.changePct;
                         }
                         // 保存昨收价和涨跌额（用于统计页显示涨跌差额）
                         if(q.prevClose != null && !isNaN(q.prevClose) && q.prevClose > 0){
                             it.prevClose = q.prevClose;
+                        }
+                        if(q.open != null && !isNaN(q.open) && q.open > 0){
+                            it.openPrice = q.open;
                         }
                         if(q.change != null && !isNaN(q.change)){
                             it.change = q.change;
@@ -14887,6 +15361,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let tradeMode = 'buy';
         let tradeItemId = null;
         function openTradeModal(id, mode){
+            // 从持仓详情进入交易页时，先收起详情页与底部操作栏，避免交易页被详情页盖住
+            const holdCardDetailPage = document.querySelector('#pageHoldCardDetail');
+            if(holdCardDetailPage && !holdCardDetailPage.classList.contains('hidden')) closeHoldCardDetail(true);
             rememberScroll();
             const item = holdDataList.find(it => it.id === id);
             if(!item) return;
@@ -16687,6 +17164,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             histSectionOpen = false;
             histSectionPageCount = 50;
             // 显示页面
+            document.querySelector('#pageTrade').classList.add('hidden');
             document.querySelector('#pageHold').classList.add('hidden');
             document.querySelector('#pageTradeLog').classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.add('hidden');
@@ -33972,6 +34450,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 setNumText(card.querySelector('.hq-yield'), stockYield + '%', 'text-gray-800');
                 setNumText(card.querySelector('.hq-chg'), dayChangeAmtText, dayChangeClass);
                 setNumText(card.querySelector('.hq-chgpct'), dayChangePctText, dayChangeClass);
+                // 新版扁卡：右侧只保留现价 + 当日涨跌幅；走势线随最新报价重绘
+                const cardPctText = (dayPct != null && !isNaN(dayPct)) ? ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%') : '--';
+                const cardPctColor = (dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
+                const cardPriceColor = (dayPct == null || isNaN(dayPct)) ? '#2b2723' : cardPctColor;
+                const priceEl = card.querySelector('.hq-card-price-val');
+                setNumText(priceEl, fmtPrice(item.nowPrice, item.code, isHk), '');
+                if(priceEl) priceEl.style.color = cardPriceColor;
+                const cardPctEl = card.querySelector('.hq-card-pct');
+                setNumText(cardPctEl, cardPctText, dayPct > 0 ? 'text-[#e03131]' : (dayPct < 0 ? 'text-[#00a05c]' : 'text-gray-400'));
+                if(cardPctEl) cardPctEl.style.color = cardPctColor;
+                updateCardSparkline(card, item);
                 // 回本时间（分红回收，资金流水口径）：不复投 / 复投
                 const beD = calcBreakEvenData(item);
                 const beNoCls = beD.beNo != null && beD.beNo <= 0 ? 'text-purple-600' : (beD.beNo == null ? 'text-gray-400' : 'text-gray-800');
@@ -34055,7 +34544,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         dayPnlPctText = (pct != null && !isNaN(pct)) ? ((pct > 0 ? '+' : (pct < 0 ? '' : '')) + pct.toFixed(2) + '%') : '--';
                     }
                 }
-                setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal));
+                setNumText(row.querySelector('[data-field="market"]'), fmtMoney(itemMarketTotal), 'text-[#2f2a27]');
                 setNumText(row.querySelector('[data-field="holdPct"]'), holdPct + '%', 'text-gray-500');
                 setNumText(row.querySelector('[data-field="dayPnl"]'), dayPnlText, dayPnlClass);
                 const dayPnlPctEl = row.querySelector('[data-field="dayPnlPct"]');
@@ -34086,236 +34575,446 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             updateSummaryCard(sumQ);
             if(holdViewMode === 'list') updateListHoldNumbers(sumQ);
             else updateCardHoldNumbers(sumQ);
+            if(holdCardDetailKey) updateHoldCardDetailNumbers(sumQ);
+        }
+
+        // ===== 卡片模式 v3：Robinhood 式横向扁卡 + 20 点迷你走势 =====
+        const HOLD_SPARK_KEY = 'dividendHoldSparkV1';
+        let _holdSparkSaveTimer = null;
+
+        function loadHoldSparkHistory(){
+            if(window.__holdSparkHistory) return window.__holdSparkHistory;
+            let obj = {};
+            try{
+                const raw = lsGet(HOLD_SPARK_KEY);
+                if(raw){
+                    const parsed = JSON.parse(raw);
+                    if(parsed && typeof parsed === 'object') obj = parsed;
+                }
+            }catch(e){ obj = {}; }
+            Object.keys(obj).forEach(function(k){
+                if(!Array.isArray(obj[k])){ delete obj[k]; return; }
+                obj[k] = obj[k].map(Number).filter(function(v){ return isFinite(v) && v > 0; }).slice(-20);
+                if(!obj[k].length) delete obj[k];
+            });
+            window.__holdSparkHistory = obj;
+            return obj;
+        }
+        function holdSparkKey(market, code){ return (market || 'A') + '|' + String(code || ''); }
+        function saveHoldSparkHistorySoon(){
+            if(_holdSparkSaveTimer) return;
+            _holdSparkSaveTimer = setTimeout(function(){
+                _holdSparkSaveTimer = null;
+                try{ lsSet(HOLD_SPARK_KEY, JSON.stringify(loadHoldSparkHistory())); }catch(e){}
+            }, 1200);
+        }
+        function recordHoldSparkPoint(market, code, price){
+            const p = Number(price);
+            if(!isFinite(p) || p <= 0) return;
+            const hist = loadHoldSparkHistory();
+            const key = holdSparkKey(market, code);
+            const arr = hist[key] || [];
+            // 同价不重复堆点：20 个点留给真正发生过变化的价格，趋势线更可读
+            if(arr.length && Math.abs(arr[arr.length - 1] - p) < 0.000001) return;
+            arr.push(p);
+            hist[key] = arr.slice(-20);
+            saveHoldSparkHistorySoon();
+        }
+        function getHoldSparkPoints(item){
+            const hist = loadHoldSparkHistory();
+            const key = holdSparkKey(item.marketType, item.code);
+            const arr = (hist[key] || []).slice(-20);
+            if(arr.length >= 2 && new Set(arr.map(function(v){ return Number(v).toFixed(6); })).size > 1) return arr;
+            const now = Number(item.nowPrice);
+            const prev = Number(item.prevClose);
+            const open = Number(item.openPrice);
+            if(isFinite(now) && now > 0){
+                if(isFinite(prev) && prev > 0 && isFinite(open) && open > 0) return [prev, open, now];
+                if(isFinite(prev) && prev > 0) return [prev, now];
+                return arr.length ? arr : [now, now];
+            }
+            return arr;
+        }
+        function sparkPathD(points, w, h, padY){
+            if(!points || !points.length) return '';
+            const vals = points.length === 1 ? [points[0], points[0]] : points.slice();
+            let min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+            if(min === max){ min -= 0.001; max += 0.001; }
+            const py = padY == null ? 5 : padY;
+            const usable = h - py * 2;
+            return vals.map(function(v, i){
+                const x = vals.length === 1 ? 0 : (i / (vals.length - 1)) * w;
+                const y = py + (max - v) / (max - min) * usable;
+                return (i === 0 ? 'M' : 'L') + x.toFixed(2) + ',' + y.toFixed(2);
+            }).join(' ');
+        }
+        function sparkSvgInner(item, w, h, color){
+            const pts = getHoldSparkPoints(item);
+            const d = sparkPathD(pts, w, h, 5);
+            if(!d) return '<path d="M0,' + (h/2) + ' L' + w + ',' + (h/2) + '" stroke="#d9cbbb" stroke-width="1.2" fill="none" stroke-dasharray="3 4"/>';
+            const end = pts.length ? pts[pts.length - 1] : null;
+            let dot = '';
+            if(end != null){
+                const vals = pts.length === 1 ? [end, end] : pts;
+                let min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+                if(min === max){ min -= 0.001; max += 0.001; }
+                const y = 5 + (max - end) / (max - min) * (h - 10);
+                dot = '<circle cx="' + w + '" cy="' + y.toFixed(2) + '" r="1.6" fill="' + color + '" opacity=".9"/>';
+            }
+            return '<path d="' + d + '" stroke="' + color + '" stroke-width="1.55" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' + dot;
+        }
+        function sparkColor(item){
+            const pct = getEffectiveChangePct(item.changePct);
+            if(pct == null || isNaN(pct)) return '#b8a58f';
+            return pct > 0 ? '#d94a4a' : (pct < 0 ? '#2f9e73' : '#b8a58f');
+        }
+        function sparkSvg(item, w, h, cls){
+            const color = sparkColor(item);
+            return '<svg class="' + (cls || '') + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true">' + sparkSvgInner(item, w, h, color) + '</svg>';
+        }
+        function updateCardSparkline(card, item){
+            const svg = card.querySelector('.hq-spark');
+            if(!svg) return;
+            svg.innerHTML = sparkSvgInner(item, 100, 36, sparkColor(item));
         }
 
         function renderHoldCardMode(sorted, sum){
             const holdListDom = document.querySelector('#holdList');
-            // 保留各卡片"更多指标"展开状态（全量渲染后恢复，避免返回/刷新时折叠被重置）
-            const prevOpenMap = {};
-            if(holdListDom){
-                holdListDom.querySelectorAll('.hold-card').forEach(function(c){
-                    const b = c.querySelector('.hold-more-body');
-                    if(b && !b.classList.contains('hidden')){
-                        prevOpenMap[c.getAttribute('data-hold-code')] = true;
-                    }
-                });
-            }
+            if(!holdListDom) return;
+            holdListDom.classList.add('hold-card-mode');
             const totalMarketForPct = Number(sum.totalMarket) || 1;
             let htmlStr = '';
-            sorted.forEach(function(item, index){
+            sorted.forEach(function(item){
                 const isHk = item.marketType === 'HK';
-                const pricePrefix = isHk ? 'HK$' : '';
-                const itemCostTotal = (item.count * item.costPrice * (isHk ? hkFxRate : 1));
-                const itemMarketTotal = getMarketValue(item);
-                const itemAnnualDiv = getAnnualDiv(item);
-                const itemTotalReceived = getItemTotalReceived(item);
-                const stockYield = itemMarketTotal>0 ? ((itemAnnualDiv / itemMarketTotal)*100).toFixed(2):0;
-                // 回本时间（分红回收动态成本）：不复投 / 复投
-                const beD = calcBreakEvenData(item);
-                const beNoText = fmtBeYears(beD.beNo);
-                const beReText = fmtBeYears(beD.beRe);
-                const itemPnl = getPnl(item);
-                const itemPnlClass = pnlClass(itemPnl, false);
-                const pnlPct = itemCostTotal !== 0 ? (itemPnl / itemCostTotal * 100) : 0;
-                const pnlPctText = (pnlPct>0?'+':(pnlPct<0?'-':'')) + Math.abs(pnlPct).toFixed(2) + '%';
-                // 当日盈亏（券商总账口径：收盘市值−昨日市值+卖出总额−买入总额，现价随时取最新）
-                const dayPct = getEffectiveChangePct(item.changePct);
-                let dayPnl = 0;
-                let dayPnlText = '--';
-                let dayPnlClass = 'text-gray-400';
-                let dayPnlPctText = '--';
-                if(item.nowPrice && item.count){
-                    const flow = calcDayFlow(item);
-                    if(flow.hasBase){
-                        dayPnl = flow.pnl;
-                        if(dayPnl > 0){
-                            dayPnlText = '+' + fmtMoney(dayPnl);
-                            dayPnlClass = 'text-[#e03131]';
-                        } else if(dayPnl < 0){
-                            dayPnlText = fmtMoney(dayPnl);
-                            dayPnlClass = 'text-[#00a05c]';
-                        } else {
-                            dayPnlText = '0.00';
-                            dayPnlClass = 'text-gray-500';
-                        }
-                        dayPnlPctText = (dayPct != null && !isNaN(dayPct)) ? ((dayPct > 0 ? '+' : (dayPct < 0 ? '' : '')) + dayPct.toFixed(2) + '%') : '--';
-                    }
-                }
-                // 持仓占比：当前股票市值 / 总资产
-                const holdPct = totalMarketForPct>0 ? ((itemMarketTotal / totalMarketForPct)*100).toFixed(1):0;
-                // 市场标签：与累计盈亏/列表模式统一（16×14、8px 白字实底）
-                const tagText = item.marketType === 'A' ? 'A' : 'HK';
-                const tagBg = item.marketType === 'A' ? 'bg-[#e03131]' : 'bg-blue-500';
-                // 已回本里程碑样式（成本<0）：整卡紫色渐变+顶部横幅+紫色渐变序号+紫色数据
                 const isCostRecovered = item.costPrice < 0;
-                const cardOuterClass = isCostRecovered
-                    ? 'bg-gradient-to-br from-purple-50 via-white to-purple-50 rounded-2xl overflow-hidden card-shadow border border-purple-200 shadow-lg shadow-purple-100 transition-transform duration-150 active:scale-[0.99]'
-                    : 'bg-white rounded-2xl overflow-hidden card-shadow transition-transform duration-150 active:scale-[0.99]';
-                const topBanner = isCostRecovered
-                    ? '<div class="h-1.5 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-400"></div>'
-                    : '';
-                const seqClass = isCostRecovered
-                    ? 'w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-base font-bold text-white shadow-md shadow-purple-300'
-                    : 'w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-base font-bold text-white shadow-sm';
-                const nameClass = isCostRecovered ? 'text-purple-600 font-bold' : 'text-gray-800 font-semibold';
-                const badgeHtml = isCostRecovered
-                    ? '<span class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium shadow-sm flex items-center gap-0.5"><i class="fa fa-trophy text-[8px]"></i>已回本</span>'
-                    : '';
-                const rowBgClass = isCostRecovered
-                    ? 'bg-purple-50/70 mx-2 rounded-xl grid grid-cols-5 border border-purple-100'
-                    : 'bg-[#F9F8F4] mx-2 rounded-xl grid grid-cols-5';
-                // 今年涨幅（年初至今，东财K线前复权基础价 + 实时现价）与今年盈亏额（券商算法：当前市值-年初市值-今年净流入）
-                const ytdPct = getYtdPct(item);
-                const ytdPnl = getYtdPnl(item);
-                let ytdText = '--';
-                let ytdPnlText = '--';
-                let ytdClass = 'text-gray-400';
-                let ytdPnlClass = 'text-gray-400';
-                if(ytdPct != null && !isNaN(ytdPct)){
-                    ytdText = (ytdPct >= 0 ? '+' : '') + ytdPct.toFixed(2) + '%';
-                    ytdClass = ytdPct > 0 ? 'text-[#e03131]' : (ytdPct < 0 ? 'text-[#00a05c]' : 'text-gray-500');
-                }
-                if(ytdPnl != null && !isNaN(ytdPnl)){
-                    ytdPnlText = formatPnl(ytdPnl);
-                    ytdPnlClass = ytdPnl > 0 ? 'text-[#e03131]' : (ytdPnl < 0 ? 'text-[#00a05c]' : 'text-gray-500');
-                }
-                // 最新涨幅列：上行当日涨跌额，下行涨跌幅%（涨红跌绿，交易日9点后接口未更新显示0）
-                let effChange = getEffectiveChange(item.change);
-                let dayChangeAmtText = '--';
-                let dayChangePctText = '--';
-                let dayChangeClass = 'text-gray-400';
-                if(effChange != null && !isNaN(effChange)){
-                    const chgPct = dayPct != null && !isNaN(dayPct) ? dayPct : 0;
-                    const sign = effChange > 0 ? '+' : '';
-                    dayChangeAmtText = sign + Number(effChange).toFixed(isEtfCode(item.code) || item.marketType === 'HK' ? 3 : 2);
-                    dayChangePctText = (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%';
-                    dayChangeClass = effChange > 0 ? 'text-[#e03131]' : (effChange < 0 ? 'text-[#00a05c]' : 'text-gray-500');
-                }
-                htmlStr += `
-                <div class="${cardOuterClass} hold-card" data-hold-code="${item.marketType}|${item.code}">
-                    ${topBanner}
-                    <!-- 主行：股票名（左）+ 当日盈亏（右） -->
-                    <div class="px-3 pt-3 pb-2">
-                        <div class="flex justify-between items-start">
-                            <div class="flex gap-2.5 items-center">
-                                <div class="${seqClass}">${index+1}</div>
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        ${stockLogoHtml(item, 20)}
-                                        <span class="text-[16px] ${nameClass}">${item.name}</span>
-                                        ${badgeHtml}
-                                        <span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none ${tagBg} flex-shrink-0">${tagText}</span>
-                                    </div>
-                                    <div class="text-[13px] text-gray-400 mt-0.5 tabular-nums">${item.code}</div>
-                                </div>
+                const itemMarketTotal = getMarketValue(item);
+                const holdPct = totalMarketForPct > 0 ? ((itemMarketTotal / totalMarketForPct) * 100).toFixed(1) : '0.0';
+                const dayPct = getEffectiveChangePct(item.changePct);
+                const pctText = (dayPct == null || isNaN(dayPct)) ? '--' : ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%');
+                const pctColor = (dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
+                const priceColor = (dayPct == null || isNaN(dayPct)) ? '#2b2723' : pctColor;
+                const priceText = fmtPrice(item.nowPrice, item.code, isHk);
+                const industry = item.industry || (isEtfCode(item.code) ? 'ETF' : '其他');
+                const marketLabel = isHk ? '港股' : 'A股';
+                const metaTail = (industry && industry !== '其他') ? (' · ' + industry) : '';
+                const tagClass = isHk ? 'hk' : 'a';
+                const cardClass = 'hold-card hold-card-v2' + (isCostRecovered ? ' is-recovered' : '');
+                htmlStr += `<div class="${cardClass}" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" role="button" tabindex="0" aria-label="${item.name} 持仓详情" onclick="openHoldCardDetail(${item.id}, event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHoldCardDetail(${item.id}, event);}">
+                    <div class="hold-card-v2-id">
+                        ${stockLogoHtml(item, 22)}
+                        <div class="min-w-0">
+                            <div class="hold-card-v2-title">
+                                <span class="hold-card-v2-name">${item.name}</span>
+                                <span class="hold-card-v2-tag ${tagClass}">${isHk ? 'HK' : 'A'}</span>
+                                ${isCostRecovered ? '<span class="hold-card-v2-badge">已回本</span>' : ''}
                             </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-gray-400 tracking-wide">当日盈亏</div>
-                                <div class="text-[16px] font-bold ${dayPnlClass} tabular-nums leading-tight mt-0.5 hq-daypnl">${dayPnlText}</div>
-                                <div class="text-[15px] font-medium ${dayPnlClass} tabular-nums mt-0.5 hq-daypnlpct">${dayPnlPctText}</div>
-                            </div>
-                        </div>
-                        <!-- 副行：市值 / 仓位 / 预测分红 / 回本（不复投） / 回本（复投） -->
-                        <div class="mt-2.5 pt-2 border-t border-[#F0EDE7] grid grid-cols-5 gap-1">
-                            <div class="flex flex-col items-center gap-0.5 min-w-0">
-                                <span class="text-[10px] text-gray-400">市值</span>
-                                <span class="text-[15px] font-semibold ${isCostRecovered ? 'text-purple-600' : 'text-gray-800'} tabular-nums hq-mv">${fmtMoney(itemMarketTotal)}</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-0.5 min-w-0">
-                                <span class="text-[10px] text-gray-400">仓位</span>
-                                <span class="text-[15px] font-medium text-gray-700 tabular-nums hq-pct">${holdPct}%</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-0.5 min-w-0">
-                                <span class="text-[10px] text-gray-400">预测分红</span>
-                                <span class="text-[15px] font-medium text-accent tabular-nums">${fmtMoney(itemAnnualDiv)}</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-0.5 min-w-0 cursor-pointer active:scale-95 transition-transform" onclick="openBreakEvenPage('${item.code}')" title="查看回本趋势">
-                                <span class="text-[10px] text-gray-400">回本·不复</span>
-                                <span class="text-[15px] font-medium ${beNoText==='已回本' ? 'text-purple-600' : (beNoText==='--' ? 'text-gray-400' : 'text-gray-800')} tabular-nums hq-be-no">${beNoText}</span>
-                            </div>
-                            <div class="flex flex-col items-center gap-0.5 min-w-0 cursor-pointer active:scale-95 transition-transform" onclick="openBreakEvenPage('${item.code}')" title="查看回本趋势">
-                                <span class="text-[10px] text-gray-400">回本·复投</span>
-                                <span class="text-[15px] font-medium ${beReText==='已回本' ? 'text-purple-600' : (beReText==='--' ? 'text-gray-400' : 'text-gray-800')} tabular-nums hq-be-re">${beReText}</span>
-                            </div>
+                            <div class="hold-card-v2-meta"><span class="hcm-code">${item.code}</span> · ${marketLabel}${metaTail}</div>
                         </div>
                     </div>
-                    <!-- 更多指标：默认收起，点击展开 -->
-                    <div onclick="toggleHoldMore(this)" class="flex items-center justify-center gap-1 py-2 text-[11px] font-medium text-accent cursor-pointer select-none active:opacity-70">
-                        <span class="more-label">更多指标</span>
-                        <svg class="more-arrow w-3 h-3 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                    <div class="hold-card-v2-chart">${sparkSvg(item, 100, 36, 'hq-spark')}</div>
+                    <div class="hold-card-v2-quote">
+                        <div class="hold-card-v2-price" style="color:${priceColor}">${isHk ? '<span class="hcm-cur">HK$</span>' : ''}<span class="hq-card-price-val">${priceText}</span></div>
+                        <div class="hold-card-v2-pct hq-card-pct" style="color:${pctColor}">${pctText}</div>
                     </div>
-                    <div class="hold-more-body hidden">
-                        <div class="${rowBgClass} mt-1 mb-1 mx-2" style="grid-template-columns:repeat(4,minmax(0,1fr))">
-                            <div class="px-1 py-2 text-center">
-                                <div class="text-[10px] text-gray-400">个股仓位</div>
-                                <div class="text-[15px] font-semibold text-gray-800 mt-0.5 tabular-nums">${item.count}</div>
-                            </div>
-                            <div class="px-1 py-2 text-center split-line">
-                                <div class="text-[10px] text-gray-400">持仓占比</div>
-                                <div class="text-[15px] font-semibold text-gray-800 mt-0.5 tabular-nums hq-pct2">${holdPct}%</div>
-                            </div>
-                            <div class="px-1 py-2 text-center split-line">
-                                <div class="text-[10px] text-gray-400">持仓成本</div>
-                                <div class="text-[15px] font-semibold text-gray-800 mt-0.5 tabular-nums"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtCost(item.costPrice)}</div>
-                            </div>
-                            <div class="px-1 py-2 text-center split-line">
-                                <div class="text-[10px] text-gray-400">累计收息</div>
-                                <div class="text-[15px] font-semibold text-gray-800 mt-0.5 tabular-nums">${fmtMoney(itemTotalReceived)}</div>
-                            </div>
-                            <div class="px-1 py-2 text-center">
-                                <div class="text-[10px] text-gray-400">今年涨幅</div>
-                                <div class="text-[15px] font-semibold mt-0.5 ${ytdPnlClass} tabular-nums hq-ytdpnl">${ytdPnlText}</div>
-                                <div class="hold-card-sub font-medium mt-0.5 ${ytdClass} tabular-nums hq-ytd">${ytdText}</div>
-                            </div>
-                            <div class="px-1 py-2 text-center split-line hold-card-pnl-cell">
-                                <div class="text-[10px] text-gray-400">累计盈亏</div>
-                                <div class="text-[15px] font-semibold mt-0.5 ${itemPnlClass} tabular-nums hq-pnl hold-card-pnl-val">${formatPnl(itemPnl)}</div>
-                                <div class="hold-card-sub hold-card-pnl-val font-medium mt-0.5 ${itemPnlClass} tabular-nums hq-pnlpct">${pnlPctText}</div>
-                            </div>
-                            <div class="px-1 py-2 text-center split-line">
-                                <div class="text-[10px] text-gray-400">现价/息率</div>
-                                <div class="text-[15px] font-semibold text-gray-800 mt-0.5 tabular-nums hq-price"><span class="text-[8px] font-medium">${pricePrefix}</span>${fmtPrice(item.nowPrice, item.code, item.marketType === 'HK')}</div>
-                                <div class="hold-card-sub font-medium mt-0.5 text-gray-800 tabular-nums hq-yield">${stockYield}%</div>
-                            </div>
-                            <div class="px-1 py-2 text-center split-line">
-                                <div class="text-[10px] text-gray-400">最新涨幅</div>
-                                <div class="text-[15px] font-semibold mt-0.5 ${dayChangeClass} tabular-nums hq-chg">${dayChangeAmtText}</div>
-                                <div class="hold-card-sub font-medium mt-0.5 ${dayChangeClass} tabular-nums hq-chgpct">${dayChangePctText}</div>
-                            </div>
-                        </div>
-                        <!-- 折叠区底部：低频管理操作（明细 / 编辑 / 目标）左对齐，与右侧主操作（买入/卖出）分居两侧 -->
-                        <div class="flex justify-start items-center gap-4 px-3 py-2 border-t border-[#F0EDE7]">
-                            <button onclick="openTradeLogPage(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>明细</button>
-                            <button onclick="editItem(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>编辑</button>
-                            <button onclick="openTargetEditorById(${item.id})" class="flex items-center gap-1 text-gray-400 text-[11px] font-medium active:text-gray-600 transition-colors"><i class="fa fa-bullseye text-[11px]"></i>目标</button>
-                        </div>
-                    </div>
-                    <div class="flex justify-end items-center gap-2.5 px-2 py-2">
-                        <button onclick="openTradeModal(${item.id},'buy')" class="px-3.5 py-1 rounded-lg bg-red-50 text-[#e03131] text-xs font-semibold active:scale-95 transition-transform">买入</button>
-                        <button onclick="openTradeModal(${item.id},'sell')" class="px-3.5 py-1 rounded-lg bg-green-50 text-[#00b57a] text-xs font-semibold active:scale-95 transition-transform">卖出</button>
-                    </div>
-                </div>
-                `
-            })
-            holdListDom.innerHTML = htmlStr;
-            // 恢复"更多指标"展开状态
-            Object.keys(prevOpenMap).forEach(function(k){
-                let target = null;
-                holdListDom.querySelectorAll('.hold-card').forEach(function(c){
-                    if(c.getAttribute('data-hold-code') === k) target = c;
-                });
-                if(target){
-                    const body = target.querySelector('.hold-more-body');
-                    const arrow = target.querySelector('.more-arrow');
-                    const label = target.querySelector('.more-label');
-                    if(body) body.classList.remove('hidden');
-                    if(arrow) arrow.classList.add('rotate-180');
-                    if(label) label.textContent = '收起指标';
-                }
+                </div>`;
             });
-            fitCardPnlOverflowFonts(holdListDom);
+            holdListDom.innerHTML = htmlStr;
         }
 
+        // ===== 卡片点击后的轻量持仓详情（非 K 线页） =====
+        var holdCardDetailKey = null;
+
+        function getHoldCardMetrics(item, sum){
+            const isHk = item.marketType === 'HK';
+            const itemCostTotal = (Number(item.count) || 0) * (Number(item.costPrice) || 0) * (isHk ? hkFxRate : 1);
+            const itemMarketTotal = getMarketValue(item);
+            const itemAnnualDiv = getAnnualDiv(item);
+            const itemTotalReceived = getItemTotalReceived(item);
+            const stockYield = itemMarketTotal > 0 ? ((itemAnnualDiv / itemMarketTotal) * 100).toFixed(2) : '0.00';
+            const beD = calcBreakEvenData(item);
+            const beNoText = fmtBeYears(beD.beNo);
+            const beReText = fmtBeYears(beD.beRe);
+            const itemPnl = getPnl(item);
+            const pnlPct = itemCostTotal > 0 ? (itemPnl / itemCostTotal * 100) : null;
+            const pnlPctText = pnlPct == null ? '--' : (pnlPct > 0 ? '+' : (pnlPct < 0 ? '-' : '')) + Math.abs(pnlPct).toFixed(2) + '%';
+            const dayPct = getEffectiveChangePct(item.changePct);
+            let dayPnlText = '--', dayPnlColor = '#9f8f7e';
+            if(item.nowPrice && item.count){
+                const flow = calcDayFlow(item);
+                if(flow.hasBase){
+                    const dayPnl = flow.pnl;
+                    if(dayPnl > 0){ dayPnlText = '+' + fmtMoney(dayPnl); dayPnlColor = '#e03131'; }
+                    else if(dayPnl < 0){ dayPnlText = fmtMoney(dayPnl); dayPnlColor = '#00a05c'; }
+                    else { dayPnlText = '0.00'; dayPnlColor = '#8b7c6c'; }
+                }
+            }
+            const holdPct = (Number(sum && sum.totalMarket) || 1) > 0 ? ((itemMarketTotal / (Number(sum && sum.totalMarket) || 1)) * 100).toFixed(1) : '0.0';
+            const ytdPct = getYtdPct(item);
+            const ytdPnl = getYtdPnl(item);
+            let ytdText = '--', ytdColor = '#9f8f7e', ytdPnlText = '--', ytdPnlColor = '#9f8f7e';
+            if(ytdPct != null && !isNaN(ytdPct)){
+                ytdText = (ytdPct >= 0 ? '+' : '') + ytdPct.toFixed(2) + '%';
+                ytdColor = ytdPct > 0 ? '#e03131' : (ytdPct < 0 ? '#00a05c' : '#8b7c6c');
+            }
+            if(ytdPnl != null && !isNaN(ytdPnl)){
+                ytdPnlText = formatPnl(ytdPnl);
+                ytdPnlColor = ytdPnl > 0 ? '#e03131' : (ytdPnl < 0 ? '#00a05c' : '#8b7c6c');
+            }
+            let effChange = getEffectiveChange(item.change);
+            let dayChangeAmtText = '--', dayChangeColor = '#9f8f7e';
+            if(effChange != null && !isNaN(effChange)){
+                const sign = effChange > 0 ? '+' : '';
+                dayChangeAmtText = sign + Number(effChange).toFixed(isEtfCode(item.code) || isHk ? 3 : 2);
+                dayChangeColor = effChange > 0 ? '#e03131' : (effChange < 0 ? '#00a05c' : '#8b7c6c');
+            }
+            const pctText = (dayPct == null || isNaN(dayPct)) ? '--' : ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%');
+            const pctColor = (dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
+            const priceColor = (dayPct == null || isNaN(dayPct)) ? '#28231f' : (dayPct > 0 ? '#c92f2f' : (dayPct < 0 ? '#00875a' : '#28231f'));
+            const costDisplay = item.costPrice < 0 ? '已回本' : (isHk ? 'HK$' : '') + fmtCost(item.costPrice);
+            const industry = item.industry || (isEtfCode(item.code) ? 'ETF' : '其他');
+            const metaTail = (industry && industry !== '其他') ? (' · ' + industry) : '';
+            return {
+                isHk: isHk,
+                isCostRecovered: item.costPrice < 0,
+                itemMarketTotal: itemMarketTotal,
+                itemAnnualDiv: itemAnnualDiv,
+                itemTotalReceived: itemTotalReceived,
+                stockYield: stockYield,
+                beNoText: beNoText,
+                beReText: beReText,
+                itemPnl: itemPnl,
+                pnlPctText: pnlPctText,
+                dayPnlText: dayPnlText,
+                dayPnlColor: dayPnlColor,
+                holdPct: holdPct,
+                ytdText: ytdText,
+                ytdColor: ytdColor,
+                ytdPnlText: ytdPnlText,
+                ytdPnlColor: ytdPnlColor,
+                dayChangeAmtText: dayChangeAmtText,
+                dayChangeColor: dayChangeColor,
+                pctText: pctText,
+                pctColor: pctColor,
+                priceColor: priceColor,
+                costDisplay: costDisplay,
+                priceText: fmtPrice(item.nowPrice, item.code, isHk),
+                marketLabel: isHk ? '港股' : 'A股',
+                industry: industry,
+                metaTail: metaTail,
+                tagText: isHk ? 'HK' : 'A'
+            };
+        }
+
+        function renderHoldCardDetailBody(item){
+            const m = getHoldCardMetrics(item, calcSummary());
+            const pnlColor = m.itemPnl > 0 ? '#e03131' : (m.itemPnl < 0 ? '#00a05c' : '#8b7c6c');
+            const noColor = m.beNoText === '已回本' ? '#7c3aed' : '#2f2a27';
+            const reColor = m.beReText === '已回本' ? '#7c3aed' : '#2f2a27';
+            return `<div class="hcd-topbar">
+                <button type="button" class="hcd-back" onclick="closeHoldCardDetail()" aria-label="返回">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="min-w-0">
+                    <div class="hcd-topbar-title">持仓详情</div>
+                    <div class="hcd-topbar-sub">${item.name} · ${item.code}</div>
+                </div>
+                <span class="hcd-topbar-tag">${m.isCostRecovered ? '已回本' : '持仓中'}</span>
+            </div>
+            <div class="hcd-hero">
+                <div class="hcd-hero-head">
+                    ${stockLogoHtml(item, 32)}
+                    <div class="min-w-0">
+                        <div class="hcd-hero-name">${item.name}</div>
+                        <div class="hcd-hero-sub">${item.code} · ${m.marketLabel}${m.metaTail}</div>
+                    </div>
+                </div>
+                <div class="hcd-hero-price-row">
+                    <div class="hcd-price" style="color:${m.priceColor}">${m.isHk ? '<span class="hcd-cur">HK$</span>' : ''}<span id="hcdPrice">${m.priceText}</span></div>
+                    <div class="hcd-change">
+                        <div class="hcd-change-amt" id="hcdChangeAmt" style="color:${m.dayChangeColor}">${m.dayChangeAmtText}</div>
+                        <div class="hcd-change-pct" id="hcdChangePct" style="color:${m.pctColor}">${m.pctText}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hcd-ledger">
+            <div class="hcd-section">
+                <div class="hcd-section-head"><div class="hcd-section-title">持仓概览</div><div class="hcd-section-line"></div></div>
+                <div class="hcd-grid">
+                    <div class="hcd-cell"><div class="hcd-label">市值</div><div class="hcd-value" id="hcdMarket">${fmtMoney(m.itemMarketTotal)}</div></div>
+                    <div class="hcd-cell"><div class="hcd-label">个股仓位</div><div class="hcd-value" id="hcdHoldPct">${m.holdPct}%</div></div>
+                    <div class="hcd-cell"><div class="hcd-label">持仓股数</div><div class="hcd-value" id="hcdShares">${(Number(item.count) || 0).toLocaleString('zh-CN')}</div></div>
+                    <div class="hcd-cell"><div class="hcd-label">持仓成本</div><div class="hcd-value ${m.isCostRecovered ? 'purple' : ''}" id="hcdCost">${m.costDisplay}</div></div>
+                </div>
+            </div>
+            <div class="hcd-section">
+                <div class="hcd-section-head"><div class="hcd-section-title">收益表现</div><div class="hcd-section-line"></div></div>
+                <div class="hcd-grid">
+                    <div class="hcd-cell primary"><div class="hcd-label">累计盈亏</div><div class="hcd-value" id="hcdPnl" style="color:${pnlColor}"><span id="hcdPnlVal">${formatPnl(m.itemPnl)}</span><small id="hcdPnlPct" style="color:${pnlColor}">${m.pnlPctText === '--' ? '' : m.pnlPctText}</small></div></div>
+                    <div class="hcd-cell"><div class="hcd-label">当日盈亏</div><div class="hcd-value" id="hcdDayPnl" style="color:${m.dayPnlColor}">${m.dayPnlText}</div></div>
+                    <div class="hcd-cell"><div class="hcd-label">今年涨幅</div><div class="hcd-value" id="hcdYtd" style="color:${m.ytdColor}"><span id="hcdYtdVal">${m.ytdText}</span><small id="hcdYtdPnl" style="color:${m.ytdPnlColor}">${m.ytdPnlText}</small></div></div>
+                    <div class="hcd-cell"><div class="hcd-label">累计收息</div><div class="hcd-value" id="hcdReceived">${fmtMoney(m.itemTotalReceived)}</div></div>
+                </div>
+            </div>
+            <div class="hcd-section">
+                <div class="hcd-section-head"><div class="hcd-section-title">分红与回本</div><div class="hcd-section-line"></div></div>
+                <div class="hcd-grid">
+                    <div class="hcd-cell"><div class="hcd-label">预测分红</div><div class="hcd-value wine" id="hcdDiv">${fmtMoney(m.itemAnnualDiv)}</div></div>
+                    <div class="hcd-cell"><div class="hcd-label">股息率</div><div class="hcd-value" id="hcdYield">${m.stockYield}%</div></div>
+                    ${m.isCostRecovered
+                        ? '<div class="hcd-cell wide"><div class="hcd-label">回本状态</div><div class="hcd-value purple">已回本 · 不复投与复投均已完成</div></div>'
+                        : `<div class="hcd-cell"><div class="hcd-label">回本 · 不复投</div><div class="hcd-value" id="hcdBeNo" style="color:${noColor}">${m.beNoText}</div></div>
+                           <div class="hcd-cell"><div class="hcd-label">回本 · 复投</div><div class="hcd-value" id="hcdBeRe" style="color:${reColor}">${m.beReText}</div></div>`}
+                </div>
+            </div>
+            </div>
+            <div class="hcd-footnote">口径：市值按最新价 × 持股数；累计盈亏含已收分红；回本按资金流水口径计算。</div>`;
+        }
+
+        function renderHoldCardActions(item){
+            return `<div class="hcd-actions">
+                <button type="button" class="hcd-btn buy" onclick="openTradeModal(${item.id},'buy')">买入</button>
+                <button type="button" class="hcd-btn sell" onclick="openTradeModal(${item.id},'sell')">卖出</button>
+            </div>
+            <div class="hcd-links">
+                <button type="button" class="hcd-link" onclick="holdDetailOpenTradeLog(${item.id})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12a1 1 0 0 1 1 1v15l-3-2-4 2-4-2-3 2V5a1 1 0 0 1 1-1Z"/><path d="M9 8h6M9 12h6"/></svg>
+                    <span>交易明细</span>
+                </button>
+                <button type="button" class="hcd-link" onclick="holdDetailEdit(${item.id})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    <span>编辑</span>
+                </button>
+                <button type="button" class="hcd-link" onclick="holdDetailOpenTarget(${item.id})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+                    <span>目标</span>
+                </button>
+                <button type="button" class="hcd-link" onclick="holdDetailOpenKline(${item.id})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M9 16V8M14 20V10M19 15V7"/></svg>
+                    <span>K线行情</span>
+                </button>
+            </div>`;
+        }
+
+        function openHoldCardDetail(id, ev){
+            const item = holdDataList.find(function(it){ return String(it.id) === String(id); });
+            if(!item) return;
+            const bodyEl = document.querySelector('#holdCardDetailBody');
+            const pageEl = document.querySelector('#pageHoldCardDetail');
+            if(!bodyEl || !pageEl) return;
+            bodyEl.innerHTML = renderHoldCardDetailBody(item);
+            holdCardDetailKey = holdSparkKey(item.marketType, item.code);
+            const navEl = document.querySelector('#bottomNav');
+            if(navEl){
+                const navH = Math.round(navEl.getBoundingClientRect().height);
+                if(navH > 0) document.documentElement.style.setProperty('--app-bottom-nav-h', navH + 'px');
+            }
+            const actionEl = document.querySelector('#holdCardDetailActions');
+            if(actionEl){
+                actionEl.innerHTML = renderHoldCardActions(item);
+                actionEl.classList.remove('hidden');
+            }
+            const fabEl = document.querySelector('#openModalBtn');
+            if(fabEl) fabEl.classList.add('hold-fab-hidden');
+            pageEl.classList.remove('hidden');
+            pageEl.scrollTop = 0;
+            const card = ev && ev.currentTarget ? ev.currentTarget.closest('.hold-card-v2') : document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]');
+            if(!card || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+                pageEl.style.transform = '';
+                pageEl.style.opacity = '1';
+                return;
+            }
+            const r = card.getBoundingClientRect();
+            const pr = pageEl.getBoundingClientRect();
+            pageEl.style.transformOrigin = ((r.left + r.width / 2) - pr.left).toFixed(1) + 'px ' + ((r.top + r.height / 2) - pr.top).toFixed(1) + 'px';
+            pageEl.style.opacity = '0';
+            pageEl.style.transform = 'scale(.14)';
+            pageEl.style.transition = 'none';
+            requestAnimationFrame(function(){
+                const anim = pageEl.animate([
+                    { opacity: 0, transform: 'scale(.14)' },
+                    { opacity: 1, transform: 'scale(1)' }
+                ], { duration: 360, easing: 'cubic-bezier(.22,.8,.2,1)', fill: 'both' });
+                anim.onfinish = function(){
+                    pageEl.style.transform = '';
+                    pageEl.style.opacity = '1';
+                    pageEl.style.transition = '';
+                    try{ anim.cancel(); }catch(e){}
+                };
+            });
+        }
+
+        function closeHoldCardDetail(immediate){
+            const pageEl = document.querySelector('#pageHoldCardDetail');
+            if(!pageEl || pageEl.classList.contains('hidden')) return;
+            const finish = function(){
+                pageEl.classList.add('hidden');
+                pageEl.style.transform = '';
+                pageEl.style.opacity = '';
+                pageEl.style.transformOrigin = '';
+                pageEl.style.transition = '';
+                const bodyEl = document.querySelector('#holdCardDetailBody');
+                if(bodyEl) bodyEl.innerHTML = '';
+                const actionEl = document.querySelector('#holdCardDetailActions');
+                if(actionEl){ actionEl.classList.add('hidden'); actionEl.innerHTML = ''; }
+                const fabEl = document.querySelector('#openModalBtn');
+                if(fabEl) fabEl.classList.remove('hold-fab-hidden');
+                holdCardDetailKey = null;
+            };
+            if(immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+                finish();
+                return;
+            }
+            const card = holdCardDetailKey ? document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]') : null;
+            if(card){
+                const r = card.getBoundingClientRect();
+                const pr = pageEl.getBoundingClientRect();
+                pageEl.style.transformOrigin = ((r.left + r.width / 2) - pr.left).toFixed(1) + 'px ' + ((r.top + r.height / 2) - pr.top).toFixed(1) + 'px';
+            }
+            pageEl.animate([
+                { opacity: 1, transform: 'scale(1)' },
+                { opacity: 0, transform: 'scale(.14)' }
+            ], { duration: 240, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'both' }).onfinish = finish;
+        }
+
+        function updateHoldCardDetailNumbers(sumQ){
+            if(!holdCardDetailKey) return;
+            const pageEl = document.querySelector('#pageHoldCardDetail');
+            if(!pageEl || pageEl.classList.contains('hidden')) return;
+            const item = holdDataList.find(function(it){ return holdSparkKey(it.marketType, it.code) === holdCardDetailKey; });
+            if(!item) return;
+            const m = getHoldCardMetrics(item, sumQ || calcSummary());
+            const pnlColor = m.itemPnl > 0 ? '#e03131' : (m.itemPnl < 0 ? '#00a05c' : '#8b7c6c');
+            const set = function(sel, text, color){
+                const el = pageEl.querySelector(sel);
+                if(!el) return;
+                el.textContent = text;
+                if(color) el.style.color = color;
+            };
+            set('#hcdPrice', m.priceText, m.priceColor);
+            set('#hcdChangeAmt', m.dayChangeAmtText, m.dayChangeColor);
+            set('#hcdChangePct', m.pctText, m.pctColor);
+            set('#hcdMarket', fmtMoney(m.itemMarketTotal));
+            set('#hcdHoldPct', m.holdPct + '%');
+            set('#hcdShares', (Number(item.count) || 0).toLocaleString('zh-CN'));
+            set('#hcdCost', m.costDisplay);
+            var hcdCostEl = document.getElementById('hcdCost');
+            if(hcdCostEl) hcdCostEl.classList.toggle('purple', m.isCostRecovered);
+            set('#hcdPnlVal', formatPnl(m.itemPnl), pnlColor);
+            set('#hcdPnlPct', m.pnlPctText === '--' ? '' : m.pnlPctText, pnlColor);
+            set('#hcdDayPnl', m.dayPnlText, m.dayPnlColor);
+            set('#hcdYtdVal', m.ytdText, m.ytdColor);
+            set('#hcdYtdPnl', m.ytdPnlText, m.ytdPnlColor);
+            set('#hcdReceived', fmtMoney(m.itemTotalReceived));
+            set('#hcdDiv', fmtMoney(m.itemAnnualDiv), '#8f2437');
+            set('#hcdYield', m.stockYield + '%');
+            set('#hcdBeNo', m.beNoText, m.beNoText === '已回本' ? '#7c3aed' : '#2f2a27');
+            set('#hcdBeRe', m.beReText, m.beReText === '已回本' ? '#7c3aed' : '#2f2a27');
+        }
+
+        function holdDetailOpenTradeLog(id){ closeHoldCardDetail(true); openTradeLogPage(id); }
+        function holdDetailEdit(id){ closeHoldCardDetail(true); editItem(id); }
+        function holdDetailOpenTarget(id){ closeHoldCardDetail(true); openTargetEditorById(id); }
+        function holdDetailOpenKline(id){ closeHoldCardDetail(true); setTimeout(function(){ openHoldStockDetail(id); }, 40); }
         // 列表模式渲染（极简两行列表：按总市值倒序，详情点开后在嵌套面板出现）
         function renderHoldListMode(sorted, sum){
             const holdListDom = document.querySelector('#holdList');
@@ -34367,15 +35066,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const sharesText = (Number(item.count) || 0).toLocaleString('zh-CN');
                     const rowBorder = idx === 0 ? '' : 'border-top:1px solid #f2ede5;';
                     htmlStr += `
-                    <div class="hold-row ${isCostRecovered ? 'bg-[#faf7fd]' : 'bg-white'} px-3.5 py-3 cursor-pointer transition-all duration-300" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="${rowBorder}">
+                    <div class="hold-row ${isCostRecovered ? 'hold-recovered' : ''} px-3.5 py-3 cursor-pointer transition-all duration-300" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" onclick="toggleHoldRowActions(this)" style="${rowBorder}">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex items-start gap-2.5 min-w-0">
                                 ${stockLogoHtml(item, 22)}
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="text-[16px] font-semibold truncate ${isCostRecovered ? 'text-purple-600' : 'text-[#2f2a27]'}">${item.name}</span>
+                                        <span class="text-[16px] font-semibold truncate" style="color:${isCostRecovered ? '#6f3bd4' : '#2f2a27'}">${item.name}</span>
                                         <span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none ${tagBg} flex-shrink-0">${tagText}</span>
-                                        ${isCostRecovered ? `<span class="inline-flex items-center h-[14px] px-1 rounded-[3px] text-[8px] font-medium flex-shrink-0" style="color:#7c3aed;background:#f4edff;border:1px solid #e4d4fb;">已回本</span>` : ''}
+                                        ${isCostRecovered ? `<span class="hold-recovered-badge">已回本</span>` : ''}
                                     </div>
                                     <div class="mt-1 text-[11px] leading-[1.45] tabular-nums truncate" style="color:#a49382;">
                                         <span style="color:#6f635b;" data-field="shares">${sharesText}</span> 股
@@ -34385,7 +35084,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <div class="text-[16px] font-semibold tabular-nums" data-code="${item.code}" data-field="market" style="color:${isCostRecovered ? '#7c3aed' : '#2f2a27'};">${mvText}</div>
+                                <div class="text-[16px] font-semibold tabular-nums" data-code="${item.code}" data-field="market" style="color:#2f2a27;">${mvText}</div>
                                 <div class="mt-1 text-[12px] font-semibold tabular-nums ${dayPnlClass}">
                                     <span class="list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</span>
                                     <span class="ml-1 list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</span>
@@ -34420,6 +35119,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     `
             });
             htmlStr += '<div class="h-2"></div></div>';
+            holdListDom.classList.remove('hold-card-mode');
             holdListDom.innerHTML = htmlStr;
             const holdFab = document.querySelector('#openModalBtn');
             if(holdFab) holdFab.classList.remove('hold-fab-hidden');
@@ -36399,6 +37099,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 底部导航 Tab 切换
         document.querySelectorAll('.bottomTab').forEach(function(btn){
             btn.addEventListener('click', function(){
+                // 详情浮层可见时，底部导航仍可操作；切页前先收起详情，避免浮层覆盖新页面
+                const detailEl = document.querySelector('#pageHoldCardDetail');
+                if(detailEl && !detailEl.classList.contains('hidden')) closeHoldCardDetail(true);
                 switchTab(btn.getAttribute('data-tab'));
             });
         });

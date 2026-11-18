@@ -444,16 +444,28 @@
                 color:#a49382;
                 white-space:nowrap;
                 overflow:hidden;
-                text-overflow:ellipsis;
                 font-variant-numeric:tabular-nums;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:8px;
+            }
+            #holdList .hold-card-v2-meta .hcm-meta-left{
+                min-width:0;
+                overflow:hidden;
+                text-overflow:ellipsis;
             }
             #holdList .hold-card-v2-meta .hcm-mv{
                 color:#5f5246;
                 font-weight:600;
             }
-            #holdList .hold-card-v2-meta .hcm-code{
-                color:#7a6a5d;
-                font-weight:500;
+            #holdList .hold-card-v2-meta .hcm-pnl-wrap{
+                flex-shrink:0;
+                white-space:nowrap;
+            }
+            #holdList .hold-card-v2-meta .hcm-pnl{
+                color:#8b7c6c;
+                font-weight:600;
             }
             #holdList .hold-card-v2-tag{
                 display:inline-flex;
@@ -2521,7 +2533,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
         <!-- 顶部汇总卡片：墨黑酒红渐变 + 香槟内线，层级更沉稳（首页直接展示资产卡，品牌区移至"我的"页） -->
-        <div class="relative rounded-3xl px-[18px] py-2.5 mb-4 overflow-hidden" style="background:linear-gradient(155deg,#1a1215 0%,#1f1418 58%,#27171d 100%);box-shadow:0 2px 5px rgba(0,0,0,.55),0 10px 26px rgba(24,12,16,.16),inset 0 1px 0 rgba(255,255,255,.05);">
+        <div id="assetHeroCard" data-peek-card="asset" class="relative rounded-3xl px-[18px] py-2.5 mb-4 overflow-hidden" style="background:linear-gradient(155deg,#1a1215 0%,#1f1418 58%,#27171d 100%);box-shadow:0 2px 5px rgba(0,0,0,.55),0 10px 26px rgba(24,12,16,.16),inset 0 1px 0 rgba(255,255,255,.05);">
             <div class="absolute -top-24 -right-20 w-64 h-64 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(143,36,55,.16) 0%,transparent 72%);"></div>
             <div class="relative z-10">
                 <!-- 第一层：总资产（主数字）｜今日盈亏（金额与百分比同行） -->
@@ -14876,6 +14888,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!el || el.classList.contains('hidden')){
                 if(done) done();
                 restoreScroll();
+                return;
+            }
+            // P0 卡片 Peek/Pop：只对已登记原点的页面做“缩回原卡片”，其余页面保持原右滑淡出
+            if(window.__peekExit && el.__peekOrigin){
+                window.__peekExit(el, function(){ if(done) done(); restoreScroll(); });
                 return;
             }
             // 内联动画强制退场（inline 优先级最高，确保覆盖页面级入场动画）
@@ -35044,7 +35061,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const preOpenWide = isPreOpenWide();
                 const cardPctText = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '--' : ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%');
                 const cardPctColor = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
-                const cardPriceColor = preOpenWide ? '#9f8f7e' : ((dayPct == null || isNaN(dayPct)) ? '#2b2723' : cardPctColor);
+                const cardPriceColor = preOpenWide ? '#9f8f7e' : ((dayPct == null || isNaN(dayPct) || dayPct === 0) ? '#2d2925' : cardPctColor);
                 const priceEl = card.querySelector('.hq-card-price-val');
                 setNumText(priceEl, preOpenWide ? '--' : fmtPrice(item.nowPrice, item.code, isHk), '');
                 if(priceEl) priceEl.style.color = cardPriceColor;
@@ -35054,6 +35071,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 setNumText(cardPctEl, cardPctText, preOpenWide ? 'text-gray-400' : (dayPct > 0 ? 'text-[#e03131]' : (dayPct < 0 ? 'text-[#00a05c]' : 'text-gray-400')));
                 if(cardPctEl) cardPctEl.style.color = cardPctColor;
                 setNumText(card.querySelector('.hcm-mv'), fmtMoney(itemMarketTotal), '');
+                const cardPnlEl = card.querySelector('.hcm-pnl');
+                setNumText(cardPnlEl, formatPnl(itemPnl), '');
+                if(cardPnlEl) cardPnlEl.style.color = itemPnl > 0 ? '#e03131' : (itemPnl < 0 ? '#00a05c' : '#8b7c6c');
                 updateCardSparkline(card, item);
                 // 回本时间（分红回收，资金流水口径）：不复投 / 复投
                 const beD = calcBreakEvenData(item);
@@ -35294,10 +35314,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const preOpenWide = isPreOpenWide();
                 const pctText = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '--' : ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%');
                 const pctColor = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
-                const priceColor = preOpenWide ? '#9f8f7e' : ((dayPct == null || isNaN(dayPct)) ? '#2b2723' : pctColor);
+                const priceColor = preOpenWide ? '#9f8f7e' : ((dayPct == null || isNaN(dayPct) || dayPct === 0) ? '#2d2925' : pctColor);
+                const itemPnl = getPnl(item);
+                const itemPnlColor = itemPnl > 0 ? '#e03131' : (itemPnl < 0 ? '#00a05c' : '#8b7c6c');
                 const priceText = preOpenWide ? '--' : fmtPrice(item.nowPrice, item.code, isHk);
                 const cardClass = 'hold-card hold-card-v2' + (isCostRecovered ? ' is-recovered' : '');
-                htmlStr += `<div class="${cardClass}" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" role="button" tabindex="0" aria-label="${item.name} 持仓详情" onclick="openHoldCardDetail(${item.id}, event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHoldCardDetail(${item.id}, event);}">
+                htmlStr += `<div class="${cardClass}" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" role="button" tabindex="0" aria-label="${item.name} ${item.code} 持仓详情" onclick="openHoldCardDetail(${item.id}, event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHoldCardDetail(${item.id}, event);}">
                     <div class="hold-card-v2-id">
                         ${stockLogoHtml(item, 22)}
                         <div class="min-w-0">
@@ -35305,7 +35327,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 <span class="hold-card-v2-name">${item.name}</span>
                                 ${isCostRecovered ? '<span class="hold-card-v2-badge">已回本</span>' : ''}
                             </div>
-                            <div class="hold-card-v2-meta"><span class="hcm-code">${item.code}</span> · 总市值 <span class="hcm-mv">${fmtMoney(itemMarketTotal)}</span></div>
+                            <div class="hold-card-v2-meta">
+                                <span class="hcm-meta-left">总市值 <span class="hcm-mv">${fmtMoney(itemMarketTotal)}</span></span>
+                                <span class="hcm-pnl-wrap">盈亏 <span class="hcm-pnl" style="color:${itemPnlColor}">${formatPnl(itemPnl)}</span></span>
+                            </div>
                         </div>
                     </div>
                     <div class="hold-card-v2-chart">${sparkSvg(item, 100, 36, 'hq-spark')}</div>
@@ -38732,6 +38757,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     if(typeof window.APP_VERSION !== 'string') return;
     var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // P0：有明确卡片原点的详情页。只有这些页面启用“放大 + 圆角 + 返回缩回”，
+    // 表单、操作按钮子页、主 Tab 仍保持原有右滑淡出，避免影响输入与返回栈。
+    var PEEK_PAGE_IDS = {
+        pageStatsToday: 1,
+        pageGoalPlan: 1,
+        pageAnalysis: 1,
+        pageStatsPosition: 1,
+        pageStatsPnl: 1,
+        pageStatsDivRank: 1,
+        pageStatsSchedule: 1,
+        pageStatsIndustry: 1,
+        pageStatsCashFlow: 1,
+        pageStatsTrade: 1,
+        pageStatsCashBook: 1,
+        pageStatsRisk: 1,
+        pageStatsCompare: 1,
+        pageAssetHigh: 1,
+        pageDivDetail: 1,
+        pageBreakEven: 1
+    };
+
     // 点击捕获：记录打开详情页的入口卡片位置（capture 阶段先于 inline onclick / addEventListener）
     window.__growFrom = null;
     document.addEventListener('click', function(ev){
@@ -38739,43 +38785,138 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         if(!b) return;
         var oc = (b.getAttribute && b.getAttribute('onclick')) || '';
         var id = b.id || '';
-        var hit = /^(openStatsSection|openStatsFromHold|openDivDetail|openAssetHighModal|openAnnualReport|openBalanceSheet|openStockScores|openHealthCheck|openWatchPage|openNotifCenter|openNavDetail|openCostDetail|openIndustryMapPage|openFundTransfer|openFundTransferAdd|openTradeLogPage|openTradeModal|openDivEntry|openYearSnapshot|showSettings)\(/.test(oc.trim())
-              || id === 'annualReportBtn' || id === 'balanceSheetBtn';
-        if(hit) window.__growFrom = b.getBoundingClientRect();
+        var hit = /^(openStatsSection|openStatsFromHold|openCashFlowFromHold|openDivScheduleFromHold|openDivDetail|openAssetHighModal|openBreakEvenPage|openAnnualReport|openBalanceSheet|openStockScores|openHealthCheck|openWatchPage|openNotifCenter|openNavDetail|openCostDetail|openIndustryMapPage|openFundTransfer|openFundTransferAdd|openTradeLogPage|openTradeModal|openDivEntry|openYearSnapshot|showSettings)\(/.test(oc.trim())
+              || id === 'annualReportBtn' || id === 'balanceSheetBtn' || id === 'yearSnapshotBtn';
+        if(hit){
+            // 资产卡内的小文字按钮不能作为原点，否则会从一行小字弹出；
+            // 标记了 data-peek-card 的卡片整体才是 Peek/Pop 的视觉起点。
+            var card = b.closest ? b.closest('[data-peek-card]') : null;
+            window.__growFrom = (card || b).getBoundingClientRect();
+        }
     }, true);
 
     // FLIP：目标页从入口卡片位置放大到最终位置（WAAPI 关键帧动画）
     function growPageFrom(pageEl, fromRect){
         if(!pageEl || !fromRect || fromRect.width < 2 || pageEl.__growLock || reduced) return;
         pageEl.__growLock = true;
+        var isPeek = !!PEEK_PAGE_IDS[pageEl.id];
+        if(isPeek) pageEl.__peekClosing = false;
         var toRect = pageEl.getBoundingClientRect();
         var toW = toRect.width || 320;
         // 用宽高比取小者决定起点缩放：横跨大卡（宽高比接近1）与窄卡统一都有生长感，避免"直接弹射"
         var toH = Math.max(toRect.height, 200);
-        var s = Math.min(Math.max(Math.min(fromRect.width / toW, fromRect.height / toH), 0.35), 1);
+        var minScale = isPeek ? 0.16 : 0.35;
+        var s = Math.min(Math.max(Math.min(fromRect.width / toW, fromRect.height / toH), minScale), 1);
         // 统一方向：去掉位移，transform-origin 锚定入口卡片中心 → 从点击处同心膨胀（iOS/顶级财富 App morph 语言）
         var sx = fromRect.left + fromRect.width / 2, sy = fromRect.top + fromRect.height / 2;
         var ox = Math.max(0, sx - toRect.left), oy = Math.max(0, sy - toRect.top);
         var st = pageEl.style;
-        st.willChange = 'transform, opacity';
+        st.willChange = 'transform, opacity, border-radius, box-shadow';
         st.transformOrigin = ox + 'px ' + oy + 'px';
         // 抑制页级 appSlideIn 入场动画：生长动画已提供入场，双动画叠加（scale+translateX）会让页面含标题栏重绘闪烁，观感"渲染两次"
         st.animation = 'none';
+        if(isPeek){
+            // 只有 P0 白名单页面记录原点；关闭时由 __peekExit 缩回这里
+            pageEl.__peekOrigin = { left: fromRect.left, top: fromRect.top, width: fromRect.width, height: fromRect.height };
+            st.overflow = 'hidden';
+            st.borderRadius = '18px';
+            st.boxShadow = '0 22px 60px rgba(24,12,16,.18)';
+        }
+        var fromKf = { transform: 'scale(' + s + ')', opacity: 0.25 };
+        var toKf = { transform: 'scale(1)', opacity: 1 };
+        if(isPeek){
+            fromKf.borderRadius = '18px';
+            fromKf.boxShadow = '0 22px 60px rgba(24,12,16,.18)';
+            toKf.borderRadius = '0px';
+            toKf.boxShadow = '0 0 0 rgba(0,0,0,0)';
+        }
+        var released = false;
+        function release(){
+            if(released) return;
+            if(pageEl.__peekClosing) return;
+            released = true;
+            pageEl.__growAnim = null;
+            // 保持 animation:'none'：grow 已提供入场，恢复 CSS 动画会让 appSlideIn 重播（页面闪一下）
+            st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = ''; st.animation = 'none';
+            if(isPeek){ st.overflow = ''; st.borderRadius = ''; st.boxShadow = ''; }
+            pageEl.__growLock = false;
+        }
         try {
-            var anim = pageEl.animate([
-                { transform: 'scale(' + s + ')', opacity: 0.25 },
-                { transform: 'scale(1)', opacity: 1 }
-            ], { duration: 380, easing: 'cubic-bezier(.16,.8,.3,1)', fill: 'none' });
-            anim.onfinish = function(){
-                // 保持 animation:'none'：grow 已提供入场，恢复 CSS 动画会让 appSlideIn 重播（页面闪一下）
-                st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = ''; st.animation = 'none';
-                pageEl.__growLock = false;
-            };
+            var anim = pageEl.animate([fromKf, toKf], { duration: 380, easing: 'cubic-bezier(.16,.8,.3,1)', fill: 'none' });
+            pageEl.__growAnim = anim;
+            anim.onfinish = release;
+            if(anim.addEventListener) anim.addEventListener('finish', release);
+            setTimeout(release, 460);
         } catch(err){
             st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = '';
+            if(isPeek){ st.overflow = ''; st.borderRadius = ''; st.boxShadow = ''; }
             pageEl.__growLock = false;
         }
     }
+
+    // P0 反向 Peek/Pop：页面缩回入口卡片，再隐藏并交回原关闭逻辑
+    window.__peekExit = function(pageEl, done){
+        if(!pageEl || !pageEl.__peekOrigin){
+            if(done) done();
+            return false;
+        }
+        if(pageEl.__peekCloseLock){
+            if(done) done();
+            return true;
+        }
+        var origin = pageEl.__peekOrigin;
+        pageEl.__peekOrigin = null;
+        pageEl.__peekCloseLock = true;
+        pageEl.__peekClosing = true;
+        if(pageEl.__growAnim && pageEl.__growAnim.cancel){ try{ pageEl.__growAnim.cancel(); }catch(_e){} }
+        pageEl.__growAnim = null;
+        if(reduced){
+            pageEl.classList.add('hidden');
+            pageEl.__peekCloseLock = false;
+            pageEl.__peekClosing = false;
+            pageEl.__growLock = false;
+            if(done) done();
+            return true;
+        }
+        var toRect = pageEl.getBoundingClientRect();
+        var toW = toRect.width || 320;
+        var toH = Math.max(toRect.height, 200);
+        var s = Math.min(Math.max(Math.min(origin.width / toW, origin.height / toH), 0.16), 0.92);
+        var ox = Math.max(0, (origin.left + origin.width / 2) - toRect.left);
+        var oy = Math.max(0, (origin.top + origin.height / 2) - toRect.top);
+        var st = pageEl.style;
+        st.willChange = 'transform, opacity, border-radius, box-shadow';
+        st.transformOrigin = ox + 'px ' + oy + 'px';
+        st.animation = 'none';
+        st.overflow = 'hidden';
+        st.borderRadius = '18px';
+        st.boxShadow = '0 22px 60px rgba(24,12,16,.18)';
+        var finished = false;
+        var fallbackTimer = null;
+        function finish(){
+            if(finished) return;
+            finished = true;
+            if(fallbackTimer) clearTimeout(fallbackTimer);
+            if(anim && anim.cancel){ try{ anim.cancel(); }catch(_e){} }
+            st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = ''; st.animation = '';
+            st.overflow = ''; st.borderRadius = ''; st.boxShadow = '';
+            pageEl.classList.add('hidden');
+            pageEl.__peekCloseLock = false;
+            pageEl.__peekClosing = false;
+            pageEl.__growLock = false;
+            if(done) done();
+        }
+        try {
+            var anim = pageEl.animate([
+                { transform: 'scale(1)', opacity: 1, borderRadius: '0px', boxShadow: '0 0 0 rgba(0,0,0,0)' },
+                { transform: 'scale(' + s + ')', opacity: 0.18, borderRadius: '18px', boxShadow: '0 22px 60px rgba(24,12,16,.18)' }
+            ], { duration: 280, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+            anim.onfinish = finish;
+            if(anim.addEventListener) anim.addEventListener('finish', finish);
+            fallbackTimer = setTimeout(finish, 360);
+        } catch(err){ finish(); }
+        return true;
+    };
 
     // 包装入口函数：调用原逻辑后，对目标页做生长过渡；并重绑定 addEventListener 入口
     var map = [
@@ -38783,6 +38924,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         ['openStatsFromHold', function(){ return 'pageStatsToday'; }],
         ['openDivDetail', function(){ return 'pageDivDetail'; }],
         ['openAssetHighModal', function(){ return 'pageAssetHigh'; }],
+        ['openBreakEvenPage', function(){ return 'pageBreakEven'; }],
         ['openAnnualReport', function(){ return 'pageAnnualReport'; }],
         ['openBalanceSheet', function(){ return 'pageBalanceSheet'; }],
         ['openStockScores', function(){ return 'pageStockScores'; }],
@@ -38811,9 +38953,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     var pid = getPage.apply(null, arguments);
                     if(pid){
                         var el = document.getElementById(pid);
-                        // 与页面显示同一帧执行生长动画：首帧即动画起点（35%），避免"完整页闪现后缩回"造成标题栏两次感/跳动
-                        // 分红对比统计详情页（含可编辑输入框）：跳过 grow（WAAPI transform/willChange 合成层会让 iOS input 无法聚焦），改用 appSlideIn 淡入
-                        if(el && pid !== 'pageStatsCompare') growPageFrom(el, r);
+                        // 与页面显示同一帧执行生长动画：首帧即动画起点（16%），避免"完整页闪现后缩回"造成标题栏两次感/跳动
+                        if(el) growPageFrom(el, r);
                     }
                 }
                 return res;
@@ -38826,6 +38967,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(name === 'openBalanceSheet'){
                 var bs = document.getElementById('balanceSheetBtn');
                 if(bs){ bs.removeEventListener('click', orig); bs.addEventListener('click', wrapped); }
+            }
+            if(name === 'openYearSnapshot'){
+                var ys = document.getElementById('yearSnapshotBtn');
+                if(ys){ ys.removeEventListener('click', orig); ys.addEventListener('click', wrapped); }
             }
         })(map[i][0], map[i][1]);
     }

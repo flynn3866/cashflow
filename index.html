@@ -538,13 +538,19 @@
 
             /* ===== 卡片点击后的全屏持仓详情（Peek/Pop） ===== */
             #pageHoldCardDetail{
+                top:16px;
                 bottom:var(--app-bottom-nav-h,58px);
+                border-radius:18px 18px 0 0;
+                box-shadow:0 -12px 32px rgba(40,28,18,.16);
                 background-color:#f5efe3;
                 padding-bottom:78px;
                 background-image:
                     url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'120'%20height%3D'120'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.85'%20numOctaves%3D'2'%20stitchTiles%3D'stitch'/%3E%3C/filter%3E%3Crect%20width%3D'120'%20height%3D'120'%20filter%3D'url(%23n)'%20opacity%3D'0.05'/%3E%3C/svg%3E");
                 transform-origin:center center;
                 will-change:transform,opacity;
+            }
+            #pageHoldCardDetail .hcd-topbar{
+                border-radius:18px 18px 0 0;
             }
             .hcd-topbar{
                 position:sticky;
@@ -837,6 +843,89 @@
             }
             .hcd-link svg{width:15px;height:15px;stroke-width:1.7;opacity:.78}
             .hcd-link:active{background:#f3eadf}
+            #tradeInsightStrip:focus-visible{outline:2px solid rgba(143,36,55,.35);outline-offset:2px;border-radius:8px}
+            /* ===== 交易洞察：持仓目标式“遮罩 + 底部面板”，面板停在底部导航上方 ===== */
+            #tradeInsightBackdrop{
+                background:rgba(24,18,14,.42);
+                -webkit-backdrop-filter:blur(2px);
+                backdrop-filter:blur(2px);
+                opacity:0;
+            }
+            #tradeInsightSheet{
+                background:#fbf8f1;
+                border-radius:24px 24px 0 0;
+                border-top:3px solid #742034;
+                box-shadow:0 -18px 48px rgba(40,28,18,.18);
+                height:min(64vh, calc(100% - 16px));
+                max-height:calc(100% - 16px);
+                overflow-y:auto;
+                overscroll-behavior:contain;
+                -webkit-overflow-scrolling:touch;
+                scrollbar-width:none;
+                transform-origin:center bottom;
+            }
+            #pageTradeInsight .hcd-topbar{
+                background:rgba(251,248,241,.96);
+                border-radius:24px 24px 0 0;
+                border-bottom-color:rgba(126,102,80,.10);
+            }
+            #pageTradeInsight .ti-shell{padding:0 16px 20px}
+            .ti-hero{
+                margin:12px 0 12px;
+                padding:16px 15px 14px;
+                border-radius:16px;
+                background:#fff;
+                border:1px solid #e4c7cb;
+                box-shadow:0 3px 12px rgba(116,32,52,.07);
+            }
+            .ti-kicker{font-size:9.5px;font-weight:600;letter-spacing:.1em;color:#a49382}
+            .ti-total{
+                margin-top:8px;
+                font-family:'Space Grotesk',sans-serif;
+                font-size:31px;line-height:1;font-weight:600;
+                letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+                color:#2f2a27;
+            }
+            .ti-meta{margin-top:9px;font-size:10.5px;line-height:1.5;color:#8f7f6d;font-variant-numeric:tabular-nums}
+            .ti-tax-chip{
+                flex-shrink:0;font-size:8.5px;font-weight:600;letter-spacing:.06em;
+                color:#8f5f67;background:rgba(143,36,55,.07);
+                border:1px solid rgba(143,36,55,.12);border-radius:999px;
+                padding:4px 7px;line-height:1;
+            }
+            .ti-tabs{display:flex;gap:3px;background:#f4ebdd;border-radius:999px;padding:3px;margin-top:14px}
+            .ti-tab{
+                flex:1;border:0;background:transparent;border-radius:999px;
+                padding:6px 0;font-size:10.5px;font-weight:500;color:#8a7763;
+                transition:background .2s ease,color .2s ease,box-shadow .2s ease;
+            }
+            .ti-tab.is-on{background:#8f2437;color:#fff3e4;box-shadow:0 2px 8px rgba(143,36,55,.18)}
+            .ti-card{
+                margin-top:12px;border-radius:16px;overflow:hidden;
+                background:#fff;
+                border:1px solid #e4c7cb;
+                box-shadow:0 3px 12px rgba(116,32,52,.055);
+            }
+            .ti-list-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px 9px}
+            .ti-list-title{font-size:10.5px;font-weight:600;letter-spacing:.06em;color:#7d6a55}
+            .ti-list-note{font-size:9px;color:#b0a08d}
+            .ti-row{
+                display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;
+                padding:11px 14px;border-top:1px solid #f4ece1;
+            }
+            .ti-row-name{font-size:13px;font-weight:600;line-height:1.3;color:#2f2a27;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .ti-row-meta{margin-top:3px;font-size:9.5px;line-height:1.35;color:#a49382;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .ti-row-meta .ti-closed{display:inline-block;margin-left:5px;padding:1px 4px;border-radius:4px;color:#8f5f67;background:rgba(143,36,55,.06);font-size:8px;vertical-align:1px}
+            .ti-row-amt{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+            .ti-empty{padding:32px 14px;text-align:center;font-size:11px;line-height:1.7;color:#a49382}
+            .ti-foot{padding:10px 14px 12px;border-top:1px solid #f4ece1;font-size:9px;line-height:1.6;color:#b0a08d}
+            @media (max-width:360px){
+                .ti-total{font-size:27px}
+                .ti-row{padding:10px 12px}
+            }
+            @media (prefers-reduced-motion: reduce){
+                .ti-tab{transition:none}
+            }
             @media (min-width:768px){
                 .hcd-hero,.hcd-section{margin-left:0;margin-right:0}
                 .hcd-footnote{margin-left:4px;margin-right:4px}
@@ -2593,6 +2682,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="flex items-center gap-2"><span class="text-[10px] font-semibold tracking-[.12em]" style="color:#8f2437;">目标持仓</span></div>
                 <div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#6f635b;">正在读取目标…</div>
             </div>
+            <div id="tradeInsightStrip" class="hidden relative z-10 px-4 py-2.5 border-t cursor-pointer hover:bg-[#fdf9f3] active:bg-[#fbf6ef] transition-colors" style="border-color:rgba(143,36,55,.10);" role="button" tabindex="0" aria-label="查看交易洞察" onclick="openTradeInsight(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeInsight(event);}">
+                <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="text-[10px] font-semibold tracking-[.06em]" style="color:#6f635b;">交易洞察</span>
+                    <span id="tradeInsightPeriod" class="text-[9px] font-medium" style="color:#a49382;">今日</span>
+                    <span id="tradeInsightTotal" class="ml-auto text-[13px] font-semibold tabular-nums leading-none" style="color:#e03131;">+¥0.00</span>
+                    <span class="text-[13px] leading-none" style="color:#b8a793;">›</span>
+                </div>
+                <div id="tradeInsightSub" class="mt-1 text-[10px] leading-[1.4] truncate" style="color:#8f7f6d;">--</div>
+            </div>
             <div id="holdWarnRow" class="hidden relative z-10 px-4 pt-2.5 pb-3 border-t" style="border-color:rgba(143,36,55,.10);"></div>
         </div>
 
@@ -2628,11 +2726,55 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 卡片点击后的全屏持仓详情：轻量、非 K 线页，承接原卡片里的持仓关键字段 -->
+    <div id="holdCardDetailBackdrop" class="hidden fixed inset-0 z-[59]" style="bottom:var(--app-bottom-nav-h,62px);background:rgba(0,0,0,.5);opacity:0;" onclick="closeHoldCardDetail()"></div>
     <div id="pageHoldCardDetail" class="hidden detail-page fixed inset-0 z-[60] overflow-y-auto overscroll-none max-w-2xl mx-auto" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <div id="holdCardDetailBody" class="min-h-full pb-4"></div>
     </div>
     <!-- 详情页操作栏独立于滚动/缩放容器，避免被页面层级吞掉 -->
     <div id="holdCardDetailActions" class="hidden hcd-action-bar"></div>
+
+    <!-- 交易洞察：首页目标卡内的安静洞察行，点击后从原位放大到独立明细页 -->
+    <div id="pageTradeInsight" class="hidden detail-page fixed inset-0 z-[64]" style="bottom:var(--app-bottom-nav-h,62px);">
+        <div id="tradeInsightBackdrop" class="ti-backdrop absolute inset-0" onclick="closeTradeInsight()"></div>
+        <div id="tradeInsightSheet" class="ti-sheet absolute left-0 right-0 bottom-0 mx-auto max-w-xl">
+        <div class="ti-shell">
+            <div class="hcd-topbar">
+                <button type="button" class="hcd-back" onclick="closeTradeInsight()" aria-label="返回首页">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                </button>
+                <div class="min-w-0">
+                    <div class="hcd-topbar-title">交易洞察</div>
+                    <div class="hcd-topbar-sub">已闭环做T · 扣费后净收益</div>
+                </div>
+                <span id="tiTopbarTag" class="hcd-topbar-tag">本月</span>
+            </div>
+            <div class="ti-hero">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="ti-kicker" id="tiPeriodLabel">本月做T净收益</div>
+                        <div class="ti-total" id="tiTotal">¥0.00</div>
+                        <div class="ti-meta" id="tiMeta">暂无已闭环做T</div>
+                    </div>
+                    <span class="ti-tax-chip">扣费后</span>
+                </div>
+                <div class="ti-tabs" id="tiTabs" role="tablist">
+                    <button type="button" data-ti-period="day" onclick="setTradeInsightPeriod('day')" class="ti-tab">当天</button>
+                    <button type="button" data-ti-period="month" onclick="setTradeInsightPeriod('month')" class="ti-tab">本月</button>
+                    <button type="button" data-ti-period="half" onclick="setTradeInsightPeriod('half')" class="ti-tab">近半年</button>
+                    <button type="button" data-ti-period="year" onclick="setTradeInsightPeriod('year')" class="ti-tab">今年</button>
+                </div>
+            </div>
+            <div class="ti-card">
+                <div class="ti-list-head">
+                    <span class="ti-list-title">个股贡献</span>
+                    <span class="ti-list-note">按净收益排序</span>
+                </div>
+                <div id="tiList"></div>
+                <div class="ti-foot">仅统计已闭环做T；同一股票合并当前持仓与已清仓流水；买卖均按扣费后净价计算。</div>
+            </div>
+        </div>
+        </div>
+    </div>
 
     <!-- 新增股票弹窗，max‑2xl同步加宽弹窗最大宽度；背景与主页一致，高度可控可滚动 -->
     <!-- 新增/编辑持仓独立页面 -->
@@ -19308,6 +19450,271 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
 
+        // ==================== 首页 · 交易洞察（聚合做T，点击进入逐股明细） ====================
+        // 复用统计页同一套已闭环做T算法；首页只给一个安静聚合行，明细页才逐股展开。
+        let _tradeInsightHomeCache = { key:'', ts:0, data:null };
+        function tiEsc(s){
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+                return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+            });
+        }
+        function fmtTradeInsightMoney(v){
+            const n = Number(v);
+            const val = isNaN(n) ? 0 : n;
+            const sign = val > 0.004 ? '+' : (val < -0.004 ? '-' : '');
+            const abs = Math.abs(val);
+            let body;
+            if(abs >= 10000) body = fmtMoney(abs);
+            else body = abs.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return sign + '¥' + body;
+        }
+        function tradeInsightColor(v){
+            const n = Number(v) || 0;
+            if(n > 0.004) return '#e03131';
+            if(n < -0.004) return '#00a05c';
+            return '#2f2a27';
+        }
+        function tradeInsightHomeKey(){
+            let count = 0;
+            let last = 0;
+            let sig = 0;
+            const scan = function(it){
+                if(!it) return;
+                const txs = it.transactions || [];
+                count += txs.length;
+                txs.forEach(function(tr){
+                    const ts = Number(tr && tr.t) || 0;
+                    if(ts > last) last = ts;
+                    sig = (sig + ts + (Number(tr.delta) || 0) + (Number(tr.price) || 0) * 1000 + (Number(tr.fee) || 0) * 100) % 1000000000000;
+                });
+            };
+            (holdDataList || []).forEach(scan);
+            if(typeof historyData !== 'undefined' && historyData && historyData.closedStocks){
+                historyData.closedStocks.forEach(scan);
+            }
+            return [
+                new Date().toDateString(),
+                count,
+                last,
+                sig,
+                (holdDataList || []).length,
+                Number(hkFxRate) || 1
+            ].join('|');
+        }
+        function tradeInsightHomeData(){
+            const key = tradeInsightHomeKey();
+            if(_tradeInsightHomeCache.key === key && (Date.now() - _tradeInsightHomeCache.ts) < 30000){
+                return _tradeInsightHomeCache.data;
+            }
+            let data = null;
+            let period = '';
+            try{
+                data = calcStatsTData('day');
+                if(data && data.stockCount){
+                    period = 'day';
+                } else {
+                    data = calcStatsTData('month');
+                    if(data && data.stockCount){
+                        period = 'month';
+                    } else {
+                        data = calcStatsTData('year');
+                        if(data && data.stockCount) period = 'year';
+                        else data = null;
+                    }
+                }
+            }catch(e){
+                data = null;
+            }
+            let top = null;
+            if(data && data.rows && data.rows.length){
+                top = data.rows.slice().sort(function(a, b){ return b.profit - a.profit; })[0] || null;
+            }
+            const info = data ? { period: period, data: data, top: top } : null;
+            _tradeInsightHomeCache = { key: key, ts: Date.now(), data: info };
+            return info;
+        }
+        function updateTradeInsightStrip(){
+            const el = document.querySelector('#tradeInsightStrip');
+            if(!el) return;
+            const info = tradeInsightHomeData();
+            if(!info){
+                el.classList.add('hidden');
+                return;
+            }
+            const data = info.data;
+            const periodEl = document.querySelector('#tradeInsightPeriod');
+            const totalEl = document.querySelector('#tradeInsightTotal');
+            const subEl = document.querySelector('#tradeInsightSub');
+            el.dataset.period = info.period;
+            el.classList.remove('hidden');
+            if(periodEl) periodEl.innerText = tradeInsightPeriodName(info.period);
+            if(totalEl){
+                totalEl.innerText = fmtTradeInsightMoney(data.total);
+                totalEl.style.color = tradeInsightColor(data.total);
+            }
+            if(subEl){
+                if(info.top){
+                    const topName = String(info.top.name || info.top.code || '').trim();
+                    subEl.innerHTML = '<span style="color:#6f635b">' + tiEsc(topName) + '</span> '
+                        + '<span class="font-semibold tabular-nums" style="color:' + tradeInsightColor(info.top.profit) + '">' + fmtTradeInsightMoney(info.top.profit) + '</span>'
+                        + '<span style="color:#a49382"> · ' + data.stockCount + '只参与</span>';
+                } else {
+                    subEl.innerText = data.stockCount + '只参与';
+                }
+            }
+        }
+
+        // ==================== 交易洞察 · 明细页 ====================
+        let tradeInsightPeriod = 'month';
+        let _tradeInsightOrigin = null;
+        function tradeInsightPeriodName(p){
+            return p === 'day' ? '今日' : (p === 'half' ? '近半年' : (p === 'year' ? '今年' : '本月'));
+        }
+        function renderTradeInsightPage(){
+            const page = document.querySelector('#pageTradeInsight');
+            if(!page) return;
+            const data = calcStatsTData(tradeInsightPeriod);
+            const pName = tradeInsightPeriodName(tradeInsightPeriod);
+            const totalEl = document.querySelector('#tiTotal');
+            const metaEl = document.querySelector('#tiMeta');
+            const labelEl = document.querySelector('#tiPeriodLabel');
+            const tagEl = document.querySelector('#tiTopbarTag');
+            if(labelEl) labelEl.innerText = pName + '做T净收益';
+            if(tagEl) tagEl.innerText = pName;
+            if(totalEl){
+                totalEl.innerText = fmtTradeInsightMoney(data.total);
+                totalEl.style.color = tradeInsightColor(data.total);
+            }
+            if(metaEl){
+                metaEl.innerText = data.stockCount
+                    ? (data.stockCount + '只 · ' + data.winCount + '盈 ' + data.loseCount + '亏 · ' + data.pairTotal + '笔闭环')
+                    : '本期暂无已闭环做T';
+            }
+            document.querySelectorAll('#tiTabs [data-ti-period]').forEach(function(b){
+                const on = b.getAttribute('data-ti-period') === tradeInsightPeriod;
+                b.className = 'ti-tab' + (on ? ' is-on' : '');
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            const listEl = document.querySelector('#tiList');
+            if(!listEl) return;
+            if(!data.stockCount){
+                listEl.innerHTML = '<div class="ti-empty">本期暂无已闭环做T<br><span style="font-size:9px;color:#c0b09d">有买卖闭环后会自动汇总</span></div>';
+                return;
+            }
+            const rows = data.rows.slice().sort(function(a, b){ return b.profit - a.profit; });
+            listEl.innerHTML = rows.map(function(x){
+                let metaText = String(x.code || '');
+                if(x.closedQty > 0){
+                    metaText += ' · 闭环 ' + Math.round(x.closedQty).toLocaleString('zh-CN') + ' 股';
+                } else {
+                    metaText += ' · 闭环 ' + (Number(x.pairCount) || 0) + ' 笔';
+                }
+                const closedBadge = x.closed ? '<span class="ti-closed">已清仓</span>' : '';
+                return '<div class="ti-row">'
+                    + '<div class="min-w-0">'
+                    + '<div class="ti-row-name" title="' + tiEsc(x.name || x.code) + '">' + tiEsc(x.name || x.code) + '</div>'
+                    + '<div class="ti-row-meta">' + tiEsc(metaText) + closedBadge + '</div>'
+                    + '</div>'
+                    + '<div class="ti-row-amt" style="color:' + tradeInsightColor(x.profit) + '">' + fmtTradeInsightMoney(x.profit) + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+        function setTradeInsightPeriod(p){
+            tradeInsightPeriod = p;
+            renderTradeInsightPage();
+            const sheet = document.querySelector('#tradeInsightSheet');
+            if(sheet) sheet.scrollTop = 0;
+        }
+        function resetTradeInsightSheetStyle(sheet, backdrop){
+            if(sheet){
+                sheet.style.transform = '';
+                sheet.style.transformOrigin = '';
+                sheet.style.opacity = '';
+                sheet.style.borderRadius = '';
+                sheet.style.willChange = '';
+            }
+            if(backdrop) backdrop.style.opacity = '0';
+        }
+        function tradeInsightOriginPercent(sheetRect, rect){
+            if(!sheetRect || !sheetRect.width || !sheetRect.height || !rect) return null;
+            const ox = ((rect.left + rect.width / 2 - sheetRect.left) / sheetRect.width) * 100;
+            const oy = ((rect.top + rect.height / 2 - sheetRect.top) / sheetRect.height) * 100;
+            return { x: ox, y: oy };
+        }
+        function openTradeInsight(ev){
+            const page = document.querySelector('#pageTradeInsight');
+            if(!page) return;
+            const sheet = document.querySelector('#tradeInsightSheet');
+            const backdrop = document.querySelector('#tradeInsightBackdrop');
+            if(!sheet || !backdrop) return;
+            const strip = document.querySelector('#tradeInsightStrip');
+            tradeInsightPeriod = (strip && strip.dataset.period) || 'month';
+            renderTradeInsightPage();
+            const rect = ev && ev.currentTarget ? ev.currentTarget.getBoundingClientRect() : (strip ? strip.getBoundingClientRect() : null);
+            _tradeInsightOrigin = rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
+            page.classList.remove('hidden');
+            sheet.scrollTop = 0;
+            resetTradeInsightSheetStyle(sheet, backdrop);
+            const sheetRect = sheet.getBoundingClientRect();
+            const origin = tradeInsightOriginPercent(sheetRect, rect);
+            if(origin) sheet.style.transformOrigin = origin.x.toFixed(2) + '% ' + origin.y.toFixed(2) + '%';
+            if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+                backdrop.style.opacity = '1';
+                resetTradeInsightSheetStyle(sheet, null);
+                return;
+            }
+            backdrop.style.opacity = '0';
+            const bAnim = backdrop.animate([
+                { opacity: 0 },
+                { opacity: 1 }
+            ], { duration: 240, easing: 'ease-out', fill: 'both' });
+            bAnim.onfinish = function(){ backdrop.style.opacity = '1'; };
+            sheet.style.willChange = 'transform,opacity,border-radius';
+            const sAnim = sheet.animate([
+                { transform: 'scale(.16)', opacity: .2, borderRadius: '18px' },
+                { transform: 'scale(1)', opacity: 1, borderRadius: '24px 24px 0 0' }
+            ], {
+                duration: 360,
+                easing: 'cubic-bezier(.22,.75,.2,1)'
+            });
+            sAnim.onfinish = function(){
+                resetTradeInsightSheetStyle(sheet, null);
+            };
+        }
+        function closeTradeInsight(immediate){
+            const page = document.querySelector('#pageTradeInsight');
+            if(!page || page.classList.contains('hidden')) return;
+            const sheet = document.querySelector('#tradeInsightSheet');
+            const backdrop = document.querySelector('#tradeInsightBackdrop');
+            if(!sheet || !backdrop) return;
+            const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if(immediate || reduce || !_tradeInsightOrigin || !sheet.animate){
+                page.classList.add('hidden');
+                resetTradeInsightSheetStyle(sheet, backdrop);
+                return;
+            }
+            const sheetRect = sheet.getBoundingClientRect();
+            const origin = tradeInsightOriginPercent(sheetRect, _tradeInsightOrigin);
+            if(origin) sheet.style.transformOrigin = origin.x.toFixed(2) + '% ' + origin.y.toFixed(2) + '%';
+            sheet.style.willChange = 'transform,opacity,border-radius';
+            const sAnim = sheet.animate([
+                { transform: 'scale(1)', opacity: 1, borderRadius: '24px 24px 0 0' },
+                { transform: 'scale(.16)', opacity: .2, borderRadius: '18px' }
+            ], {
+                duration: 260,
+                easing: 'cubic-bezier(.4,0,.6,1)'
+            });
+            sAnim.onfinish = function(){
+                page.classList.add('hidden');
+                resetTradeInsightSheetStyle(sheet, backdrop);
+            };
+            backdrop.animate([
+                { opacity: 1 },
+                { opacity: 0 }
+            ], { duration: 220, easing: 'ease-in', fill: 'both' });
+        }
+
+
         function updateTargetSummaryStrip(){
             const el = document.querySelector('#targetSummaryStrip');
             if(!el) return;
@@ -19318,6 +19725,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="flex items-center gap-2"><span class="text-[10px] font-semibold tracking-[.12em]" style="color:#8f2437;">目标持仓</span></div>'
                     + '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#6f635b;">暂未设置目标持仓</div>'
                     + '</div>';
+                updateTradeInsightStrip();
                 return;
             }
             const done = rows.filter(function(r){ return r.achieved; }).length;
@@ -19381,6 +19789,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '</div>'
                 + bodyLine
                 + '</div>';
+            updateTradeInsightStrip();
         }
         function renderStockTargetCard(){
             const box = document.querySelector('#sdTargetCard');
@@ -35107,10 +35516,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(fabEl) fabEl.classList.add('hold-fab-hidden');
             pageEl.classList.remove('hidden');
             pageEl.scrollTop = 0;
+            const backdropEl = document.querySelector('#holdCardDetailBackdrop');
+            if(backdropEl){
+                backdropEl.classList.remove('hidden');
+                backdropEl.style.opacity = '0';
+            }
             const card = ev && ev.currentTarget ? ev.currentTarget.closest('.hold-card-v2') : document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]');
             if(skipAnim || !card || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
                 pageEl.style.transform = '';
                 pageEl.style.opacity = '1';
+                if(backdropEl) backdropEl.style.opacity = '1';
                 return;
             }
             const r = card.getBoundingClientRect();
@@ -35120,6 +35535,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             pageEl.style.transform = 'scale(.14)';
             pageEl.style.transition = 'none';
             requestAnimationFrame(function(){
+                if(backdropEl){
+                    const bAnim = backdropEl.animate([
+                        { opacity: 0 },
+                        { opacity: 1 }
+                    ], { duration: 280, easing: 'ease-out', fill: 'both' });
+                    bAnim.onfinish = function(){ backdropEl.style.opacity = '1'; };
+                }
                 const anim = pageEl.animate([
                     { opacity: 0, transform: 'scale(.14)' },
                     { opacity: 1, transform: 'scale(1)' }
@@ -35146,6 +35568,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(bodyEl) bodyEl.innerHTML = '';
                 const actionEl = document.querySelector('#holdCardDetailActions');
                 if(actionEl){ actionEl.classList.add('hidden'); actionEl.innerHTML = ''; }
+                const backdropEl = document.querySelector('#holdCardDetailBackdrop');
+                if(backdropEl){ backdropEl.classList.add('hidden'); backdropEl.style.opacity = '0'; }
                 const fabEl = document.querySelector('#openModalBtn');
                 if(fabEl) fabEl.classList.remove('hold-fab-hidden');
                 holdCardDetailKey = null;
@@ -35159,6 +35583,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const r = card.getBoundingClientRect();
                 const pr = pageEl.getBoundingClientRect();
                 pageEl.style.transformOrigin = ((r.left + r.width / 2) - pr.left).toFixed(1) + 'px ' + ((r.top + r.height / 2) - pr.top).toFixed(1) + 'px';
+            }
+            const backdropEl = document.querySelector('#holdCardDetailBackdrop');
+            if(backdropEl){
+                backdropEl.animate([
+                    { opacity: 1 },
+                    { opacity: 0 }
+                ], { duration: 240, easing: 'ease-in', fill: 'both' });
             }
             pageEl.animate([
                 { opacity: 1, transform: 'scale(1)' },

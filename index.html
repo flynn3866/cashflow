@@ -425,7 +425,7 @@
             #holdList .hold-card-v2-name{
                 font-size:16px;
                 font-weight:600;
-                line-height:1.15;
+                line-height:1.18;
                 letter-spacing:-.01em;
                 color:#2d2925;
                 white-space:nowrap;
@@ -438,9 +438,9 @@
                 color:#6f3bd4;
             }
             #holdList .hold-card-v2-meta{
-                margin-top:4px;
+                margin-top:8px;
                 font-size:10px;
-                line-height:1.2;
+                line-height:1.25;
                 color:#a49382;
                 white-space:nowrap;
                 overflow:hidden;
@@ -12656,12 +12656,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeAssetHighModal(){
             // 关闭资产新高页面，恢复持仓页
+            const holdPg = document.querySelector('#pageHold');
+            const opts = (activeTab === 'hold' && holdPg) ? {
+                parentEl: holdPg,
+                skipRestore: true,
+                afterPin: function(){ holdPg.classList.remove('hidden'); restoreScroll(); }
+            } : null;
             exitDetailPage(document.querySelector('#pageAssetHigh'), function(){
             document.querySelector('#pageHold').classList.toggle('hidden', activeTab !== 'hold');
             document.querySelector('#openModalBtn').classList.toggle('hidden', activeTab !== 'hold');
         
 
-            });
+            }, opts);
     }
         document.querySelector('#assetHighBackBtn').addEventListener('click', closeAssetHighModal);
         // 月底归档：对已过去的月份，取该月最后一天的 dailyAssets 作为 monthlyAssets
@@ -14318,6 +14324,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closeBreakEvenPage(){
             const holdPg = document.querySelector('#pageHold');
             const bePg = document.querySelector('#pageBreakEven');
+            const opts = (activeTab === 'hold' && holdPg && bePg) ? {
+                parentEl: holdPg,
+                skipRestore: true,
+                afterPin: function(){ holdPg.classList.remove('hidden'); restoreScroll(); }
+            } : null;
             // 退场方式与资产负债表详情页一致：右滑淡出后再隐藏（图表实例在动画结束后释放，避免淡出期间图表闪没）
             exitDetailPage(bePg, function(){
                 disposeBeChart('chartBeAccount');
@@ -14328,7 +14339,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const btn = document.querySelector('#openModalBtn');
                 if(btn) btn.classList.remove('hidden');
                 renderPage();
-            });
+            }, opts);
         }
         function renderBreakEvenPage(focusCode){
             const beA = calcAccountBreakEven();
@@ -14884,7 +14895,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(typeof fn !== 'function') return;
             requestAnimationFrame(function(){ requestAnimationFrame(fn); });
         }
-        function exitDetailPage(el, done){
+        function exitDetailPage(el, done, opts){
             if(!el || el.classList.contains('hidden')){
                 if(done) done();
                 restoreScroll();
@@ -14892,7 +14903,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // P0 卡片 Peek/Pop：只对已登记原点的页面做“缩回原卡片”，其余页面保持原右滑淡出
             if(window.__peekExit && el.__peekOrigin){
-                window.__peekExit(el, function(){ if(done) done(); restoreScroll(); });
+                window.__peekExit(el, function(){ if(done) done(); if(!(opts && opts.skipRestore)) restoreScroll(); }, opts);
                 return;
             }
             // 内联动画强制退场（inline 优先级最高，确保覆盖页面级入场动画）
@@ -21214,14 +21225,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeDivDetail(){
             divDetailRhythmDispose();
+            const parentEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : divDetailReturnTab === 'watch' ? 'pageWatchSel' : 'pageMine'));
+            const opts = ((divDetailReturnTab === 'hold' || divDetailReturnTab === 'stats') && parentEl) ? {
+                parentEl: parentEl,
+                skipRestore: true,
+                afterPin: function(){ parentEl.classList.remove('hidden'); restoreScroll(); }
+            } : null;
             exitDetailPage(document.querySelector('#pageDivDetail'), function(){
-            const pageEl = document.querySelector('#' + (divDetailReturnTab === 'hold' ? 'pageHold' : divDetailReturnTab === 'stats' ? 'pageStats' : divDetailReturnTab === 'analysis' ? 'pageAnalysis' : divDetailReturnTab === 'milestone' ? 'pageMilestone' : divDetailReturnTab === 'watch' ? 'pageWatchSel' : 'pageMine'));
+            const pageEl = parentEl;
             if(pageEl) pageEl.classList.remove('hidden');
             document.querySelector('#openModalBtn').classList.toggle('hidden', divDetailReturnTab !== 'hold');
             deferRender(renderPage);
         
 
-            });
+            }, opts);
     }
         // ============ 净值历史（我的页 - 持仓概览 - 最新净值） ============
         let navDetailReturnTab = 'mine';
@@ -27287,6 +27304,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             hideAllChartTips();
             const cur = findVisibleDetailPage();
             const fromHold = !!window.__statsFromHold;
+            const holdPg = document.querySelector('#pageHold');
+            const statsPg = document.querySelector('#pageStats');
+            // 首页顶部卡只接管“今日盈亏 / 现金”两个入口；首页分红日历等其它入口保持原逻辑。
+            const homeTopIds = { pageStatsToday: 1, pageStatsCashFlow: 1 };
+            const parentEl = fromHold ? holdPg : statsPg;
+            const opts = (cur && parentEl && (!fromHold || homeTopIds[cur.id])) ? {
+                parentEl: parentEl,
+                skipRestore: true,
+                afterPin: function(){ parentEl.classList.remove('hidden'); restoreScroll(); }
+            } : null;
             window.__statsFromHold = false;
             exitDetailPage(cur, function(){
                 for(const k in STATS_SECTION_PAGES){
@@ -27302,7 +27329,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     // 主页先显示（隐藏期间数据未变），重渲染延后一帧，避免关闭瞬间同步大渲染卡顿
                     deferRender(renderStatsPage);
                 }
-            });
+            }, opts);
         }
         // 统计页卡片宫格摘要：今日卡右侧为当日合计盈亏（复用详情页顶部数据），其余卡片显示各板块数据最新刷新时间（纯本地，不额外拉取）
         // ============ 风险指标（全周期）：最大回撤 / 年化波动 / 最长水下 ============
@@ -38854,8 +38881,48 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
     }
 
+    // P0 close：把详情页临时固定到当前视口位置，避免为了露出父页面而改变详情页的文档流位置。
+    // 只在这里保存/恢复内联样式，页面本身的布局、滚动、图表实例都不动。
+    function pinPeekPageForExit(pageEl){
+        var r = pageEl.getBoundingClientRect();
+        var st = pageEl.style;
+        var keys = ['position','left','top','width','height','zIndex','margin','maxWidth','background','overflow','boxSizing'];
+        var saved = {};
+        keys.forEach(function(k){ saved[k] = st[k] || ''; });
+        st.position = 'fixed';
+        st.left = r.left + 'px';
+        st.top = r.top + 'px';
+        st.width = r.width + 'px';
+        st.height = Math.max(r.height, window.innerHeight) + 'px';
+        st.margin = '0';
+        st.maxWidth = 'none';
+        st.zIndex = '30';
+        st.background = '#f5efe3';
+        st.overflow = 'hidden';
+        st.boxSizing = 'border-box';
+        return { el: pageEl, saved: saved };
+    }
+
+    function restorePeekPin(pin){
+        if(!pin) return;
+        var st = pin.el.style;
+        Object.keys(pin.saved).forEach(function(k){ st[k] = pin.saved[k]; });
+    }
+
+    function ensurePeekExitScrim(){
+        var id = '__peekExitScrim';
+        var el = document.getElementById(id);
+        if(el) return el;
+        el = document.createElement('div');
+        el.id = id;
+        el.setAttribute('aria-hidden', 'true');
+        el.style.cssText = 'position:fixed;inset:0;background:#1a1215;opacity:0;pointer-events:none;z-index:20;';
+        document.body.appendChild(el);
+        return el;
+    }
+
     // P0 反向 Peek/Pop：页面缩回入口卡片，再隐藏并交回原关闭逻辑
-    window.__peekExit = function(pageEl, done){
+    window.__peekExit = function(pageEl, done, opts){
         if(!pageEl || !pageEl.__peekOrigin){
             if(done) done();
             return false;
@@ -38871,12 +38938,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         if(pageEl.__growAnim && pageEl.__growAnim.cancel){ try{ pageEl.__growAnim.cancel(); }catch(_e){} }
         pageEl.__growAnim = null;
         if(reduced){
+            if(opts && opts.parentEl && typeof opts.afterPin === 'function'){
+                try{ opts.afterPin(); }catch(_e){}
+            }
             pageEl.classList.add('hidden');
             pageEl.__peekCloseLock = false;
             pageEl.__peekClosing = false;
             pageEl.__growLock = false;
             if(done) done();
             return true;
+        }
+        var pin = null;
+        var scrim = null;
+        var scrimAnim = null;
+        if(opts && opts.parentEl){
+            // 先固定详情页，再恢复父页面；父页面重新进入文档流也不会把详情页挤走。
+            pin = pinPeekPageForExit(pageEl);
+            if(typeof opts.afterPin === 'function'){
+                try{ opts.afterPin(); }catch(_e){}
+            }
+            if(opts.scrim !== false){
+                scrim = ensurePeekExitScrim();
+                scrim.style.opacity = '0.18';
+                try{
+                    scrimAnim = scrim.animate(
+                        [{ opacity: 0.18 }, { opacity: 0 }],
+                        { duration: 280, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }
+                    );
+                }catch(_e){}
+            }
         }
         var toRect = pageEl.getBoundingClientRect();
         var toW = toRect.width || 320;
@@ -38900,6 +38990,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(anim && anim.cancel){ try{ anim.cancel(); }catch(_e){} }
             st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = ''; st.animation = '';
             st.overflow = ''; st.borderRadius = ''; st.boxShadow = '';
+            if(scrimAnim && scrimAnim.cancel){ try{ scrimAnim.cancel(); }catch(_e){} }
+            if(scrim && scrim.parentNode) scrim.parentNode.removeChild(scrim);
+            restorePeekPin(pin);
             pageEl.classList.add('hidden');
             pageEl.__peekCloseLock = false;
             pageEl.__peekClosing = false;

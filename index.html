@@ -2696,7 +2696,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
             <div id="tradeInsightStrip" class="hidden relative z-10 px-4 py-2.5 border-t cursor-pointer hover:bg-[#fdf9f3] active:bg-[#fbf6ef] transition-colors" style="border-color:rgba(143,36,55,.10);" role="button" tabindex="0" aria-label="查看交易洞察" onclick="openTradeInsight(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeInsight(event);}">
                 <div class="flex items-center gap-1.5 min-w-0">
-                    <span class="text-[10px] font-semibold tracking-[.06em]" style="color:#6f635b;">交易洞察</span>
+                    <span class="text-[10px] font-semibold tracking-[.06em]" style="color:#8f2437;">交易洞察</span>
                     <span id="tradeInsightPeriod" class="text-[9px] font-medium" style="color:#a49382;">今日</span>
                     <span id="tradeInsightTotal" class="ml-auto text-[13px] font-semibold tabular-nums leading-none" style="color:#e03131;">+¥0.00</span>
                     <span class="text-[13px] leading-none" style="color:#b8a793;">›</span>
@@ -2751,14 +2751,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div id="tradeInsightSheet" class="ti-sheet absolute left-0 right-0 bottom-0 mx-auto max-w-xl">
         <div class="ti-shell">
             <div class="hcd-topbar">
-                <button type="button" class="hcd-back" onclick="closeTradeInsight()" aria-label="返回首页">
-                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-                </button>
                 <div class="min-w-0">
                     <div class="hcd-topbar-title">交易洞察</div>
                     <div class="hcd-topbar-sub">已闭环做T · 扣费后净收益</div>
                 </div>
                 <span id="tiTopbarTag" class="hcd-topbar-tag">本月</span>
+                <button id="tradeInsightCloseBtn" type="button" class="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-gray-400 active:scale-95 transition-transform flex-shrink-0" aria-label="关闭交易洞察" onclick="closeTradeInsight()"><i class="fa fa-times text-[13px]"></i></button>
             </div>
             <div class="ti-hero">
                 <div class="flex items-start justify-between gap-3">
@@ -38975,7 +38973,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var ox = Math.max(0, (origin.left + origin.width / 2) - toRect.left);
         var oy = Math.max(0, (origin.top + origin.height / 2) - toRect.top);
         var st = pageEl.style;
-        st.willChange = 'transform, opacity, border-radius, box-shadow';
+        st.willChange = 'transform, opacity, border-radius, box-shadow, filter';
         st.transformOrigin = ox + 'px ' + oy + 'px';
         st.animation = 'none';
         st.overflow = 'hidden';
@@ -38983,12 +38981,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         st.boxShadow = '0 22px 60px rgba(24,12,16,.18)';
         var finished = false;
         var fallbackTimer = null;
+        var fadeAnim = null;
         function finish(){
             if(finished) return;
             finished = true;
             if(fallbackTimer) clearTimeout(fallbackTimer);
             if(anim && anim.cancel){ try{ anim.cancel(); }catch(_e){} }
+            if(fadeAnim && fadeAnim.cancel){ try{ fadeAnim.cancel(); }catch(_e){} }
             st.transform = ''; st.opacity = ''; st.transformOrigin = ''; st.willChange = ''; st.animation = '';
+            st.filter = '';
             st.overflow = ''; st.borderRadius = ''; st.boxShadow = '';
             if(scrimAnim && scrimAnim.cancel){ try{ scrimAnim.cancel(); }catch(_e){} }
             if(scrim && scrim.parentNode) scrim.parentNode.removeChild(scrim);
@@ -39000,10 +39001,44 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(done) done();
         }
         try {
-            var anim = pageEl.animate([
-                { transform: 'scale(1)', opacity: 1, borderRadius: '0px', boxShadow: '0 0 0 rgba(0,0,0,0)' },
-                { transform: 'scale(' + s + ')', opacity: 0.18, borderRadius: '18px', boxShadow: '0 22px 60px rgba(24,12,16,.18)' }
-            ], { duration: 280, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+            var tailFade = !!(opts && opts.parentEl);
+            var endS = Math.max(0.02, s * 0.55);
+            var mid35 = 1 - (1 - s) * (0.35 / 0.65);
+            var mid50 = 1 - (1 - s) * (0.50 / 0.65);
+            var s65 = Math.min(0.92, s * 1.06);
+            var frames;
+            if(tailFade){
+                // 缩回动画只管形变；透明度和模糊单独线性控制：
+                // 35% 开始渐隐，50% 约 0.52 + 0.6px 模糊，80% 约 0.10 + 2.4px，88% 完全透明。
+                frames = [
+                    { offset: 0, transform: 'scale(1)', borderRadius: '0px', boxShadow: '0 0 0 rgba(0,0,0,0)', easing: 'cubic-bezier(.4,0,.2,1)' },
+                    { offset: 0.35, transform: 'scale(' + mid35 + ')', borderRadius: '18px', boxShadow: '0 22px 60px rgba(24,12,16,.18)', easing: 'linear' },
+                    { offset: 0.50, transform: 'scale(' + mid50 + ')', borderRadius: '18px', boxShadow: '0 10px 28px rgba(24,12,16,.10)', easing: 'linear' },
+                    { offset: 0.65, transform: 'scale(' + s65 + ')', borderRadius: '18px', boxShadow: '0 0 0 rgba(0,0,0,0)', easing: 'linear' },
+                    { offset: 0.80, transform: 'scale(' + s + ')', borderRadius: '16px', boxShadow: '0 0 0 rgba(0,0,0,0)', easing: 'linear' },
+                    { offset: 0.90, transform: 'scale(' + endS + ')', borderRadius: '12px', boxShadow: '0 0 0 rgba(0,0,0,0)', easing: 'linear' },
+                    { offset: 1, transform: 'scale(' + endS + ')', borderRadius: '12px', boxShadow: '0 0 0 rgba(0,0,0,0)' }
+                ];
+                fadeAnim = pageEl.animate([
+                    { offset: 0, opacity: 1, filter: 'blur(0px)' },
+                    { offset: 0.35, opacity: 1, filter: 'blur(0px)' },
+                    { offset: 0.50, opacity: 0.52, filter: 'blur(0.6px)' },
+                    { offset: 0.65, opacity: 0.30, filter: 'blur(1.4px)' },
+                    { offset: 0.80, opacity: 0.09, filter: 'blur(2.4px)' },
+                    { offset: 0.88, opacity: 0, filter: 'blur(3px)' },
+                    { offset: 1, opacity: 0, filter: 'blur(3px)' }
+                ], { duration: 280, easing: 'linear', fill: 'both' });
+            } else {
+                frames = [
+                    { transform: 'scale(1)', opacity: 1, borderRadius: '0px', boxShadow: '0 0 0 rgba(0,0,0,0)' },
+                    { transform: 'scale(' + s + ')', opacity: 0.18, borderRadius: '18px', boxShadow: '0 22px 60px rgba(24,12,16,.18)' }
+                ];
+            }
+            var anim = pageEl.animate(frames, {
+                duration: 280,
+                easing: tailFade ? 'linear' : 'cubic-bezier(.4,0,.2,1)',
+                fill: 'both'
+            });
             anim.onfinish = finish;
             if(anim.addEventListener) anim.addEventListener('finish', finish);
             fallbackTimer = setTimeout(finish, 360);

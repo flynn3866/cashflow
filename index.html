@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- 禁止缓存：确保手机桌面图标打开时总是最新版本 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -2027,11 +2027,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .divdd-sum-grid{ grid-template-columns:1fr 1fr; row-gap:9px; }
             .divdd-sum-cell:nth-child(2){ border-right:0; padding-right:0; padding-left:8px; }
             .divdd-sum-progress{ grid-column:1 / -1; padding-left:0; padding-top:8px; border-top:1px solid #f1e5d4; }
+            /* 年度分红详情在小屏仍保持三列摘要，避免第三格独占整行留下空列 */
+            #divDetailYearSummary .divdd-sum-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+            #divDetailYearSummary .divdd-sum-progress{ grid-column:auto; padding:8px; border-top:1px solid #efe2ca; }
             .divdd-sum-value{ font-size:16px; }
             .divdd-chart{ height:170px; }
             .divdd-card-title{ font-size:13px; }
             .divdd-contrib-row{ grid-template-columns:18px minmax(0,1fr) auto; gap:6px; padding-left:12px; padding-right:12px; }
             .divdd-contrib-name b{ font-size:11px; }
+        }
+        @media (max-width:359px){
+            /* 超小屏把年度摘要收成 2 列，避免三列格子过窄导致说明被截断 */
+            #divDetailYearSummary .divdd-sum-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+            #divDetailYearSummary .divdd-sum-progress{ grid-column:1 / -1; padding:8px; border-top:1px solid #efe2ca; }
         }
 
         /* 累计分红成就卡（仅累计模式） */
@@ -2871,10 +2879,485 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
 </style>
+    <!-- ===== v518 Phase 1：设计 token / 字号下限 / 顶部栏与核心组件统一 ===== -->
+    <style id="design-system-v518">
+        :root{
+            --c-bg:#f9f7f4;
+            --c-surface:#ffffff;
+            --c-surface-warm:#fffdf8;
+            --c-surface-warm-2:#fffaf3;
+            --c-ink:#2d2925;
+            --c-ink-2:#5f5246;
+            --c-ink-3:#7a6d61;
+            --c-ink-4:#8f8071;
+            --c-line:#eadfce;
+            --c-line-soft:#f3eadf;
+            --c-brand:#8f2437;
+            --c-brand-deep:#742034;
+            --c-brand-soft:#f8ecef;
+            --c-up:#d85454;
+            --c-down:#389973;
+            --c-flat:#6f655b;
+            --fs-caption:11px;
+            --fs-helper:12px;
+            --fs-body:14px;
+            --fs-title:16px;
+            --fs-h2:20px;
+            --fs-hero:32px;
+            --r-card:18px;
+            --r-panel:16px;
+            --r-inner:12px;
+            --shadow-card:0 1px 2px rgba(93,72,38,.035),0 8px 22px rgba(93,72,38,.055);
+            --shadow-card-soft:0 1px 2px rgba(93,72,38,.035),0 8px 22px rgba(93,72,38,.06),0 18px 42px rgba(93,72,38,.07);
+            --shadow-hero:0 3px 12px rgba(82,55,32,.06),inset 0 1px 0 rgba(255,255,255,.86);
+        }
+        :where(#pageHold,#pageStats,#pageMine,#pageMilestone,#pageWatchSel,#pageWatchManage,.detail-page) [class*="text-[8px]"]:not(i):not(svg):not(.fa):not(.fa-svg):not(.hold-card-v2-tag):not(.hold-card-v2-badge),
+        :where(#pageHold,#pageStats,#pageMine,#pageMilestone,#pageWatchSel,#pageWatchManage,.detail-page) [class*="text-[8.5px]"]:not(i):not(svg):not(.fa):not(.fa-svg):not(.hold-card-v2-tag):not(.hold-card-v2-badge),
+        :where(#pageHold,#pageStats,#pageMine,#pageMilestone,#pageWatchSel,#pageWatchManage,.detail-page) [class*="text-[9px]"]:not(i):not(svg):not(.fa):not(.fa-svg),
+        :where(#pageHold,#pageStats,#pageMine,#pageMilestone,#pageWatchSel,#pageWatchManage,.detail-page) [class*="text-[9.5px]"]:not(i):not(svg):not(.fa):not(.fa-svg),
+        :where(#pageHold,#pageStats,#pageMine,#pageMilestone,#pageWatchSel,#pageWatchManage,.detail-page) [class*="text-[10px]"]:not(i):not(svg):not(.fa):not(.fa-svg),
+        :where(#pageHold,#pageStats,#pageMine,#pageMilestone,#pageWatchSel,#pageWatchManage,.detail-page) [class*="text-[10.5px]"]:not(i):not(svg):not(.fa):not(.fa-svg){
+            font-size:11px!important;
+            line-height:1.4!important;
+        }
+        .page-eyebrow{
+            font-size:10.5px!important;
+            color:var(--c-ink-3)!important;
+        }
+        .card-shadow{
+            box-shadow:var(--shadow-card)!important;
+        }
+        .card-shadow-soft{
+            box-shadow:var(--shadow-card-soft)!important;
+        }
+        /* 语义色 token 收口：不改变任何业务判断，只把同一组行情色映射到同一变量 */
+        [class*="text-[#e03131]"]{color:var(--c-up)!important;}
+        [class*="text-[#00a05c]"]{color:var(--c-down)!important;}
+        #holdList .hold-card-v2-meta,
+        #holdList .hold-card-v2-price,
+        #pageHoldCardDetail .hcd-value,
+        #pageHoldCardDetail .hcd-price,
+        #pageHoldCardDetail .hcd-change-amt,
+        #pageHoldCardDetail .hcd-change-pct,
+        #pageHoldCardDetail .hcd-t-value{
+            font-variant-numeric:tabular-nums;
+            font-feature-settings:"tnum" 1;
+        }
+        .surface-hero{
+            background:linear-gradient(180deg,var(--c-surface-warm) 0%,var(--c-surface-warm-2) 100%)!important;
+            border-color:var(--c-line)!important;
+            box-shadow:var(--shadow-hero)!important;
+        }
+        .app-topbar{
+            border-radius:var(--r-panel)!important;
+            border:1px solid var(--c-line)!important;
+            background:var(--c-surface)!important;
+            padding:12px 14px!important;
+            box-shadow:var(--shadow-card)!important;
+        }
+        .app-topbar .min-w-0{min-width:0!important;}
+        .app-topbar [class*="text-[17px]"]{font-size:16.5px!important;letter-spacing:.01em!important;}
+        #holdList .hold-card-v2-meta{
+            font-size:11px!important;
+            line-height:1.3!important;
+            color:var(--c-ink-3)!important;
+        }
+        #holdList .hold-card-v2-tag{font-size:9px!important;height:14px!important;min-width:16px!important;}
+        #holdList .hold-card-v2-badge{font-size:9px!important;height:15px!important;padding:0 5px!important;}
+        #holdList .hold-card-v2{border-color:rgba(126,102,80,.10)!important;box-shadow:var(--shadow-card)!important;}
+        #pageHoldCardDetail .hcd-card{border-color:var(--c-line-soft)!important;box-shadow:var(--shadow-card)!important;}
+        #pageHoldCardDetail .hcd-card-title{font-size:13.5px;color:var(--c-ink);}
+        #pageHoldCardDetail .hcd-card-meta{font-size:11px;color:var(--c-ink-3);}
+        #pageHoldCardDetail .hcd-hero-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        #pageHoldCardDetail .hcd-hero-sub{font-size:11px;color:var(--c-ink-3);}
+        #pageHoldCardDetail .hcd-status{font-size:10.5px;}
+        #pageHoldCardDetail .hcd-label{font-size:11px;line-height:1.35;color:var(--c-ink-3);}
+        #pageHoldCardDetail .hcd-value{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 6px;}
+        #pageHoldCardDetail .hcd-value small{font-size:11px;margin-left:0;color:var(--c-ink-3);}
+        #pageHoldCardDetail .hcd-mini-title,
+        #pageHoldCardDetail .hcd-mini-empty,
+        #pageHoldCardDetail .hcd-t-label,
+        #pageHoldCardDetail .hcd-t-list-head,
+        #pageHoldCardDetail .hcd-t-empty{font-size:11px;line-height:1.4;}
+        #pageHoldCardDetail .hcd-mini-sub,
+        #pageHoldCardDetail .hcd-mini-foot,
+        #pageHoldCardDetail .hcd-mini-flat-item span{font-size:10.5px;line-height:1.35;}
+        #pageHoldCardDetail .hcd-trade-row{font-size:11px;}
+        #pageHoldCardDetail .hcd-trade-date,
+        #pageHoldCardDetail .hcd-trade-type{font-size:10px;}
+        #pageHoldCardDetail .hcd-trade-amt{font-size:10.5px;}
+        #pageHoldCardDetail .hcd-t-all{font-size:12px;}
+        #pageHoldCardDetail .hcd-link{font-size:11px;}
+        #pageHoldCardDetail .hcd-btn{font-size:13px;}
+        #pageHoldCardDetail .hcd-topbar-sub{font-size:11px;color:var(--c-ink-3);}
+        #pageHoldCardDetail .hcd-back{width:36px;height:36px;}
+        @media (max-width:340px){
+            #holdList .hold-card-v2{grid-template-columns:minmax(0,1fr) 52px 60px!important;gap:7px!important;padding:0 10px!important;}
+            #holdList .hold-card-v2-name{font-size:14.5px!important;}
+            #holdList .hold-card-v2-meta{font-size:10.5px!important;gap:5px!important;}
+            #holdList .hold-card-v2-price{font-size:16.5px!important;}
+            #holdList .hold-card-v2-chart{height:32px!important;}
+            #pageHoldCardDetail .hcd-card .hcd-cell{padding-left:14px!important;padding-right:14px!important;}
+            #pageHoldCardDetail .hcd-link{font-size:10px!important;}
+        }
+        @media (max-width:400px){
+            /* 统计宫格在主流手机宽度改为两列，避免 3 列时标题和数值被挤断 */
+            #pageStats .grid.grid-cols-3{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;}
+            #pageStats .grid.grid-cols-3 > .col-span-3{grid-column:span 2/span 2!important;}
+            #pageStats .card-rise.col-span-3 > div{gap:9px!important;}
+            #pageStats .card-rise.col-span-3 div[class*="text-[15px]"]{font-size:14px!important;white-space:nowrap!important;}
+            #pageStats #statsCardTodayPnl,
+            #pageStats #statsCardTodayPnlPct{font-size:12px!important;}
+            #pageStats .card-rise.col-span-3 > div > .fa-chevron-right{display:none!important;}
+        }
+    </style>
+    <!-- ===== v518 Phase 2：可见视觉层级 / 主卡 / 详情卡 / 统计卡 / 顶栏材质 ===== -->
+    <style id="phase2-visual-v518">
+        /* 一级页刊头：更大字号 + 更清晰的分隔线 */
+        .page-masthead{
+            padding-bottom:14px!important;
+            margin-bottom:12px!important;
+            border-bottom:1px solid rgba(116,32,52,.14)!important;
+        }
+        .page-title{
+            font-size:28px!important;
+            line-height:1.12!important;
+            letter-spacing:.015em!important;
+        }
+        .page-eyebrow{
+            font-size:10.5px!important;
+            letter-spacing:.2em!important;
+            color:#8f7f72!important;
+        }
+        @media (max-width:360px){
+            .page-title{font-size:25px!important;}
+        }
+        /* 28 个详情页顶栏：轻玻璃、暖米描边、悬浮层级 */
+        .app-topbar{
+            border-radius:16px!important;
+            padding:13px 15px!important;
+            background:rgba(255,252,247,.88)!important;
+            border:1px solid rgba(126,102,80,.12)!important;
+            box-shadow:0 1px 2px rgba(93,72,38,.02),0 6px 18px rgba(93,72,38,.045)!important;
+            -webkit-backdrop-filter:blur(18px) saturate(1.12);
+            backdrop-filter:blur(18px) saturate(1.12);
+        }
+        #pageHoldCardDetail .hcd-topbar{
+            border-radius:20px 20px 0 0!important;
+            background:rgba(249,247,244,.88)!important;
+            -webkit-backdrop-filter:blur(18px) saturate(1.08);
+            backdrop-filter:blur(18px) saturate(1.08);
+        }
+        #pageHoldCardDetail{border-radius:20px 20px 0 0!important;}
+        .card-shadow{
+            box-shadow:0 1px 2px rgba(93,72,38,.025),0 4px 12px rgba(93,72,38,.04)!important;
+        }
+        .card-shadow-soft{
+            box-shadow:0 1px 2px rgba(93,72,38,.02),0 6px 18px rgba(93,72,38,.045)!important;
+        }
+        /* 首页资产主卡：更大主数字、更有层次的墨酒红材质 */
+        #assetHeroCard{
+            padding:16px 20px 10px!important;
+            border-radius:20px!important;
+            background:linear-gradient(155deg,#1a1215 0%,#1f1418 58%,#27171d 100%)!important;
+            box-shadow:
+                0 2px 5px rgba(0,0,0,.55),
+                0 10px 26px rgba(24,12,16,.16),
+                inset 0 1px 0 rgba(255,255,255,.05)!important;
+        }
+        /* 主卡内的文字入口统一 11px，避免辅助标签小于其它小字 */
+        #assetHeroCard button[title^="查看"]{font-size:11px!important;}
+        #assetHeroCard #totalMarketWrap{
+            font-size:28px!important;
+            font-weight:700!important;
+            letter-spacing:-.03em!important;
+        }
+        #assetHeroCard .asset-cur{
+            color:rgba(232,200,138,.58);
+            font-weight:500;
+            margin-right:3px;
+            letter-spacing:0;
+            vertical-align:.08em;
+        }
+        #assetHeroCard .asset-cur-main{font-size:11px;}
+        #assetHeroCard .asset-cur-metric{font-size:9.5px;}
+        /* 仓位徽标：降为辅助信息，但保持小字可读 */
+        #assetHeroCard #positionPctBadge{
+            opacity:.9;
+            border-color:rgba(232,200,138,.18)!important;
+            background:rgba(232,200,138,.05)!important;
+            box-shadow:none!important;
+        }
+        #assetHeroCard #positionPctBadge,
+        #assetHeroCard #positionPctBadge span{
+            font-size:11px!important;
+            line-height:1!important;
+        }
+        #assetHeroCard #positionPctBadge span:first-child{
+            color:rgba(232,200,138,.70)!important;
+        }
+        #assetHeroCard #positionPct{
+            font-weight:600!important;
+            color:rgba(241,211,154,.96)!important;
+        }
+        #assetHeroCard #todayPnl{
+            font-size:18px!important;
+            font-weight:600!important;
+            letter-spacing:-.01em!important;
+        }
+        #assetHeroCard #todayPnlPct{font-size:13.5px!important;}
+        /* 第二层三项金额：统一为安静的辅助数字 */
+        #assetHeroCard #totalYearDiv,
+        #assetHeroCard #totalProfit,
+        #assetHeroCard #cashSign,
+        #assetHeroCard #cashVal{
+            font-size:13px!important;
+            font-weight:500!important;
+        }
+        @media (max-width:360px){
+            #assetHeroCard #todayPnl{font-size:18px!important;}
+            #assetHeroCard #todayPnlPct{font-size:12px!important;}
+        }
+        #assetHeroCard .grid{
+            grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1.35fr)!important;
+            row-gap:18px!important;
+        }
+        #assetHeroCard [class*="text-[15px]"]{
+            font-size:clamp(15px,calc(15px + .22vw),17px)!important;
+            letter-spacing:-.01em!important;
+        }
+        #assetHeroCard #moreMetricsPanel .grid{
+            grid-template-columns:repeat(3,minmax(0,1fr))!important;
+            row-gap:0!important;
+        }
+        #assetHeroCard #moreMetricsPanel .grid > div{box-shadow:none!important;}
+        #assetHeroCard #moreMetricsPanel #totalDivReceivedWrap,
+        #assetHeroCard #moreMetricsPanel #totalPnl{
+            font-size:13px!important;
+        }
+        /* 主卡第二段：总资产曲线（无坐标轴，单色低饱和涨跌色 + 极淡渐变） */
+        #assetHeroCard .hero-asset-curve-zone{margin-top:12px;}
+        #assetHeroCard #heroAssetCurve{
+            width:100%;
+            height:87px;
+            overflow:hidden;
+            position:relative;
+            opacity:1;
+            transition:opacity .2s ease;
+        }
+        #assetHeroCard #heroAssetCurve svg{display:block;width:100%;height:87px;}
+        #assetHeroCard #heroAssetCurve.is-loading{opacity:.48;}
+        #assetHeroCard .hero-curve-controls{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            min-height:22px;
+            margin-top:6px;
+        }
+        #assetHeroCard .hero-period-tabs{
+            display:inline-flex;
+            align-items:center;
+            gap:2px;
+            padding:2px;
+            border-radius:999px;
+            background:rgba(232,200,138,.055);
+            border:1px solid rgba(232,200,138,.13);
+        }
+        #assetHeroCard .hero-period-tab{
+            appearance:none;
+            border:0;
+            background:transparent;
+            color:rgba(222,207,183,.80);
+            height:20px;
+            padding:0 8px;
+            border-radius:999px;
+            font-size:11px;
+            font-weight:500;
+            line-height:1;
+            letter-spacing:.02em;
+            white-space:nowrap;
+            transition:background .18s ease,color .18s ease,box-shadow .18s ease;
+        }
+        #assetHeroCard .hero-period-tab.is-active{
+            background:rgba(232,200,138,.17);
+            color:#f1d79c;
+            font-weight:600;
+            box-shadow:inset 0 0 0 1px rgba(232,200,138,.15);
+        }
+        #assetHeroCard .hero-more-toggle{
+            margin-left:auto;
+            display:inline-flex;
+            align-items:center;
+            gap:4px;
+            height:22px;
+            padding:0 0 0 4px;
+            border:0;
+            background:transparent;
+            color:rgba(222,207,183,.80);
+            font-size:11px;
+            line-height:1;
+            white-space:nowrap;
+            transition:color .18s ease;
+        }
+        #assetHeroCard .hero-more-toggle #moreMetricsIcon{
+            font-size:11px!important;
+            color:rgba(246,196,83,.80)!important;
+        }
+        #assetHeroCard .hero-more-toggle #moreMetricsChevron{font-size:10px!important;opacity:.78;}
+        @media (max-width:480px){
+            #assetHeroCard .hero-asset-curve-zone{margin-top:12px;}
+            #assetHeroCard #heroAssetCurve,
+            #assetHeroCard #heroAssetCurve svg{height:94px;}
+            #assetHeroCard .hero-curve-controls{min-height:20px;margin-top:6px;}
+            #assetHeroCard .hero-period-tab{height:18px;}
+            #assetHeroCard .hero-asset-metrics-row{padding-top:4px!important;padding-bottom:0!important;}
+        }
+        @media (max-width:400px) and (max-height:820px){
+            #assetHeroCard .hero-curve-controls{min-height:18px;margin-top:6px;}
+            #assetHeroCard .hero-asset-metrics-row{padding-top:3px!important;padding-bottom:0!important;}
+        }
+        @media (max-width:340px){
+            #assetHeroCard .hero-period-tab{padding:0 6px;}
+        }
+        /* 首页持仓卡片：更高一级的留白和价格权重 */
+        #holdList .hold-card-v2{
+            border-radius:12px!important;
+            padding:0 16px!important;
+            border-color:rgba(126,102,80,.10)!important;
+            box-shadow:0 1px 2px rgba(72,49,31,.025),0 4px 12px rgba(72,49,31,.04)!important;
+        }
+        #holdList .hold-card-v2-name{font-size:16.5px!important;}
+        #holdList .hold-card-v2-price{font-size:19px!important;}
+        #holdList .hold-card-v2-price .hcm-cur{font-size:10px!important;vertical-align:1px!important;margin-right:2px!important;color:#8c7c6d!important;}
+        #holdList .hold-card-v2-meta{font-size:11.5px!important;color:#75695c!important;margin-top:7px!important;}
+        #holdList .hold-card-v2-chart{height:38px!important;}
+        #holdList .hold-card-v2-chart svg{height:38px!important;}
+        @media (hover:hover){
+            #holdList .hold-card-v2:hover{
+                transform:translateY(-1px);
+                box-shadow:0 1px 2px rgba(72,49,31,.025),0 5px 14px rgba(72,49,31,.055)!important;
+                border-color:rgba(126,102,80,.16)!important;
+            }
+        }
+        .goal-strip{
+            border-radius:12px!important;
+            border-color:rgba(143,36,55,.10)!important;
+            box-shadow:0 1px 2px rgba(93,72,38,.02),0 4px 12px rgba(93,72,38,.035)!important;
+        }
+        .insight-card{
+            border-radius:12px!important;
+        }
+        #holdList .hold-list-shell{
+            border-radius:12px!important;
+            border:1px solid rgba(126,102,80,.10)!important;
+            box-shadow:0 1px 2px rgba(72,49,31,.025),0 4px 12px rgba(72,49,31,.04)!important;
+        }
+        /* 统计宫格：更安静的白卡 + 更清楚的数字层级 */
+        #pageStats .grid.grid-cols-3{gap:14px!important;}
+        #pageStats .grid.grid-cols-3 > button:not(.col-span-3){
+            border-radius:12px!important;
+            border:1px solid rgba(126,102,80,.09)!important;
+            padding:18px 16px!important;
+            box-shadow:0 1px 2px rgba(93,72,38,.02),0 4px 12px rgba(93,72,38,.04)!important;
+        }
+        #pageStats .grid.grid-cols-3 > .col-span-3{
+            border-radius:12px!important;
+            border:1px solid rgba(126,102,80,.09)!important;
+            padding:15px 18px!important;
+            box-shadow:0 1px 2px rgba(93,72,38,.02),0 4px 12px rgba(93,72,38,.04)!important;
+        }
+        #pageStats .grid.grid-cols-3 > button:not(.col-span-3) [class*="text-[13px]"]{
+            font-size:13.5px!important;
+        }
+        #pageStats .grid.grid-cols-3 > button:not(.col-span-3) [class*="text-[11px]"]{
+            font-size:11.5px!important;
+        }
+        #pageStats #statsCardGoalPct{font-size:21px!important;}
+        #pageStats .grid.grid-cols-3 > button [class*="text-[#a49382]"]{color:#7f7164!important;}
+        #pageStats .grid.grid-cols-3 > button [class*="text-[#b3a48f]"]{color:#857668!important;}
+        #pageStats .module-mark{
+            width:32px!important;height:32px!important;border-radius:10px!important;
+        }
+        #pageStats .module-mark i,#pageStats .module-mark svg{font-size:14px!important;width:14px!important;height:14px!important;}
+        @media (hover:hover){
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3):hover{
+                transform:translateY(-1px);
+                box-shadow:0 1px 2px rgba(93,72,38,.025),0 6px 16px rgba(93,72,38,.055)!important;
+            }
+        }
+        /* 持仓详情：Hero 放大 + 分组卡标题建立酒红索引 */
+        #pageHoldCardDetail .hcd-hero{
+            margin:12px 12px 0!important;
+            padding:20px!important;
+            border-radius:20px!important;
+            background:
+                radial-gradient(100% 90% at 100% 0%,rgba(232,200,138,.10) 0%,rgba(232,200,138,0) 58%),
+                linear-gradient(180deg,#fffdf8 0%,#fffaf3 100%)!important;
+            box-shadow:0 1px 2px rgba(82,55,32,.025),0 8px 20px rgba(82,55,32,.055),inset 0 1px 0 rgba(255,255,255,.9)!important;
+        }
+        #pageHoldCardDetail .hcd-hero::before{height:3px!important;}
+        #pageHoldCardDetail .hcd-hero-name{font-size:20px!important;letter-spacing:.01em!important;}
+        #pageHoldCardDetail .hcd-hero-sub{font-size:11.5px!important;color:#7d6e60!important;}
+        #pageHoldCardDetail .hcd-price{font-size:36px!important;letter-spacing:-.025em!important;}
+        @media(max-width:359px){#pageHoldCardDetail .hcd-price{font-size:34px!important;}}
+        @media(min-width:768px){#pageHoldCardDetail .hcd-price{font-size:40px!important;}}
+        #pageHoldCardDetail .hcd-change-amt{font-size:17px!important;}
+        #pageHoldCardDetail .hcd-change-pct{font-size:15px!important;}
+        #pageHoldCardDetail .hcd-cards{gap:12px!important;margin:14px 12px 0!important;}
+        #pageHoldCardDetail .hcd-card{
+            border-radius:12px!important;
+            border-color:rgba(126,102,80,.10)!important;
+            box-shadow:0 1px 2px rgba(93,72,38,.02),0 4px 12px rgba(93,72,38,.04)!important;
+        }
+        #pageHoldCardDetail .hcd-card-head{
+            padding:15px 18px!important;
+            background:linear-gradient(180deg,#fffdf9 0%,#fffaf3 100%)!important;
+            border-bottom:1px solid #f2e8db!important;
+        }
+        #pageHoldCardDetail .hcd-card-title{
+            font-size:14px!important;
+            display:inline-flex!important;
+            align-items:center!important;
+            color:#403933!important;
+        }
+        #pageHoldCardDetail .hcd-card-title::before{
+            content:"";width:3px;height:11px;border-radius:2px;
+            background:linear-gradient(180deg,#a82d43,#742034);margin-right:8px;flex:0 0 auto;
+        }
+        #pageHoldCardDetail .hcd-card .hcd-cell{padding:11px 18px 14px!important;}
+        #pageHoldCardDetail .hcd-card .hcd-label{font-size:11.5px!important;color:#7d7063!important;}
+        #pageHoldCardDetail .hcd-card .hcd-value{margin-top:7px!important;font-size:17px!important;}
+        #pageHoldCardDetail .hcd-card .hcd-cell.primary .hcd-value{font-size:20px!important;}
+        #pageHoldCardDetail .hcd-card .hcd-value small{font-size:11px!important;}
+        @media (max-width:400px){
+            #holdList .hold-card-v2-meta{display:block!important;margin-top:6px!important;line-height:1.24!important;}
+            #holdList .hold-card-v2-meta .hcm-meta-left{display:block!important;overflow:visible!important;text-overflow:clip!important;}
+            #holdList .hold-card-v2-meta .hcm-pnl-wrap{display:block!important;margin-top:2px!important;}
+        }
+        @media (max-width:380px){
+            #holdList .hold-card-v2{padding:0 12px!important;}
+            #holdList .hold-card-v2-name{font-size:16px!important;}
+            #holdList .hold-card-v2-price{font-size:17.5px!important;}
+            #holdList .hold-card-v2-meta{font-size:10.5px!important;}
+            #holdList .hold-card-v2-chart,#holdList .hold-card-v2-chart svg{height:36px!important;}
+        }
+        @media (max-width:340px){
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) [class*="text-[11px]"]{
+                white-space:normal!important;line-height:1.35!important;
+            }
+            #holdList .hold-card-v2{padding:0 10px!important;}
+            #holdList .hold-card-v2-name{font-size:14.5px!important;}
+            #holdList .hold-card-v2-price{font-size:16.5px!important;}
+            #holdList .hold-card-v2-meta{display:block!important;font-size:10.5px!important;margin-top:5px!important;line-height:1.22!important;}
+            #holdList .hold-card-v2-meta .hcm-meta-left{display:block!important;overflow:visible!important;text-overflow:clip!important;}
+            #holdList .hold-card-v2-meta .hcm-pnl-wrap{display:block!important;margin-top:2px!important;}
+            #holdList .hold-card-v2-chart,#holdList .hold-card-v2-chart svg{height:32px!important;}
+        }
+    </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
-    <div id="pageHold" class="max-w-xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageHold" class="max-w-xl mx-auto px-3 pt-[calc(1rem+env(safe-area-inset-top))] pb-6">
         <!-- 我的持仓标题（置顶，汇总卡上方；右侧消息铃铛与其他一级页统一） -->
         <div class="page-masthead">
             <div class="page-masthead-main">
@@ -2893,7 +3376,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -top-24 -right-20 w-64 h-64 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(143,36,55,.16) 0%,transparent 72%);"></div>
             <div class="relative z-10">
                 <!-- 第一层：总资产（主数字）｜今日盈亏（金额与百分比同行） -->
-                <div class="pt-3 pb-2.5 flex items-start justify-between gap-3">
+                <div class="pt-2.5 pb-1 flex items-start justify-between gap-3">
                     <div class="min-w-0 flex-1">
                         <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform">
                             <span class="tracking-[.06em] font-serif">总资产</span>
@@ -2905,7 +3388,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             <span class="absolute rounded-lg" style="inset:-8px;"></span>
                         </button>
                         <div class="mt-1.5 flex items-baseline min-w-0">
-                            <span class="text-[30px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span id="totalMarket">0.00</span></span>
+                            <span class="text-[28px] font-bold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span class="asset-cur asset-cur-main">¥</span><span id="totalMarket">0.00</span></span>
                         </div>
                     </div>
                     <div class="shrink-0 text-right max-w-[55%]">
@@ -2921,73 +3404,54 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                 </div>
 
-                <div style="height:1px;background:rgba(230,210,163,0.16);transform:scaleY(0.6);"></div>
-
-                <!-- 第二层：两行三列，沿用 v376 整卡平铺结构 -->
-                <div class="pt-3 pb-3">
-                    <div class="grid items-start" style="grid-template-columns:1.4fr 1.04fr 1.4fr; row-gap:15px;">
-                        <!-- 第一行：年度分红收入 / 累计分红 / 预计回本（默认不复投） -->
+                <!-- 第二层：单行三列：年度分红收入 / 总盈利 / 现金 -->
+                <div class="hero-asset-metrics-row pt-2 pb-0.5">
+                    <div class="grid items-start" style="grid-template-columns:1.4fr 1.04fr 1.4fr;">
+                        <!-- 年度分红收入 -->
                         <div class="text-left min-w-0 pr-2">
                             <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="h-4 whitespace-nowrap flex items-center gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-[.06em]">年度分红收入</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-1.5 flex items-baseline gap-1.5 whitespace-nowrap">
-                                <span class="text-[15px] font-medium tabular-nums num-transition text-[#ffffff] leading-none" id="totalYearDiv">0.00</span>
+                            <div class="mt-1.5 flex items-baseline whitespace-nowrap">
+                                <span class="asset-cur asset-cur-metric">¥</span><span class="text-[15px] font-medium tabular-nums num-transition text-[#ffffff] leading-none" id="totalYearDiv">0.00</span>
                             </div>
                         </div>
+                        <!-- 总盈利 -->
                         <div class="text-center min-w-0 px-0.5">
-                            <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="h-4 mx-auto whitespace-nowrap flex items-center justify-center gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-[.06em]">累计分红</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-1.5 text-[15px] font-medium tabular-nums num-transition whitespace-nowrap leading-none" id="totalDivReceivedWrap"><span id="totalDivReceived" class="text-[#ffffff]">0.00</span></div>
+                            <div class="h-4 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] leading-[16px]">总盈利</div>
+                            <div class="mt-1.5 text-[15px] font-medium tabular-nums num-transition leading-none whitespace-nowrap" id="totalProfit">¥0.00</div>
                         </div>
-                        <div class="text-right min-w-0 pl-2">
-                            <button type="button" onclick="openBreakEvenPage()" title="查看回本分析（不复投口径）" class="h-4 ml-auto whitespace-nowrap flex items-center justify-end gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-[.06em]">预计回本 · 不复投</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-1.5 text-[15px] font-medium tabular-nums text-[#ffffff] leading-none whitespace-nowrap" id="sumBeNo">--</div>
-                        </div>
-                        <!-- 第二行：总市值 / 持仓盈亏 / 现金 -->
-                        <div class="text-left min-w-0 pr-2">
-                            <div class="h-4 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] leading-[16px]">总市值</div>
-                            <div class="mt-1.5 text-[15px] font-medium tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="mktVal">0.00</span></div>
-                        </div>
-                        <div class="text-center min-w-0 px-0.5">
-                            <div class="h-4 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] leading-[16px]">持仓盈亏</div>
-                            <div class="mt-1.5 text-[15px] font-medium tabular-nums num-transition leading-none whitespace-nowrap"><span id="totalPnl">0.00</span></div>
-                        </div>
+                        <!-- 现金 -->
                         <div class="text-right min-w-0 pl-2">
                             <button type="button" onclick="openCashFlowFromHold()" title="查看现金变动历史" class="h-4 ml-auto whitespace-nowrap flex items-center justify-end gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-[.06em]">现金</span><i class="fa fa-chevron-right text-[9px]"></i></button>
-                            <div class="mt-1.5 text-[15px] font-medium tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap"><span id="cashVal">0.00</span></div>
+                            <div class="mt-1.5 flex items-baseline justify-end whitespace-nowrap"><span id="cashSign" class="text-[15px] font-medium tabular-nums text-[#ffffff] leading-none"></span><span class="asset-cur asset-cur-metric">¥</span><span id="cashVal" class="text-[15px] font-medium tabular-nums num-transition text-[#ffffff] leading-none">0.00</span></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 更多指标：收纳折叠（回本口径也在此处查询） -->
-                <div class="mt-0.5">
-                    <button type="button" id="moreMetricsToggle" onclick="toggleMoreMetrics()" class="w-full flex items-center justify-center gap-1.5 py-1.5 text-[10.5px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-all">
-                        <i class="fa fa-plus-circle text-[11px]" style="color:rgba(246,196,83,.7)" id="moreMetricsIcon"></i>
-                        <span>更多指标</span>
-                        <i class="fa fa-chevron-down text-[10px] transition-transform duration-300" id="moreMetricsChevron"></i>
-                    </button>
+                <!-- 第二段：总资产曲线（单色、无坐标轴；周期 Tab 在曲线下方） -->
+                <div class="hero-asset-curve-zone">
+                    <div id="heroAssetCurve" class="is-loading" role="img" aria-label="总资产走势，最近 1 天">
+                        <svg id="heroAssetCurveSvg" viewBox="0 0 320 94" preserveAspectRatio="none" aria-hidden="true">
+                            <path d="M0,45 L320,45" stroke="rgba(207,192,166,.35)" stroke-width="1.5" fill="none"/>
+                        </svg>
+                    </div>
+                    <div class="hero-curve-controls">
+                        <div class="hero-period-tabs" role="tablist" aria-label="总资产曲线周期">
+                            <button type="button" class="hero-period-tab is-active" data-hero-period="1D" aria-pressed="true" onclick="setHeroCurvePeriod('1D')">1D</button>
+                            <button type="button" class="hero-period-tab" data-hero-period="1M" aria-pressed="false" onclick="setHeroCurvePeriod('1M')">1M</button>
+                            <button type="button" class="hero-period-tab" data-hero-period="YTD" aria-pressed="false" onclick="setHeroCurvePeriod('YTD')">YTD</button>
+                            <button type="button" class="hero-period-tab" data-hero-period="ALL" aria-pressed="false" onclick="setHeroCurvePeriod('ALL')">ALL</button>
+                        </div>
+                        <button type="button" id="moreMetricsToggle" onclick="toggleMoreMetrics()" class="hero-more-toggle active:scale-95 transition-all">
+                            <i class="fa fa-plus-circle" style="color:rgba(246,196,83,.55)" id="moreMetricsIcon"></i>
+                            <span>更多指标</span>
+                            <i class="fa fa-chevron-down transition-transform duration-300" id="moreMetricsChevron"></i>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- 更多指标：收纳折叠（回本口径与下一笔分红都在此处查询） -->
                 <div id="moreMetricsPanel" class="hidden mb-2.5 rounded-xl" style="background:transparent;">
                     <div class="grid grid-cols-3 gap-0 py-2">
-                        <div class="py-1.5 pr-2">
-                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center gap-1">
-                                <i class="fa fa-calendar-o text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>月均分红</span>
-                            </div>
-                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" id="monthDivWrap"><span id="monthDiv">0.00</span></div>
-                        </div>
-                        <div class="py-1.5 px-2 text-center">
-                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
-                                <i class="fa fa-percent text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>成本息率</span>
-                            </div>
-                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]"><span id="costYield">0.00</span><span class="text-[#b3a488] text-[10px] font-normal">%</span></div>
-                        </div>
-                        <div class="py-1.5 pl-2 text-right">
-                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
-                                <i class="fa fa-percent text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>市值息率</span>
-                            </div>
-                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]"><span id="marketYield">0.00</span><span class="text-[#b3a488] text-[10px] font-normal">%</span></div>
-                        </div>
                         <div class="py-1.5 pr-1.5">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center gap-1">
                                 <i class="fa fa-line-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
@@ -3012,33 +3476,57 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                             <div class="text-[13px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                         </div>
-                    </div>
-                    <!-- 回本口径（复投 / 缺口）：详情页按自身数据独立计算，此处仅作入口与展示 -->
-                    <div class="pb-2 pt-2 flex items-center justify-between gap-2 text-[10px] text-[#cfc0a6]/75" style="border-top:1px solid rgba(230,210,163,0.12);">
-                        <span>复投 <span id="sumBeRe" class="text-[11px] font-semibold tabular-nums text-white">--</span></span>
-                        <span>缺口 <span id="sumBeGap" class="text-[11px] font-semibold tabular-nums text-amber-200">--</span></span>
-                        <button type="button" onclick="openBreakEvenPage()" class="flex items-center gap-1 text-[#cfc0a6] active:scale-95 transition-transform">回本详情<i class="fa fa-chevron-right text-[8px]"></i></button>
-                    </div>
-                </div>
-
-                <!-- 下一笔分红（常显；分隔线 + 无预告时给占位，避免卡高跳动） -->
-                <div id="nextDivFooter" class="mt-1.5 pt-2" style="border-top:1px solid rgba(230,210,163,0.12);">
-                    <div class="flex items-center justify-between gap-2">
-                        <div id="nextDivCountdown" class="min-w-0 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] text-[#cfc0a6]/80">
-                            <span id="nextDivEmpty" class="text-[10px] text-[#cfc0a6]/65">下一笔分红 · 暂无预告</span>
-                            <span id="nextDivDetail" class="hidden flex items-center gap-1.5">
-                                <span id="nextDivDate" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span>
-                                <span style="color:rgba(230,210,163,0.22)">·</span>
-                                <span id="nextDivStock" class="text-[#e8c88a] truncate" style="max-width:52px">--</span>
-                                <span style="color:rgba(230,210,163,0.22)">·</span>
-                                <span>还有 <span id="nextDivDays" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span> 天</span>
-                                <span style="color:rgba(230,210,163,0.22)">·</span>
-                                <span>约 <span id="nextDivAmt" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span></span>
-                            </span>
+                        <!-- 从主卡第二层移入：累计分红 / 持仓盈亏 / 预计回本 -->
+                        <div class="py-1.5 pr-1.5">
+                            <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="h-4 whitespace-nowrap flex items-center gap-1 text-[10px] text-[#cfc0a6] active:scale-95 transition-transform">
+                                <i class="fa fa-history text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>累计分红</span>
+                                <i class="fa fa-chevron-right text-[8px]"></i>
+                            </button>
+                            <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" id="totalDivReceivedWrap"><span id="totalDivReceived">0.00</span></div>
                         </div>
-                        <button type="button" onclick="openDivScheduleFromHold()" class="shrink-0 flex items-center gap-0.5 text-[10px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-transform">
-                            <span>分红日历</span><i class="fa fa-chevron-right text-[8px]"></i>
-                        </button>
+                        <div class="py-1.5 px-2 text-center">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
+                                <i class="fa fa-line-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>持仓盈亏</span>
+                            </div>
+                            <div class="text-[13px] font-semibold tabular-nums num-transition"><span id="totalPnl">0.00</span></div>
+                        </div>
+                        <div class="py-1.5 pl-2 text-right">
+                            <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
+                                <i class="fa fa-pie-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
+                                <span>总市值</span>
+                            </div>
+                            <div class="mt-1.5 flex items-baseline justify-end whitespace-nowrap">
+                                <span class="asset-cur asset-cur-metric">¥</span><span id="mktVal" class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" style="font-size:13px">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 回本口径：预计回本（不复投）与缺口合并到底部一行；复投不在首页展示 -->
+                    <div class="pb-2 pt-2 flex items-center justify-between gap-2 text-[10px] text-[#cfc0a6]/75" style="border-top:1px solid rgba(230,210,163,0.12);">
+                        <span class="whitespace-nowrap">预计回本 <span id="sumBeNo" class="text-[11px] font-semibold tabular-nums text-white">--</span></span>
+                        <span class="whitespace-nowrap">缺口 <span id="sumBeGap" class="text-[11px] font-semibold tabular-nums text-amber-200">--</span></span>
+                        <button type="button" onclick="openBreakEvenPage()" class="flex items-center gap-1 text-[#cfc0a6] active:scale-95 transition-transform whitespace-nowrap">回本详情<i class="fa fa-chevron-right text-[8px]"></i></button>
+                    </div>
+                    <!-- 下一笔分红：收进更多指标，折叠时不占主卡高度 -->
+                    <div id="nextDivFooter" class="mt-2 pt-3" style="border-top:1px solid rgba(230,210,163,0.12);">
+                        <div class="flex items-center justify-between gap-2">
+                            <div id="nextDivCountdown" class="min-w-0 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] text-[#cfc0a6]/80">
+                                <span id="nextDivEmpty" class="text-[10px] text-[#cfc0a6]/65">下一笔分红 · 暂无预告</span>
+                                <span id="nextDivDetail" class="hidden flex items-center gap-1.5">
+                                    <span id="nextDivDate" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span>
+                                    <span style="color:rgba(230,210,163,0.22)">·</span>
+                                    <span id="nextDivStock" class="text-[#e8c88a] truncate" style="max-width:52px">--</span>
+                                    <span style="color:rgba(230,210,163,0.22)">·</span>
+                                    <span>还有 <span id="nextDivDays" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span> 天</span>
+                                    <span style="color:rgba(230,210,163,0.22)">·</span>
+                                    <span>约 <span id="nextDivAmt" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span></span>
+                                </span>
+                            </div>
+                            <button type="button" onclick="openDivScheduleFromHold()" class="shrink-0 flex items-center gap-0.5 text-[10px] text-[#cfc0a6]/70 hover:text-[#cfc0a6] active:scale-95 transition-transform">
+                                <span>分红日历</span><i class="fa fa-chevron-right text-[8px]"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3054,7 +3542,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="flex items-center gap-1.5 min-w-0">
                     <span class="text-[10px] font-semibold tracking-[.06em]" style="color:#8f2437;">交易洞察</span>
                     <span id="tradeInsightPeriod" class="text-[9px] font-medium" style="color:#a49382;">今日</span>
-                    <span id="tradeInsightTotal" class="ml-auto text-[13px] font-semibold tabular-nums leading-none" style="color:#e03131;">+¥0.00</span>
+                    <span id="tradeInsightTotal" class="ml-auto text-[13px] font-semibold tabular-nums leading-none" style="color:#d85454;">+¥0.00</span>
                     <span class="text-[13px] leading-none" style="color:#b8a793;">›</span>
                 </div>
                 <div id="tradeInsightSub" class="mt-1 text-[10px] leading-[1.4] truncate" style="color:#8f7f6d;">--</div>
@@ -3485,7 +3973,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 交易明细独立页面（买卖流水 + 分红到账时间线；手机上独立页面比弹窗体验更好，记录多时分页加载） -->
     <div id="pageTradeLog" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航（吸顶白卡圆角，与今年已收/年度快照等详情页统一） -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -3706,7 +4194,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 回本分析独立页面：账户汇总 + 回本时间趋势 + 各股明细与操作影响（首页汇总卡/卡片副行可进入） -->
     <div id="pageBreakEven" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部导航（吸顶白卡圆角，与交易明细等详情页统一） -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -3791,7 +4279,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 总资产趋势页（历史新高入口 · 年末总资产轨迹 + 翻倍推演） -->
     <div id="pageAssetHigh" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -4062,7 +4550,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 资产分析页面：账户全景 · 财富轨迹 · 年度成绩单 · 分红账本 · 复利引擎 -->
     <div id="pageAnalysis" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#8b4a6b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -4373,7 +4861,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 自选页：东方财富通风格（标题栏 + 指数汇总卡 + 表头吸顶固定；列表按内容自然长度延伸，自选页整页滚动到底，同首页体验） -->
     <div id="pageWatchSel" class="hidden max-w-2xl mx-auto fixed inset-0 z-30 px-3" style="overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <!-- 吸顶区：标题栏 + 指数汇总卡 + 表头（纵向滚动时整体固定在顶部，背景与页面一致） -->
-        <div id="watchSelSticky" class="sticky top-0 z-50" style="background:#f5efe3;margin:0 -0.75rem;padding:calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 0;">
+        <div id="watchSelSticky" class="sticky top-0 z-50" style="background:#f5efe3;margin:0 -0.75rem;padding:calc(env(safe-area-inset-top) + 1rem) 0.75rem 0;">
             <!-- 标题栏：与其余一级页共用刊头语法（眉标 + 宋体大标题 + 发丝线），吸顶区结构不动 -->
             <div class="page-masthead">
                 <div class="page-masthead-main">
@@ -4454,7 +4942,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- ==================== 管理自选股详情页（拖拽排序：点"完成"应用顺序并返回主页面） ==================== -->
     <div id="pageWatchManage" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-24">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="applyWatchOrder()" class="h-9 px-4 rounded-xl bg-gradient-to-b from-[#8f2437] to-[#742034] text-[#ffe5bb] text-[13px] font-semibold flex items-center gap-1.5 shadow-sm shadow-[#742034]/25 active:scale-95 transition-transform">
@@ -4477,7 +4965,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- ===== 股票详情页（自选股点击进入；点击即加载，无后台自动刷新） ===== -->
     <div id="pageStockDetail" class="hidden detail-page fixed inset-0 z-30 overflow-y-auto overscroll-none max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-24" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <!-- 标题栏 -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStockDetail()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
@@ -4591,7 +5079,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
 
     <!-- 统计页面 -->
-    <div id="pageStats" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageStats" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1rem+env(safe-area-inset-top))] pb-6">
         <div class="page-masthead">
             <div class="page-masthead-main">
                 <div class="page-eyebrow">INSIGHTS</div>
@@ -4715,7 +5203,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：今日盈亏（首页「今日盈亏」与统计页「今日涨跌幅」共用） -->
     <div id="pageStatsToday" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-3 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-3 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -4835,7 +5323,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：仓位分布 -->
     <div id="pageStatsPosition" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -4913,7 +5401,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：盈亏排行 -->
     <div id="pageStatsPnl" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -4998,7 +5486,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：累计分红排行 -->
     <div id="pageStatsDivRank" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -5059,7 +5547,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：分红派发日程 -->
     <div id="pageStatsSchedule" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -5160,7 +5648,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：目标规划 -->
     <div id="pageGoalPlan" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
@@ -5171,7 +5659,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
 
         <!-- 核心进度 -->
-        <div class="relative rounded-[22px] overflow-hidden mb-4" style="background:linear-gradient(155deg,#2b1420 0%,#3a1b2b 58%,#2d203d 100%);box-shadow:0 14px 34px rgba(46,18,32,0.24),inset 0 1px 0 rgba(255,226,181,0.10)">
+        <div class="relative rounded-[20px] overflow-hidden mb-4" style="background:linear-gradient(155deg,#2b1420 0%,#3a1b2b 58%,#2d203d 100%);box-shadow:0 14px 34px rgba(46,18,32,0.24),inset 0 1px 0 rgba(255,226,181,0.10)">
             <div class="absolute inset-0 pointer-events-none opacity-[0.22]" style="background:radial-gradient(120% 80% at 82% 0%,rgba(242,212,146,0.30),transparent 58%)"></div>
             <div class="absolute -bottom-12 -left-10 w-44 h-44 rounded-full pointer-events-none opacity-[0.10]" style="background:radial-gradient(circle,#c07b32,transparent 68%)"></div>
             <div class="relative px-5 pt-4 pb-5">
@@ -5310,7 +5798,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：分红升降对比 -->
     <div id="pageStatsCompare" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -5475,7 +5963,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：行业资产分布 -->
     <div id="pageStatsIndustry" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -5551,7 +6039,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：资金流水 -->
     <div id="pageStatsCashFlow" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -5700,7 +6188,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：风险指标（最大回撤 / 年化波动 / 最长水下，按每日总资产快照计算） -->
     <div id="pageStatsRisk" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
@@ -5734,7 +6222,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：收支统计（手动录入当月收入/支出，与持仓无关；月/年维度走势与汇总） -->
     <div id="pageStatsCashBook" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-28">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -5890,7 +6378,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 统计详情：交易明细（每笔买入/卖出 + 修改持仓事件，本地实时） -->
     <div id="pageStatsTrade" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -6056,7 +6544,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 我的页面 -->
-    <div id="pageMine" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageMine" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1rem+env(safe-area-inset-top))] pb-6">
         <div class="page-masthead">
             <div class="page-masthead-main">
                 <div class="page-eyebrow">PROFILE</div>
@@ -6202,7 +6690,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 年度快照页面：每年年末手动一键保存组合快照，永久留存用于多年回溯与报表 -->
     <div id="pageYearSnapshot" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题 -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -6235,7 +6723,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 消息中心页面：当日重要信息（除权提醒 + 股息率提醒），券商级消息推送 -->
     <div id="pageNotifCenter" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -6270,7 +6758,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 分红明细页面：今年已收分红的每一笔来源（设置基准 + 各股票除权到账） -->
     <div id="pageDivDetail" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -6297,6 +6785,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="text-right space-y-1">
                         <div class="text-[11px]" style="color:#8a7354" id="divDetailCountLine">分红笔数 <span class="font-semibold" style="color:#742034" id="divDetailCount">0</span></div>
                         <div class="text-[11px]" style="color:#8a7354" id="divDetailStocksLine">来自 <span class="font-semibold" style="color:#742034" id="divDetailStocks">0</span> 只持仓</div>
+                        <div class="text-[11px] hidden" style="color:#8a7354" id="divDetailMonthLine" title="按年度分红收入 ÷ 12">月均分红 <span class="font-semibold tabular-nums" style="color:#742034" id="divDetailMonthAvg">¥0.00</span></div>
                     </div>
                 </div>
                 <div id="divDetailHint" class="text-[10px] mt-2" style="color:#9a8b76">每笔 = 每股分红 × 持股数 · 仅统计已实施并发放到账的分红</div>
@@ -6439,7 +6928,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 投入成本明细页面：初始成本 + 历年净流入的来源 -->
     <div id="pageCostDetail" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -6475,7 +6964,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 净值历史页面：每年最终净值 + 年度增长率（风格与投入成本明细统一） -->
     <div id="pageNavDetail" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-10">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -7476,7 +7965,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <!-- 分红收入里程碑页面 -->
-    <div id="pageMilestone" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
+    <div id="pageMilestone" class="hidden max-w-2xl mx-auto px-3 pt-[calc(1rem+env(safe-area-inset-top))] pb-6">
         <!-- 头部 -->
         <div class="page-masthead">
             <div class="page-masthead-main">
@@ -7623,7 +8112,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 资金转账详情页：资金转入/取出记录 + 年度汇总（与资金流水同源，风格统一） -->
     <div id="pageFundTransfer" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部吸顶标题栏：标题 + 右侧醒目"新增流水"按钮 -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -7715,7 +8204,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </div>
 
     <div id="pageSettings" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -7906,7 +8395,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 行业映射配置页（我的 - 行业映射配置） -->
     <div id="pageIndustryMap" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部标题栏（白色卡片 + 吸顶固定，与其他详情页统一） -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -7991,7 +8480,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 股票评分页面（设置-股票评分：巴菲特式收息标准） -->
     <div id="pageStockScores" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
         <!-- 顶部标题栏（白色卡片 + 吸顶固定） -->
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
@@ -8011,7 +8500,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- 持仓体检页面（组合级护城河打分 + 红黄绿榜，与"股票评分"并存） -->
     <div id="pageHealthCheck" class="hidden detail-page fixed inset-0 z-30 overflow-y-auto overscroll-none max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
-        <div class="relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeHealthCheck()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
@@ -15289,6 +15778,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function fmtPctNum(v){ v = Number(v); return (v > 0 ? '+' : (v < 0 ? '-' : '')) + Math.abs(v).toFixed(2) + '%'; }
         function fmtPnlNum(v){ v = Number(v); return (v > 0 ? '+' : (v < 0 ? '-' : '')) + fmtMoney(Math.abs(v)); }
 
+        // 首页主卡专用：金额保留千分位，币种符号由 DOM/CSS 控制，不影响其他页面
+        function fmtMoneyTop(v, withCurrency){
+            const n = Number(v) || 0;
+            const neg = n < 0;
+            const abs = Math.abs(n);
+            let s;
+            if(abs >= 100000000){
+                s = (abs / 100000000).toFixed(2) + '亿';
+            } else if(abs >= 10000){
+                s = (abs / 10000).toFixed(2) + '万';
+            } else {
+                s = abs.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            }
+            return (neg ? '-' : '') + (withCurrency ? '¥' : '') + s;
+        }
+        function fmtPnlTop(v, withCurrency = true){
+            const n = Number(v) || 0;
+            const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
+            return sign + (withCurrency ? '¥' : '') + fmtMoneyTop(Math.abs(n)).replace(/^-/, '');
+        }
+
         // 金额格式化：不加千分位逗号；超过10万以"万"为单位（如 38.28万）
         function fmtMoney(v){
             const neg = v < 0;
@@ -19857,6 +20367,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function tradeInsightColor(v){
             const n = Number(v) || 0;
+            if(n > 0.004) return '#d85454';
+            if(n < -0.004) return '#389973';
+            return '#2f2a27';
+        }
+        // 交易洞察详情页：白色卡面使用全站经典涨红/跌绿，提升数字对比度
+        function tradeInsightDetailColor(v){
+            const n = Number(v) || 0;
             if(n > 0.004) return '#e03131';
             if(n < -0.004) return '#00a05c';
             return '#2f2a27';
@@ -19970,7 +20487,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(tagEl) tagEl.innerText = pName;
             if(totalEl){
                 totalEl.innerText = fmtTradeInsightMoney(data.total);
-                totalEl.style.color = tradeInsightColor(data.total);
+                totalEl.style.color = tradeInsightDetailColor(data.total);
             }
             if(metaEl){
                 metaEl.innerText = data.stockCount
@@ -20002,7 +20519,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<div class="ti-row-name" title="' + tiEsc(x.name || x.code) + '">' + tiEsc(x.name || x.code) + '</div>'
                     + '<div class="ti-row-meta">' + tiEsc(metaText) + closedBadge + '</div>'
                     + '</div>'
-                    + '<div class="ti-row-amt" style="color:' + tradeInsightColor(x.profit) + '">' + fmtTradeInsightMoney(x.profit) + '</div>'
+                    + '<div class="ti-row-amt" style="color:' + tradeInsightDetailColor(x.profit) + '">' + fmtTradeInsightMoney(x.profit) + '</div>'
                     + '</div>';
             }).join('');
         }
@@ -21809,6 +22326,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             statsEl.classList.remove('hidden');
             const summaryEl = document.querySelector('#divDetailYearSummary');
             if(summaryEl) summaryEl.classList.remove('hidden');
+            const monthLineEl = document.querySelector('#divDetailMonthLine');
+            if(monthLineEl) monthLineEl.classList.remove('hidden');
+            const monthAvgEl = document.querySelector('#divDetailMonthAvg');
             const receivedEl = document.querySelector('#divddReceived');
             const pendingEl = document.querySelector('#divddPending');
             const progressEl = document.querySelector('#divddProgress');
@@ -21876,10 +22396,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const grandTotal = received + pending;
             const progress = grandTotal > 0 ? Math.min(100, Math.max(0, received / grandTotal * 100)) : 0;
             // 股息率：年度分红收入 ÷ 总资产，与首页原口径同源，但只在年度详情中展示
-            const totalAssetForYield = Number(calcSummary().totalAsset) || 0;
+            const summaryForDiv = calcSummary();
+            const totalAssetForYield = Number(summaryForDiv.totalAsset) || 0;
             const yieldPct = (grandTotal > 0 && totalAssetForYield > 0) ? (grandTotal / totalAssetForYield * 100) : null;
+            const monthAvg = grandTotal / 12;
             if(yieldEl) yieldEl.innerText = yieldPct != null ? yieldPct.toFixed(2) + '%' : '--';
             if(yieldBadgeEl) yieldBadgeEl.classList.toggle('hidden', yieldPct == null);
+            if(monthAvgEl) monthAvgEl.innerText = '¥' + fmtMoney(monthAvg);
             const recCount = entries.filter(function(e){ return e.kind === 'manual' || !/^预测/.test(String(e.sub || '')); }).length;
             const pendCount = entries.filter(function(e){ return e.kind !== 'manual' && /^预测/.test(String(e.sub || '')); }).length;
             const statsStockCount = Object.keys(stockMap).length;
@@ -22021,6 +22544,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(statsRoot) statsRoot.classList.add('hidden');
             const summaryRoot = document.querySelector('#divDetailYearSummary');
             if(summaryRoot) summaryRoot.classList.add('hidden');
+            const monthLineRoot = document.querySelector('#divDetailMonthLine');
+            if(monthLineRoot) monthLineRoot.classList.add('hidden');
             const cumulativeCardRoot = document.querySelector('#divDetailCumulativeCard');
             if(cumulativeCardRoot) cumulativeCardRoot.classList.add('hidden');
             const yieldBadgeRoot = document.querySelector('#divDetailYieldBadge');
@@ -35216,6 +35741,451 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var positionWarnMessage = '';
         var _todayPnlLoadStartedAt = 0;
         var _todayPnlLoadTimer = null;
+        var _todayPnlNow = null;
+
+        // ==================== 首页主卡：总资产曲线 ====================
+        // 日线：复用 assetDaily（一天一条，长期保存）。
+        // 1D：单独一条“仅当天”的 20 分钟采样，date 变化即覆盖，不占用长期存储。
+        var HERO_INTRADAY_KEY = 'dividendIntradayAssets';
+        var HERO_INTRADAY_START = 570;   // 09:30
+        var HERO_INTRADAY_END = 900;     // 15:00
+        var HERO_INTRADAY_MAX_POINTS = 3600; // 6-10 秒采样，覆盖完整交易时段
+        var HERO_PERIOD_META = {
+            '1D': { label: '最近 1 天', maxPoints: 0 },
+            '1M': { label: '最近 1 个月', maxPoints: 400 },
+            'YTD': { label: '今年以来', maxPoints: 500 },
+            'ALL': { label: '全部历史', maxPoints: 1200 }
+        };
+        var _heroCurvePeriod = '1D';
+        var _heroCurveInited = false;
+        var _heroCurveCache = {};
+        var _heroCurveCacheDay = '';
+        var _heroCurveToken = 0;
+        var _heroIntradayData = null;
+        var _heroPrevClose = null;
+        var _heroPrevCloseDay = '';
+        var _heroPrevClosePromise = null;
+        var _heroMarketTimer = null;
+        var _heroLastTotal = 0;
+        var _heroLastPoints = [];
+        var _heroResizeTimer = null;
+        var _heroResizeObserver = null;
+
+        function heroPad2(n){ return n < 10 ? '0' + n : String(n); }
+        function heroDateStr(d){
+            return d.getFullYear() + '-' + heroPad2(d.getMonth() + 1) + '-' + heroPad2(d.getDate());
+        }
+        function heroDateToTs(s){
+            var p = String(s || '').split('-');
+            if(p.length < 3) return 0;
+            var ts = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12, 0, 0).getTime();
+            return isFinite(ts) ? ts : 0;
+        }
+        function heroCurveColor(){
+            var pnl = _todayPnlNow == null ? null : Number(_todayPnlNow);
+            if(pnl == null || !isFinite(pnl) || Math.abs(pnl) < 0.005) return '#b8a58f';
+            return pnl > 0 ? '#d85454' : '#389973';
+        }
+        // 1D 采样时间用“当日分钟（带秒小数）”，6–10 秒刷新即可落一个真实点；
+        // 09:30 前归到 09:30（集合竞价前的静值不铺开），15:00 后归到收盘点。
+        function heroIntradayTime(d){
+            var mins = d.getHours() * 60 + d.getMinutes()
+                + (d.getSeconds() + d.getMilliseconds() / 1000) / 60;
+            if(mins < HERO_INTRADAY_START) return HERO_INTRADAY_START;
+            if(mins > HERO_INTRADAY_END) return HERO_INTRADAY_END;
+            return mins;
+        }
+        function readHeroIntradayData(){
+            if(_heroIntradayData && _heroIntradayData.date === todayStr()) return _heroIntradayData;
+            var data = null;
+            try{
+                var raw = lsGet(HERO_INTRADAY_KEY);
+                if(raw){
+                    var parsed = JSON.parse(raw);
+                    if(parsed && parsed.date && Array.isArray(parsed.points)) data = parsed;
+                }
+            }catch(e){}
+            if(!data || data.date !== todayStr()){
+                data = { date: todayStr(), points: [] };
+            }
+            _heroIntradayData = data;
+            return data;
+        }
+        function saveHeroIntradayData(data){
+            _heroIntradayData = data;
+            try{ lsSet(HERO_INTRADAY_KEY, JSON.stringify(data)); }catch(e){}
+        }
+        function heroPrevDateStr(){
+            var d = new Date();
+            d.setDate(d.getDate() - 1);
+            return heroDateStr(d);
+        }
+        // 交易日 09:00 前 / 非交易日：1D 显示上一交易日收盘；09:00 起显示当天真实快照
+        function heroShowPrevClose(now){
+            if(!isTradingDay(now)) return true;
+            return (now.getHours() * 60 + now.getMinutes()) < 540;
+        }
+        function heroCanRecordIntraday(now){
+            if(!isTradingDay(now)) return false;
+            return (now.getHours() * 60 + now.getMinutes()) >= 540;
+        }
+        function loadHeroPrevClose(){
+            var today = todayStr();
+            if(_heroPrevCloseDay === today && _heroPrevClose != null) return Promise.resolve(_heroPrevClose);
+            if(_heroPrevClosePromise) return _heroPrevClosePromise;
+            _heroPrevClosePromise = (async function(){
+                var now = new Date();
+                var endD = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+                var startD = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 45);
+                var start = heroDateStr(startD), end = heroDateStr(endD);
+                var rows = [];
+                if(AppDB.ok && AppDB.db){
+                    try{ rows = await AssetDaily.loadRange(start, end); }catch(e){ rows = []; }
+                }
+                if(!rows.length){
+                    Object.keys(historyData.dailyAssets || {}).forEach(function(d){
+                        if(d >= start && d <= end) rows.push({ date: d, total: Number(historyData.dailyAssets[d]) || 0 });
+                    });
+                    rows.sort(function(a, b){ return String(a.date).localeCompare(String(b.date)); });
+                }
+                var val = 0;
+                for(var i = rows.length - 1; i >= 0; i--){
+                    var v = Number(rows[i] && rows[i].total) || 0;
+                    if(v > 0 && String(rows[i].date) < today){ val = v; break; }
+                }
+                _heroPrevClose = val;
+                _heroPrevCloseDay = today;
+                _heroPrevClosePromise = null;
+                return val;
+            })().catch(function(){
+                _heroPrevClose = 0;
+                _heroPrevCloseDay = today;
+                _heroPrevClosePromise = null;
+                return 0;
+            });
+            return _heroPrevClosePromise;
+        }
+        // 09:00 清掉旧的 1D 采样，只保留当天真实快照；历史遗留的 seed 估算点一并移除
+        function resetHeroIntradayForMarketOpen(){
+            var today = todayStr();
+            var data = readHeroIntradayData();
+            var pts = (data.points || []).filter(function(p){
+                return !p.seed && isFinite(Number(p.t)) && isFinite(Number(p.v)) && Number(p.v) > 0;
+            }).map(function(p){
+                return { t: Number(p.t), v: Number(p.v) };
+            });
+            saveHeroIntradayData({ date: today, points: pts });
+        }
+        // 只记录真实总资产快照，不再用“当前总资产 − 今日盈亏”反推开盘值。
+        // 每次 6–10 秒刷新都落一个点；同一秒内重复刷新只更新最后一个点，避免抖动。
+        function recordHeroIntradayPoint(total, force){
+            if(!(Number(total) > 0)) return;
+            var now = new Date();
+            if(!heroCanRecordIntraday(now)) return;
+            var today = todayStr();
+            var data = readHeroIntradayData();
+            if(data.date !== today){
+                data = { date: today, points: [] };
+            }
+            var t = Number(heroIntradayTime(now).toFixed(4));
+            var pts = data.points.map(function(p){
+                return { t: Number(p.t), v: Number(p.v), seed: !!p.seed };
+            }).filter(function(p){
+                return !p.seed && isFinite(p.t) && isFinite(p.v) && p.v > 0;
+            });
+            var changed = pts.length !== data.points.length;
+            var last = pts.length ? pts[pts.length - 1] : null;
+            if(last && Math.abs(last.t - t) < 0.02){
+                if(Math.abs(Number(last.v) - Number(total)) > 0.005){
+                    last.v = Number(total);
+                    changed = true;
+                }
+            }else{
+                pts.push({ t: t, v: Number(total) });
+                changed = true;
+            }
+            pts.sort(function(a, b){ return a.t - b.t; });
+            if(pts.length > HERO_INTRADAY_MAX_POINTS) pts = pts.slice(pts.length - HERO_INTRADAY_MAX_POINTS);
+            data.points = pts;
+            if(changed || force) saveHeroIntradayData(data);
+            else _heroIntradayData = data;
+        }
+        function getHeroIntradayPoints(){
+            var data = readHeroIntradayData();
+            return (data.points || []).filter(function(p){ return !p.seed; })
+                .map(function(p){ return { t: Number(p.t), v: Number(p.v) }; })
+                .filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v > 0; })
+                .sort(function(a, b){ return a.t - b.t; });
+        }
+        function heroMergeCurrent(points, total){
+            var todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+            var out = (points || []).filter(function(p){
+                return p && Number(p.t) > 0 && Number(p.v) > 0 && Number(p.t) < todayStart;
+            }).map(function(p){ return { t: Number(p.t), v: Number(p.v) }; });
+            if(Number(total) > 0) out.push({ t: Date.now(), v: Number(total) });
+            return out;
+        }
+        function heroCurvePath(points, w, h, padY){
+            var pts = (points || []).map(function(p){ return { t: Number(p.t), v: Number(p.v) }; })
+                .filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v > 0; })
+                .sort(function(a, b){ return a.t - b.t; });
+            if(!pts.length) return null;
+            if(pts.length === 1){
+                var only = pts[0];
+                pts = [{ t: only.t, v: only.v }, { t: only.t + 1, v: only.v }];
+            }
+            var minT = pts[0].t, maxT = pts[pts.length - 1].t;
+            var minV = Math.min.apply(null, pts.map(function(p){ return p.v; }));
+            var maxV = Math.max.apply(null, pts.map(function(p){ return p.v; }));
+            if(minV === maxV){ minV -= 0.5; maxV += 0.5; }
+            var spanT = maxT - minT;
+            var padX = 3;
+            var drawW = Math.max(1, w - padX * 2);
+            var xy = pts.map(function(p, i){
+                var x = spanT > 0 ? padX + (p.t - minT) / spanT * drawW : (pts.length === 1 ? padX : padX + i / (pts.length - 1) * drawW);
+                var y = padY + (maxV - p.v) / (maxV - minV) * (h - padY * 2);
+                return { x: x, y: y };
+            });
+            var d = 'M' + xy[0].x.toFixed(2) + ',' + xy[0].y.toFixed(2);
+            if(xy.length === 2){
+                d += ' L' + xy[1].x.toFixed(2) + ',' + xy[1].y.toFixed(2);
+            }else{
+                for(var i = 0; i < xy.length - 1; i++){
+                    var p0 = xy[i - 1] || xy[i];
+                    var p1 = xy[i];
+                    var p2 = xy[i + 1];
+                    var p3 = xy[i + 2] || p2;
+                    var cp1x = p1.x + (p2.x - p0.x) / 6;
+                    var cp1y = p1.y + (p2.y - p0.y) / 6;
+                    var cp2x = p2.x - (p3.x - p1.x) / 6;
+                    var cp2y = p2.y - (p3.y - p1.y) / 6;
+                    // 50px 画布只留 4px 内边距，曲率控制点必须夹在绘图区内，避免线被裁掉
+                    cp1y = Math.max(padY, Math.min(h - padY, cp1y));
+                    cp2y = Math.max(padY, Math.min(h - padY, cp2y));
+                    d += ' C' + cp1x.toFixed(2) + ',' + cp1y.toFixed(2)
+                        + ' ' + cp2x.toFixed(2) + ',' + cp2y.toFixed(2)
+                        + ' ' + p2.x.toFixed(2) + ',' + p2.y.toFixed(2);
+                }
+            }
+            return { d: d, end: xy[xy.length - 1] };
+        }
+        function heroCurveSvg(points, w, h){
+            var color = heroCurveColor();
+            var padY = 4;
+            var built = heroCurvePath(points, w, h, padY);
+            if(!built){
+                return '<path d="M0,' + (h - padY) + ' L' + w + ',' + (h - padY) + '" stroke="rgba(207,192,166,.32)" stroke-width="1.5" fill="none"/>';
+            }
+            var area = built.d + ' L' + w + ',' + h + ' L0,' + h + ' Z';
+            return '<defs>'
+                + '<linearGradient id="heroAssetGrad" x1="0" y1="0" x2="0" y2="1">'
+                + '<stop offset="0%" stop-color="' + color + '" stop-opacity=".12"/>'
+                + '<stop offset="72%" stop-color="' + color + '" stop-opacity=".04"/>'
+                + '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>'
+                + '</linearGradient>'
+                + '</defs>'
+                + '<path d="' + area + '" fill="url(#heroAssetGrad)" stroke="none"/>'
+                + '<path d="' + built.d + '" stroke="' + color + '" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+                + '<circle cx="' + built.end.x.toFixed(2) + '" cy="' + built.end.y.toFixed(2) + '" r="2.4" fill="' + color + '"/>';
+        }
+        function renderHeroAssetCurve(points){
+            var el = document.querySelector('#heroAssetCurve');
+            if(!el) return;
+            _heroLastPoints = points || [];
+            var svg = el.querySelector('svg');
+            if(!svg) return;
+            var w = Math.max(200, Math.floor(el.clientWidth || 320));
+            var h = Math.max(40, Math.floor(el.clientHeight || 94));
+            var drawPoints = heroDownsampleForRender(_heroLastPoints, w);
+            svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+            svg.setAttribute('preserveAspectRatio', 'none');
+            svg.innerHTML = heroCurveSvg(drawPoints, w, h);
+            el.classList.remove('is-loading');
+            var meta = HERO_PERIOD_META[_heroCurvePeriod] || HERO_PERIOD_META['1D'];
+            el.setAttribute('aria-label', '总资产走势，' + meta.label);
+        }
+        // 高频 1D 数据全部保留；绘制时按画布像素做 min/max 抽稀，视觉不丢峰谷，也不会每 6 秒解析上万段路径
+        function heroDownsampleForRender(points, width){
+            var pts = points || [];
+            var maxDraw = Math.max(240, Math.floor(width * 2));
+            if(pts.length <= maxDraw) return pts;
+            var bucketCount = Math.max(1, Math.floor(maxDraw / 2));
+            var bucketSize = pts.length / bucketCount;
+            var out = [pts[0]];
+            for(var b = 0; b < bucketCount; b++){
+                var start = Math.floor(b * bucketSize);
+                var end = Math.min(pts.length, Math.floor((b + 1) * bucketSize));
+                if(end <= start) continue;
+                var minI = start, maxI = start;
+                for(var i = start + 1; i < end; i++){
+                    if(pts[i].v < pts[minI].v) minI = i;
+                    if(pts[i].v > pts[maxI].v) maxI = i;
+                }
+                var first = Math.min(minI, maxI), second = Math.max(minI, maxI);
+                if(!out.length || out[out.length - 1] !== pts[first]) out.push(pts[first]);
+                if(second !== first) out.push(pts[second]);
+            }
+            var last = pts[pts.length - 1];
+            if(out.length && out[out.length - 1] !== last) out.push(last);
+            return out;
+        }
+        function updateHeroCurveTabs(){
+            document.querySelectorAll('.hero-period-tab').forEach(function(btn){
+                var on = btn.getAttribute('data-hero-period') === _heroCurvePeriod;
+                btn.classList.toggle('is-active', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }
+        async function buildHeroDailyPoints(period){
+            var now = new Date();
+            var start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if(period === '1M') start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+            else if(period === 'YTD') start = new Date(now.getFullYear(), 0, 1);
+            else start = new Date(ASSET_DAILY_START_DATE + 'T12:00:00');
+            var startStr = heroDateStr(start);
+            var endStr = todayStr();
+            var maxPoints = (HERO_PERIOD_META[period] || HERO_PERIOD_META['1M']).maxPoints || 500;
+            var rows = [];
+            if(AppDB.ok && AppDB.db){
+                try{
+                    var pack = await AssetDaily.loadRangeSampled(startStr, endStr, maxPoints);
+                    rows = (pack && pack.rows) || [];
+                }catch(e){ rows = []; }
+            }
+            if(!rows.length){
+                // IndexedDB 不可用时的只读兜底；不写回、不影响主数据
+                Object.keys(historyData.dailyAssets || {}).forEach(function(d){
+                    if(d >= startStr && d <= endStr){
+                        rows.push({ date: d, total: Number(historyData.dailyAssets[d]) || 0 });
+                    }
+                });
+            }
+            var pts = [];
+            rows.forEach(function(r){
+                var v = Number(r && r.total) || 0;
+                var t = heroDateToTs(r && r.date);
+                if(v > 0 && t > 0) pts.push({ t: t, v: v });
+            });
+            pts.sort(function(a, b){ return a.t - b.t; });
+            return pts;
+        }
+        function refreshHero1D(total){
+            var now = new Date();
+            var val = Number(total) || 0;
+            if(heroShowPrevClose(now)){
+                // 开盘前/非交易日：只显示上一交易日收盘，不使用当天任何估算点
+                var cachedPrev = (_heroPrevCloseDay === todayStr() && _heroPrevClose != null) ? (Number(_heroPrevClose) || 0) : 0;
+                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: cachedPrev > 0 ? cachedPrev : val }]);
+                if(cachedPrev > 0) return;
+                var token = ++_heroCurveToken;
+                var el = document.querySelector('#heroAssetCurve');
+                if(el) el.classList.add('is-loading');
+                loadHeroPrevClose().then(function(prev){
+                    if(token !== _heroCurveToken || _heroCurvePeriod !== '1D') return;
+                    var pv = Number(prev) > 0 ? Number(prev) : val;
+                    renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: pv }]);
+                });
+                return;
+            }
+            // 09:00 起：清掉上一日残留，只画当天真实快照
+            _heroCurveToken++;
+            recordHeroIntradayPoint(val);
+            renderHeroAssetCurve(getHeroIntradayPoints());
+        }
+        function scheduleHeroMarketOpen(){
+            if(_heroMarketTimer){ clearTimeout(_heroMarketTimer); _heroMarketTimer = null; }
+            var now = new Date();
+            var next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+            if(next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
+            _heroMarketTimer = setTimeout(function(){
+                _heroMarketTimer = null;
+                _heroPrevClose = null;
+                _heroPrevCloseDay = '';
+                _heroPrevClosePromise = null;
+                resetHeroIntradayForMarketOpen();
+                if(_heroCurveInited && _heroCurvePeriod === '1D') refreshHero1D(_heroLastTotal);
+                scheduleHeroMarketOpen();
+            }, Math.max(1000, next.getTime() - now.getTime() + 600));
+        }
+        function loadHeroCurvePeriod(period){
+            if(period === '1D'){
+                refreshHero1D(_heroLastTotal);
+                return;
+            }
+            var token = ++_heroCurveToken;
+            var el = document.querySelector('#heroAssetCurve');
+            if(el){
+                renderHeroAssetCurve(heroMergeCurrent([], _heroLastTotal));
+                el.classList.add('is-loading');
+            }
+            buildHeroDailyPoints(period).then(function(points){
+                if(token !== _heroCurveToken || period !== _heroCurvePeriod) return;
+                _heroCurveCache[period] = { day: todayStr(), points: points };
+                renderHeroAssetCurve(heroMergeCurrent(points, _heroLastTotal));
+            }).catch(function(){
+                if(token !== _heroCurveToken || period !== _heroCurvePeriod) return;
+                _heroCurveCache[period] = { day: todayStr(), points: [] };
+                renderHeroAssetCurve(heroMergeCurrent([], _heroLastTotal));
+            });
+        }
+        function setHeroCurvePeriod(period){
+            if(!HERO_PERIOD_META[period]) return;
+            _heroCurvePeriod = period;
+            updateHeroCurveTabs();
+            if(period === '1D'){
+                refreshHero1D(_heroLastTotal);
+                return;
+            }
+            var cached = _heroCurveCache[period];
+            if(cached && cached.day === todayStr()){
+                renderHeroAssetCurve(heroMergeCurrent(cached.points, _heroLastTotal));
+            }else{
+                loadHeroCurvePeriod(period);
+            }
+        }
+        function ensureHeroCurveInited(){
+            if(_heroCurveInited) return;
+            _heroCurveInited = true;
+            _heroCurveCacheDay = todayStr();
+            updateHeroCurveTabs();
+            var el = document.querySelector('#heroAssetCurve');
+            if(window.ResizeObserver && el){
+                _heroResizeObserver = new ResizeObserver(function(){
+                    if(el.clientWidth > 0 && _heroLastPoints && _heroLastPoints.length){
+                        renderHeroAssetCurve(_heroLastPoints);
+                    }
+                });
+                _heroResizeObserver.observe(el);
+            }
+            window.addEventListener('resize', function(){
+                clearTimeout(_heroResizeTimer);
+                _heroResizeTimer = setTimeout(function(){
+                    if(_heroLastPoints && _heroLastPoints.length) renderHeroAssetCurve(_heroLastPoints);
+                }, 120);
+            });
+            // 页面从后台回到前台时，若已跨过 09:00，立即从“昨日收盘”切到当天真实快照
+            document.addEventListener('visibilitychange', function(){
+                if(!document.hidden && _heroCurveInited && _heroCurvePeriod === '1D') refreshHero1D(_heroLastTotal);
+            });
+            scheduleHeroMarketOpen();
+        }
+        function syncHeroAssetCurve(total){
+            _heroLastTotal = Number(total) || 0;
+            if(_heroCurveCacheDay !== todayStr()){
+                _heroCurveCache = {};
+                _heroCurveCacheDay = todayStr();
+                _heroIntradayData = null;
+            }
+            ensureHeroCurveInited();
+            if(_heroCurvePeriod === '1D'){
+                refreshHero1D(_heroLastTotal);
+                return;
+            }
+            var cached = _heroCurveCache[_heroCurvePeriod];
+            if(cached && cached.day === todayStr()){
+                renderHeroAssetCurve(heroMergeCurrent(cached.points, _heroLastTotal));
+            }
+        }
         function updateHoldInsight(sum){
             const el = document.querySelector('#holdWarnRow');
             if(!el) return;
@@ -35239,23 +36209,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.querySelector('#allCount').innerText = sum.holdLen;
             document.querySelector('#aCount').innerText = sum.aShareNum;
             document.querySelector('#hkCount').innerText = sum.hkShareNum;
-            numTween(document.querySelector('#totalYearDiv'), sum.totalYearDiv, fmtMoney);
-            numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoney);
+            numTween(document.querySelector('#totalYearDiv'), sum.totalYearDiv, fmtMoneyTop);
+            numTween(document.querySelector('#totalDivReceived'), sum.totalDivReceived, fmtMoneyTop);
             const incomeNowEl = document.querySelector('#incomeNow');
             if(incomeNowEl) numTween(incomeNowEl, sum.totalReceived, fmtMoney);
             const totalPnlEl = document.querySelector('#totalPnl');
             const pnlVal = Number(sum.totalPnl);
-            numTween(totalPnlEl, pnlVal, fmtPnlNum, 280, 500);
+            numTween(totalPnlEl, pnlVal, function(v){ return fmtPnlTop(v, false); }, 280, 500);
             totalPnlEl.className = 'text-[15px] font-medium tabular-nums num-transition ' + pnlLightClass(pnlVal);
-            const taWrapEl = document.querySelector('#totalMarketWrap');
+            // 首页顶部“总盈利”：与“我的”页顶部卡共用 calcPnlRet() 口径（账户累计盈利，含已实现/未实现与现金）
+            const totalProfitEl = document.querySelector('#totalProfit');
+            const totalProfitVal = Number(calcPnlRet().pnl) || 0;
+            if(totalProfitEl){
+                numTween(totalProfitEl, totalProfitVal, function(v){ return fmtPnlTop(v, true); }, 280, 500);
+                totalProfitEl.className = 'mt-1.5 text-[15px] font-medium tabular-nums num-transition leading-none whitespace-nowrap ' + pnlLightClass(totalProfitVal);
+            }
             const pageW = document.querySelector('#pageHold') ? document.querySelector('#pageHold').getBoundingClientRect().width : 0;
             const holdCardW = pageW > 0 ? Math.min(window.innerWidth || pageW, pageW) : (window.innerWidth || 430);
-            if(taWrapEl){
-                const taTxt = fmtMoney(sum.totalAsset);
-                const taBase = holdCardW < 400 ? 28 : 30;
-                taWrapEl.style.fontSize = (taTxt.length >= 9 ? (taBase-6) : (taTxt.length >= 8 ? (taBase-4) : (taTxt.length >= 7 ? (taBase-2) : taBase))) + 'px';
-            }
-            numTween(document.querySelector('#totalMarket'), sum.totalAsset, fmtMoney, 280, 500);
+            const heroW = document.querySelector('#assetHeroCard') ? document.querySelector('#assetHeroCard').getBoundingClientRect().width : holdCardW;
+            // 总资产恢复“万 / 亿”单位展示，保留 28px/700 的主数字层级
+            numTween(document.querySelector('#totalMarket'), sum.totalAsset, fmtMoneyTop, 280, 500);
             // 仓位百分比：总市值 ÷ 总资产（含现金）；总资产为 0 时显示 --，不影响金额渲染
             const positionPctEl = document.querySelector('#positionPct');
             if(positionPctEl){
@@ -35265,8 +36238,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             const mktValEl = document.querySelector('#mktVal');
             const cashValEl = document.querySelector('#cashVal');
-            if(mktValEl) mktValEl.innerText = fmtMoney(sum.totalMarket);
-            if(cashValEl) cashValEl.innerText = fmtMoney(sum.cash);
+            const cashSignEl = document.querySelector('#cashSign');
+            if(mktValEl) mktValEl.innerText = fmtMoneyTop(sum.totalMarket);
+            const cashValue = Number(sum.cash) || 0;
+            if(cashSignEl) cashSignEl.innerText = cashValue < -0.005 ? '-' : '';
+            if(cashValEl) cashValEl.innerText = fmtMoneyTop(Math.abs(cashValue));
             const totalInvestedEl = document.querySelector('#totalInvested');
             if(totalInvestedEl) numTween(totalInvestedEl, getTotalInvested(), fmtMoney);
             // 回本分析（顶部右侧，资金流水口径）：预计回本（不复投）/ 复投 / 缺口
@@ -35278,8 +36254,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     el.className = base + ' ' + colorCls;
                 }
             };
-            setBe('sumBeNo', fmtBeYears(beA.beNo), 'text-[15px] font-medium tabular-nums', (beA.beNo != null && beA.beNo <= 0) ? 'text-purple-300' : 'text-white');
-            setBe('sumBeRe', fmtBeYears(beA.beRe), 'text-[11px] font-semibold tabular-nums', (beA.beRe != null && beA.beRe <= 0) ? 'text-purple-300' : 'text-white');
+            setBe('sumBeNo', fmtBeYears(beA.beNo), 'text-[11px] font-semibold tabular-nums', (beA.beNo != null && beA.beNo <= 0) ? 'text-purple-300' : 'text-white');
             setBe('sumBeGap', beA.gap != null ? fmtMoney(beA.gap) : '--', 'text-[11px] font-semibold tabular-nums', '');
             renderNextDivCountdown();
             const trrEl = document.querySelector('#totalReturnRate');
@@ -35311,18 +36286,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 numTween(yrrEl, yrrVal, fmtPctNum);
                 yrrEl.className = 'text-[10px] font-medium tabular-nums num-transition ' + pnlLightClass(yrrVal);
             }
-            numTween(document.querySelector('#costYield'), sum.costYield, fmtNum2);
-            numTween(document.querySelector('#marketYield'), sum.marketYield, fmtNum2);
-            numTween(document.querySelector('#monthDiv'), sum.monthDiv, fmtMoney);
             // 今日盈亏：金额为主（28px 半粗，涨红跌绿）+ 百分比为副（13px 金色小字，同行基线对齐）；
             // 当日盈亏金额 = Σ 市值 × 涨跌%/（100+涨跌%），百分比 = 当日盈亏 ÷ 昨日总市值（口径与统计详情页一致）
             const todayPnlEl = document.querySelector('#todayPnl');
             const todayPnlPctEl = document.querySelector('#todayPnlPct');
-            const todayBase = holdCardW < 340 ? 26 : 28;
+            const todayBase = heroW < 340 ? 24 : 28;
+            _todayPnlNow = null;
             if(todayPnlEl && todayPnlPctEl){
                 const todaySnap = calcTodayPnlSnapshot();
                 const totalDayPnl = todaySnap.totalDayPnl;
                 const hasValidDayPct = todaySnap.hasValidDayPct;
+                _todayPnlNow = hasValidDayPct ? Number(totalDayPnl) : null;
                 if(!hasValidDayPct){
                     const hasHoldings = (holdDataList || []).some(function(it){ return Number(it.count) > 0; });
                     if(!_todayPnlLoadStartedAt) _todayPnlLoadStartedAt = performance.now();
@@ -35354,7 +36328,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const dayPnlPct = hasPct ? Number(todaySnap.dayPnlPct) : null;
                     // 金额主色：涨红跌绿
                     const amtCls = totalDayPnl > 0.005 ? 'text-[#e03131]' : (totalDayPnl < -0.005 ? 'text-[#00a05c]' : 'text-[#ffffff]');
-                    numTween(todayPnlEl, totalDayPnl, fmtPnlNum, 280, 500);
+                    numTween(todayPnlEl, totalDayPnl, function(v){ return fmtPnlTop(v, heroW >= 360); }, 280, 500);
                     todayPnlEl.className = 'text-[28px] font-semibold tabular-nums num-transition leading-none ' + amtCls;
                     todayPnlEl.style.fontSize = todayBase + 'px';
                     // 百分比副色：与金额一致涨红跌绿；无昨日市值基准时显示 --，避免 0.00% 误导
@@ -35365,6 +36339,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             }
             updateHoldInsight(sum);
+            syncHeroAssetCurve(sum.totalAsset);
         }
 
         // 节点文本/颜色更新助手：保留节点内前缀货币符号 span，只替换尾部文本与颜色 class
@@ -35635,6 +36610,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             return arr;
         }
+        function smoothSparkVals(points){
+            if(!points || points.length < 4) return (points || []).slice();
+            const raw = points.map(Number);
+            const out = raw.slice();
+            for(let i = 1; i < raw.length - 1; i++){
+                if(i > 1 && i < raw.length - 2){
+                    out[i] = (raw[i - 2] + 2 * raw[i - 1] + 3 * raw[i] + 2 * raw[i + 1] + raw[i + 2]) / 9;
+                } else {
+                    out[i] = raw[i - 1] * 0.25 + raw[i] * 0.5 + raw[i + 1] * 0.25;
+                }
+            }
+            return out;
+        }
         function sparkPathD(points, w, h, padY){
             if(!points || !points.length) return '';
             const vals = points.length === 1 ? [points[0], points[0]] : points.slice();
@@ -35642,18 +36630,39 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(min === max){ min -= 0.001; max += 0.001; }
             const py = padY == null ? 5 : padY;
             const usable = h - py * 2;
-            return vals.map(function(v, i){
+            const pts = vals.map(function(v, i){
                 const x = vals.length === 1 ? 0 : (i / (vals.length - 1)) * w;
                 const y = py + (max - v) / (max - min) * usable;
-                return (i === 0 ? 'M' : 'L') + x.toFixed(2) + ',' + y.toFixed(2);
-            }).join(' ');
+                return { x: x, y: y };
+            });
+            if(pts.length === 2){
+                return 'M' + pts[0].x.toFixed(2) + ',' + pts[0].y.toFixed(2)
+                    + ' L' + pts[1].x.toFixed(2) + ',' + pts[1].y.toFixed(2);
+            }
+            // Catmull-Rom → 三次贝塞尔：保留数据拐点，但消除折线锯齿
+            let d = 'M' + pts[0].x.toFixed(2) + ',' + pts[0].y.toFixed(2);
+            for(let i = 0; i < pts.length - 1; i++){
+                const p0 = pts[i - 1] || pts[i];
+                const p1 = pts[i];
+                const p2 = pts[i + 1];
+                const p3 = pts[i + 2] || p2;
+                const cp1x = p1.x + (p2.x - p0.x) / 6;
+                const cp1y = p1.y + (p2.y - p0.y) / 6;
+                const cp2x = p2.x - (p3.x - p1.x) / 6;
+                const cp2y = p2.y - (p3.y - p1.y) / 6;
+                d += ' C' + cp1x.toFixed(2) + ',' + cp1y.toFixed(2)
+                    + ' ' + cp2x.toFixed(2) + ',' + cp2y.toFixed(2)
+                    + ' ' + p2.x.toFixed(2) + ',' + p2.y.toFixed(2);
+            }
+            return d;
         }
         function sparkSvgInner(item, w, h, color){
-            const pts = getHoldSparkPoints(item);
+            const rawPts = getHoldSparkPoints(item);
             // 少于 5 个真实/可计算点时不画折线，只保留一条 1px 灰基线，避免“断线图表”的错觉
-            if(!pts || pts.length < 5){
+            if(!rawPts || rawPts.length < 5){
                 return '<path d="M0,' + (h/2) + ' L' + w + ',' + (h/2) + '" stroke="#d9cbbb" stroke-width="1" fill="none" opacity=".8"/>';
             }
+            const pts = smoothSparkVals(rawPts);
             const d = sparkPathD(pts, w, h, 5);
             if(!d){
                 return '<path d="M0,' + (h/2) + ' L' + w + ',' + (h/2) + '" stroke="#d9cbbb" stroke-width="1" fill="none" opacity=".8"/>';
@@ -35665,15 +36674,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const areaD = d + ' L' + w + ',' + baseY + ' L0,' + baseY + ' Z';
             const end = pts[pts.length - 1];
             const y = 5 + (max - end) / (max - min) * (h - 10);
-            const dot = '<circle cx="' + w + '" cy="' + y.toFixed(2) + '" r="2.2" fill="' + color + '" opacity=".95"/>';
-            return '<path d="' + areaD + '" fill="' + color + '" opacity=".06" stroke="none"/>'
-                + '<path d="' + d + '" stroke="' + color + '" stroke-width="1.55" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+            const dot = '<circle cx="' + w + '" cy="' + y.toFixed(2) + '" r="1.8" fill="' + color + '" opacity=".9"/>';
+            return '<path d="' + areaD + '" fill="' + color + '" opacity=".07" stroke="none"/>'
+                + '<path d="' + d + '" stroke="' + color + '" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
                 + dot;
         }
         function sparkColor(item){
             const pct = getEffectiveChangePct(item.changePct);
             if(pct == null || isNaN(pct)) return '#b8a58f';
-            return pct > 0 ? '#d94a4a' : (pct < 0 ? '#2f9e73' : '#b8a58f');
+            return pct > 0 ? '#d85454' : (pct < 0 ? '#389973' : '#b8a58f');
         }
         function sparkSvg(item, w, h, cls){
             const color = sparkColor(item);
@@ -35699,10 +36708,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const dayPct = getEffectiveChangePct(item.changePct);
                 const preOpenWide = isPreOpenWide();
                 const pctText = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '--' : ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%');
-                const pctColor = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
+                const pctColor = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#d85454' : (dayPct < 0 ? '#389973' : '#8b7c6c'));
                 const priceColor = preOpenWide ? '#9f8f7e' : ((dayPct == null || isNaN(dayPct) || dayPct === 0) ? '#2d2925' : pctColor);
                 const itemPnl = getPnl(item);
-                const itemPnlColor = itemPnl > 0 ? '#e03131' : (itemPnl < 0 ? '#00a05c' : '#8b7c6c');
+                const itemPnlColor = itemPnl > 0 ? '#d85454' : (itemPnl < 0 ? '#389973' : '#8b7c6c');
                 const priceText = preOpenWide ? '--' : fmtPrice(item.nowPrice, item.code, isHk);
                 const cardClass = 'hold-card hold-card-v2' + (isCostRecovered ? ' is-recovered' : '');
                 htmlStr += `<div class="${cardClass}" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" role="button" tabindex="0" aria-label="${item.name} ${item.code} 持仓详情" onclick="openHoldCardDetail(${item.id}, event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHoldCardDetail(${item.id}, event);}">
@@ -35735,9 +36744,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var holdCardDetailReturnState = null;
 
         // 持仓详情页专用低饱和色板：红涨绿跌，状态紫不抢主数字
-        const HCD_UP = '#e03131';
-        const HCD_DOWN = '#00a05c';
-        const HCD_FLAT = '#6f655b';
+        const HCD_UP = 'var(--c-up)';
+        const HCD_DOWN = 'var(--c-down)';
+        const HCD_FLAT = 'var(--c-flat)';
         const HCD_PURPLE = '#6d5578';
         function getHoldCardMetrics(item, sum){
             const isHk = item.marketType === 'HK';

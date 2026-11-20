@@ -477,6 +477,14 @@
             #holdList .hold-card-v2-meta .hcm-chg{
                 font-weight:400;
             }
+            #holdList .hold-card-v2-meta .hcm-code{
+                color:#6f635b;
+                font-family:"Space Grotesk",Bahnschrift,system-ui,sans-serif;
+                font-size:11px;
+                font-weight:400;
+                letter-spacing:.055em;
+                font-variant-numeric:tabular-nums;
+            }
             #holdList .hold-card-v2-meta .hcm-pnl{
                 color:#8b7c6c;
                 font-weight:400;
@@ -3212,8 +3220,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             background:transparent;
             color:rgba(222,207,183,.80);
             height:20px;
-            width:42px;
-            flex:0 0 42px;
+            width:50px;
+            flex:0 0 50px;
             padding:0;
             text-align:center;
             border-radius:999px;
@@ -36514,19 +36522,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 setNumText(card.querySelector('.hq-yield'), stockYield + '%', 'text-gray-800');
                 setNumText(card.querySelector('.hq-chg'), dayChangeAmtText, dayChangeClass);
                 setNumText(card.querySelector('.hq-chgpct'), dayChangePctText, dayChangeClass);
-                // 新版扁卡：左侧现价 + 涨跌幅，右侧总市值 + 今日盈亏金额/涨跌幅；9:00–9:15 与全站统一显示 "--"
+                // 新版扁卡：右侧总市值 + 今日盈亏金额/涨跌幅；9:00–9:15 与全站统一显示 "--"
                 const preOpenWide = isPreOpenWide();
-                const cardPctText = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '--' : ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%');
-                const cardPctColor = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
-                const cardPriceColor = preOpenWide ? '#9f8f7e' : ((dayPct == null || isNaN(dayPct) || dayPct === 0) ? '#2d2925' : cardPctColor);
-                const priceEl = card.querySelector('.hcm-price');
-                setNumText(priceEl, preOpenWide ? '--' : fmtPrice(item.nowPrice, item.code, isHk), '');
-                if(priceEl) priceEl.style.color = cardPriceColor;
-                const curEl = card.querySelector('.hcm-cur');
-                if(curEl) curEl.style.display = (preOpenWide || !isHk) ? 'none' : '';
-                const chgEl = card.querySelector('.hcm-chg');
-                setNumText(chgEl, cardPctText, '');
-                if(chgEl) chgEl.style.color = cardPctColor;
                 const mvEl = card.querySelector('.hcm-mv');
                 setNumText(mvEl, fmtMoney(itemMarketTotal), '');
                 if(mvEl) mvEl.style.color = '#2b2723';
@@ -36815,12 +36812,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const dayPct = getEffectiveChangePct(item.changePct);
                 const preOpenWide = isPreOpenWide();
                 const pctText = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '--' : ((dayPct > 0 ? '+' : '') + dayPct.toFixed(2) + '%');
-                const pctColor = (preOpenWide || dayPct == null || isNaN(dayPct)) ? '#9f8f7e' : (dayPct > 0 ? '#e03131' : (dayPct < 0 ? '#00a05c' : '#8b7c6c'));
-                const priceColor = preOpenWide ? '#9f8f7e' : ((dayPct == null || isNaN(dayPct) || dayPct === 0) ? '#2d2925' : pctColor);
                 const itemPnl = getPnl(item);
                 const itemPnlColor = itemPnl > 0 ? '#e03131' : (itemPnl < 0 ? '#00a05c' : '#8b7c6c');
-                const priceText = preOpenWide ? '--' : fmtPrice(item.nowPrice, item.code, isHk);
-                // 卡片右侧改为“总市值 + 今日盈亏金额/涨跌幅”；左侧现价与涨跌幅为主信息补位
+                // 卡片右侧为“总市值 + 今日盈亏金额/涨跌幅”；左侧为股票代码 + 累计盈亏
                 let dayPnlValue = null;
                 let dayPnlText = '--';
                 let dayPnlColor = '#a49382';
@@ -36844,14 +36838,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 ${isCostRecovered ? '<span class="hold-card-v2-badge">已回本</span>' : ''}
                             </div>
                             <div class="hold-card-v2-meta">
-                                <span class="hcm-meta-left">现价 <span class="hcm-cur"${isHk ? (preOpenWide ? ' style="display:none"' : '') : ' style="display:none"'}>HK$</span><span class="hcm-price" style="color:${priceColor}">${priceText}</span> <span class="hcm-chg" style="color:${pctColor}">${pctText}</span></span>
+                                <span class="hcm-code">${item.code}</span>
                                 <span class="hcm-pnl-wrap">盈亏 <span class="hcm-pnl" style="color:${itemPnlColor}">${formatPnl(itemPnl)}</span></span>
                             </div>
                         </div>
                     </div>
                     <div class="hold-card-v2-chart">${sparkSvg(item, 100, 36, 'hq-spark')}</div>
                     <div class="hold-card-v2-quote">
-                        <div class="hold-card-v2-mv-label">总市值</div>
                         <div class="hold-card-v2-price" style="color:#2b2723"><span class="hcm-mv">${fmtMoney(itemMarketTotal)}</span></div>
                         <div class="hold-card-v2-daypnl" style="color:${dayPnlColor}">
                             <span class="hcm-daypnl">${dayPnlText}</span>

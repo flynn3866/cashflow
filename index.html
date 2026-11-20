@@ -3875,12 +3875,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             --watch-down:#00a05c;
             --watch-zero:#1f2937;
             --watch-placeholder:#b8b8b8;
+            --watch-index-up:#ff6b6b;
+            --watch-index-down:#4ade80;
+            --watch-index-flat:#f7cf8f;
+            --watch-index-muted:#d4c5a8;
         }
         #pageWatchSel.watch-dark{
-            --watch-up:#ff5a5f;
-            --watch-down:#21d07a;
+            --watch-up:#ed0000;
+            --watch-down:#00d800;
             --watch-zero:#ececf0;
             --watch-placeholder:#61616a;
+            --watch-index-up:#ed0000;
+            --watch-index-down:#00d800;
             background:#0a0a0c!important;
             color:#ececf0!important;
             box-shadow:0 0 0 100vmax #0a0a0c;
@@ -3935,7 +3941,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             background:#0a0a0c!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row [data-fixcol] .min-w-0 > div:first-child{
-            color:#ececf0!important;
+            color:#e4e4e8!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row [data-fixcol] .min-w-0 > div:nth-child(2){
             color:#73737c!important;
@@ -26540,7 +26546,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const x = iq[m.key];
                 if(!x || x.price == null) return;
                 const pct = x.changePct;
-                const upColor = '#ff6b6b', downColor = '#4ade80', flatColor = '#f7cf8f';
+                const upColor = 'var(--watch-index-up)', downColor = 'var(--watch-index-down)', flatColor = 'var(--watch-index-flat)', mutedColor = 'var(--watch-index-muted)';
                 const pe = document.querySelector('#' + m.priceEl);
                 const pp = document.querySelector('#' + m.pctEl);
                 if(pe){
@@ -26549,7 +26555,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 if(pp){
                     pp.innerText = pct == null ? '--' : (pct > 0 ? '+' : '') + pct.toFixed(2) + '%';
-                    pp.style.color = pct == null ? '#d4c5a8' : (pct > 0 ? upColor : (pct < 0 ? downColor : '#d4c5a8'));
+                    pp.style.color = pct == null ? mutedColor : (pct > 0 ? upColor : (pct < 0 ? downColor : mutedColor));
                 }
             });
         }

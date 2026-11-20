@@ -10281,8 +10281,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             loadHistory();
             // 趋势图起点基线：只补一次，已存在相同记录则跳过
             await ensureAssetDailyBaseline();
-            // 今日盈亏百分比分母：昨日收盘总资产（昨日持仓市值 + 昨日闲置现金）。
-            // 优先使用 assetDaily 上一交易日收盘快照，避免把今天已发生的买卖/现金变动混进分母。
+            // 今日盈亏百分比分母：盈亏归属日的前一日收盘总资产（昨日持仓市值 + 昨日闲置现金）。
+            // 优先使用 assetDaily 上一交易日收盘快照，避免把当天已发生的买卖/现金变动混进分母。
             await loadPrevCloseAssetBase();
             // 历史趋势只读 assetDaily 表，启动不再迁移旧 dailyAssets，也不回算历史收益率。
             // 启动即自愈（此时 historyData 已从存储加载，覆盖安全）：
@@ -35777,7 +35777,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             });
             const netCashFlow = sellAmt - buyAmt;
-            const prevCloseAssetTotal = Number(_prevCloseAssetBase);
+            const refDateStr = pnlReferenceDateStr();
+            const prevCloseAssetTotal = (_prevCloseAssetBaseForDay === refDateStr) ? Number(_prevCloseAssetBase) : null;
             return {
                 totalDayPnl: totalDayPnl,
                 totalMarketValue: totalMarketValue,
@@ -35812,46 +35813,85 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var _prevCloseAssetBaseDate = '';
         var _prevCloseAssetBaseForDay = '';
 
-        function latestHistoryTotalBefore(today){
+        function latestHistoryTotalBefore(refDateStr){
             const map = historyData.dailyAssets || {};
             let best = null;
             Object.keys(map).forEach(function(d){
-                if(!/^\d{4}-\d{2}-\d{2}$/.test(d) || d >= today) return;
+                if(!/^\d{4}-\d{2}-\d{2}$/.test(d) || d >= refDateStr) return;
                 const v = Number(map[d]);
                 if(v > 0 && (!best || d > best.date)) best = { date: d, total: v };
             });
             return best;
         }
 
-        async function loadPrevCloseAssetBase(){
-            const today = todayStr();
-            if(_prevCloseAssetBaseForDay === today) return _prevCloseAssetBase;
-            let hit = latestHistoryTotalBefore(today);
+        // 今日盈亏归属日：交易日 9:00 起归今天；9 点前/周末归上一交易日。
+        // 9:00–9:15 仍由 calcDayFlow 返回 hasBase:false 显示 "--"，这里提前把分母切到当天，
+        // 避免 9:15 开盘后才开始异步加载造成短暂错误百分比。
+        function pnlReferenceDate(now){
+            const d = new Date(now || Date.now());
+            const day = d.getDay();
+            const mins = d.getHours() * 60 + d.getMinutes();
+            d.setHours(0, 0, 0, 0);
+            if(day !== 0 && day !== 6 && mins >= 9 * 60) return d;
+            d.setDate(d.getDate() - 1);
+            while(d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+            return d;
+        }
+        function pnlReferenceDateStr(now){
+            const d = pnlReferenceDate(now);
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        // 分母 = 盈亏归属日的前一日收盘总资产。
+        // 例如周二 9 点前显示周一盈亏，用周五收盘总资产；周末显示周五盈亏，用周四收盘总资产。
+        async function loadPrevCloseAssetBase(refDateStr){
+            const ref = refDateStr || pnlReferenceDateStr();
+            if(_prevCloseAssetBaseForDay === ref) return _prevCloseAssetBase;
+            let hit = latestHistoryTotalBefore(ref);
             try{
-                // 取昨天之前（含昨天）最后一条 assetDaily；周末会自动落到上一交易日。
-                const d = new Date();
+                const p = String(ref).split('-');
+                const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
                 d.setDate(d.getDate() - 1);
                 const prevDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 const rows = await AppDB.range(ASSET_DAILY, ASSET_DAILY_START_DATE, prevDate, 1, 'prev');
                 const row = rows && rows[0];
                 const total = row ? Number(row.total) : 0;
-                if(row && String(row.date) < today && total > 0 && (!hit || String(row.date) > hit.date)){
+                if(row && String(row.date) < ref && total > 0 && (!hit || String(row.date) > hit.date)){
                     hit = { date: String(row.date), total: total };
                 }
             }catch(e){}
             _prevCloseAssetBase = hit ? hit.total : null;
             _prevCloseAssetBaseDate = hit ? hit.date : '';
-            _prevCloseAssetBaseForDay = today;
+            _prevCloseAssetBaseForDay = ref;
             return _prevCloseAssetBase;
+        }
+
+        // 跨天/跨 9 点时按当前归属日补载分母；未加载完成前百分比显示 "--"，不允许拿旧分母算出错误值。
+        var _prevCloseBaseLoadingRef = '';
+        function ensurePrevCloseAssetBaseForDisplay(){
+            const ref = pnlReferenceDateStr();
+            if(_prevCloseAssetBaseForDay === ref || _prevCloseBaseLoadingRef === ref) return;
+            _prevCloseBaseLoadingRef = ref;
+            loadPrevCloseAssetBase(ref).then(function(){
+                if(_prevCloseBaseLoadingRef === ref) _prevCloseBaseLoadingRef = '';
+                if(pnlReferenceDateStr() === ref && typeof updateSummaryCard === 'function'){
+                    requestAnimationFrame(function(){
+                        try{ updateSummaryCard(calcSummary()); }catch(e){}
+                    });
+                }
+            }).catch(function(){
+                if(_prevCloseBaseLoadingRef === ref) _prevCloseBaseLoadingRef = '';
+            });
         }
 
         // ==================== 首页主卡：总资产曲线 ====================
         // 日线：复用 assetDaily（一天一条，长期保存）。
         // 1D：单独一条“仅当天”的 20 分钟采样，date 变化即覆盖，不占用长期存储。
         var HERO_INTRADAY_KEY = 'dividendIntradayAssets';
-        var HERO_INTRADAY_START = 570;   // 09:30
+        var HERO_INTRADAY_START = 555;   // 09:15 集合竞价开始
         var HERO_INTRADAY_END = 900;     // 15:00
         var HERO_INTRADAY_MAX_POINTS = 3600; // 6-10 秒采样，覆盖完整交易时段
+        var HERO_INTRADAY_DRAW_BUCKET_MIN = 2; // 1D 绘制粒度：2 分钟均值（原始 6-10 秒点仍完整保留）
         var HERO_PERIOD_META = {
             '1D': { label: '最近 1 天', maxPoints: 0 },
             '1M': { label: '最近 1 个月', maxPoints: 400 },
@@ -35889,7 +35929,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return pnl > 0 ? '#d85454' : '#389973';
         }
         // 1D 采样时间用“当日分钟（带秒小数）”，6–10 秒刷新即可落一个真实点；
-        // 09:30 前归到 09:30（集合竞价前的静值不铺开），15:00 后归到收盘点。
+        // 09:15 前归到 09:15（集合竞价前的静值不铺开），15:00 后归到收盘点。
         function heroIntradayTime(d){
             var mins = d.getHours() * 60 + d.getMinutes()
                 + (d.getSeconds() + d.getMilliseconds() / 1000) / 60;
@@ -35922,14 +35962,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             d.setDate(d.getDate() - 1);
             return heroDateStr(d);
         }
-        // 交易日 09:00 前 / 非交易日：1D 显示上一交易日收盘；09:00 起显示当天真实快照
+        // 交易日 09:00 前 / 非交易日：1D 显示上一交易日收盘；09:00–09:15 清空为空白画布；
+        // 09:15 起显示当天真实快照（与主卡今日盈亏统一规则）。
         function heroShowPrevClose(now){
             if(!isTradingDay(now)) return true;
             return (now.getHours() * 60 + now.getMinutes()) < 540;
         }
         function heroCanRecordIntraday(now){
             if(!isTradingDay(now)) return false;
-            return (now.getHours() * 60 + now.getMinutes()) >= 540;
+            return (now.getHours() * 60 + now.getMinutes()) >= 555;
         }
         function loadHeroPrevClose(){
             var today = todayStr();
@@ -36027,7 +36068,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(Number(total) > 0) out.push({ t: Date.now(), v: Number(total) });
             return out;
         }
-        function heroCurvePath(points, w, h, padY){
+        function heroCurvePath(points, w, h, padY, domain){
             var pts = (points || []).map(function(p){ return { t: Number(p.t), v: Number(p.v) }; })
                 .filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v > 0; })
                 .sort(function(a, b){ return a.t - b.t; });
@@ -36036,7 +36077,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 var only = pts[0];
                 pts = [{ t: only.t, v: only.v }, { t: only.t + 1, v: only.v }];
             }
-            var minT = pts[0].t, maxT = pts[pts.length - 1].t;
+            var minT = domain ? Number(domain.start) : pts[0].t;
+            var maxT = domain ? Number(domain.end) : pts[pts.length - 1].t;
             var minV = Math.min.apply(null, pts.map(function(p){ return p.v; }));
             var maxV = Math.max.apply(null, pts.map(function(p){ return p.v; }));
             if(minV === maxV){ minV -= 0.5; maxV += 0.5; }
@@ -36044,7 +36086,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             var padX = 3;
             var drawW = Math.max(1, w - padX * 2);
             var xy = pts.map(function(p, i){
-                var x = spanT > 0 ? padX + (p.t - minT) / spanT * drawW : (pts.length === 1 ? padX : padX + i / (pts.length - 1) * drawW);
+                var ratio = spanT > 0 ? (p.t - minT) / spanT : 0;
+                if(ratio < 0) ratio = 0;
+                if(ratio > 1) ratio = 1;
+                var x = padX + ratio * drawW;
                 var y = padY + (maxV - p.v) / (maxV - minV) * (h - padY * 2);
                 return { x: x, y: y };
             });
@@ -36071,14 +36116,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             return { d: d, end: xy[xy.length - 1] };
         }
-        function heroCurveSvg(points, w, h){
+        function heroCurveSvg(points, w, h, domain){
             var color = heroCurveColor();
             var padY = 4;
-            var built = heroCurvePath(points, w, h, padY);
+            var built = heroCurvePath(points, w, h, padY, domain);
             if(!built){
+                // 1D 无数据时只给一条淡色虚线基准；其他周期保持原来的暖灰细实线，避免影响别处。
+                if(domain){
+                    return '<path d="M0,' + (h - padY) + ' L' + w + ',' + (h - padY) + '" stroke="rgba(207,192,166,.28)" stroke-width="1" stroke-dasharray="4 6" fill="none"/>';
+                }
                 return '<path d="M0,' + (h - padY) + ' L' + w + ',' + (h - padY) + '" stroke="rgba(207,192,166,.32)" stroke-width="1.5" fill="none"/>';
             }
-            var area = built.d + ' L' + w + ',' + h + ' L0,' + h + ' Z';
+            // 1D 固定时间轴时面积只铺到最后一个数据点；其他周期保持原来的整宽填充。
+            var areaEndX = domain ? built.end.x : w;
+            var area = built.d + ' L' + areaEndX.toFixed(2) + ',' + h + ' L0,' + h + ' Z';
             return '<defs>'
                 + '<linearGradient id="heroAssetGrad" x1="0" y1="0" x2="0" y2="1">'
                 + '<stop offset="0%" stop-color="' + color + '" stop-opacity=".12"/>'
@@ -36090,21 +36141,68 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<path d="' + built.d + '" stroke="' + color + '" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
                 + '<circle cx="' + built.end.x.toFixed(2) + '" cy="' + built.end.y.toFixed(2) + '" r="2.4" fill="' + color + '"/>';
         }
-        function renderHeroAssetCurve(points){
+        function renderHeroAssetCurve(points, blank, keepFullSpan){
             var el = document.querySelector('#heroAssetCurve');
             if(!el) return;
+            if(blank){
+                _heroLastPoints = [];
+                var blankSvg = el.querySelector('svg');
+                if(blankSvg) blankSvg.innerHTML = '';
+                el.classList.remove('is-loading');
+                var blankMeta = HERO_PERIOD_META[_heroCurvePeriod] || HERO_PERIOD_META['1D'];
+                el.setAttribute('aria-label', '总资产走势，' + blankMeta.label);
+                return;
+            }
             _heroLastPoints = points || [];
             var svg = el.querySelector('svg');
             if(!svg) return;
             var w = Math.max(200, Math.floor(el.clientWidth || 320));
             var h = Math.max(40, Math.floor(el.clientHeight || 94));
-            var drawPoints = heroDownsampleForRender(_heroLastPoints, w);
+            var drawPoints = _heroCurvePeriod === '1D'
+                ? heroAggregateIntradayForRender(_heroLastPoints, HERO_INTRADAY_DRAW_BUCKET_MIN)
+                : _heroLastPoints;
+            drawPoints = heroDownsampleForRender(drawPoints, w);
+            var domain = (_heroCurvePeriod === '1D' && !keepFullSpan)
+                ? { start: HERO_INTRADAY_START, end: HERO_INTRADAY_END }
+                : null;
             svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
             svg.setAttribute('preserveAspectRatio', 'none');
-            svg.innerHTML = heroCurveSvg(drawPoints, w, h);
+            svg.innerHTML = heroCurveSvg(drawPoints, w, h, domain);
             el.classList.remove('is-loading');
             var meta = HERO_PERIOD_META[_heroCurvePeriod] || HERO_PERIOD_META['1D'];
             el.setAttribute('aria-label', '总资产走势，' + meta.label);
+        }
+        // 原始 6-10 秒点全部保留；1D 绘制按 1 分钟做均值聚合，避免几百个点挤在几十像素里糊成色带。
+        function heroAggregateIntradayForRender(points, bucketMin){
+            var pts = (points || []).map(function(p){ return { t: Number(p.t), v: Number(p.v) }; })
+                .filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v > 0; })
+                .sort(function(a, b){ return a.t - b.t; });
+            if(!pts.length) return [];
+            var bucket = Math.max(1, Number(bucketMin) || 1);
+            var out = [];
+            var currentKey = null;
+            var sum = 0;
+            var count = 0;
+            function flush(){
+                if(currentKey === null || !count) return;
+                out.push({ t: currentKey, v: sum / count });
+                sum = 0;
+                count = 0;
+            }
+            pts.forEach(function(p){
+                var key = Math.floor(p.t / bucket) * bucket;
+                if(currentKey !== null && key !== currentKey) flush();
+                currentKey = key;
+                sum += p.v;
+                count++;
+            });
+            flush();
+            // 最后一个聚合点使用当前最新值，保证曲线末端与主卡总资产一致，不滞后到整分钟/整两分钟。
+            if(out.length && pts.length){
+                out[out.length - 1].v = pts[pts.length - 1].v;
+                out[out.length - 1].t = pts[pts.length - 1].t;
+            }
+            return out;
         }
         // 高频 1D 数据全部保留；绘制时按画布像素做 min/max 抽稀，视觉不丢峰谷，也不会每 6 秒解析上万段路径
         function heroDownsampleForRender(points, width){
@@ -36177,7 +36275,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(heroShowPrevClose(now)){
                 // 开盘前/非交易日：只显示上一交易日收盘，不使用当天任何估算点
                 var cachedPrev = (_heroPrevCloseDay === todayStr() && _heroPrevClose != null) ? (Number(_heroPrevClose) || 0) : 0;
-                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: cachedPrev > 0 ? cachedPrev : val }]);
+                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: cachedPrev > 0 ? cachedPrev : val }], false, true);
                 if(cachedPrev > 0) return;
                 var token = ++_heroCurveToken;
                 var el = document.querySelector('#heroAssetCurve');
@@ -36185,11 +36283,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 loadHeroPrevClose().then(function(prev){
                     if(token !== _heroCurveToken || _heroCurvePeriod !== '1D') return;
                     var pv = Number(prev) > 0 ? Number(prev) : val;
-                    renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: pv }]);
+                    renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: pv }], false, true);
                 });
                 return;
             }
-            // 09:00 起：清掉上一日残留，只画当天真实快照
+            // 09:00–09:15 集合竞价前：清空当天曲线，展示真正的空白画布，不落任何点。
+            if(!heroCanRecordIntraday(now)){
+                _heroCurveToken++;
+                renderHeroAssetCurve([], true);
+                return;
+            }
+            // 09:15 起：只画当天真实快照；不会残留上一交易日曲线
             _heroCurveToken++;
             recordHeroIntradayPoint(val);
             renderHeroAssetCurve(getHeroIntradayPoints());
@@ -36306,6 +36410,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
         function updateSummaryCard(sum){
+            ensurePrevCloseAssetBaseForDisplay();
             const stNumEl = document.querySelector('#stockNum');
             if(stNumEl) stNumEl.innerText = sum.holdLen;
             document.querySelector('#allCount').innerText = sum.holdLen;
@@ -36389,7 +36494,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 yrrEl.className = 'text-[10px] font-medium tabular-nums num-transition ' + pnlLightClass(yrrVal);
             }
             // 今日盈亏：金额为主（28px 半粗，涨红跌绿）+ 百分比为副（13px 金色小字，同行基线对齐）；
-            // 当日盈亏金额沿用个股当日口径；百分比 = 当日盈亏 ÷ 昨日收盘总资产（收盘市值 + 闲置现金），与主流券商一致。
+            // 当日盈亏金额沿用个股当日口径；百分比 = 当日盈亏 ÷ 盈亏归属日前一日收盘总资产（含闲置现金）。
             const todayPnlEl = document.querySelector('#todayPnl');
             const todayPnlPctEl = document.querySelector('#todayPnlPct');
             const todayBase = heroW < 340 ? 24 : 28;
@@ -36400,6 +36505,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const hasValidDayPct = todaySnap.hasValidDayPct;
                 _todayPnlNow = hasValidDayPct ? Number(totalDayPnl) : null;
                 if(!hasValidDayPct){
+                    // 交易日 9:00–9:15 集合竞价前：一律直接 "--"，不再走首屏 6 秒 loading，
+                    // 避免刚打开页面时先闪 0.00 / 0.00%。
+                    if(isPreOpen()){
+                        if(_todayPnlLoadTimer){ clearTimeout(_todayPnlLoadTimer); _todayPnlLoadTimer = null; }
+                        todayPnlEl.innerText = '--';
+                        todayPnlEl.className = 'text-[28px] font-semibold tabular-nums num-transition text-gray-400 leading-none';
+                        todayPnlEl.style.fontSize = todayBase + 'px';
+                        todayPnlPctEl.innerText = '--';
+                        todayPnlPctEl.className = 'text-[13px] font-medium tabular-nums num-transition text-gray-400 leading-none';
+                    } else {
                     const hasHoldings = (holdDataList || []).some(function(it){ return Number(it.count) > 0; });
                     if(!_todayPnlLoadStartedAt) _todayPnlLoadStartedAt = performance.now();
                     const stillLoading = hasHoldings && (performance.now() - _todayPnlLoadStartedAt < 6000);
@@ -36422,6 +36537,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         todayPnlEl.style.fontSize = todayBase + 'px';
                         todayPnlPctEl.innerText = '--';
                         todayPnlPctEl.className = 'text-[13px] font-medium tabular-nums num-transition text-gray-400 leading-none';
+                    }
                     }
                 } else {
                     if(_todayPnlLoadTimer){ clearTimeout(_todayPnlLoadTimer); _todayPnlLoadTimer = null; }

@@ -3115,7 +3115,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 0 2px 5px rgba(0,0,0,.55),
                 0 10px 26px rgba(24,12,16,.16),
                 inset 0 1px 0 rgba(255,255,255,.05)!important;
+            --hero-up:#db2c27;
+            --hero-down:#3ccb4f;
         }
+        /* 主卡深色底：仿东方财富 APP 深色行情的红绿，只作用于主卡，不影响浅色持仓页 */
+        #assetHeroCard [class*="text-[#e03131]"]{color:var(--hero-up)!important;}
+        #assetHeroCard [class*="text-[#00a05c]"]{color:var(--hero-down)!important;}
         /* 主卡内的文字入口统一 11px，避免辅助标签小于其它小字 */
         #assetHeroCard button[title^="查看"]{font-size:11px!important;}
         #assetHeroCard #totalMarketWrap{
@@ -35924,9 +35929,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return isFinite(ts) ? ts : 0;
         }
         function heroCurveColor(){
-            var pnl = _todayPnlNow == null ? null : Number(_todayPnlNow);
-            if(pnl == null || !isFinite(pnl) || Math.abs(pnl) < 0.005) return '#b8a58f';
-            return pnl > 0 ? '#d85454' : '#389973';
+            // 主卡所有周期曲线统一固定为香槟浅金，不随涨跌方向切换。
+            return '#e6c27a';
         }
         // 1D 采样时间用“当日分钟（带秒小数）”，6–10 秒刷新即可落一个真实点；
         // 09:15 前归到 09:15（集合竞价前的静值不铺开），15:00 后归到收盘点。
@@ -36102,10 +36106,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     var p1 = xy[i];
                     var p2 = xy[i + 1];
                     var p3 = xy[i + 2] || p2;
-                    var cp1x = p1.x + (p2.x - p0.x) / 6;
+                    var cp1x = p1.x + (p2.x - p1.x) / 3;
                     var cp1y = p1.y + (p2.y - p0.y) / 6;
-                    var cp2x = p2.x - (p3.x - p1.x) / 6;
+                    var cp2x = p1.x + (p2.x - p1.x) * 2 / 3;
                     var cp2y = p2.y - (p3.y - p1.y) / 6;
+                    // 横轴是时间，控制点横向只取本段三等分位置：相邻采样间隔不均时也不会过冲回退，避免曲线绕圈。
                     // 50px 画布只留 4px 内边距，曲率控制点必须夹在绘图区内，避免线被裁掉
                     cp1y = Math.max(padY, Math.min(h - padY, cp1y));
                     cp2y = Math.max(padY, Math.min(h - padY, cp2y));
@@ -36132,8 +36137,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             var area = built.d + ' L' + areaEndX.toFixed(2) + ',' + h + ' L0,' + h + ' Z';
             return '<defs>'
                 + '<linearGradient id="heroAssetGrad" x1="0" y1="0" x2="0" y2="1">'
-                + '<stop offset="0%" stop-color="' + color + '" stop-opacity=".12"/>'
-                + '<stop offset="72%" stop-color="' + color + '" stop-opacity=".04"/>'
+                + '<stop offset="0%" stop-color="' + color + '" stop-opacity=".18"/>'
                 + '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>'
                 + '</linearGradient>'
                 + '</defs>'

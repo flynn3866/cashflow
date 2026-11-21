@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261121.527';</script>
+    <script>window.APP_VERSION = '20261121.529';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -196,6 +196,10 @@
         /* 展开持仓详情时暂时收起右下角新增按钮，避免遮住操作行 */
         #openModalBtn{transition:opacity .22s ease, transform .22s ease !important;}
         #openModalBtn.hold-fab-hidden{opacity:0 !important;pointer-events:none !important;transform:translateY(8px) scale(.92) !important;}
+        /* 展开面板标题行：整行作为“持仓详情”链接，点击进入与卡片模式相同的详情页 */
+        #holdList .hold-detail-link{border:0;background:transparent;color:inherit;cursor:pointer;border-radius:8px 8px 0 0;}
+        #holdList .hold-detail-link:active{background:#fff8f3;}
+        #holdList .hold-detail-link:focus-visible{outline:2px solid rgba(143,36,55,.32);outline-offset:-2px;}
         @keyframes holdPanelIn{
             from{opacity:0;transform:translateY(-4px);}
             to{opacity:1;transform:translateY(0);}
@@ -4085,12 +4089,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             --watch-tab-text:#5f574f;
         }
         #pageWatchSel.watch-dark{
-            --watch-up:#f04a40;
-            --watch-down:#45d66a;
+            --watch-up:#ed0000;
+            --watch-down:#00d800;
             --watch-zero:#e6e6e6;
             --watch-placeholder:#7b7b7b;
-            --watch-index-up:#ff5147;
-            --watch-index-down:#5ed738;
+            --watch-index-up:#ed0000;
+            --watch-index-down:#00d800;
             --watch-index-flat:#9a9a9a;
             --watch-index-muted:#8b8b8b;
             --watch-tab-active:#4f7fe8;
@@ -4160,7 +4164,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #pageWatchSel.watch-dark .watch-index-name{color:#c7d0ca!important;}
         #pageWatchSel.watch-dark #watchIndexCards{filter:none;}
-        /* 自选行：64px 行高，股票名恢复东方财富默认浅灰，其余字段白/灰 */
+        /* 自选行：按东方财富参考图 49.7px 固定行高；上下留白由行内垂直居中产生 */
         #pageWatchSel.watch-dark #watchSelList .watch-row,
         #pageWatchSel.watch-dark #watchSelList .watch-row > div{
             background:#171717!important;
@@ -4169,7 +4173,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             border-bottom-color:#242424!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row > div{
-            padding-top:12px!important;padding-bottom:12px!important;
+            padding-top:0!important;padding-bottom:0!important;
+        }
+        #watchSelList .watch-row{
+            height:49.7px!important;
+            min-height:49.7px!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row [data-fixcol] .min-w-0 > div:first-child{
             color:#e4e4e8!important;
@@ -4180,10 +4188,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         /* 通用行高：亮色主题也按同一密度，避免两套主题跳变 */
         #watchSelList .watch-row > div{
-            padding-top:12px!important;padding-bottom:12px!important;
+            padding-top:0!important;padding-bottom:0!important;
         }
         #watchSelList .watch-row [data-fixcol] .min-w-0 > div:first-child{
             font-size:20px;line-height:23px;
+        }
+        #watchSelList .watch-row [data-fixcol] .min-w-0 > div:nth-child(2){
+            margin-top:1px;
+            line-height:13px;
         }
         #pageWatchSel.watch-dark #watchSelSticky{background:#171717!important;}
         #pageWatchSel.watch-dark{
@@ -39231,10 +39243,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                     <!-- 点开后出现的是嵌套详情面板：标题、完整指标与操作分层，不再延续股票行的底色 -->
                     <div class="hold-row-actions hidden mx-2.5 mb-2.5 rounded-[10px] overflow-hidden" data-hold-id="${item.id}" style="background:#f8f3ec;border:1px solid #ebdfd2;">
-                        <div class="px-3 pt-2.5 pb-1.5 flex items-baseline gap-2">
-                            <span class="text-[9px] font-semibold tracking-[.12em]" style="color:#8f5f67;">持仓详情</span>
+                        <button type="button" class="hold-detail-link w-full px-3 pt-2.5 pb-1.5 flex items-baseline gap-2 text-left" onclick="event.stopPropagation();openHoldCardDetail(${item.id}, event)" aria-label="查看${item.name}持仓详情">
+                            <span class="text-[9px] font-semibold tracking-[.12em] underline underline-offset-2 decoration-1" style="color:#8f2437;">持仓详情</span>
                             <span class="text-[10px] tabular-nums" style="color:#a49382;">${item.code}</span>
-                        </div>
+                            <span class="ml-auto inline-flex items-center gap-0.5 text-[10px] font-medium" style="color:#8f2437;">查看<i class="fa fa-angle-right text-[11px]" aria-hidden="true"></i></span>
+                        </button>
                         <div class="px-3 pb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] leading-[1.55]" style="color:#a49382;">
                             <span>现价 <span style="color:#2f2a27;" data-field="price">${pricePrefix}${fmtListPrice(item.nowPrice)}</span></span>
                             <span>·</span>

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
     <!-- 禁止缓存：确保手机桌面图标打开时总是最新版本 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261121.531';</script>
+    <script>window.APP_VERSION = '20261121.545';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -391,7 +391,7 @@
             #holdList .hold-card-v2{
                 position:relative;
                 display:grid;
-                grid-template-columns:minmax(0,1fr) 60px 88px;
+                grid-template-columns:minmax(0,1fr) 66px 100px;
                 align-items:center;
                 gap:10px;
                 height:88px;
@@ -432,9 +432,11 @@
                 line-height:1.18;
                 letter-spacing:.5px;
                 color:#2d2925;
-                white-space:nowrap;
-                overflow:hidden;
-                text-overflow:ellipsis;
+                white-space:normal;
+                overflow:visible;
+                overflow-wrap:anywhere;
+                word-break:break-word;
+                text-overflow:clip;
                 min-width:0;
                 flex-shrink:1;
             }
@@ -1978,6 +1980,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .divcmp-card-title{ font-size:13px; line-height:1.2; font-weight:700; color:#403126; }
         .divcmp-card-sub{ margin-top:3px; font-size:8px; line-height:1.3; color:#a18b74; }
         .divcmp-chip{ flex-shrink:0; padding:2px 6px; border-radius:5px; border:1px solid #ead8be; background:#fff; color:#9b7b55; font-size:7px; font-weight:700; letter-spacing:.04em; }
+        /* 累计分红档案：并入分红统计后统一字号/色彩，避免被旧页面的动态 class 覆盖 */
+        #divRankArchiveCard #divRankTotal{ font-size:20px !important; line-height:1 !important; font-weight:700 !important; color:#742034 !important; }
+        #divRankArchiveCard #statsDivRankIndList > div{ min-height:18px; }
+        #divRankArchiveCard #statsDivRankIndList .text-\[10px\]{ font-size:9px; }
+        #divRankArchiveCard #divRankPager{ padding-top:2px; }
         .divcmp-legend{ display:flex; flex-wrap:wrap; gap:4px 10px; padding:0 14px 3px; font-size:8px; color:#8f765c; }
         .divcmp-legend span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
         .divcmp-legend i{ width:5px; height:5px; border-radius:50%; display:inline-block; flex-shrink:0; }
@@ -3119,9 +3126,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             #pageHoldCardDetail .hcd-link{font-size:10px!important;}
         }
         @media (max-width:400px){
-            /* 统计宫格在主流手机宽度改为两列，避免 3 列时标题和数值被挤断 */
-            #pageStats .grid.grid-cols-3{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;}
-            #pageStats .grid.grid-cols-3 > .col-span-3{grid-column:span 2/span 2!important;}
+            /* 3×3 宫格：390px 下仍保持三列，用更紧凑的内边距与字号保证可读性 */
+            #pageStats .grid.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;}
+            #pageStats .grid.grid-cols-3 > .col-span-3{grid-column:span 3/span 3!important;}
             #pageStats .card-rise.col-span-3 > div{gap:9px!important;}
             #pageStats .card-rise.col-span-3 div[class*="text-[15px]"]{font-size:14px!important;white-space:nowrap!important;}
             #pageStats #statsCardTodayPnl,
@@ -3674,6 +3681,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             width:32px!important;height:32px!important;border-radius:10px!important;
         }
         #pageStats .module-mark i,#pageStats .module-mark svg{font-size:14px!important;width:14px!important;height:14px!important;}
+        @media (max-width:480px){
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3){padding:12px 10px!important;min-height:132px!important;}
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) .module-mark{
+                width:25px!important;height:25px!important;border-radius:8px!important;
+                margin-bottom:8px!important;
+            }
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) .module-mark i,
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) .module-mark svg{
+                font-size:11px!important;width:11px!important;height:11px!important;
+            }
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) [class*="text-[13px]"]{
+                font-size:11px!important;line-height:1.25!important;white-space:normal!important;
+            }
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) [class*="text-[13px]"].mt-1\.5,
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) [class*="text-[13px]"].text-gray-800.font-bold{
+                font-size:11.5px!important;
+            }
+            #pageStats .grid.grid-cols-3 > button:not(.col-span-3) [class*="text-[9px]"]{
+                font-size:8px!important;line-height:1.3!important;
+            }
+            #pageStats #statsCardGoalPct{font-size:16px!important;}
+            #pageStats #statsCardGoalEta{max-width:100%!important;}
+        }
         @media (hover:hover){
             #pageStats .grid.grid-cols-3 > button:not(.col-span-3):hover{
                 transform:translateY(-1px);
@@ -4147,6 +4177,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:var(--watch-tab-text);font-size:16px;cursor:pointer;padding:0;
         }
         #watchTabActions button:active{opacity:.65;}
+        #watchTabAddBtn .watch-add-close{display:none;}
+        #watchTabAddBtn.is-open .watch-add-plus{display:none;}
+        #watchTabAddBtn.is-open .watch-add-close{display:block;}
+        /* 添加自选搜索态：紧凑浮层锚定在 tab 行右侧 + 下方，不改动 tab 行、不遮挡分组 */
+        #watchSearchBar{
+            position:absolute;display:none;top:50%;transform:translateY(-50%);right:52px;
+            width:240px;height:36px;z-index:41;
+        }
+        #watchSearchBar:not(.hidden){display:block;}
+        #watchSearchBar #watchCodeInput{
+            width:100%!important;font-size:16px!important;line-height:19px!important;
+            -webkit-text-size-adjust:100%!important;
+            box-shadow:0 8px 22px rgba(60,35,15,.16);
+        }
+        #pageWatchSel.watch-dark #watchSearchBar #watchCodeInput{box-shadow:0 10px 26px rgba(0,0,0,.5)!important;}
+        #watchSearchPanel{
+            top:calc(100% + 4px)!important;right:16px!important;left:auto!important;
+            width:320px;max-width:calc(100vw - 2rem);
+        }
         /* 三张独立指数卡：103px 左右宽、78px 高、6px 间距、6px 圆角 */
         #watchIndexCards{display:flex;gap:6px;align-items:stretch;margin:0 -8px 8px;}
         .watch-index-card{
@@ -4164,7 +4213,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #pageWatchSel.watch-dark .watch-index-name{color:#c7d0ca!important;}
         #pageWatchSel.watch-dark #watchIndexCards{filter:none;}
-        /* 自选行：按东方财富参考图 49.7px 固定行高；上下留白由行内垂直居中产生 */
+        /* 自选行：默认 49.7px 行高；长股票名换行时按内容自然增高，保证名字完整 */
         #pageWatchSel.watch-dark #watchSelList .watch-row,
         #pageWatchSel.watch-dark #watchSelList .watch-row > div{
             background:#171717!important;
@@ -4176,12 +4225,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             padding-top:0!important;padding-bottom:0!important;
         }
         #watchSelList .watch-row{
-            height:49.7px!important;
+            height:auto!important;
             min-height:49.7px!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row [data-fixcol] .min-w-0 > div:first-child{
             color:#d6d6d6!important;
-            font-size:17px!important;line-height:20px!important;font-weight:400!important;
+            line-height:20px!important;font-weight:400!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row [data-fixcol] .min-w-0 > div:nth-child(2){
             color:#8a8a8a!important;
@@ -4204,8 +4253,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             padding-top:0!important;padding-bottom:0!important;
         }
         #watchSelList .watch-row [data-fixcol] .min-w-0 > div:first-child{
-            font-size:17px;line-height:20px;font-weight:400;
+            line-height:20px;font-weight:400;
         }
+        /* 股票名超过4字时用紧凑字号，4字及以内保持 17px；任何长度都完整换行，不出现省略号 */
+        #watchSelList .watch-row .watch-name-sm,
+        #watchSelList .watch-row .watch-name-lg{
+            white-space:normal!important;overflow:visible!important;
+            overflow-wrap:anywhere;word-break:break-word;
+            text-overflow:clip!important;
+        }
+        #watchSelList .watch-row .watch-name-sm{font-size:12px!important;line-height:20px!important;}
+        #watchSelList .watch-row .watch-name-lg{font-size:17px!important;line-height:20px!important;}
         #watchSelList .watch-row [data-fixcol] .min-w-0 > div:nth-child(2){
             margin-top:1px;
             font-size:11px;
@@ -4234,20 +4292,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageWatchSel.watch-dark #watchSelList .py-10{color:#7a7a7a!important;}
         #pageWatchSel.watch-dark #watchSelList .watch-row > div .text-gray-800{color:#e6e6e6!important;}
         #pageWatchSel.watch-dark #watchSelList .watch-row > div .text-gray-400{color:#777!important;}
-        /* 自选搜索态与候选面板：统一为 #171717 深色体系 */
+        /* 自选搜索态与候选面板：深色页上保持纯白搜索卡，避免表单控件聚焦缩放 */
         #pageWatchSel.watch-dark #watchCodeInput{
-            background:#202020!important;color:#ededed!important;border-color:#3a3a3a!important;
+            background:#ffffff!important;color:#2f2a27!important;border-color:#e2d0b6!important;
+            box-shadow:0 8px 24px rgba(0,0,0,.42)!important;
+            font-size:16px!important;line-height:19px!important;-webkit-text-size-adjust:100%!important;
         }
-        #pageWatchSel.watch-dark #watchCodeInput::placeholder{color:#777!important;}
-        #pageWatchSel.watch-dark #watchClearInput{background:#2d2d2d!important;color:#b5b5b5!important;}
+        #pageWatchSel.watch-dark #watchCodeInput:focus{border-color:#8f2437!important;}
+        #pageWatchSel.watch-dark #watchCodeInput::placeholder{color:#9a8d7e!important;}
+        #pageWatchSel.watch-dark #watchClearInput{background:#f3eee5!important;color:#716153!important;}
         #pageWatchSel.watch-dark #watchSearchPanel{
-            background:#202020!important;border-color:#303030!important;box-shadow:0 10px 30px rgba(0,0,0,.5)!important;
+            background:#ffffff!important;border-color:#ead9bf!important;box-shadow:0 14px 34px rgba(0,0,0,.5)!important;
         }
-        #pageWatchSel.watch-dark #watchSearchPanel .watch-suggest-item{border-bottom-color:#2a2a2a!important;}
-        #pageWatchSel.watch-dark #watchSearchPanel .watch-suggest-item:hover{background:#262626!important;}
-        #pageWatchSel.watch-dark #watchSearchPanel .watch-suggest-name{color:#e6e6e6!important;}
-        #pageWatchSel.watch-dark #watchSearchPanel .text-gray-400{color:#8a8a8a!important;}
-        #pageWatchSel.watch-dark #watchAddHint{color:#888!important;border-color:#2a2a2a!important;}
+        #pageWatchSel.watch-dark #watchSearchPanel .watch-suggest-item{background:#ffffff!important;border-bottom-color:#f0e6d6!important;}
+        #pageWatchSel.watch-dark #watchSearchPanel .watch-suggest-item:hover{background:#faf3e3!important;}
+        #pageWatchSel.watch-dark #watchSearchPanel .watch-suggest-name{color:#2f2a27!important;}
+        #pageWatchSel.watch-dark #watchSearchPanel .text-gray-400{color:#9a8d7e!important;}
+        #pageWatchSel.watch-dark #watchAddHint{color:#9a8d7e!important;border-color:#f0e6d6!important;}
+        #pageWatchSel.watch-dark #watchAddTargetBar{background:#fbf8f2!important;border-bottom-color:#f0e6d6!important;}
+        #pageWatchSel.watch-dark .watch-add-target-label{color:#9a8d7e!important;}
+        #pageWatchSel.watch-dark .watch-add-target-static{color:#8f2437!important;background:#faf3e3!important;}
         #pageWatchSel.watch-dark #watchMgrBtnWrap button{
             background:#202020!important;border-color:#303030!important;color:#dedede!important;box-shadow:none!important;
         }
@@ -4276,7 +4340,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .watch-group-chip.is-active b{background:#8f2437;color:#ffe5bb;}
         .watch-group-form{display:none;gap:6px;margin-top:10px;}
         .watch-group-form.open{display:flex;}
-        .watch-group-form input{flex:1;min-width:0;height:32px;border-radius:8px;border:1px solid #ddd0be;background:#fbf8f2;padding:0 10px;font-size:12px;color:#3a332d;outline:none;}
+        .watch-group-form input{flex:1;min-width:0;height:32px;border-radius:8px;border:1px solid #ddd0be;background:#fbf8f2;padding:0 10px;font-size:16px;line-height:19px;color:#3a332d;outline:none;-webkit-text-size-adjust:100%;}
         .watch-group-form input:focus{border-color:#8f2437;}
         .watch-group-form button{height:32px;padding:0 12px;border-radius:8px;border:0;background:#8f2437;color:#ffe5bb;font-size:12px;font-weight:600;}
         .watch-group-form button.ghost{background:#f1ece4;color:#6f6458;}
@@ -4384,7 +4448,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 首页持仓：卡片/列表数字规格统一，不随 390/428 宽度降档 -->
     <style id="hold-name-value-type-20261121">
         #holdList .hold-card-v2{
-            grid-template-columns:minmax(0,1fr) 60px 96px!important;
+            grid-template-columns:minmax(0,1fr) 66px 100px!important;
             gap:10px!important;
             padding:0 14px!important;
         }
@@ -4394,6 +4458,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-weight:500!important;
             letter-spacing:.5px!important;
         }
+        /* 卡片模式股票名：超过4字用12px，4字及以内保持16px */
+        #holdList .hold-card-v2-name.hold-card-name-sm{font-size:12px!important;line-height:1.18!important;}
+        #holdList .hold-card-v2-name.hold-card-name-lg{font-size:16px!important;line-height:1.18!important;}
         #holdList .hold-card-v2-meta,
         #holdList .hold-card-v2-meta .hcm-code,
         #holdList .hold-card-v2-meta .hcm-pnl,
@@ -5715,13 +5782,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- ================= 账户体检（长期主义四维） ================= -->
+        <!-- ================= 账户体检（长期主义六维） ================= -->
         <div class="card-rise bg-white rounded-2xl p-4 card-shadow mb-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
                     <span class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:#faf3e3;color:#a9642a"><i class="fa fa-heartbeat text-[11px]"></i></span>
                     <span class="text-sm font-semibold text-gray-700">账户体检</span>
-                    <span class="text-[9px] text-gray-400">长期主义 · 四维</span>
+                    <span class="text-[9px] text-gray-400">长期主义 · 六维</span>
                 </div>
                 <span id="analysisHeroHighWrap" class="inline-flex items-center gap-1 text-[9px] px-2 py-1 rounded-full" style="background:#fbf4e6;border:1px solid #efe0c4;color:#9a7b45">
                     <i class="fa fa-diamond text-[8px]" style="color:#d9a441"></i>
@@ -5751,7 +5818,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div id="analysisAvgAnnual" class="text-[18px] font-bold tabular-nums mt-1" style="color:#8f2437">--</div>
                     <div id="analysisAvgAnnualSub" class="text-[9px] text-gray-400 mt-0.5">--</div>
                 </div>
+                <div class="rounded-xl p-3" style="background:linear-gradient(145deg,#fffdf8,#faf4e8);border:1px solid #efe2ca">
+                    <div class="flex items-center justify-between"><span class="text-[10px] text-gray-400">年化波动</span><i class="fa fa-signal text-[10px]" style="color:#a9642a"></i></div>
+                    <div id="analysisVol" class="text-[18px] font-bold tabular-nums mt-1" style="color:#1f2937">--</div>
+                    <div id="analysisVolSub" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
+                </div>
+                <div class="rounded-xl p-3" style="background:linear-gradient(145deg,#fffdf8,#f7f0e5);border:1px solid #efe2ca">
+                    <div class="flex items-center justify-between"><span class="text-[10px] text-gray-400">最长水下</span><i class="fa fa-clock-o text-[10px]" style="color:#a9642a"></i></div>
+                    <div id="analysisWater" class="text-[18px] font-bold tabular-nums mt-1" style="color:#1f2937">--</div>
+                    <div id="analysisWaterSub" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
+                </div>
             </div>
+            <div class="text-[9px] leading-relaxed mt-2.5" style="color:#a18b74">口径：基于每日总资产快照；回撤与水下按自然日计算，年化波动按间隔折算。含现金与出入金，未做净值折算。</div>
         </div>
 
         <!-- ================= 资产构成 / 杠杆 ================= -->
@@ -5958,27 +6036,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="watchAddSlot" class="relative flex items-center justify-end flex-1 min-w-0 max-w-[240px]">
                     <button id="watchThemeBtn" class="w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform mr-2" onclick="toggleWatchSelTheme()" title="切换为深色模式" aria-label="切换为深色模式"><i class="fa fa-moon-o"></i></button>
                     <button id="watchManageBtn" class="w-10 h-10 rounded-full bg-[#faf3e3] border border-[#eedfc0] card-shadow flex items-center justify-center text-accent active:scale-95 transition-transform" onclick="openWatchManage()" title="管理自选分组" aria-label="管理自选分组"><i class="fa fa-bars"></i></button>
-                    <div id="watchSearchBar" class="hidden items-center w-full">
-                        <div class="relative w-full">
-                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]"></i>
-                            <input id="watchCodeInput" type="text" class="w-full h-9 bg-white rounded-xl pl-8 pr-8 text-[13px] border-2 border-accent/60 focus:border-accent focus:outline-none transition-colors" placeholder="代码 / 名称 / 拼音" autocomplete="off">
-                            <button id="watchClearInput" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[12px] leading-none flex items-center justify-center active:scale-90 transition-transform">×</button>
-                        </div>
-                    </div>
-                    <!-- 联想下拉浮层：绝对定位于输入框下方（随标题栏吸顶），浮在页面上覆盖列表，不推挤其他内容；纯候选列表 + 底部反馈，无按钮 -->
-                    <div id="watchSearchPanel" class="hidden absolute top-full right-0 mt-1.5 z-40 w-[320px] max-w-[calc(100vw-1.5rem)] min-h-[168px] overflow-hidden rounded-xl bg-white border border-[#eedfc0] card-shadow">
-                        <div id="watchAddTargetBar"></div>
-                        <div id="watchSuggestList" class="overflow-y-auto max-h-[42vh] min-h-[0]"></div>
-                        <div id="watchAddHint" class="px-3 py-1.5 border-t border-gray-100 text-[11px] text-gray-400"></div>
-                    </div>
                 </div>
             </div>
 
-            <!-- 分组 tab（指数卡上方）：全部 + 自定义分组；右侧为添加自选入口 -->
+            <!-- 分组 tab（指数卡上方）：全部 + 自定义分组；右侧为添加自选入口；搜索框与 + 同排展开 -->
             <div id="watchTabsBar">
                 <div id="watchTabsScroll"></div>
                 <div id="watchTabActions">
-                    <button id="watchTabAddBtn" onclick="openWatchPage()" title="添加自选股" aria-label="添加自选股"><i class="fa fa-plus"></i></button>
+                    <button id="watchTabAddBtn" onclick="toggleWatchPage()" title="添加自选股" aria-label="添加自选股"><i class="fa fa-plus watch-add-plus"></i><i class="fa fa-times watch-add-close"></i></button>
+                </div>
+                <div id="watchSearchBar" class="hidden">
+                    <div class="relative w-full">
+                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[11px]"></i>
+                        <input id="watchCodeInput" type="text" class="w-full h-9 bg-white rounded-xl pl-8 pr-8 text-[16px] border-2 border-accent/60 focus:border-accent focus:outline-none transition-colors" placeholder="代码 / 名称 / 拼音" autocomplete="off">
+                        <button id="watchClearInput" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[12px] leading-none flex items-center justify-center active:scale-90 transition-transform">×</button>
+                    </div>
+                </div>
+                <!-- 联想下拉浮层：从 tab 行下方展开，覆盖指数卡但保留分组 tab 可点 -->
+                <div id="watchSearchPanel" class="hidden absolute z-40 w-[320px] min-h-[168px] overflow-hidden rounded-xl bg-white border border-[#eedfc0] card-shadow">
+                    <div id="watchAddTargetBar"></div>
+                    <div id="watchSuggestList" class="overflow-y-auto max-h-[42vh] min-h-[0]"></div>
+                    <div id="watchAddHint" class="px-3 py-1.5 border-t border-gray-100 text-[11px] text-gray-400"></div>
                 </div>
             </div>
 
@@ -6002,8 +6080,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <!-- 表头行（横向随列表镜像滑动、同源无脱节；表头首列 JS 固定不动） -->
-            <div id="watchSelHeadRow" class="min-w-[692px] grid gap-x-1 grid-cols-[120px_96px_90px_86px_96px_82px_98px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
-                <div id="watchSelHeadFirst" class="relative bg-white z-50 pl-4 pr-3 py-2 text-[12px] leading-[18px] text-gray-500 font-normal" data-fixcol>股票</div>
+            <div id="watchSelHeadRow" class="min-w-[698px] grid gap-x-1 grid-cols-[126px_96px_90px_86px_96px_82px_98px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
+                <div id="watchSelHeadFirst" class="relative bg-white z-50 pl-[16px] pr-[8px] py-2 text-[12px] leading-[18px] text-gray-500 font-normal" data-fixcol>股票</div>
                 <div class="pl-2 pr-4 py-2 text-[12px] leading-[18px] text-gray-500 font-normal text-right">最新</div>
                 <div class="pl-2 pr-4 py-2 text-[12px] leading-[18px] text-gray-500 font-normal text-right">涨幅</div>
                 <div class="pl-2 pr-4 py-2 text-[12px] leading-[18px] text-gray-500 font-normal text-right">股息率</div>
@@ -6276,23 +6354,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="statsCardSummaryAnalysis" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubAnalysis" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
-            <button onclick="openStatsSection('position')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="module-mark mb-3"><i class="fa fa-pie-chart"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">仓位分布</div>
-                <div id="statsCardSummaryPosition" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
-                <div id="statsCardSubPosition" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
-            </button>
             <button onclick="openStatsSection('pnl')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
                 <div class="module-mark mb-3"><i class="fa fa-balance-scale"></i></div>
                 <div class="text-[13px] font-semibold text-gray-800">累计盈亏</div>
                 <div id="statsCardSummaryPnl" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubPnl" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
-            </button>
-            <button onclick="openStatsSection('divrank')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="module-mark mb-3"><i class="fa fa-cny"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">分红排行</div>
-                <div id="statsCardSummaryDivRank" class="text-[13px] font-bold text-accent mt-1.5 tabular-nums truncate">--</div>
-                <div id="statsCardSubDivRank" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('schedule')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform relative">
                 <span id="statsCardScheduleBadge" class="hidden absolute -top-1.5 -right-1.5 z-10 text-[10px] font-semibold text-white pl-2 pr-2 py-1 rounded-full today-reg-pulse whitespace-nowrap" style="background:linear-gradient(135deg,#e03131,#b0332f);box-shadow:0 2px 8px rgba(224,49,49,0.4)">今日 0 笔</span>
@@ -6302,14 +6368,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="statsCardSubSchedule" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('compare')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="module-mark mb-3"><i class="fa fa-exchange"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">分红对比</div>
+                <div class="module-mark mb-3"><i class="fa fa-bar-chart"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">分红统计</div>
                 <div id="statsCardSummaryCompare" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubCompare" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
             <button onclick="openStatsSection('industry')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="module-mark mb-3"><i class="fa fa-building"></i></div>
-                <div class="text-[13px] font-semibold text-gray-800">行业资产</div>
+                <div class="module-mark mb-3"><i class="fa fa-pie-chart"></i></div>
+                <div class="text-[13px] font-semibold text-gray-800">资产仓位</div>
                 <div id="statsCardSummaryIndustry" class="text-[13px] font-bold text-gray-800 mt-1.5 tabular-nums truncate">--</div>
                 <div id="statsCardSubIndustry" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
@@ -6331,12 +6397,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="statsCardCashFlowBal" class="text-[13px] font-bold tabular-nums mt-1.5 truncate text-gray-800">--</div>
                 <div id="statsCardSummaryCashFlow" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
                 <div id="statsCardCashFlowSub" class="hidden text-[9px] text-gray-400 mt-0.5 truncate">--</div>
-            </button>
-            <button onclick="openStatsSection('risk')" class="card-rise bg-white rounded-2xl card-shadow px-4 py-4 text-left active:scale-95 transition-transform">
-                <div class="module-mark mb-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3z"/><path d="M9.4 12.1l1.9 1.9 3.5-3.6"/></svg></div>
-                <div class="text-[13px] font-semibold text-gray-800">风险指标</div>
-                <div id="statsCardSummaryRisk" class="text-[13px] font-bold tabular-nums mt-1.5 truncate text-gray-800">--</div>
-                <div id="statsCardSubRisk" class="text-[9px] text-gray-400 mt-0.5 truncate">--</div>
             </button>
         </div>
 
@@ -6466,84 +6526,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         </div>
     </div>
 
-    <!-- 统计详情：仓位分布 -->
-    <div id="pageStatsPosition" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
-            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
-            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
-            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
-            <div class="flex items-center gap-2.5 relative z-10">
-                <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">仓位分布</span>
-                <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
-                    <i class="fa fa-clock-o text-[10px]"></i>
-                    <span id="statsPositionRefreshTime">每日更新 · -- 更新</span>
-                </span>
-            </div>
-        </div>
-        <!-- 仓位分布：总览指标 + 行业结构 + 个股仓位明细 -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div id="statsPositionWrap">
-                <!-- 组合总览：三项核心指标 -->
-                <div class="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100">
-                    <div class="px-4 py-4">
-                        <div class="text-[10px] font-medium text-gray-400">持仓市值</div>
-                        <div id="posSummaryMv" class="mt-1.5 text-[20px] font-semibold text-gray-800 tabular-nums tracking-tight">--</div>
-                    </div>
-                    <div class="px-4 py-4">
-                        <div class="text-[10px] font-medium text-gray-400">股票仓位</div>
-                        <div id="posSummaryEquity" class="mt-1.5 text-[20px] font-semibold text-accent tabular-nums tracking-tight">--</div>
-                    </div>
-                    <div class="px-4 py-4">
-                        <div class="text-[10px] font-medium text-gray-400">最大单一持仓</div>
-                        <div id="posSummaryMax" class="mt-1.5 text-[20px] font-semibold text-gray-800 tabular-nums tracking-tight">--</div>
-                    </div>
-                </div>
-
-                <!-- 行业配置 -->
-                <div class="px-5 py-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-baseline gap-2 min-w-0">
-                            <span class="text-[12px] font-semibold text-gray-700">行业配置</span>
-                            <span class="text-[10px] text-gray-400">占总资产</span>
-                        </div>
-                        <span class="text-[10px] text-gray-400 whitespace-nowrap"><span id="posIndustryCount">--</span> 个行业</span>
-                    </div>
-                    <div class="flex items-center gap-3.5">
-                        <div class="relative flex-shrink-0" style="width:132px;height:132px;">
-                            <div id="industryPieChart" style="width:132px;height:132px;"></div>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span id="posPieCount" class="text-[16px] font-semibold text-gray-800 tabular-nums leading-none">--</span>
-                                <span class="text-[10px] text-gray-400 mt-1">只持仓</span>
-                            </div>
-                        </div>
-                        <div id="statsIndustryList" class="flex-1 min-w-0 divide-y divide-gray-100">
-                            <div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 个股仓位 -->
-                <div class="px-5 py-4 border-t border-gray-100">
-                    <div class="flex items-center justify-between mb-1">
-                        <div class="flex items-baseline gap-2 min-w-0">
-                            <span class="text-[12px] font-semibold text-gray-700">个股仓位</span>
-                            <span class="text-[10px] text-gray-400">按占比倒序</span>
-                        </div>
-                        <span id="posStockCount" class="text-[10px] text-gray-400 whitespace-nowrap">-- 只</span>
-                    </div>
-                    <div id="statsStockPositionList" class="divide-y divide-gray-100">
-                        <div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>
-                    </div>
-                </div>
-
-                <div class="px-5 py-3 border-t border-gray-100 bg-[#fffdf9] text-[10px] leading-relaxed text-gray-400">
-                    仓位占比 = 个股持仓市值 ÷ 总资产（含现金），行情每日收盘后更新。
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- 统计详情：盈亏排行 -->
     <div id="pageStatsPnl" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
                 <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
@@ -6623,67 +6605,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div id="pnlRankPager" class="px-4 pb-4 pt-1 hidden">
                     <button id="pnlRankMoreBtn" type="button" onclick="loadMorePnlRank()" class="w-full py-3 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium active:scale-95 transition-transform">加载更多</button>
                     <button id="pnlRankCollapseBtn" type="button" onclick="collapsePnlRank()" class="hidden w-full mt-2 py-3 rounded-xl bg-gray-50 text-gray-400 text-sm font-medium active:scale-95 transition-transform">收起</button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- 统计详情：累计分红排行 -->
-    <div id="pageStatsDivRank" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
-            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
-            <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
-            <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
-            <div class="flex items-center gap-2.5 relative z-10">
-                <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">累计分红排行</span>
-                <div class="ml-auto text-right leading-tight">
-                    <div id="divRankTotal" class="text-[12px] font-bold tabular-nums text-amber-600">--</div>
-                    <div class="text-[10px] text-gray-400 mt-0.5 whitespace-nowrap">共 <span id="divRankCount" class="text-amber-600 font-semibold">0</span> 只 · 含已清仓</div>
-                </div>
-            </div>
-        </div>
-        <!-- 行业累计分红占比环形图 + 行业占比列表（>2%）：所有持仓（含清仓）历史累计分红按映射后行业汇总，参考仓位分布详情页风格（灰底区块 + 环形图 + 右侧占比数值） -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-            <div id="statsDivRankPieWrap">
-                <div class="px-5 py-3 bg-gray-50/50 border-b border-gray-100">
-                    <div class="flex items-center gap-1.5 mb-3">
-                        <span class="text-[12px] font-semibold text-gray-600">行业累计分红占比</span>
-                        <span class="ml-auto text-[10px] text-gray-400" id="statsDivRankIndTag">&gt;2% 行业</span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <!-- 环形图 -->
-                        <div class="flex-shrink-0" style="width:120px;height:120px;">
-                            <div id="chartStatsDivRankInd" style="width:120px;height:120px;"></div>
-                        </div>
-                        <!-- 行业占比列表 -->
-                        <div id="statsDivRankIndList" class="flex-1 min-w-0 space-y-1.5">
-                            <div class="text-center text-gray-400 text-xs py-4">暂无行业数据</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="px-5 py-3">
-                    <div class="text-[10px] text-gray-400 leading-relaxed">口径：全部持仓（含已清仓）历史累计已收分红按映射后行业汇总，行业累计分红 ÷ 组合累计分红，仅展示占比 &gt; 2% 的行业。</div>
-                </div>
-            </div>
-        </div>
-        <!-- 累计分红排行：所有持仓（含已清仓）累计分红收入排行（刷新机制与盈亏排行一致：交易日6:00/20:00各构建一次并存储） -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
-
-            <div id="statsDivRankWrap">
-                <!-- 汇总条：只数 + 累计分红总额 -->
-                <div class="px-4 py-2 border-b border-gray-100 flex items-center text-[11px] text-gray-400 bg-white">
-                    <span class="flex-1">股票</span>
-                    <span class="w-24 text-right">累计分红</span>
-                </div>
-                <!-- 排行列表 -->
-                <div id="statsDivRankList" class="px-4 py-1 divide-y divide-gray-200">
-                    <div class="text-center text-gray-400 text-xs py-4">暂无分红数据</div>
-                </div>
-                <div id="divRankPager" class="px-4 pb-4 pt-1 hidden">
-                    <button id="divRankMoreBtn" type="button" onclick="loadMoreDivRank()" class="w-full py-3 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium active:scale-95 transition-transform">加载更多</button>
-                    <button id="divRankCollapseBtn" type="button" onclick="collapseDivRank()" class="hidden w-full mt-2 py-3 rounded-xl bg-gray-50 text-gray-400 text-sm font-medium active:scale-95 transition-transform">收起</button>
                 </div>
             </div>
         </div>
@@ -6949,8 +6870,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">分红对比统计</span>
-                <span class="flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
+                <div class="min-w-0">
+                    <div class="text-gray-800 text-[17px] font-semibold tracking-wide leading-tight">分红统计分析</div>
+                    <div class="text-[9px] text-gray-400 tracking-[0.16em] mt-0.5 whitespace-nowrap">DIVIDEND ANALYTICS</div>
+                </div>
+                <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
                     <i class="fa fa-clock-o text-[10px]"></i>
                     <span id="statsDivCompareRefreshTime">每日更新 · -- 更新</span>
                 </span>
@@ -7017,21 +6941,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
         </div>
 
-        <!-- 增量贡献榜：正贡献/拖累各前五 -->
-        <div class="divcmp-card divcmp-rank-card">
-            <div class="divcmp-card-head">
-                <div class="divcmp-icon"><i class="fa fa-trophy"></i></div>
-                <div class="divcmp-head-text">
-                    <div class="divcmp-card-title">增量贡献榜</div>
-                    <div class="divcmp-card-sub">谁把今年的分红抬上去，谁在拖后腿</div>
-                </div>
-                <span class="divcmp-chip">TOP 5</span>
-            </div>
-            <div id="divcmpRankBody" class="divcmp-rank-grid">
-                <div class="divcmp-rank-empty">正在计算…</div>
-            </div>
-        </div>
-
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
 
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5 bg-white">
@@ -7051,7 +6960,67 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
             <!-- 汇总行 -->
             <div id="statsDivCompareTotal" class="hidden grid grid-cols-[1.3fr_1fr_1fr_1fr] px-3 py-3 border-t-2 border-[#e2cf9c] bg-[#f7f1e0] items-center"></div>
-            <!-- 调仓分析对比：本次会话内有效，不持久化；每次进入详情页重置 -->
+        </div>
+
+        <!-- 累计分红档案：行业占比 + 累计排行，原「累计分红排行」页并入 -->
+        <div class="divcmp-card mt-4" id="divRankArchiveCard">
+            <div class="divcmp-card-head">
+                <div class="divcmp-icon"><i class="fa fa-archive"></i></div>
+                <div class="divcmp-head-text">
+                    <div class="divcmp-card-title">累计分红档案</div>
+                    <div class="divcmp-card-sub">历史已收 · 含已清仓 · 个股与行业双视角</div>
+                </div>
+                <span class="divcmp-chip">ALL TIME</span>
+            </div>
+            <div class="px-3.5 pb-3">
+                <div class="flex items-end justify-between gap-3 rounded-xl px-3 py-2.5" style="background:linear-gradient(135deg,#fffdf8,#fbf4e8);border:1px solid #efe0c9">
+                    <div class="min-w-0">
+                        <div class="text-[9px]" style="color:#8a7354">累计已收</div>
+                        <div id="divRankTotal" class="text-[20px] leading-none font-bold tabular-nums mt-1" style="color:#742034">--</div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="text-[9px]" style="color:#8a7354">覆盖个股</div>
+                        <div class="text-[13px] font-semibold tabular-nums mt-1" style="color:#1f2937"><span id="divRankCount">0</span><span class="text-[9px] font-normal text-gray-400 ml-0.5">只</span></div>
+                    </div>
+                </div>
+
+                <div class="mt-2.5 rounded-xl overflow-hidden" style="background:#fff;border:1px solid #efe2ca">
+                    <div class="px-3 py-2 flex items-center gap-2 border-b border-[#f3e7d7]">
+                        <span class="text-[10px] font-semibold" style="color:#403126">分红来源 · 行业占比</span>
+                        <span id="statsDivRankIndTag" class="ml-auto text-[8.5px] whitespace-nowrap" style="color:#a18b74">--</span>
+                    </div>
+                    <div class="flex items-center gap-3 px-3 py-2.5">
+                        <div class="flex-shrink-0" style="width:108px;height:108px;">
+                            <div id="chartStatsDivRankInd" style="width:108px;height:108px;"></div>
+                        </div>
+                        <div id="statsDivRankIndList" class="flex-1 min-w-0 space-y-1.5">
+                            <div class="text-center text-gray-400 text-[10px] py-4">暂无行业数据</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 mt-3 mb-1.5">
+                    <span class="text-[10.5px] font-semibold" style="color:#403126">个股累计排行</span>
+                    <span class="text-[8.5px]" style="color:#a18b74">历史累计 · 含已清仓</span>
+                </div>
+                <div class="rounded-xl overflow-hidden" style="background:#fff;border:1px solid #efe2ca">
+                    <div class="px-3 py-1.5 flex items-center border-b border-[#f3e7d7] text-[8.5px]" style="color:#a18b74;background:#fffdf8">
+                        <span class="flex-1">股票</span>
+                        <span class="w-24 text-right">累计分红</span>
+                    </div>
+                    <div id="statsDivRankList" class="px-3 py-0.5 divide-y divide-gray-100">
+                        <div class="text-center text-gray-400 text-[10px] py-4">暂无分红数据</div>
+                    </div>
+                    <div id="divRankPager" class="px-3 pb-3 pt-1 hidden">
+                        <button id="divRankMoreBtn" type="button" onclick="loadMoreDivRank()" class="w-full py-2.5 rounded-xl bg-gray-50 text-gray-500 text-[12px] font-medium active:scale-95 transition-transform">加载更多</button>
+                        <button id="divRankCollapseBtn" type="button" onclick="collapseDivRank()" class="hidden w-full mt-2 py-2.5 rounded-xl bg-gray-50 text-gray-400 text-[12px] font-medium active:scale-95 transition-transform">收起</button>
+                    </div>
+                </div>
+                <div class="text-[8px] leading-relaxed mt-2" style="color:#a18b74">口径：全部持仓（含已清仓）历史累计已收分红；行业占比仅展示 &gt;2% 的行业，金额与排行同源。</div>
+            </div>
+        </div>
+
+        <!-- 调仓分析对比：本次会话内有效，不持久化；每次进入详情页重置 -->
             <div class="relative bg-white rounded-2xl card-shadow overflow-hidden mt-6">
                 <!-- 顶部金色渐变线：与详情页标题栏同款，强化"模块标题栏"分区感 -->
                 <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f59e0b,#a9642a,transparent)"></div>
@@ -7103,18 +7072,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <button onclick="adjAddRow()" class="w-full h-10 rounded-xl border border-dashed border-[#e2d3b0] bg-[#fdfbf5] text-[13px] font-medium text-accent active:scale-95 transition-transform flex items-center justify-center gap-1.5"><i class="fa fa-plus text-[12px]"></i>添加调仓股票</button>
                 </div>
             </div>
-        </div>
     </div>
 
-    <!-- 统计详情：行业资产分布 -->
+    <!-- 统计详情：资产仓位（行业配置 + 个股仓位，原仓位分布已并入） -->
     <div id="pageStatsIndustry" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-                <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
+        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
             <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
             <div class="absolute -top-7 -right-7 w-32 h-32 rounded-full opacity-[0.07] pointer-events-none" style="background:radial-gradient(circle,#D45329,transparent 70%)"></div>
             <div class="absolute -bottom-9 -left-5 w-28 h-28 rounded-full opacity-[0.04] pointer-events-none" style="background:radial-gradient(circle,#f59e0b,transparent 70%)"></div>
             <div class="flex items-center gap-2.5 relative z-10">
                 <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">行业资产分析</span>
+                <div class="min-w-0">
+                    <div class="text-gray-800 text-[17px] font-semibold tracking-wide leading-tight">资产仓位</div>
+                    <div class="text-[8.5px] text-gray-400 tracking-[0.2em] mt-0.5 whitespace-nowrap">ALLOCATION</div>
+                </div>
                 <div class="ml-auto flex items-center gap-1.5">
                     <select id="industryYearSelect" onchange="industryYear = this.value; renderIndustryMulti();" class="text-[11px] font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg pl-2 pr-1 py-1 outline-none appearance-none max-w-[86px]"></select>
                     <span class="flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
@@ -7124,60 +7095,117 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
             </div>
         </div>
-        <!-- 组合综合评估面板（风险评估核心区） -->
+
+        <!-- 仓位总览：原仓位分布三项核心指标，收进资产仓位首屏 -->
+        <div class="card-rise surface-hero p-4 mb-4">
+            <div class="absolute -top-12 -right-12 w-44 h-44 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(168,45,67,.08),transparent 68%)"></div>
+            <div class="absolute -bottom-14 -left-10 w-36 h-36 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(227,180,107,.09),transparent 70%)"></div>
+            <div class="relative z-10 flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-[8.5px] tracking-[0.2em] font-semibold" style="color:rgba(143,36,55,.52)">POSITION OVERVIEW</div>
+                    <div class="text-[16px] font-semibold mt-1" style="color:#5b1828">仓位总览</div>
+                    <div class="text-[9px] mt-0.5" style="color:#8a7354">持仓市值 · 仓位 · 集中度，一屏看全</div>
+                </div>
+                <span class="inline-flex items-center gap-1 text-[9px] px-2 py-1 rounded-full flex-shrink-0" style="background:rgba(255,253,248,.72);border:1px solid #eadfce;color:#8a7354">
+                    <i class="fa fa-shield text-[8px]" style="color:#a9642a"></i>含现金口径
+                </span>
+            </div>
+            <div class="relative z-10 grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top:1px solid #eadfce">
+                <div class="min-w-0">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">持仓市值</div>
+                    <div id="posSummaryMv" class="text-[17px] leading-none font-bold tabular-nums truncate" style="color:#1f2937">--</div>
+                </div>
+                <div class="min-w-0 px-2 text-center" style="border-left:1px solid #efe2ca;border-right:1px solid #efe2ca">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">股票仓位</div>
+                    <div id="posSummaryEquity" class="text-[17px] leading-none font-bold tabular-nums" style="color:#8f2437">--</div>
+                </div>
+                <div class="min-w-0 text-right">
+                    <div class="text-[9px] mb-1" style="color:#8a7354">最大单一持仓</div>
+                    <div id="posSummaryMax" class="text-[17px] leading-none font-bold tabular-nums" style="color:#1f2937">--</div>
+                </div>
+            </div>
+            <div class="relative z-10 flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pt-2.5 text-[9px]" style="border-top:1px dashed rgba(201,154,75,.28);color:#9a8b76">
+                <span>行业 <b id="posIndustryCount" class="font-semibold tabular-nums" style="color:#742034">--</b> 个</span>
+                <span>个股 <b id="posStockCount" class="font-semibold tabular-nums" style="color:#742034">-- 只</b></span>
+                <span id="statsPositionRefreshTime" class="ml-auto whitespace-nowrap">每日更新 · --</span>
+            </div>
+        </div>
+
+        <!-- 组合诊断：五维评分 + 集中度/分红依赖 + 精炼调优清单，替代原风险页与巴菲特长评 -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#a82d43] to-[#742034] flex items-center justify-center shadow-sm shadow-[#742034]/30 flex-shrink-0"><i class="fa fa-clipboard-check text-white text-[14px]"></i></div>
                 <div class="flex-1 min-w-0">
-                    <div class="text-[14px] font-semibold text-gray-800">组合综合评估 <span id="industrySummaryLevel" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle ml-1"></span></div>
-                    <div class="text-[10px] text-gray-400 mt-0.5">行业集中度 · 分红依赖度 · 风险提示</div>
+                    <div class="text-[14px] font-semibold text-gray-800">组合诊断 <span id="industrySummaryLevel" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle ml-1"></span></div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">五维评分 · 集中度 · 分红依赖 · 调优优先级</div>
                 </div>
                 <span class="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full text-white whitespace-nowrap" style="background:linear-gradient(135deg,#8f2437,#742034);box-shadow:0 2px 8px rgba(116,32,52,.30)">
                     <i class="fa fa-diamond text-[9px]"></i>
-                    <span id="industryBfBadge">伯克希尔风格 · --</span>
+                    <span id="industryBfBadge">BRK · --</span>
                 </span>
             </div>
             <div id="industryBfDetail" class="px-4 py-3 border-b border-[#e8cdd4]" style="background:linear-gradient(135deg,#fffafb,#f8ecef)"></div>
-            <div id="industrySummaryBody" class="px-4 py-3.5 text-[11px] leading-relaxed text-gray-600">
+            <div id="industrySummaryBody" class="px-4 py-3 text-[11px] leading-relaxed text-gray-600">
                 正在计算…
             </div>
-        </div>
-        <!-- 巴菲特组合调优方案（行业资产分布内，巴菲特亲手调优思路代码化） -->
-        <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
-            <div class="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8f2437] to-[#5b1828] flex items-center justify-center shadow-sm shadow-[#742034]/30 flex-shrink-0"><i class="fa fa-diamond text-white text-[14px]"></i></div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-[14px] font-semibold text-gray-800">巴菲特组合调优方案 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle ml-1" id="industryBuffettLevel"></span></div>
-                    <div class="text-[10px] text-gray-400 mt-0.5">收益最大化 · 现金流最大化 · 分红稳定性与生意长久性</div>
+            <div class="px-4 py-3 border-t border-gray-100 bg-[#fffdf9]">
+                <div class="flex items-center gap-1.5 mb-2">
+                    <span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#a82d43,#742034)"></span>
+                    <span class="text-[11px] font-bold text-[#742034]">调优优先级</span>
+                    <span id="industryBuffettLevel" class="text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle"></span>
+                    <span class="ml-auto text-[9px] text-gray-400">按痛点排序 · 只留 Top 3</span>
                 </div>
-                <span class="text-[10px] text-[#9b6b73] font-medium whitespace-nowrap"><i class="fa fa-balance-scale text-[10px]"></i> 行业占比对比</span>
-            </div>
-            <div id="industryBuffettBody" class="px-4 py-3.5">
-                正在计算…
+                <div id="industryBuffettBody" class="text-[11px] leading-relaxed text-gray-600">
+                    正在计算…
+                </div>
             </div>
         </div>
-        <!-- 口径说明（轻量单行，置于表格前） -->
-        <div class="flex items-start gap-2 rounded-2xl bg-[#f8ecef] border border-[#e8cdd4] px-3.5 py-2.5 mb-4">
-            <i class="fa fa-lightbulb-o text-[#8f2437] text-[12px] mt-0.5 flex-shrink-0"></i>
-            <div class="text-[10px] leading-relaxed text-[#742034]">市值占比看资产集中度；成本占比看历史本金投入；预估分红占比用于现金流规划与风控预警；实际已收分红仅用于年末复盘，不适合年内横向对比。预估分红为理论值，最终以实际到账现金为准。</div>
-        </div>
-        <!-- 行业三占比柱形图（预测分红/市值/成本占比，复用行业对比明细已算好的数据） -->
+
+        <!-- 行业三占比柱形图（预测分红/市值/成本占比） -->
         <div class="bg-white rounded-2xl card-shadow mb-4 overflow-hidden">
             <div class="px-4 py-2.5 flex items-center justify-between border-b border-gray-100 bg-gray-50/40">
                 <div class="flex items-center gap-1.5 text-[13px] font-semibold text-gray-800"><i class="fa fa-bar-chart text-accent text-[13px]"></i>行业占比对比</div>
                 <span id="industryCmpNote" class="text-[9px] text-gray-400 flex items-center gap-1"><i class="fa fa-percent text-[9px]"></i>预测分红 · 市值 · 成本</span>
             </div>
-            <div id="industryCompareChart" style="width:100%;height:260px;"></div>
+            <div id="industryCompareChart" style="width:100%;height:240px;"></div>
         </div>
+
         <!-- 行业对比明细表 -->
         <div class="bg-white rounded-2xl card-shadow overflow-hidden">
             <div class="px-4 py-2.5 flex items-center justify-between border-b border-gray-100 bg-gray-50/40">
                 <div class="flex items-center gap-1.5 text-[13px] font-semibold text-gray-800"><i class="fa fa-th-list text-accent text-[13px]"></i>行业对比明细</div>
                 <span class="text-[9px] text-gray-400 flex items-center gap-1"><i class="fa fa-sort-amount-desc text-[9px]"></i>按预估分红降序</span>
             </div>
-            <!-- 表头：行业 | 成本占比 | 市值占比 | 预估分红 | 较去年 -->
+            <!-- 统一表头：避免每行重复列名，行业多时更短更清晰 -->
+            <div class="grid grid-cols-[28px_minmax(0,1fr)_44px_44px_50px_44px] gap-1 px-3 py-2 border-b border-gray-100 bg-gray-50/70 text-center text-[8.5px] text-gray-400">
+                <span></span><span class="text-left pl-0.5">行业</span><span>成本</span><span>市值</span><span id="industryDivColHead">预估分红</span><span>较去年</span>
+            </div>
             <div id="statsIndustryListNew" class="divide-y divide-gray-100">
                 <div class="px-5 py-8 text-center text-gray-400 text-sm">暂无持仓数据</div>
+            </div>
+            <div class="px-4 py-2.5 border-t border-gray-100 bg-[#fffdf9] text-[9px] leading-relaxed text-gray-400">
+                市值占比看集中度；成本占比看本金投入；预估分红占比用于现金流规划。预估为理论值，以实际到账为准。
+            </div>
+        </div>
+
+        <!-- 个股仓位：原仓位分布页核心列表，默认前 8 只，可展开 -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden mt-4">
+            <div class="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100">
+                <div class="w-7 h-7 rounded-lg bg-[#faf3e3] ring-1 ring-[#eedfc0] flex items-center justify-center flex-shrink-0"><i class="fa fa-users text-[12px] text-accent"></i></div>
+                <div class="min-w-0 flex-1">
+                    <div class="text-[13px] font-semibold text-gray-800">个股仓位</div>
+                    <div class="text-[9px] text-gray-400 mt-0.5">按占总资产倒序 · 含现金</div>
+                </div>
+                <span class="text-[9px] px-2 py-1 rounded-full" style="background:#fbf7ed;border:1px solid #f0e4cd;color:#9a7b45">TOP 5</span>
+            </div>
+            <div id="statsStockPositionList" class="px-4 divide-y divide-gray-100">
+                <div class="text-center text-gray-400 text-xs py-4">暂无持仓数据</div>
+            </div>
+            <div id="stockPosToggleWrap" class="hidden px-4 pb-3">
+                <button id="stockPosToggleBtn" type="button" onclick="toggleStockPositionAll()" class="w-full py-2.5 rounded-xl bg-gray-50 text-gray-500 text-[12px] font-medium active:scale-95 transition-transform">展开全部持仓</button>
+            </div>
+            <div class="px-4 py-2.5 border-t border-gray-100 bg-[#fffdf9] text-[9px] leading-relaxed text-gray-400">
+                仓位占比 = 个股持仓市值 ÷ 总资产（含现金）；行情每日收盘后更新。
             </div>
         </div>
     </div>
@@ -7328,40 +7356,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <button id="cashFlowMoreBtn" class="w-full py-3 rounded-xl bg-gray-50 text-gray-500 text-sm font-medium active:scale-95 transition-transform">加载更多</button>
                 <button id="cashFlowCollapseBtn" class="hidden w-full mt-2 py-3 rounded-xl bg-gray-50 text-gray-400 text-sm font-medium active:scale-95 transition-transform">收起</button>
             </div>
-        </div>
-    </div>
-
-    <!-- 统计详情：风险指标（最大回撤 / 年化波动 / 最长水下，按每日总资产快照计算） -->
-    <div id="pageStatsRisk" class="hidden detail-page max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-6">
-        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
-            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#D45329,#f59e0b,#D45329,transparent)"></div>
-            <div class="flex items-center gap-2.5 relative z-10">
-                <button onclick="closeStatsSection()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <span class="text-gray-800 text-[17px] font-semibold tracking-wide">风险指标</span>
-                <span class="ml-auto flex items-center gap-1 text-[10px] text-gray-400 font-normal whitespace-nowrap">
-                    <i class="fa fa-shield text-[10px]"></i>
-                    <span>全周期</span>
-                </span>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl card-shadow px-5 py-3">
-            <div class="flex items-baseline justify-between py-3.5">
-                <span class="text-xs text-gray-500">最大回撤</span>
-                <span id="riskPageMdd" class="text-[22px] font-bold tabular-nums text-[#00a05c]">--</span>
-            </div>
-            <div class="h-px bg-gray-100"></div>
-            <div class="flex items-baseline justify-between py-3.5">
-                <span class="text-xs text-gray-500">年化波动率</span>
-                <span id="riskPageVol" class="text-[22px] font-bold tabular-nums text-gray-800">--</span>
-            </div>
-            <div class="h-px bg-gray-100"></div>
-            <div class="flex items-baseline justify-between py-3.5">
-                <span class="text-xs text-gray-500">最长水下时长</span>
-                <span id="riskPageWater" class="text-[22px] font-bold tabular-nums text-gray-800">--</span>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl card-shadow px-5 py-4 mt-4">
-            <div id="riskPageNote" class="text-[11px] text-gray-400 leading-relaxed">--</div>
         </div>
     </div>
 
@@ -10868,7 +10862,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 如果交易时间内，使用上一个交易日的快照（快照日期 < 今天）
             // 如果没有快照，使用当前数据
             const curDateStr = todayStr();
-            if(positionSnapshot && positionSnapshot.stocks){
+            const snapHasStocks = !!(positionSnapshot && positionSnapshot.stocks && Object.keys(positionSnapshot.stocks).length);
+            if(snapHasStocks){
                 // 已收盘且有今天的快照 → 用今天的
                 if(isMarketClosed() && positionSnapshot.date === curDateStr){
                     return snapshotToHoldData(positionSnapshot);
@@ -10883,7 +10878,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     return holdDataList;
                 }
             }
-            // 没有快照，使用当前数据
+            // 没有快照，或快照里没有任何持仓 → 直接用当前持仓，避免资产仓位页空态
             return holdDataList;
         }
 
@@ -24373,8 +24368,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ==================== 关注列表（我的页 - 关注） ====================
         let watchReturnTab = 'mine';
         // 打开关注页面
+        // 打开/收起关注页搜索浮层：+ 变为 ×，再点一次即收起
+        function toggleWatchPage(){
+            const bar = document.querySelector('#watchSearchBar');
+            if(bar && !bar.classList.contains('hidden')) closeWatchPage();
+            else openWatchPage();
+        }
         function openWatchPage(){
-            // 自选页 tab 行右侧 +：搜索输入显示在标题栏内，候选面板随吸顶区显示于标题栏下方
+            // 自选页 tab 行右侧 +：240px 搜索框与 + 同排展开，候选面板从 tab 行下方弹出
             const bar = document.querySelector('#watchSearchBar');
             const btn = document.querySelector('#watchTabAddBtn');
             const themeBtn = document.querySelector('#watchThemeBtn');
@@ -24382,9 +24383,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const panel = document.querySelector('#watchSearchPanel');
             const inp = document.querySelector('#watchCodeInput');
             if(bar) bar.classList.remove('hidden');
-            if(btn) btn.classList.add('hidden');
-            if(themeBtn) themeBtn.classList.add('hidden');
-            if(manageBtn) manageBtn.classList.add('hidden');
+            if(btn){
+                btn.classList.remove('hidden');
+                btn.classList.add('is-open');
+                btn.title = '收起搜索';
+                btn.setAttribute('aria-label', '收起搜索');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+            if(themeBtn) themeBtn.classList.remove('hidden');
+            if(manageBtn) manageBtn.classList.remove('hidden');
             if(panel) panel.classList.remove('hidden');
             window.__watchSuggestItems = [];
             renderWatchAddTarget();
@@ -24395,10 +24402,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(sList){ sList.innerHTML = '<div class="px-3 py-6 text-xs text-gray-400 text-center">输入股票代码或名称开始搜索</div>'; sList.classList.remove('hidden'); }
             const clearBtn = document.querySelector('#watchClearInput');
             if(clearBtn) clearBtn.classList.add('hidden');
-            setTimeout(function(){ if(inp) inp.focus(); }, 80);
+            // 在点击手势内同步聚焦，避免延迟聚焦触发 iOS 视口自动放大
+            if(inp){ try{ inp.focus({preventScroll:true}); }catch(e){ try{ inp.focus(); }catch(_e){} } }
         }
         function closeWatchPage(){
-            // 还原 tab 行 + 号和标题栏按钮，收起搜索态
+            // 收起搜索浮层，+ 恢复为添加图标；主动失焦避免键盘留在页面
             const bar = document.querySelector('#watchSearchBar');
             const btn = document.querySelector('#watchTabAddBtn');
             const themeBtn = document.querySelector('#watchThemeBtn');
@@ -24406,11 +24414,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const panel = document.querySelector('#watchSearchPanel');
             const inp = document.querySelector('#watchCodeInput');
             if(bar) bar.classList.add('hidden');
-            if(btn) btn.classList.remove('hidden');
+            if(btn){
+                btn.classList.remove('hidden');
+                btn.classList.remove('is-open');
+                btn.title = '添加自选股';
+                btn.setAttribute('aria-label', '添加自选股');
+                btn.setAttribute('aria-expanded', 'false');
+            }
             if(themeBtn) themeBtn.classList.remove('hidden');
             if(manageBtn) manageBtn.classList.remove('hidden');
             if(panel) panel.classList.add('hidden');
-            if(inp){ inp.value = ''; window.__watchQueryName = null; }
+            if(inp){ inp.blur(); inp.value = ''; window.__watchQueryName = null; }
             window.__watchSuggestItems = [];
             const hint = document.querySelector('#watchAddHint');
             if(hint){ hint.innerText = ''; hint.className = 'text-[11px] text-gray-400'; }
@@ -24591,7 +24605,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const input = document.querySelector('#watchGroupNameInput');
             const err = document.querySelector('#watchGroupError');
             if(form) form.classList.remove('open');
-            if(input) input.value = '';
+            if(input){ input.blur(); input.value = ''; }
             if(err){ err.style.display = 'none'; err.innerText = ''; }
         }
         function showWatchGroupError(msg){
@@ -24908,6 +24922,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
         function applyWatchOrder(){
+            // 结束分组输入焦点，避免移动端键盘/缩放状态带到返回页
+            const groupInput = document.querySelector('#watchGroupNameInput');
+            if(groupInput) groupInput.blur();
             // 只重排当前 tab 自己的成员数组；其他 tab 的成员与顺序完全不动
             const gid = watchMgrGroup || 'all';
             const mgr = document.querySelector('#watchMgrList');
@@ -24964,6 +24981,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let html = '';
             list.forEach(function(w){
                 const q = watchQuotes[w.code] || {};
+                const nameText = q.name || w.name || w.code;
+                const nameFontCls = Array.from(String(nameText)).length > 4 ? 'watch-name-sm' : 'watch-name-lg';
                 const price = (q.price != null && !isNaN(q.price) && q.price > 0) ? q.price : null;
                 const pct = (q.changePct != null && !isNaN(q.changePct)) ? q.changePct : null;
                 // 股息率：近1年每股分红 ÷ 最新价（仅 A 股可自动计算，与现价股息排行同口径）
@@ -24991,10 +25010,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const peCls = pe != null ? 'text-gray-800' : 'text-gray-400';
                 const pbCls = pb != null ? 'text-gray-800' : 'text-gray-400';
                 const debtCls = debtVal != null ? 'text-gray-800' : 'text-gray-400';
-                html += '<div class="watch-row min-w-[692px] grid gap-x-1 grid-cols-[120px_96px_90px_86px_96px_82px_98px] border-b border-gray-50 cursor-pointer" data-code="' + w.code + '" data-name="' + String(q.name || w.name || w.code).replace(/"/g, '&quot;') + '" onclick="openStockDetail(\'' + w.code + '\',\'' + w.market + '\',\'' + String(q.name || w.name || w.code).replace(/\'/g, "\\'") + '\')">'
-                    + '<div class="relative bg-white z-20 pl-4 pr-3 py-1.5 flex items-center gap-2 min-w-0" data-fixcol>'
+                html += '<div class="watch-row min-w-[698px] grid gap-x-1 grid-cols-[126px_96px_90px_86px_96px_82px_98px] border-b border-gray-50 cursor-pointer" data-code="' + w.code + '" data-name="' + String(nameText).replace(/"/g, '&quot;') + '" onclick="openStockDetail(\'' + w.code + '\',\'' + w.market + '\',\'' + String(nameText).replace(/\'/g, "\\'") + '\')">'
+                    + '<div class="relative bg-white z-20 pl-[16px] pr-[8px] py-1.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
-                    + '<div class="text-[17px] leading-[20px] font-normal tracking-[0.3px] text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
+                    + '<div class="' + nameFontCls + ' leading-[20px] font-normal tracking-[0.3px] text-gray-800">' + nameText + '</div>'
                     + '<div class="text-[11px] leading-[13px] text-gray-400 tabular-nums mt-0.5">' + w.code + '</div>'
                     + '</div></div>'
                     + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="price">' + priceText + '</div>'
@@ -28855,6 +28874,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 第一次渲染一次，之后只有收盘后且今天没渲染过才刷新，其他时间一律不刷新
         let positionRendered = false;
         let positionRenderDate = null;
+        // 资产仓位页：个股列表默认展示前 5 只，支持展开全部
+        let stockPosExpanded = false;
+        function applyStockPositionVisibility(){
+            const rows = document.querySelectorAll('#statsStockPositionList .stock-pos-extra');
+            const wrap = document.querySelector('#stockPosToggleWrap');
+            const btn = document.querySelector('#stockPosToggleBtn');
+            if(!wrap) return;
+            rows.forEach(function(r){ r.classList.toggle('hidden', !stockPosExpanded); });
+            if(rows.length){
+                wrap.classList.remove('hidden');
+                const totalRows = document.querySelectorAll('#statsStockPositionList .stock-position-row').length;
+                if(btn) btn.innerText = stockPosExpanded ? '收起，仅看前 5 只' : '展开全部 ' + totalRows + ' 项持仓';
+            } else {
+                wrap.classList.add('hidden');
+            }
+        }
+        function toggleStockPositionAll(){
+            stockPosExpanded = !stockPosExpanded;
+            applyStockPositionVisibility();
+        }
         // 仓位分布页：总览指标统一回填（首建与快照回填共用）
         function applyPositionSummary(totalMV, denom, count, maxPct, industryCount){
             const mvEl = document.querySelector('#posSummaryMv');
@@ -28865,12 +28904,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const indCountEl = document.querySelector('#posIndustryCount');
             if(!mvEl) return;
             const has = count > 0 && denom > 0;
-            mvEl.innerText = has ? fmtMoney(totalMV) : '--';
-            eqEl.innerText = has ? ((totalMV / denom) * 100).toFixed(2) + '%' : '--';
-            maxEl.innerText = has ? Number(maxPct || 0).toFixed(2) + '%' : '--';
-            stockCountEl.innerText = count > 0 ? count + ' 只' : '-- 只';
-            pieCountEl.innerText = count > 0 ? String(count) : '--';
-            indCountEl.innerText = industryCount > 0 ? String(industryCount) : '--';
+            if(mvEl) mvEl.innerText = has ? fmtMoney(totalMV) : '--';
+            if(eqEl) eqEl.innerText = has ? ((totalMV / denom) * 100).toFixed(2) + '%' : '--';
+            if(maxEl) maxEl.innerText = has ? Number(maxPct || 0).toFixed(2) + '%' : '--';
+            if(stockCountEl) stockCountEl.innerText = count > 0 ? count + ' 只' : '-- 只';
+            if(pieCountEl) pieCountEl.innerText = count > 0 ? String(count) : '--';
+            if(indCountEl) indCountEl.innerText = industryCount > 0 ? String(industryCount) : '--';
         }
         // 仓位分布环形图：统一初始化/缓存/主题配置，避免两个渲染分支各写一份 option
         function renderPositionPie(pieEl, pieData, pieKey){
@@ -29682,7 +29721,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 });
             }
         }
-        var STATS_SECTION_PAGES = { today:'pageStatsToday', goal:'pageGoalPlan', analysis:'pageAnalysis', position:'pageStatsPosition', pnl:'pageStatsPnl', divrank:'pageStatsDivRank', schedule:'pageStatsSchedule', compare:'pageStatsCompare', industry:'pageStatsIndustry', cash:'pageStatsCashFlow', trade:'pageStatsTrade', cashflow:'pageStatsCashBook', risk:'pageStatsRisk' };
+        var STATS_SECTION_PAGES = { today:'pageStatsToday', goal:'pageGoalPlan', analysis:'pageAnalysis', pnl:'pageStatsPnl', schedule:'pageStatsSchedule', compare:'pageStatsCompare', industry:'pageStatsIndustry', cash:'pageStatsCashFlow', trade:'pageStatsTrade', cashflow:'pageStatsCashBook' };
         var activeStatsSection = null;
         // 隐藏所有图表 tooltip（页面收起/切换/重开前清理，避免残留挂到其他页面）
         function hideAllChartTips(){
@@ -29707,34 +29746,28 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             pg.classList.remove('hidden');
             activeStatsSection = key;
             if(key === 'pnl'){ collapsePnlRank(); }
-            if(key === 'divrank'){ collapseDivRank(); }
             window.scrollTo(0, 0);
             // 行业资产分布 / 资金流水：打开时即时构建渲染（本地数据，无需网络）
             // 本地数据轻渲染：同步执行，保证共享元素过渡动画开始时页面内容已就绪（避免"先壳后内容"的两次感）
             if(key === 'compare'){
                 adjRows = [];
-                // 页面由隐藏切到可见后再初始化瀑布图，避免容器宽度为 0 时图表空白
+                // 页面由隐藏切到可见后再初始化瀑布图与累计分红环图，避免容器宽度为 0 时图表空白
                 setTimeout(function(){
                     try{ divcmpRenderChart(window.__divcmpModel); }catch(e){}
+                    const drEl = document.querySelector('#chartStatsDivRankInd');
+                    if(drEl && drEl._chart){
+                        try{ drEl._chart.resize(); }catch(e){}
+                    }
                 }, 80);
             }
             if(key === 'industry'){ renderIndustryMulti(); }
             if(key === 'cash'){ renderStatsCashFlow(); }
             if(key === 'trade'){ renderStatsTrade(); }
             if(key === 'cashflow'){ renderCashBookPage(); }
-            if(key === 'risk'){ renderRiskPage(); }
             // 目标规划：本地数据即时计算；图表延后一帧等容器可见后初始化
             if(key === 'goal'){
                 renderGoalPlan();
                 if(typeof refreshAll === 'function' && !refreshing && (Date.now() - (quoteUpdatedTs || 0) > 2000)) refreshAll();
-            }
-            // 仓位分布详情页：内容已在 switchTab(stats) 时随 renderStatsPage 渲染就绪，此处只 resize 饼图，
-            // 不再整页重复渲染（重复渲染会造成"像打开两次"的闪烁）
-            if(key === 'position'){
-                requestAnimationFrame(function(){
-                    const pieEl = document.querySelector('#industryPieChart');
-                    if(pieEl && pieEl._chart) pieEl._chart.resize();
-                });
             }
             // 分红派发日程：图表已在 renderStatsPage 初始化，打开仅 resize（未初始化时才兜底重建）
             if(key === 'schedule'){
@@ -29887,31 +29920,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             var tail = (Date.parse(pts[pts.length - 1].d) - Date.parse(peakD)) / 86400000;
             if(tail > maxSpan) maxSpan = tail;
             return { mdd: maxDd, vol: vol, waterDays: Math.max(0, Math.round(maxSpan)), points: pts.length };
-        }
-        function renderRiskPage(){
-            var rk = calcRiskStats();
-            var mddEl = document.querySelector('#riskPageMdd');
-            var volEl = document.querySelector('#riskPageVol');
-            var waterEl = document.querySelector('#riskPageWater');
-            var noteEl = document.querySelector('#riskPageNote');
-            if(!rk){
-                if(mddEl){ mddEl.innerText = '--'; mddEl.className = 'text-[22px] font-bold tabular-nums text-gray-300'; }
-                if(volEl) volEl.innerText = '--';
-                if(waterEl) waterEl.innerText = '--';
-                if(noteEl) noteEl.innerText = '每日资产快照不足 2 条，暂无法计算。打开应用记录资产后会逐步积累。';
-                return;
-            }
-            if(mddEl){
-                mddEl.innerText = (rk.mdd > 0.005 ? '-' : '') + rk.mdd.toFixed(2) + '%';
-                mddEl.className = 'text-[22px] font-bold tabular-nums text-[#00a05c]';
-            }
-            if(volEl) volEl.innerText = rk.vol != null ? rk.vol.toFixed(2) + '%' : '--';
-            if(waterEl) waterEl.innerText = rk.waterDays + ' 天';
-            if(noteEl){
-                noteEl.innerText = '口径：基于 ' + rk.points + ' 条总资产快照（每次打开应用记录一条，间隔不规则）；回撤 = 从历史峰值到最低点的最大跌幅；'
-                    + '年化波动 = 按间隔折算的日均对数收益标准差 × √250；水下时长 = 从峰值到再次创新高的最长自然日间隔（含当前未恢复段）。'
-                    + '快照含现金与出入金，未做净值折算，大额进出会平滑或放大指标。';
-            }
         }
         function refreshStatsCardSummaries(){
             updateGoalCard();
@@ -30118,12 +30126,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 });
             }
             set('statsCardSummaryCompare', holdDataList.length ? fmtMoney(tForecastG) : '暂无持仓');
-            sub('statsCardSubCompare', '今年分红预测总额');
+            sub('statsCardSubCompare', '今年预测 · 累计档案');
             // 行业资产分布 / 资金流水 / 交易明细：本地实时摘要
             const indCntC = {};
             holdDataList.forEach(function(it){ indCntC[getStockIndustry(it)] = 1; });
-            set('statsCardSummaryIndustry', holdDataList.length ? (Object.keys(indCntC).length + ' 个行业') : '暂无持仓');
-            sub('statsCardSubIndustry', '行业资产分布');
+            set('statsCardSummaryIndustry', holdDataList.length && maxPctG > 0 ? maxPctG.toFixed(2) + '%' : '暂无持仓');
+            sub('statsCardSubIndustry', '最大单一持仓');
             let cInC = 0, cOutC = 0;
             const initCc = Number(historyData.initialCost) || 0;
             if(initCc > 0) cInC += initCc; else if(initCc < 0) cOutC += Math.abs(initCc);
@@ -30192,8 +30200,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             subHtml('statsCardSubPnl', pickG(dlt(pnlSumG, 'pnl', 'amt'), '含已清仓归档'));
             subHtml('statsCardSubDivRank', pickG(dlt(totalRecvG, 'div', 'amt'), '历史累计分红'));
             subHtml('statsCardSubSchedule', pickG(dlt(fwdTotalG, 'fwd', 'amt'), (fwdTotalG > 0 ? '未来12个月' : '今年已公布')));
-            subHtml('statsCardSubCompare', pickG(dlt(tForecastG, 'compare', 'amt'), '今年分红预测总额'));
-            subHtml('statsCardSubIndustry', pickG(dlt(indNumG, 'ind', 'int'), '行业资产分布'));
+            subHtml('statsCardSubCompare', pickG(dlt(tForecastG, 'compare', 'amt'), '今年预测 · 累计档案'));
+            subHtml('statsCardSubIndustry', pickG(dlt(indNumG, 'ind', 'int'), '最大单一持仓'));
             subHtml('statsCardSubCash', pickG(dlt(curNetInG, 'cash', 'amt'), '转入转出净额'));
             if(rkCard){
                 subHtml('statsCardSubRisk', dlt(rkCard.mdd, 'mdd', 'pp') + '波动 ' + (rkCard.vol != null ? rkCard.vol.toFixed(1) + '%' : '--') + ' · 水下 ' + rkCard.waterDays + ' 天');
@@ -31052,18 +31060,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             refreshIndustryAfterMap();
         }
         function refreshIndustryAfterMap(){
-            // 统计-行业资产分布页已打开时实时重算
+            // 统计-资产仓位页已打开时实时重算
             const indPage = document.querySelector('#pageStatsIndustry');
             if(indPage && !indPage.classList.contains('hidden')) renderIndustryMulti();
             // 持仓页列表模式（行业分组）重渲染
             if(activeTab === 'hold' && holdViewMode === 'list') renderPage();
-            // 统计-仓位分布详情页：映射变化影响行业分组，立即失效当天快照，下次打开重建
+            // 行业映射变化影响仓位快照，立即失效，下次渲染重建
             try{
                 const sd = JSON.parse(lsGet('dividendStatsDaily') || '{}');
                 if(sd && sd.position){ delete sd.position; lsSet('dividendStatsDaily', JSON.stringify(sd)); }
             }catch(e){}
-            const posPage = document.querySelector('#pageStatsPosition');
-            if(posPage && !posPage.classList.contains('hidden')) renderStatsPage();
             // 统计页卡片宫格摘要（行业数）
             refreshStatsCardSummaries();
             // 年度快照页（行业结构条）
@@ -31321,6 +31327,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const tE = document.querySelector('#industryTotalEstDiv');
             const tA = document.querySelector('#industryTotalActDiv');
             const tELabel = document.querySelector('#industryTotalEstDivLabel');
+            const divColHead = document.querySelector('#industryDivColHead');
+            if(divColHead) divColHead.innerText = data.isCur ? '预估分红' : '已收分红';
             if(tM) tM.innerText = data.totals.mkt > 0 ? fmtMoney(data.totals.mkt) : '0';
             if(tC) tC.innerText = data.totals.cost > 0 ? fmtMoney(data.totals.cost) : '0';
             if(tELabel) tELabel.innerText = data.isCur ? '预估全年分红' : '已收全年分红';
@@ -31336,51 +31344,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     data.rows.forEach(function(x, i){
                         const warnYellow = x.mktPct >= 50;
                         const warnRed = x.divPct > 40;
-                        const rowCls = 'px-3 py-3.5';
-                        // 差值方向词与涨跌色（>0 红、<0 绿）
+                        const rowCls = 'px-3 py-2.5';
                         const d1w = x.d1 > 0.05 ? '浮盈' : (x.d1 < -0.05 ? '浮亏' : '持平');
                         const d2w = x.d2 > 0.05 ? '效率高' : (x.d2 < -0.05 ? '效率低' : '持平');
                         const d3w = x.d3 > 0.05 ? '回报强' : (x.d3 < -0.05 ? '回报弱' : '持平');
                         function dclr(v){ return v > 0.05 ? '#e03131' : (v < -0.05 ? '#00b57a' : '#9ca3af'); }
-                        // 评估结论文本（自然语言）
-                        const parts = [];
-                        parts.push('行业整体' + d1w + '，' + (x.d1 > 0.05 ? '市值高于投入本金' : (x.d1 < -0.05 ? '市值低于投入本金' : '市值与成本基本持平')) + '；');
-                        parts.push('股息产出效率' + (x.d2 > 0.05 ? '高于组合均值' : (x.d2 < -0.05 ? '低于组合均值' : '与组合均值相当')) + '；');
-                        parts.push('本金分红回报' + (x.d3 > 0.05 ? '强于组合' : (x.d3 < -0.05 ? '弱于组合' : '与组合相当')) + '。');
-                        let warnText = '';
-                        if(warnRed) warnText = '<span class="text-[#e03131] font-semibold">预警：' + x.divLabel + '占比 ' + x.divPct.toFixed(1) + '% 超 40%，分红现金流过度依赖该行业。</span>';
-                        else if(warnYellow) warnText = '<span class="text-[#d4a017] font-semibold">提示：市值占比 ' + x.mktPct.toFixed(1) + '% 超 35%，行业资产集中度偏高。</span>';
                         html += '<div class="' + rowCls + '">'
-                            // 行内表头（每行行业自带，下拉不丢失列对应）
-                            + '<div class="grid grid-cols-[34px_minmax(0,1fr)_46px_46px_50px_46px] gap-1 items-center text-center text-[9px] text-gray-400 mb-2">'
-                            + '<span></span><span class="text-left pl-1">行业</span><span>成本占比</span><span>市值占比</span><span>' + x.divLabel + '</span><span>较去年</span>'
-                            + '</div>'
-                            // 第一行：数字网格（含序号，渐变方块同持仓卡片模式）
-                            + '<div class="grid grid-cols-[34px_minmax(0,1fr)_46px_46px_50px_46px] gap-1 items-center text-center">'
-                            + '<div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-[12px] font-bold text-white shadow-sm mx-auto tabular-nums">' + (i + 1) + '</div>'
+                            // 单行主数据：序号 / 行业 / 成本 / 市值 / 预估分红 / 较去年
+                            + '<div class="grid grid-cols-[28px_minmax(0,1fr)_44px_44px_50px_44px] gap-1 items-center text-center">'
+                            + '<div class="w-6 h-6 rounded-lg bg-gradient-to-br from-accent to-orange-700 flex items-center justify-center text-[11px] font-bold text-white shadow-sm mx-auto tabular-nums">' + (i + 1) + '</div>'
                             + '<div class="text-left min-w-0">'
-                            + '<div class="text-[13px] font-semibold text-gray-800 truncate">' + x.name
-                            + (warnRed ? ' <span class="text-[8px] font-bold text-[#e03131] bg-[#fff1f0] border border-[#ffd6d2] rounded px-1 py-0.5 align-middle">分红依赖</span>' : '')
-                            + (warnYellow && !warnRed ? ' <span class="text-[8px] font-bold text-[#d4a017] bg-[#fffbe6] border border-[#ffe58f] rounded px-1 py-0.5 align-middle">资产集中</span>' : '')
+                            + '<div class="text-[12.5px] font-semibold text-gray-800 truncate">' + x.name
+                            + (warnRed ? ' <span class="text-[7.5px] font-bold text-[#e03131] bg-[#fff1f0] border border-[#ffd6d2] rounded px-1 py-0.5 align-middle">分红依赖</span>' : '')
+                            + (warnYellow && !warnRed ? ' <span class="text-[7.5px] font-bold text-[#d4a017] bg-[#fffbe6] border border-[#ffe58f] rounded px-1 py-0.5 align-middle">资产集中</span>' : '')
                             + '</div>'
-                            + '<div class="text-[10px] text-gray-400 mt-1 truncate">' + x.stocks + ' 只 · ' + (x.divLabel === '预估分红' ? '预估 ' : '已收 ') + fmtMoney(x.divAmt) + '</div>'
-                            + (industryMapShowRaw() && x.raws && x.raws.length ? '<div class="text-[9px] text-gray-300 mt-0.5 truncate">原始：' + x.raws.join('、') + '</div>' : '')
+                            + '<div class="text-[9px] text-gray-400 mt-0.5 truncate">' + x.stocks + ' 只 · ' + (x.divLabel === '预估分红' ? '预估 ' : '已收 ') + fmtMoney(x.divAmt) + '</div>'
+                            + (industryMapShowRaw() && x.raws && x.raws.length ? '<div class="text-[8px] text-gray-300 mt-0.5 truncate">原始：' + x.raws.join('、') + '</div>' : '')
                             + '</div>'
-                            + '<div class="min-w-0"><div class="text-[13px] font-bold text-gray-800 tabular-nums">' + x.costPct.toFixed(1) + '%</div><div class="text-[10px] text-gray-400 tabular-nums mt-1 truncate">' + (x.cost > 0 ? fmtMoney(x.cost) : '0') + '</div></div>'
-                            + '<div class="min-w-0"><div class="text-[13px] font-bold text-gray-800 tabular-nums">' + x.mktPct.toFixed(1) + '%</div><div class="text-[10px] text-gray-400 tabular-nums mt-1 truncate">' + (x.mkt > 0 ? fmtMoney(x.mkt) : '0') + '</div></div>'
-                            + '<div class="min-w-0"><div class="text-[13px] font-bold text-accent tabular-nums">' + x.divPct.toFixed(1) + '%</div><div class="text-[10px] text-gray-400 tabular-nums mt-1 truncate">' + (x.divAmt > 0 ? fmtMoney(x.divAmt) : '0') + '</div></div>'
-                            + '<div class="min-w-0 text-[11px] tabular-nums whitespace-nowrap">'
+                            + '<div class="min-w-0"><div class="text-[12px] font-bold text-gray-800 tabular-nums">' + x.costPct.toFixed(1) + '%</div><div class="text-[9px] text-gray-400 tabular-nums mt-0.5 truncate">' + (x.cost > 0 ? fmtMoney(x.cost) : '0') + '</div></div>'
+                            + '<div class="min-w-0"><div class="text-[12px] font-bold text-gray-800 tabular-nums">' + x.mktPct.toFixed(1) + '%</div><div class="text-[9px] text-gray-400 tabular-nums mt-0.5 truncate">' + (x.mkt > 0 ? fmtMoney(x.mkt) : '0') + '</div></div>'
+                            + '<div class="min-w-0"><div class="text-[12px] font-bold text-accent tabular-nums">' + x.divPct.toFixed(1) + '%</div><div class="text-[9px] text-gray-400 tabular-nums mt-0.5 truncate">' + (x.divAmt > 0 ? fmtMoney(x.divAmt) : '0') + '</div></div>'
+                            + '<div class="min-w-0 text-[10px] tabular-nums whitespace-nowrap">'
                             + (x.lastDelta == null ? '<div class="text-gray-300">--</div>' : '<div class="font-semibold">' + fmtDeltaPct(x.lastDelta) + '</div>')
                             + '</div>'
                             + '</div>'
-                            // 第二行：差值+评估结论文本包卡片（同卡片模式数据区风格）
-                            + '<div class="mt-3 bg-pageBg rounded-xl px-2.5 py-2">'
-                            + '<div class="flex flex-wrap items-center gap-1.5">'
-                            + '<span class="px-2 py-1 rounded-lg bg-white text-[10px] font-medium text-gray-700 shadow-sm">①' + d1w + ' <b style="color:' + dclr(x.d1) + '">' + (x.d1 >= 0 ? '+' : '') + x.d1.toFixed(1) + '%</b></span>'
-                            + '<span class="px-2 py-1 rounded-lg bg-white text-[10px] font-medium text-gray-700 shadow-sm">②' + d2w + ' <b style="color:' + dclr(x.d2) + '">' + (x.d2 >= 0 ? '+' : '') + x.d2.toFixed(1) + '%</b></span>'
-                            + '<span class="px-2 py-1 rounded-lg bg-white text-[10px] font-medium text-gray-700 shadow-sm">③' + d3w + ' <b style="color:' + dclr(x.d3) + '">' + (x.d3 >= 0 ? '+' : '') + x.d3.toFixed(1) + '%</b></span>'
-                            + '</div>'
-                            + '<div class="mt-1.5 text-[12px] leading-relaxed text-gray-600">' + parts.join(' ') + ' ' + warnText + '</div>'
+                            // 一行差值脚注：保留三个关键判断，去掉重复长段结论与二次预警
+                            + '<div class="mt-1.5 pl-[32px] text-[8.5px] leading-relaxed text-gray-400 truncate">'
+                            + '①' + d1w + ' <b style="color:' + dclr(x.d1) + '">' + (x.d1 >= 0 ? '+' : '') + x.d1.toFixed(1) + '%</b>'
+                            + ' · ②' + d2w + ' <b style="color:' + dclr(x.d2) + '">' + (x.d2 >= 0 ? '+' : '') + x.d2.toFixed(1) + '%</b>'
+                            + ' · ③' + d3w + ' <b style="color:' + dclr(x.d3) + '">' + (x.d3 >= 0 ? '+' : '') + x.d3.toFixed(1) + '%</b>'
                             + '</div>'
                             + '</div>';
                     });
@@ -31520,10 +31512,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             let bf = null;
             try{ const h = calcArHealth(); bf = h && h.bf ? h.bf : null; }catch(e){}
             if(!bf){
-                badge.innerText = '伯克希尔风格 · --';
+                badge.innerText = 'BRK · --';
                 if(detail) detail.innerHTML = '<div class="text-[11px] text-gray-400">暂无持仓，无法评分</div>';
             } else {
-                badge.innerText = '伯克希尔风格 · ' + bf.grade + ' ' + bf.score + '分';
+                badge.innerText = 'BRK · ' + bf.grade + ' ' + bf.score;
                 if(detail){
                     const dims = bf.dims || {};
                     const cell = function(label, v, max){
@@ -31531,18 +31523,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             + '<div class="text-[8px] text-gray-400 truncate">' + label + '</div>'
                             + '<div class="text-[11px] font-bold tabular-nums mt-0.5" style="color:#8f2437">' + v.toFixed(1) + '<span class="text-[8px] text-gray-300 font-normal">/' + max + '</span></div></div>';
                     };
-                    detail.innerHTML = '<div class="flex items-center gap-1.5 mb-2">'
-                        + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#a82d43,#5b1828)"></span>'
-                        + '<span class="text-[11px] font-bold text-[#742034]">【伯克希尔风格组合评估】</span>'
-                        + '<span class="ml-auto text-[10px] text-[#9b6b73] font-medium">总分 ' + bf.score + ' · 市值加权</span></div>'
+                    detail.innerHTML = '<div class="flex items-center justify-between mb-2">'
+                        + '<span class="text-[10px] font-semibold" style="color:#8f5d67">五维评分 · 市值加权</span>'
+                        + '<span class="text-[9px]" style="color:#9b6b73">总分 ' + bf.score + '/100</span></div>'
                         + '<div class="grid grid-cols-5 gap-1.5 text-center">'
-                        + cell('底层生意', dims.quality || 0, 30)
-                        + cell('分红可持续', dims.div || 0, 25)
-                        + cell('安全边际', dims.risk || 0, 20)
-                        + cell('资本配置', dims.capital || 0, 15)
-                        + cell('流动性', dims.liquid || 0, 10)
+                        + cell('生意', dims.quality || 0, 30)
+                        + cell('分红', dims.div || 0, 25)
+                        + cell('安全', dims.risk || 0, 20)
+                        + cell('配置', dims.capital || 0, 15)
+                        + cell('流动', dims.liquid || 0, 10)
                         + '</div>'
-                        + '<div class="text-[10px] text-[#8f5d67] mt-2 leading-relaxed">' + (bf.gradeDesc || '') + '</div>';
+                        + '<div class="text-[9px] mt-2 leading-relaxed" style="color:#8f5d67">' + (bf.gradeDesc || '') + '</div>';
                 }
             }
         }
@@ -31581,16 +31572,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             else if(maxMkt.mktPct > 20 || maxDiv.divPct > 25){ lvText = '关注'; lvCls = 'text-[#d4a017]'; lvBg = 'bg-[#fffbe6]'; }
             else { lvText = '健康'; lvCls = 'text-[#0f8a5f]'; lvBg = 'bg-[#e8faf3]'; }
             if(lvEl){ lvEl.innerText = lvText; lvEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle ' + lvCls + ' ' + lvBg; }
-            bodyEl.innerHTML = '<div class="space-y-3">'
+            bodyEl.innerHTML = '<div class="grid grid-cols-2 gap-2">'
                 // 行业集中度
-                + '<div class="flex items-center gap-1.5"><div class="w-6 h-6 rounded-lg bg-[#8f2437]/10 flex items-center justify-center flex-shrink-0"><i class="fa fa-area-chart text-[#8f2437] text-[10px]"></i></div><div class="text-[12px] font-semibold text-gray-800">行业集中度</div></div>'
-                + '<div class="rounded-xl px-3 py-2.5 flex items-start gap-2 ' + concCls + '"><span class="w-1.5 h-5 rounded-full bg-current opacity-40 flex-shrink-0 mt-0.5"></span><div class="text-[11px] leading-relaxed">' + concText + '</div></div>'
+                + '<div class="rounded-xl px-2.5 py-2 ' + concCls + '">'
+                + '<div class="flex items-center gap-1 text-[9px] font-semibold opacity-80"><i class="fa fa-area-chart text-[9px]"></i>行业集中度</div>'
+                + '<div class="text-[10px] leading-relaxed mt-1.5">' + concText + '</div></div>'
                 // 分红依赖度
-                + '<div class="flex items-center gap-1.5"><div class="w-6 h-6 rounded-lg bg-[#8f2437]/10 flex items-center justify-center flex-shrink-0"><i class="fa fa-handshake-o text-[#742034] text-[10px]"></i></div><div class="text-[12px] font-semibold text-gray-800">分红依赖度</div></div>'
-                + '<div class="rounded-xl px-3 py-2.5 flex items-start gap-2 ' + depCls + '"><span class="w-1.5 h-5 rounded-full bg-current opacity-40 flex-shrink-0 mt-0.5"></span><div class="text-[11px] leading-relaxed">' + depText + '</div></div>'
-                // 风险提示
-                + (warns.length ? '<div class="flex items-center gap-1.5"><div class="w-6 h-6 rounded-lg bg-[#e03131]/10 flex items-center justify-center flex-shrink-0"><i class="fa fa-exclamation-triangle text-[#e03131] text-[10px]"></i></div><div class="text-[12px] font-semibold text-gray-800">风险提示</div></div>'
-                    + '<div class="rounded-xl px-3 py-2.5 bg-[#fff6f5] border border-[#ffe1dd] text-[11px] leading-relaxed text-[#c0392b] space-y-1">' + warns.join('') + '</div>' : '')
+                + '<div class="rounded-xl px-2.5 py-2 ' + depCls + '">'
+                + '<div class="flex items-center gap-1 text-[9px] font-semibold opacity-80"><i class="fa fa-handshake-o text-[9px]"></i>分红依赖度</div>'
+                + '<div class="text-[10px] leading-relaxed mt-1.5">' + depText + '</div></div>'
                 + '</div>';
         }
         // ===== 巴菲特组合调优方案：行业占比对比 + 三目标评分 + 逐行业点评 + 调优行动清单 =====
@@ -31680,7 +31670,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const lowEffRows = rows.filter(function(r){ return r.d3 < -0.05 && r.mktPct >= 8; });
             if(maxMktRow && maxMktRow.mktPct >= 50) actions.push({ step: 1, tag: '集中度', text: '将最大行业「' + maxMktRow.name + '」市值占比从 ' + maxMktRow.mktPct.toFixed(1) + '% 降至 ≤50%', why: '单一行业波动将直接主导组合总资产，先拆最大的雷' });
             if(maxDiv && maxDiv.divPct > 40) actions.push({ step: actions.length + 1, tag: '依赖度', text: '降低对「' + maxDiv.name + '」的' + maxDiv.divLabel + '依赖（' + maxDiv.divPct.toFixed(1) + '% → ≤35%）', why: '为组合引入第二个分红引擎，避免单一行业分红政策变化击穿现金流' });
-            if(divYield > 0 && divYield < 4) actions.push({ step: actions.length + 1, tag: '现金流', text: '把低息浮盈仓位（' + effGapRows.map(function(r){ return r.name; }).join('、') + (effGapRows.length ? '等' : '') + '）部分止盈，转配股息率 ≥5% 的高息行业', why: '组合股息率仅 ' + divYield.toFixed(2) + '%，自由现金流是巴菲特组合的生命线' });
+            if(divYield > 0 && divYield < 4){
+                const lowYieldNames = effGapRows.map(function(r){ return r.name; }).join('、');
+                actions.push({ step: actions.length + 1, tag: '现金流', text: '把低息浮盈仓位' + (lowYieldNames ? '（' + lowYieldNames + '等）' : '') + '部分止盈，转配股息率 ≥5% 的高息行业', why: '组合股息率仅 ' + divYield.toFixed(2) + '%，自由现金流是巴菲特组合的生命线' });
+            }
             if(lowEffRows.length) actions.push({ step: actions.length + 1, tag: '替换', text: '将本金分红回报弱于组合的「' + lowEffRows.map(function(r){ return r.name; }).join('、') + '」逐步替换为高ROE、高分红、护城河深的标的', why: '投入产出比长期为负的仓位，占用本金却无法产生现金流，是组合的「沉睡资金」' });
             if(defPct < 50) actions.push({ step: actions.length + 1, tag: '防御', text: '防御型行业（公用/银行/必需消费/电信）市值占比 ' + defPct.toFixed(1) + '%，建议提升至 ≥60%', why: '需求刚性+稳定现金流才能在衰退期守住本金与分红，这是巴菲特组合的压舱石' });
             if(top3DivPct > 60 && actions.length < 4) actions.push({ step: actions.length + 1, tag: '分散', text: '前三大分红行业合计 ' + top3DivPct.toFixed(1) + '% 偏高，适度引入新的高息行业', why: '分红集中度越高，组合收息越像单行业ETF' });
@@ -31706,48 +31699,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             if(lvEl){ lvEl.innerText = b.level.text; lvEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded-md align-middle ' + b.level.cls + ' ' + b.level.bg; }
             let h = '';
-            // 三大目标评分
-            h += '<div class="flex items-center gap-1.5 mb-2">'
-                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#a82d43,#742034)"></span>'
-                + '<span class="text-[11px] font-bold text-[#742034]">三大目标评分</span>'
-                + '<span class="ml-auto text-[10px] text-gray-400">巴菲特三问：收益 / 现金流 / 稳定性</span></div>';
+            // 三问结果：只保留档位，不再重复展开长段结论
             h += '<div class="grid grid-cols-3 gap-1.5">' + b.goals.map(function(g){
-                return '<div class="rounded-xl px-2 py-2 text-center" style="background:#fafafa">'
-                    + '<div class="flex items-center justify-center gap-1"><i class="fa ' + g.icon + ' text-[9px]" style="color:' + g.color + '"></i>'
-                    + '<span class="text-[10px] font-medium text-gray-600 truncate">' + g.key + '</span></div>'
-                    + '<div class="mt-1 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style="background:' + g.color + '">' + g.level + '</div></div>';
+                return '<div class="rounded-lg px-1.5 py-1.5 text-center" style="background:#fff;border:1px solid #f0e4cd">'
+                    + '<div class="text-[8.5px] text-gray-400 truncate">' + g.key + '</div>'
+                    + '<div class="mt-1 inline-flex items-center gap-1 text-[9px] font-bold" style="color:' + g.color + '"><span class="w-1 h-1 rounded-full" style="background:' + g.color + '"></span>' + g.level + '</div></div>';
             }).join('') + '</div>';
-            h += '<div class="mt-2 space-y-1.5">' + b.goals.map(function(g){
-                return '<div class="rounded-lg px-2.5 py-1.5 text-[10px] leading-relaxed" style="background:' + (g.level === '弱' ? 'rgba(239,68,68,.06)' : 'rgba(116,32,52,.05)') + ';color:' + (g.level === '弱' ? '#c0392b' : '#742034') + '">' + g.note + '</div>';
-            }).join('') + '</div>';
-            // 逐行业巴菲特式点评
-            h += '<div class="flex items-center gap-1.5 mt-3 mb-2">'
-                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#a82d43,#742034)"></span>'
-                + '<span class="text-[11px] font-bold" style="color:#742034">逐行业点评</span>'
-                + '<span class="ml-auto text-[10px] text-gray-400">按市值占比 × 分红效率对比</span></div>';
-            h += '<div class="space-y-1.5">' + b.rows.map(function(r){
-                return '<div class="rounded-xl bg-white border border-gray-100 px-2.5 py-2">'
-                    + '<div class="flex items-center gap-1.5">'
-                    + '<span class="text-[12px] font-semibold text-gray-800 truncate flex-1 min-w-0">' + r.name + '</span>'
-                    + '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap ' + r.cls + '">' + r.action + '</span></div>'
-                    + '<div class="text-[10px] leading-relaxed mt-1" style="color:#6b7280">' + r.note + '</div>'
-                    + '<div class="flex items-center gap-1 mt-1 text-[9px] text-gray-400 tabular-nums">'
-                    + '<span class="bg-gray-50 rounded px-1 py-0.5">市值 ' + r.mktPct.toFixed(1) + '%</span>'
-                    + '<span class="bg-gray-50 rounded px-1 py-0.5">成本 ' + r.costPct.toFixed(1) + '%</span>'
-                    + '<span class="bg-gray-50 rounded px-1 py-0.5">' + r.divLabel + ' ' + r.divPct.toFixed(1) + '%</span>'
-                    + '</div></div>';
-            }).join('') + '</div>';
-            // 调优行动清单
-            h += '<div class="flex items-center gap-1.5 mt-3 mb-2">'
-                + '<span class="w-1.5 h-3.5 rounded-full" style="background:linear-gradient(180deg,#a82d43,#742034)"></span>'
-                + '<span class="text-[11px] font-bold text-[#742034]">巴菲特调优行动清单</span>'
-                + '<span class="ml-auto text-[10px] text-gray-400">按优先级执行</span></div>';
-            h += '<div class="space-y-1.5">' + b.actions.map(function(a){
-                return '<div class="rounded-xl px-2.5 py-2 flex items-start gap-2" style="background:linear-gradient(135deg,#fffafb,#f8ecef)">'
-                    + '<span class="w-5 h-5 rounded-full bg-[#742034] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">' + a.step + '</span>'
-                    + '<div class="min-w-0">'
-                    + '<div class="text-[11px] font-semibold text-gray-800">[' + a.tag + '] ' + a.text + '</div>'
-                    + '<div class="text-[10px] leading-relaxed mt-0.5" style="color:#742034">理由：' + a.why + '</div>'
+            // 行动清单：只取最痛的三条
+            const topActions = (b.actions || []).slice(0, 3);
+            h += '<div class="mt-2 space-y-1.5">' + topActions.map(function(a){
+                return '<div class="rounded-lg px-2.5 py-2 flex items-start gap-2" style="background:linear-gradient(135deg,#fffafb,#f8ecef);border:1px solid #f0dfe4">'
+                    + '<span class="w-5 h-5 rounded-full bg-[#742034] text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">' + a.step + '</span>'
+                    + '<div class="min-w-0 flex-1">'
+                    + '<div class="flex items-center gap-1.5"><span class="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-white/80 text-[#8f2437] flex-shrink-0">' + a.tag + '</span>'
+                    + '<span class="text-[10.5px] font-semibold text-gray-800 leading-snug">' + a.text + '</span></div>'
+                    + '<div class="text-[9px] leading-relaxed mt-1" style="color:#9b6b73">' + a.why + '</div>'
                     + '</div></div>';
             }).join('') + '</div>';
             body.innerHTML = h;
@@ -33039,7 +33005,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
         }
 
-        let divRankVisibleCount = 10;
+        let divRankVisibleCount = 6;
         function divRankRowEls(){
             return Array.prototype.slice.call(document.querySelectorAll('#statsDivRankList .div-rank-row'));
         }
@@ -33063,11 +33029,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             updateDivRankPager();
         }
         function loadMoreDivRank(){
-            divRankVisibleCount += 10;
+            divRankVisibleCount += 6;
             applyDivRankVisibility();
         }
         function collapseDivRank(){
-            divRankVisibleCount = 10;
+            divRankVisibleCount = 6;
             applyDivRankVisibility();
         }
 
@@ -33653,13 +33619,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function renderStatsPage(){
             // 统计页日快照版本号：版本升级（如新增logo等渲染结构变化）时强制重建当天快照，
             // 避免手机上继续展示旧版无logo的缓存HTML；同版本内仍按 6:00/20:00 双刷新点 + 其余读存储
-            const STATS_SNAP_VERSION = 3;
+            const STATS_SNAP_VERSION = 4;
             // 盈亏排行列表结构版本：仅该列表/贡献榜改版时递增，避免旧快照继续渲染已删除的进度条
             const PNL_RANK_LAYOUT_VERSION = 10;
             // 分红排行列表结构版本：独立于盈亏排行，新增分页/分隔线时递增
-            const DIV_RANK_LAYOUT_VERSION = 2;
+            const DIV_RANK_LAYOUT_VERSION = 3;
             // 仓位分布页结构版本：总览指标/行业配置/个股明细改版时递增
-            const POSITION_LAYOUT_VERSION = 3;
+            const POSITION_LAYOUT_VERSION = 4;
             // 恢复各板块上次刷新时间（持久化，跨会话延用）
             initStatsRefreshTags();
             refreshStatsCardSummaries();
@@ -33696,10 +33662,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const industryListEl = document.querySelector('#statsIndustryList');
                 const stockPositionListEl = document.querySelector('#statsStockPositionList');
                 if(!positionData.length){
-                    industryListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
-                    stockPositionListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                    if(industryListEl) industryListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                    if(stockPositionListEl) stockPositionListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
                     applyPositionSummary(0, 0, 0, 0, 0);
                     clearPositionPie();
+                    if(typeof applyStockPositionVisibility === 'function') applyStockPositionVisibility();
                     const snapE = loadStatsDaily();
                     snapE.position = { v: STATS_SNAP_VERSION, layout: POSITION_LAYOUT_VERSION, key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: false, fp: statsSnapFingerprint() };
                     saveStatsDaily(snapE);
@@ -33711,12 +33678,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         return { item: it, mv: getMarketValue(it) };
                     });
                     const totalMV = stockMV.reduce(function(sum, x){ return sum + x.mv; }, 0);
-                    // 占比分母 = 组合总资产（含现金）；现金单列，行业+现金合计 100%
+                    // 占比分母 = 组合总资产（含现金）；现金单列
                     const posDenom = Number(calcSummary().totalAsset) || totalMV;
                     const posCash = Math.max(0, posDenom - totalMV);
-                    // 行业颜色调色板（浓烈鲜明：以大红/紫红为主，相邻扇区红紫交替，保证可分辨）
-                    const industryColors = ['#F59E0B', '#3B82F6', '#10B981', '#F43F5E', '#8B5CF6', '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#6366F1', '#14B8A6', '#A855F7'];
-                    // 按行业分组
+                    // 按行业分组：仅用于行业数统计，资产仓位页不再重复渲染行业环图/列表
                     const industryMap = {};
                     stockMV.forEach(function(x){
                         const ind = getStockIndustry(x.item);
@@ -33727,51 +33692,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const industryArr = Object.values(industryMap).sort(function(a, b){ return b.mv - a.mv; });
                     const maxStockPct = posDenom > 0 ? (stockMV.reduce(function(mx, x){ return Math.max(mx, x.mv); }, 0) / posDenom * 100) : 0;
                     applyPositionSummary(totalMV, posDenom, stockMV.length, maxStockPct, industryArr.length);
-                    // 渲染行业列表：色点 + 行业名 + 持仓数/市值 + 占总资产百分比
-                    let indHtml = '';
-                    industryArr.forEach(function(ind, idx){
-                        const pct = posDenom > 0 ? (ind.mv / posDenom * 100) : 0;
-                        const color = industryColors[idx % industryColors.length];
-                        indHtml += '<div class="flex items-center justify-between gap-3 py-2">'
-                            + '<div class="flex items-center gap-2 min-w-0">'
-                            + '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + color + '"></span>'
-                            + '<div class="min-w-0">'
-                            + '<div class="text-[12px] font-semibold text-gray-700 truncate">' + ind.name + '</div>'
-                            + '<div class="text-[10px] text-gray-400 mt-0.5 truncate">' + ind.count + ' 只 · ' + fmtMoney(ind.mv) + '</div>'
-                            + '</div>'
-                            + '</div>'
-                            + '<span class="text-[13px] font-semibold text-gray-800 tabular-nums flex-shrink-0">' + pct.toFixed(2) + '%</span>'
-                            + '</div>';
-                    });
-                    if(posCash > 0){
-                        indHtml += '<div class="flex items-center justify-between gap-3 py-2">'
-                            + '<div class="flex items-center gap-2 min-w-0">'
-                            + '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#CBD5E1"></span>'
-                            + '<div class="min-w-0">'
-                            + '<div class="text-[12px] font-semibold text-gray-500 truncate">现金</div>'
-                            + '<div class="text-[10px] text-gray-400 mt-0.5 truncate">现金余额 · ' + fmtMoney(posCash) + '</div>'
-                            + '</div>'
-                            + '</div>'
-                            + '<span class="text-[13px] font-semibold text-gray-600 tabular-nums flex-shrink-0">' + (posCash / posDenom * 100).toFixed(2) + '%</span>'
-                            + '</div>';
-                    }
-                    industryListEl.innerHTML = indHtml;
-
-                    // 环形图数据（存储快照，当天不变）
-                    let pieData = [];
-                    if(typeof echarts !== 'undefined'){
-                        pieData = industryArr.map(function(ind, idx){
-                            return { name: ind.name, value: ind.mv, itemStyle: { color: industryColors[idx % industryColors.length] } };
-                        });
-                        if(posCash > 0){ pieData.push({ name: '现金', value: posCash, itemStyle: { color: '#CBD5E1' } }); }
-                        const pieEl = document.querySelector('#industryPieChart');
-                        if(pieEl){
-                            // 缓存键：刷新期 + 行业市值数据。数据未变化只 resize 不重建，
-                            // 避免每 6–10 秒行情刷新/判断条件反复为真时反复渲染饼图
-                            const pieKey = posPeriodKey + '|' + pieData.map(function(p){ return p.name + ':' + Math.round(p.value); }).join(',');
-                            renderPositionPie(pieEl, pieData, pieKey);
-                        }
-                    }
 
                     // 渲染个股仓位：24px logo + 16px/600 名称 + 代码/市值 + 细权重条
                     const sortedStockMV = stockMV.slice().sort(function(a, b){ return b.mv - a.mv; });
@@ -33780,10 +33700,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const pct = posDenom > 0 ? (x.mv / posDenom * 100) : 0;
                         const it = x.item;
                         const isHk = it.marketType === 'HK';
+                        const extraCls = idx >= 5 ? (' stock-pos-extra' + (stockPosExpanded ? '' : ' hidden')) : '';
                         const posTagHtml = isHk
                             ? '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none bg-blue-500 flex-shrink-0">HK</span>'
                             : '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none bg-[#e03131] flex-shrink-0">A</span>';
-                        stockHtml += '<div class="stock-position-row py-3">'
+                        stockHtml += '<div class="stock-position-row py-3' + extraCls + '">'
                             + '<div class="flex items-center justify-between gap-3">'
                             + '<div class="flex items-center gap-2.5 min-w-0">'
                             + stockLogoHtml(it, 22)
@@ -33823,11 +33744,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             + '</div>';
                     }
                     stockPositionListEl.innerHTML = stockHtml;
+                    applyStockPositionVisibility();
 
                     // 构建完成 → 存储渲染结果与真实更新时间（当天内不再重算）
                     // 若本会话行情从未拉取成功（数据可能陈旧），标记 stale=true：下次渲染自动重建重试
                     const snapF = loadStatsDaily();
-                    snapF.position = { v: STATS_SNAP_VERSION, layout: POSITION_LAYOUT_VERSION, key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, fp: statsSnapFingerprint(), indHtml: indHtml, stockHtml: stockHtml, pieData: pieData, totalMV: totalMV, denom: posDenom, count: stockMV.length, maxPct: maxStockPct, industryCount: industryArr.length };
+                    snapF.position = { v: STATS_SNAP_VERSION, layout: POSITION_LAYOUT_VERSION, key: posPeriodKey, date: posTodayStr, time: statsRefreshNow(), hasData: true, stale: !quoteFetchLastOk, fp: statsSnapFingerprint(), stockHtml: stockHtml, totalMV: totalMV, denom: posDenom, count: stockMV.length, maxPct: maxStockPct, industryCount: industryArr.length };
                     saveStatsDaily(snapF);
                     // 标记当天已渲染完成：此后每 6–10 秒刷新只更新实时板块，饼图不再重复渲染
                     positionRendered = true;
@@ -33835,30 +33757,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             } else if(posSnapC.hasData){
                 // ---- 当天已有快照：直接读取存储渲染（不再请求/重算）----
-                // 当天已渲染过则跳过（DOM与canvas保持，每 6–10 秒刷新不重复渲染饼图，避免闪烁与性能消耗）
+                // 当天已渲染过则跳过（DOM 保持，每 6–10 秒刷新不重复渲染列表，避免闪烁）
                 if(positionRendered && positionRenderDate === posTodayStr){
                     // 已渲染，跳过
                 } else {
-                    document.querySelector('#statsIndustryList').innerHTML = posSnapC.indHtml;
-                    document.querySelector('#statsStockPositionList').innerHTML = posSnapC.stockHtml;
+                    if(stockPositionListEl) stockPositionListEl.innerHTML = posSnapC.stockHtml;
                     applyPositionSummary(posSnapC.totalMV || 0, posSnapC.denom || 0, posSnapC.count || 0, posSnapC.maxPct || 0, posSnapC.industryCount || 0);
-                    if(typeof echarts !== 'undefined'){
-                        const pieEl = document.querySelector('#industryPieChart');
-                        if(pieEl){
-                            // 与构建分支同款缓存键：数据未变化只 resize 不重建
-                            const pieKey = posPeriodKey + '|' + (posSnapC.pieData || []).map(function(p){ return p.name + ':' + Math.round(p.value); }).join(',');
-                            renderPositionPie(pieEl, posSnapC.pieData || [], pieKey);
-                        }
-                    }
+                    applyStockPositionVisibility();
                     positionRendered = true;
                     positionRenderDate = posTodayStr;
                 }
             } else {
                 // 当天空快照：保留空态
-                document.querySelector('#statsIndustryList').innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
-                document.querySelector('#statsStockPositionList').innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                if(industryListEl) industryListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
+                if(stockPositionListEl) stockPositionListEl.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">暂无持仓数据</div>';
                 applyPositionSummary(0, 0, 0, 0, 0);
                 clearPositionPie();
+                applyStockPositionVisibility();
                 positionRendered = true;
                 positionRenderDate = posTodayStr;
             }
@@ -34253,22 +34168,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         const sharePct = grandTotal > 0 ? (x.total / grandTotal * 100) : 0;
                         const shareText = sharePct.toFixed(2) + '%';
                         const divLogoItem = x.closed ? { code: rec.code, marketType: rec.marketType, name: nameStr } : it;
-                        divRankHtml += '<div class="flex items-center gap-3 py-2.5 div-rank-row' + (idx >= divRankVisibleCount ? ' hidden' : '') + '">'
-                            + '<div class="w-6 h-6 rounded-full ' + rankCls + ' flex items-center justify-center text-[11px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
+                        divRankHtml += '<div class="flex items-center gap-2.5 py-2 div-rank-row' + (idx >= divRankVisibleCount ? ' hidden' : '') + '">'
+                            + '<div class="w-5 h-5 rounded-full ' + rankCls + ' flex items-center justify-center text-[10px] font-bold flex-shrink-0">' + (idx + 1) + '</div>'
                             + '<div class="flex-1 min-w-0">'
                             + '<div class="flex items-center gap-1.5 min-w-0">'
-                            + stockLogoHtml(divLogoItem, 16)
-                            + '<span class="text-[16px] font-semibold text-gray-800 truncate">' + nameStr + '</span>'
+                            + stockLogoHtml(divLogoItem, 14)
+                            + '<span class="text-[13px] font-semibold text-gray-800 truncate">' + nameStr + '</span>'
                             + closedTag
                             + '</div>'
-                            + '<div class="flex items-center gap-1.5 mt-0.5 min-w-0" style="padding-left:22px;">'
+                            + '<div class="flex items-center gap-1.5 mt-0.5 min-w-0" style="padding-left:20px;">'
                             + tagHtml
-                            + '<span class="text-[10px] leading-4 text-gray-400 tabular-nums truncate">' + (x.closed ? rec.code : it.code) + '</span>'
+                            + '<span class="text-[9px] leading-4 text-gray-400 tabular-nums truncate">' + (x.closed ? rec.code : it.code) + '</span>'
                             + '</div>'
                             + '</div>'
-                            + '<div class="text-right flex-shrink-0 ml-3">'
-                            + '<div class="text-[14px] font-semibold text-accent tabular-nums whitespace-nowrap">' + divText + '</div>'
-                            + '<div class="text-[11px] font-normal mt-1 text-gray-400 tabular-nums whitespace-nowrap">' + shareText + '</div>'
+                            + '<div class="text-right flex-shrink-0 ml-2">'
+                            + '<div class="text-[13px] font-semibold text-accent tabular-nums whitespace-nowrap">' + divText + '</div>'
+                            + '<div class="text-[9px] font-normal mt-0.5 text-gray-400 tabular-nums whitespace-nowrap">' + shareText + '</div>'
                             + '</div>'
                             + '</div>';
                     });
@@ -34333,11 +34248,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             indListHtml += '<div class="flex items-center justify-between gap-2">'
                                 + '<div class="flex items-center gap-1.5 min-w-0">'
                                 + '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + indColors[i % indColors.length] + '"></span>'
-                                + '<span class="text-[12px] text-gray-600 truncate">' + p.name + '</span>'
+                                + '<span class="text-[11px] text-gray-600 truncate">' + p.name + '</span>'
                                 + '</div>'
                                 + '<div class="flex items-center flex-shrink-0">'
-                                + '<span class="w-16 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap">' + fmtMoney(p.divTotal) + '</span>'
-                                + '<span class="w-14 text-right text-[12px] font-semibold text-gray-800 tabular-nums whitespace-nowrap ml-2">' + p.value.toFixed(2) + '%</span>'
+                                + '<span class="w-[52px] text-right text-[11px] font-semibold text-gray-800 tabular-nums whitespace-nowrap">' + fmtMoney(p.divTotal) + '</span>'
+                                + '<span class="w-[46px] text-right text-[10.5px] font-semibold text-gray-800 tabular-nums whitespace-nowrap ml-1.5">' + p.value.toFixed(2) + '%</span>'
                                 + '</div>'
                                 + '</div>';
                         });
@@ -35576,6 +35491,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(avgEl) avgEl.style.color = d.avgAnnual == null ? '#9a8b76' : (d.avgAnnual >= 0 ? '#8f2437' : '#00a05c');
             const winEl = document.getElementById('analysisWinRate');
             if(winEl) winEl.style.color = '#1f2937';
+
+            // 风险六维：年化波动 / 最长水下（与全周期回撤同源，不再单独设风险页）
+            const rk = (typeof calcRiskStats === 'function') ? calcRiskStats() : null;
+            _anSet('analysisVol', (rk && rk.vol != null) ? rk.vol.toFixed(2) + '%' : '--');
+            _anSet('analysisVolSub', rk ? '年化 · ' + rk.points + ' 条快照' : '快照不足');
+            _anSet('analysisWater', rk ? rk.waterDays + ' 天' : '--');
+            _anSet('analysisWaterSub', rk ? '峰值 → 新高' : '快照不足');
+            const volEl = document.getElementById('analysisVol');
+            if(volEl) volEl.style.color = (rk && rk.vol != null && rk.vol >= 30) ? '#b4554a' : '#1f2937';
 
             // 历史新高 / 下一里程碑
             _anSet('analysisHeroHigh', fmtMoney(d.histHigh));
@@ -38618,13 +38542,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const dayPnlPctText = dayPnlValue == null ? '--' : pctText;
                 const cardClass = 'hold-card hold-card-v2' + (isCostRecovered ? ' is-recovered' : '');
                 const fullName = String(item.name || '');
-                const cardName = fullName.length > 4 ? fullName.slice(0, 4) + '…' : fullName;
+                const cardName = fullName;
+                const cardNameFontCls = Array.from(fullName).length > 4 ? 'hold-card-name-sm' : 'hold-card-name-lg';
                 htmlStr += `<div class="${cardClass}" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" role="button" tabindex="0" aria-label="${item.name} ${item.code} 持仓详情" onclick="openHoldCardDetail(${item.id}, event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHoldCardDetail(${item.id}, event);}">
                     <div class="hold-card-v2-id">
                         ${stockLogoHtml(item, 22)}
                         <div class="min-w-0">
                             <div class="hold-card-v2-title">
-                                <span class="hold-card-v2-name" title="${item.name}">${cardName}</span>
+                                <span class="hold-card-v2-name ${cardNameFontCls}" title="${item.name}">${cardName}</span>
                                 ${isCostRecovered ? '<span class="hold-card-v2-badge">已回本</span>' : ''}
                             </div>
                             <div class="hold-card-v2-meta">
@@ -40485,7 +40410,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 html += scRowHtml(i.id, i.label, i.sub, i.cls, i.val);
             });
             html += scRowHtml('C1', 'C1 · 替代标的', '已有明确更好的替代标的（人工确认）', 'gray', '', cbC1);
-            html += '<div class="text-[9px] text-gray-400 mt-1.5">提示：调仓测算可在「统计 → 分红对比」详情页完成</div>';
+            html += '<div class="text-[9px] text-gray-400 mt-1.5">提示：调仓测算可在「统计 → 分红统计」详情页完成</div>';
             html += '<div class="sc-verdict" data-key="' + key + '">' + scVerdictHtml(vd, key, items) + '</div>';
             html += '</div>';
             return html;
@@ -41367,7 +41292,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return true;
             }
             function calcMax(){
-                // 行 width:100% 跟随容器，行盒宽不能代表内容宽；grid 列固定合计 692px（含 6×4px 列间距）且行 overflow visible，
+                // 行 width:100% 跟随容器，行盒宽不能代表内容宽；grid 列固定合计 698px（含 6×4px 列间距）且行 overflow visible，
                 // scrollWidth 可靠反映内容总宽，是 maxX 的正确来源
                 maxX = Math.max(0, listEl.scrollWidth - listEl.clientWidth);
                 if(X > maxX) X = maxX;
@@ -41685,6 +41610,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const slot = document.querySelector('#watchAddSlot');
             const panel = document.querySelector('#watchSearchPanel');
             const trigger = document.querySelector('#watchTabAddBtn');
+            if(bar.contains(e.target)) return;
             if(slot && slot.contains(e.target)) return;
             if(panel && panel.contains(e.target)) return;
             if(trigger && trigger.contains(e.target)) return;
@@ -42252,15 +42178,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         pageStatsToday: 1,
         pageGoalPlan: 1,
         pageAnalysis: 1,
-        pageStatsPosition: 1,
         pageStatsPnl: 1,
-        pageStatsDivRank: 1,
         pageStatsSchedule: 1,
         pageStatsIndustry: 1,
         pageStatsCashFlow: 1,
         pageStatsTrade: 1,
         pageStatsCashBook: 1,
-        pageStatsRisk: 1,
         pageStatsCompare: 1,
         pageAssetHigh: 1,
         pageDivDetail: 1,

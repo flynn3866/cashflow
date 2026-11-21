@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261121.529';</script>
+    <script>window.APP_VERSION = '20261121.531';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -4170,7 +4170,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             background:#171717!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row{
-            border-bottom-color:#242424!important;
+            border-bottom-color:#0a0a0a!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row > div{
             padding-top:0!important;padding-bottom:0!important;
@@ -4180,21 +4180,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             min-height:49.7px!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row [data-fixcol] .min-w-0 > div:first-child{
-            color:#e4e4e8!important;
-            font-size:20px!important;line-height:23px!important;
+            color:#d6d6d6!important;
+            font-size:17px!important;line-height:20px!important;font-weight:400!important;
         }
         #pageWatchSel.watch-dark #watchSelList .watch-row [data-fixcol] .min-w-0 > div:nth-child(2){
             color:#8a8a8a!important;
+            font-size:11px!important;line-height:13px!important;
+        }
+        /* 数值列统一字号：最新/涨幅/股息率/市盈率/市净率/资产负债率完全一致 */
+        #watchSelList .watch-row > div[data-field]{
+            font-size:18px!important;line-height:22px!important;font-weight:600!important;
+            font-variant-numeric:tabular-nums;
+        }
+        /* 白字在深色背景上的光学增粗补偿：右侧四列与最新/涨幅视觉粗细一致 */
+        #pageWatchSel.watch-dark #watchSelList .watch-row > div[data-field="divYield"],
+        #pageWatchSel.watch-dark #watchSelList .watch-row > div[data-field="pe"],
+        #pageWatchSel.watch-dark #watchSelList .watch-row > div[data-field="pb"],
+        #pageWatchSel.watch-dark #watchSelList .watch-row > div[data-field="debt"]{
+            font-weight:500!important;
         }
         /* 通用行高：亮色主题也按同一密度，避免两套主题跳变 */
         #watchSelList .watch-row > div{
             padding-top:0!important;padding-bottom:0!important;
         }
         #watchSelList .watch-row [data-fixcol] .min-w-0 > div:first-child{
-            font-size:20px;line-height:23px;
+            font-size:17px;line-height:20px;font-weight:400;
         }
         #watchSelList .watch-row [data-fixcol] .min-w-0 > div:nth-child(2){
             margin-top:1px;
+            font-size:11px;
             line-height:13px;
         }
         #pageWatchSel.watch-dark #watchSelSticky{background:#171717!important;}
@@ -24519,7 +24533,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const divEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="divYield"]');
                 if(divEl){
                     divEl.innerText = divYield != null ? divYield.toFixed(2) + '%' : '--';
-                    divEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + (divYield != null ? 'text-gray-800' : 'text-gray-400');
+                    divEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + (divYield != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 // 市盈率 / 市净率（跟随最新行情）
                 const pe = (q.pe != null && !isNaN(q.pe) && q.pe > 0) ? q.pe : null;
@@ -24528,11 +24542,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const pbEl = document.querySelector('#watchSelList [data-code="' + w.code + '"][data-field="pb"]');
                 if(peEl){
                     peEl.innerText = pe != null ? pe.toFixed(2) : '--';
-                    peEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + (pe != null ? 'text-gray-800' : 'text-gray-400');
+                    peEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + (pe != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 if(pbEl){
                     pbEl.innerText = pb != null ? pb.toFixed(2) : '--';
-                    pbEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + (pb != null ? 'text-gray-800' : 'text-gray-400');
+                    pbEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + (pb != null ? 'text-gray-800' : 'text-gray-400');
                 }
                 // 资产负债率：显示当前缓存值（财务数据非行情驱动，不重复拉取）
                 const dc = debtRatioCache[w.code];
@@ -24540,7 +24554,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(debtEl){
                     const v = dc ? dc.v : null;
                     debtEl.innerText = v != null ? v.toFixed(2) + '%' : '--';
-                    debtEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + (v != null ? 'text-gray-800' : 'text-gray-400');
+                    debtEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + (v != null ? 'text-gray-800' : 'text-gray-400');
                 }
             });
         }
@@ -24980,15 +24994,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 html += '<div class="watch-row min-w-[692px] grid gap-x-1 grid-cols-[120px_96px_90px_86px_96px_82px_98px] border-b border-gray-50 cursor-pointer" data-code="' + w.code + '" data-name="' + String(q.name || w.name || w.code).replace(/"/g, '&quot;') + '" onclick="openStockDetail(\'' + w.code + '\',\'' + w.market + '\',\'' + String(q.name || w.name || w.code).replace(/\'/g, "\\'") + '\')">'
                     + '<div class="relative bg-white z-20 pl-4 pr-3 py-1.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
-                    + '<div class="text-[18px] leading-[20px] font-medium tracking-[0.5px] text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
-                    + '<div class="text-[12px] leading-[14px] text-gray-400 tabular-nums mt-0.5">' + w.code + '</div>'
+                    + '<div class="text-[17px] leading-[20px] font-normal tracking-[0.3px] text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
+                    + '<div class="text-[11px] leading-[13px] text-gray-400 tabular-nums mt-0.5">' + w.code + '</div>'
                     + '</div></div>'
-                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[20px] leading-[22px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="price">' + priceText + '</div>'
-                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[20px] leading-[22px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="changePct">' + pctText + '</div>'
-                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + divCls + '" data-code="' + w.code + '" data-field="divYield">' + (divYield != null ? divYield.toFixed(2) + '%' : '--') + '</div>'
-                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
-                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
-                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '">' + debtText + '</div>'
+                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="price">' + priceText + '</div>'
+                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-semibold tabular-nums" style="color:' + pctColor + '" data-code="' + w.code + '" data-field="changePct">' + pctText + '</div>'
+                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + divCls + '" data-code="' + w.code + '" data-field="divYield">' + (divYield != null ? divYield.toFixed(2) + '%' : '--') + '</div>'
+                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + peCls + '" data-code="' + w.code + '" data-field="pe">' + (pe != null ? pe.toFixed(2) : '--') + '</div>'
+                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + pbCls + '" data-code="' + w.code + '" data-field="pb">' + (pb != null ? pb.toFixed(2) : '--') + '</div>'
+                    + '<div class="pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums ' + debtCls + '" id="debt_' + w.code + '" data-code="' + w.code + '" data-field="debt">' + debtText + '</div>'
                     + '</div>';
             });
             el.innerHTML = html;
@@ -25005,7 +25019,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             const debtEl = document.querySelector('#debt_' + w.code);
                             if(debtEl){
                                 debtEl.innerText = v.toFixed(2) + '%';
-                                debtEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[20px] font-medium tabular-nums text-gray-800';
+                                debtEl.className = 'pl-2 pr-4 py-1.5 flex items-center justify-end text-[18px] leading-[22px] font-medium tabular-nums text-gray-800';
                             }
                         }
                     });

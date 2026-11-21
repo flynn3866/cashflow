@@ -3384,8 +3384,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #assetHeroCard button[title^="查看"]{font-size:11px!important;}
         #assetHeroCard #totalMarketWrap{
             font-size:32px!important;
-            font-weight:700!important;
-            letter-spacing:-.03em!important;
+            font-weight:600!important;
+            letter-spacing:.5px!important;
         }
         #assetHeroCard .asset-cur{
             color:rgba(232,200,138,.58);
@@ -3695,7 +3695,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         /* 总资产右侧仓位胶囊：L4 辅助，浅灰小字，退出主视觉 */
         #assetHeroCard #positionPctBadge{
-            opacity:.55!important;
+            opacity:.66!important;
             padding:2px 5px!important;
             border-color:rgba(207,192,166,.14)!important;
             background:rgba(247,244,240,.028)!important;
@@ -3706,15 +3706,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-size:9px!important;
             line-height:1!important;
             font-weight:400!important;
-            color:#D6CBBE!important;
+            color:#E1D7CA!important;
             letter-spacing:.04em!important;
         }
         #assetHeroCard #positionPctBadge span:first-child{
-            color:#D6CBBE!important;
+            color:#E1D7CA!important;
             font-weight:400!important;
         }
         #assetHeroCard #positionPctBadge #positionPct{
-            color:#D6CBBE!important;
+            color:#E1D7CA!important;
             font-weight:400!important;
             font-variant-numeric:tabular-nums;
         }
@@ -4012,6 +4012,62 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             background:#e8c98f!important;
         }
     </style>
+    <!-- 首页持仓：卡片/列表数字规格统一，不随 390/428 宽度降档 -->
+    <style id="hold-name-value-type-20261121">
+        #holdList .hold-card-v2{
+            grid-template-columns:minmax(0,1fr) 60px 96px!important;
+            gap:10px!important;
+            padding:0 14px!important;
+        }
+        #holdList .hold-card-v2-name,
+        #holdList .hold-row-name{
+            font-size:16px!important;
+            font-weight:500!important;
+            letter-spacing:.5px!important;
+        }
+        #holdList .hold-card-v2-meta,
+        #holdList .hold-card-v2-meta .hcm-code,
+        #holdList .hold-card-v2-meta .hcm-pnl,
+        #holdList .hold-row-meta{
+            font-size:12px!important;
+            font-weight:400!important;
+            letter-spacing:.2px!important;
+        }
+        #holdList .hold-card-v2-price,
+        #holdList .hold-row-market{
+            font-size:16px!important;
+            font-weight:500!important;
+            letter-spacing:.5px!important;
+        }
+        #holdList .hold-card-v2-daypnl,
+        #holdList .hold-card-v2-daypnl .hcm-daypnlpct,
+        #holdList .hold-row-daypnl,
+        #holdList .hold-row-daypnl .list-num{
+            font-size:12px!important;
+            font-weight:400!important;
+            letter-spacing:.2px!important;
+        }
+    </style>
+    <style id="hero-metrics-tracking-20261121">
+        /* 首页主卡与“更多指标”数值：统一 0.5px 字距，百分比副值保持原样 */
+        #assetHeroCard #todayPnl,
+        #assetHeroCard #totalYearDiv,
+        #assetHeroCard #totalProfitVal,
+        #assetHeroCard #cashVal,
+        #assetHeroCard #yearPnl,
+        #assetHeroCard #totalInvested,
+        #assetHeroCard #totalReturnRate,
+        #assetHeroCard #totalDivReceived,
+        #assetHeroCard #totalPnl,
+        #assetHeroCard #mktVal,
+        #assetHeroCard #sumBeNo,
+        #assetHeroCard #sumBeGap,
+        #assetHeroCard #nextDivDate,
+        #assetHeroCard #nextDivDays,
+        #assetHeroCard #nextDivAmt{
+            letter-spacing:.5px!important;
+        }
+    </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
@@ -4039,14 +4095,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform">
                             <span class="tracking-[.06em] font-serif">总资产</span>
                             <span id="positionPctBadge" class="inline-flex items-center gap-1 rounded-[6px] border border-[#e8c88a]/20 px-1.5 py-0.5 whitespace-nowrap" style="background:rgba(232,200,138,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);" title="总市值 ÷ 总资产（含现金）">
-                                <span class="text-[8px] tracking-[.06em] text-[#bfae94] leading-none">仓位</span>
+                                <span class="text-[8px] tracking-[.06em] text-[#cfc0a6] leading-none">仓位</span>
                                 <span class="text-[10px] font-semibold tabular-nums text-[#e8c88a] leading-none" id="positionPct">--</span>
                             </span>
                             <i class="fa fa-chevron-right text-[9px]"></i>
                             <span class="absolute rounded-lg" style="inset:-8px;"></span>
                         </button>
                         <div class="mt-1.5 flex items-baseline min-w-0">
-                            <span class="text-[32px] font-bold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span class="asset-cur asset-cur-main">¥</span><span id="totalMarket">0.00</span></span>
+                            <span class="text-[32px] font-semibold tabular-nums num-transition text-[#ffffff] leading-none whitespace-nowrap" id="totalMarketWrap"><span class="asset-cur asset-cur-main">¥</span><span id="totalMarket">0.00</span></span>
                         </div>
                     </div>
                     <div class="shrink-0 text-right max-w-[55%]">
@@ -36568,6 +36624,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // 日线：复用 assetDaily（一天一条，长期保存）。
         // 1D：单独一条“仅当天”的 20 分钟采样，date 变化即覆盖，不占用长期存储。
         var HERO_INTRADAY_KEY = 'dividendIntradayAssets';
+        var HERO_INTRADAY_PREV_KEY = 'dividendIntradayAssetsPrev';
         var HERO_INTRADAY_START = 555;   // 09:15 集合竞价开始
         var HERO_INTRADAY_END = 900;     // 15:00
         var HERO_INTRADAY_MAX_POINTS = 3600; // 6-10 秒采样，覆盖完整交易时段
@@ -36584,6 +36641,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         var _heroCurveCacheDay = '';
         var _heroCurveToken = 0;
         var _heroIntradayData = null;
+        var _heroIntradayPrevData = null;
+        var _heroCurveBaseline = 0;
         var _heroPrevClose = null;
         var _heroPrevCloseDay = '';
         var _heroPrevClosePromise = null;
@@ -36627,6 +36686,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
             }catch(e){}
             if(!data || data.date !== todayStr()){
+                if(data && data.date && String(data.date) < todayStr()) archiveHeroIntradayData(data);
                 data = { date: todayStr(), points: [] };
             }
             _heroIntradayData = data;
@@ -36635,6 +36695,73 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function saveHeroIntradayData(data){
             _heroIntradayData = data;
             try{ lsSet(HERO_INTRADAY_KEY, JSON.stringify(data)); }catch(e){}
+        }
+        // 原始采样清洗：去掉历史 seed 估算点，只保留可绘制的时间/资产点。
+        function heroCleanIntradayPoints(points){
+            return (points || []).map(function(p){
+                return { t: Number(p && p.t), v: Number(p && p.v), seed: !!(p && p.seed) };
+            }).filter(function(p){
+                return !p.seed && isFinite(p.t) && isFinite(p.v) && p.v > 0;
+            }).map(function(p){
+                return { t: p.t, v: p.v };
+            }).sort(function(a, b){ return a.t - b.t; });
+        }
+        // 保存“上一个完整交易日”的 1D 曲线；跨天后原曲线不能被当天新采样覆盖。
+        function readHeroIntradayPrevData(){
+            if(_heroIntradayPrevData) return _heroIntradayPrevData;
+            var data = null;
+            try{
+                var raw = lsGet(HERO_INTRADAY_PREV_KEY);
+                if(raw){
+                    var parsed = JSON.parse(raw);
+                    if(parsed && parsed.date && Array.isArray(parsed.points)) data = parsed;
+                }
+            }catch(e){}
+            if(!data) data = { date: '', points: [] };
+            data.points = heroCleanIntradayPoints(data.points);
+            _heroIntradayPrevData = data;
+            return data;
+        }
+        function saveHeroIntradayPrevData(data){
+            _heroIntradayPrevData = data;
+            try{ lsSet(HERO_INTRADAY_PREV_KEY, JSON.stringify(data)); }catch(e){}
+        }
+        function archiveHeroIntradayData(data){
+            if(!data || !data.date) return;
+            var today = todayStr();
+            if(String(data.date) >= today) return;
+            var pts = heroCleanIntradayPoints(data.points);
+            if(!pts.length) return;
+            var prev = readHeroIntradayPrevData();
+            if(prev && prev.date){
+                if(String(data.date) < String(prev.date)) return;
+                if(String(data.date) === String(prev.date) && pts.length <= (prev.points || []).length) return;
+            }
+            if(pts.length > HERO_INTRADAY_MAX_POINTS) pts = pts.slice(pts.length - HERO_INTRADAY_MAX_POINTS);
+            saveHeroIntradayPrevData({ date: String(data.date), points: pts });
+        }
+        function getHeroPrevCurvePoints(){
+            // 读取当前键的同时，把跨天遗留的上一交易日采样归档。
+            readHeroIntradayData();
+            var prev = readHeroIntradayPrevData();
+            return heroCleanIntradayPoints(prev && prev.points);
+        }
+        function getHeroPrevArchiveClose(){
+            var pts = heroCleanIntradayPoints((readHeroIntradayPrevData() || {}).points);
+            return pts.length ? Number(pts[pts.length - 1].v) || 0 : 0;
+        }
+        // 上一交易日收盘价作为当天 1D 的起始点；聚合后再补，避免被 2 分钟均值吞掉。
+        function heroApplyBaselineToPoints(points, baseline){
+            var pts = (points || []).slice();
+            var v = Number(baseline) || 0;
+            if(!(v > 0)) return pts;
+            if(!pts.length) return [{ t: HERO_INTRADAY_START, v: v }];
+            if(Number(pts[0].t) <= HERO_INTRADAY_START + 1.1){
+                pts[0] = { t: HERO_INTRADAY_START, v: v };
+            }else{
+                pts.unshift({ t: HERO_INTRADAY_START, v: v });
+            }
+            return pts;
         }
         function heroPrevDateStr(){
             var d = new Date();
@@ -36825,6 +36952,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!el) return;
             if(blank){
                 _heroLastPoints = [];
+                _heroCurveBaseline = 0;
                 var blankSvg = el.querySelector('svg');
                 if(blankSvg) blankSvg.innerHTML = '';
                 el.classList.remove('is-loading');
@@ -36840,6 +36968,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             var drawPoints = _heroCurvePeriod === '1D'
                 ? heroAggregateIntradayForRender(_heroLastPoints, HERO_INTRADAY_DRAW_BUCKET_MIN)
                 : _heroLastPoints;
+            if(_heroCurvePeriod === '1D' && _heroCurveBaseline > 0){
+                drawPoints = heroApplyBaselineToPoints(drawPoints, _heroCurveBaseline);
+            }
             drawPoints = heroDownsampleForRender(drawPoints, w);
             var domain = (_heroCurvePeriod === '1D' && !keepFullSpan)
                 ? { start: HERO_INTRADAY_START, end: HERO_INTRADAY_END }
@@ -36948,34 +37079,72 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             pts.sort(function(a, b){ return a.t - b.t; });
             return pts;
         }
+        function renderHeroPrevClosePoint(fallback){
+            getHeroPrevCurvePoints(); // 先归档跨天遗留的上一交易日采样
+            var cachedPrev = (_heroPrevCloseDay === todayStr() && _heroPrevClose != null) ? (Number(_heroPrevClose) || 0) : 0;
+            if(cachedPrev > 0){
+                _heroCurveBaseline = 0;
+                _heroCurveToken++;
+                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: cachedPrev }], false, false);
+                return;
+            }
+            var archiveClose = getHeroPrevArchiveClose();
+            if(archiveClose > 0){
+                _heroCurveBaseline = 0;
+                _heroCurveToken++;
+                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: archiveClose }], false, false);
+                return;
+            }
+            var token = ++_heroCurveToken;
+            var el = document.querySelector('#heroAssetCurve');
+            if(el) el.classList.add('is-loading');
+            loadHeroPrevClose().then(function(prev){
+                if(token !== _heroCurveToken || _heroCurvePeriod !== '1D') return;
+                var pv = Number(prev) > 0 ? Number(prev) : getHeroPrevArchiveClose();
+                if(!(pv > 0)) pv = Number(fallback) || 0;
+                _heroCurveBaseline = 0;
+                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: pv }], false, false);
+            });
+        }
         function refreshHero1D(total){
             var now = new Date();
             var val = Number(total) || 0;
             if(heroShowPrevClose(now)){
-                // 开盘前/非交易日：只显示上一交易日收盘，不使用当天任何估算点
-                var cachedPrev = (_heroPrevCloseDay === todayStr() && _heroPrevClose != null) ? (Number(_heroPrevClose) || 0) : 0;
-                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: cachedPrev > 0 ? cachedPrev : val }], false, true);
-                if(cachedPrev > 0) return;
-                var token = ++_heroCurveToken;
-                var el = document.querySelector('#heroAssetCurve');
-                if(el) el.classList.add('is-loading');
-                loadHeroPrevClose().then(function(prev){
-                    if(token !== _heroCurveToken || _heroCurvePeriod !== '1D') return;
-                    var pv = Number(prev) > 0 ? Number(prev) : val;
-                    renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: pv }], false, true);
-                });
+                // 开盘前/非交易日：优先显示上一完整交易日的 1D 曲线，而不是压成一条直线。
+                var prevPts = getHeroPrevCurvePoints();
+                if(prevPts.length){
+                    _heroCurveBaseline = 0;
+                    _heroCurveToken++;
+                    renderHeroAssetCurve(prevPts, false, false);
+                    return;
+                }
+                // 没有历史采样时，只显示上一交易日收盘的一个点，不再拉伸成整宽直线。
+                renderHeroPrevClosePoint(val);
                 return;
             }
-            // 09:00–09:15 集合竞价前：清空当天曲线，展示真正的空白画布，不落任何点。
+            // 09:00–09:15：显示上一交易日收盘价作为新一天的起始点，不再清空成空白。
             if(!heroCanRecordIntraday(now)){
-                _heroCurveToken++;
-                renderHeroAssetCurve([], true);
+                renderHeroPrevClosePoint(val);
                 return;
             }
-            // 09:15 起：只画当天真实快照；不会残留上一交易日曲线
+            // 09:15 起：当天真实采样；起始点补上一交易日收盘价，只有一个采样时就是一个点。
             _heroCurveToken++;
             recordHeroIntradayPoint(val);
-            renderHeroAssetCurve(getHeroIntradayPoints());
+            var todayPts = getHeroIntradayPoints();
+            var cachedPrev = (_heroPrevCloseDay === todayStr() && _heroPrevClose != null) ? (Number(_heroPrevClose) || 0) : 0;
+            _heroCurveBaseline = cachedPrev > 0 ? cachedPrev : 0;
+            renderHeroAssetCurve(todayPts, false, false);
+            if(!(cachedPrev > 0)){
+                var token = _heroCurveToken;
+                loadHeroPrevClose().then(function(prev){
+                    if(token !== _heroCurveToken || _heroCurvePeriod !== '1D') return;
+                    var pv = Number(prev) > 0 ? Number(prev) : getHeroPrevArchiveClose();
+                    if(pv > 0){
+                        _heroCurveBaseline = pv;
+                        renderHeroAssetCurve(getHeroIntradayPoints(), false, false);
+                    }
+                });
+            }
         }
         function scheduleHeroMarketOpen(){
             if(_heroMarketTimer){ clearTimeout(_heroMarketTimer); _heroMarketTimer = null; }
@@ -37627,12 +37796,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 }
                 const dayPnlPctText = dayPnlValue == null ? '--' : pctText;
                 const cardClass = 'hold-card hold-card-v2' + (isCostRecovered ? ' is-recovered' : '');
+                const fullName = String(item.name || '');
+                const cardName = fullName.length > 4 ? fullName.slice(0, 4) + '…' : fullName;
                 htmlStr += `<div class="${cardClass}" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" role="button" tabindex="0" aria-label="${item.name} ${item.code} 持仓详情" onclick="openHoldCardDetail(${item.id}, event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHoldCardDetail(${item.id}, event);}">
                     <div class="hold-card-v2-id">
                         ${stockLogoHtml(item, 22)}
                         <div class="min-w-0">
                             <div class="hold-card-v2-title">
-                                <span class="hold-card-v2-name">${item.name}</span>
+                                <span class="hold-card-v2-name" title="${item.name}">${cardName}</span>
                                 ${isCostRecovered ? '<span class="hold-card-v2-badge">已回本</span>' : ''}
                             </div>
                             <div class="hold-card-v2-meta">
@@ -38231,11 +38402,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 ${stockLogoHtml(item, 22)}
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="text-[16px] font-semibold truncate" style="color:${isCostRecovered ? '#6f3bd4' : '#2f2a27'};letter-spacing:.5px;">${item.name}</span>
+                                        <span class="hold-row-name text-[16px] font-semibold truncate" style="color:${isCostRecovered ? '#6f3bd4' : '#2f2a27'};letter-spacing:.5px;">${item.name}</span>
                                         <span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] font-normal text-white leading-none ${tagBg} flex-shrink-0">${tagText}</span>
                                         ${isCostRecovered ? `<span class="hold-recovered-badge">已回本</span>` : ''}
                                     </div>
-                                    <div class="mt-1 text-[11px] leading-[1.45] tabular-nums truncate" style="color:#a49382;">
+                                    <div class="hold-row-meta mt-1 text-[11px] leading-[1.45] tabular-nums truncate" style="color:#a49382;">
                                         <span style="color:#6f635b;" data-field="shares">${sharesText}</span> 股
                                         <span class="mx-1">·</span> 成本 <span style="color:#6f635b;">${pricePrefix}${fmtListCost(item.costPrice)}</span>
                                         <span class="mx-1">·</span> 仓位 <span style="color:#6f635b;" data-field="holdPct">${holdPct}%</span>
@@ -38243,7 +38414,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <div class="text-[16px] font-semibold tabular-nums" data-code="${item.code}" data-field="market" style="color:#2f2a27;">${mvText}</div>
+                                <div class="hold-row-market text-[16px] font-semibold tabular-nums" data-code="${item.code}" data-field="market" style="color:#2f2a27;">${mvText}</div>
                                 <div class="hold-row-daypnl mt-1 text-[12px] font-normal tabular-nums" style="color:${dayPnlColor};">
                                     <span class="list-num" data-code="${item.code}" data-field="dayPnl">${dayPnlText}</span>
                                     <span class="ml-1 list-num" data-code="${item.code}" data-field="dayPnlPct">${dayPnlPctText}</span>

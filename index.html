@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261121.547';</script>
+    <script>window.APP_VERSION = '20261122.561';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -484,7 +484,7 @@
                 font-weight:400;
             }
             #holdList .hold-card-v2-meta .hcm-code{
-                color:#6f635b;
+                color:#9e9083;
                 font-family:"Space Grotesk",Bahnschrift,system-ui,sans-serif;
                 font-size:11px;
                 font-weight:400;
@@ -3596,6 +3596,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-size:11px;
             line-height:1;
             white-space:nowrap;
+            opacity:.66;
             transition:color .18s ease;
         }
         #assetHeroCard .hero-more-toggle #moreMetricsIcon{
@@ -3867,7 +3868,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             width:auto!important;
             flex:0 0 auto!important;
             height:23px!important;
-            padding:0 0 3px!important;
+            padding:0!important;
+            display:flex!important;
+            align-items:center!important;
+            justify-content:center!important;
             border:0!important;
             border-radius:0!important;
             background:transparent!important;
@@ -3875,7 +3879,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:rgba(247,244,240,.60)!important;
             font-size:11px!important;
             font-weight:500!important;
-            line-height:20px!important;
+            line-height:1!important;
             letter-spacing:.03em!important;
             text-align:center;
             white-space:nowrap;
@@ -3886,21 +3890,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:#E6C27A!important;
             font-weight:500!important;
         }
-        #assetHeroCard .hero-period-tab::after{
+        #assetHeroCard .hero-period-label{
+            position:relative;
+            display:inline-block;
+            line-height:1!important;
+        }
+        #assetHeroCard .hero-period-label::after{
             content:"";
             position:absolute;
-            left:50%;
-            bottom:0;
-            width:14px;
-            height:2px;
+            left:0;
+            right:0;
+            bottom:-4px;
+            width:100%;
+            height:1.5px;
             background:#E6C27A;
-            transform:translateX(-50%) scaleX(0);
+            transform:scaleX(0);
             transform-origin:center;
             transition:transform .18s ease;
             pointer-events:none;
         }
-        #assetHeroCard .hero-period-tab.is-active::after{
-            transform:translateX(-50%) scaleX(1);
+        #assetHeroCard .hero-period-tab.is-active .hero-period-label::after{
+            transform:scaleX(1);
         }
         #assetHeroCard .hero-period-tab:hover,
         #assetHeroCard .hero-period-tab:focus{
@@ -4540,6 +4550,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             letter-spacing:.2px!important;
         }
     </style>
+    <style id="hold-card-spacing-20261122">
+        /* 卡片模式：股票名→代码、市值→今日盈亏的垂直间距各 +3px */
+        #holdList .hold-card-v2-meta{margin-top:10px!important;}
+        @media (max-width:400px){
+            #holdList .hold-card-v2-meta{margin-top:9px!important;}
+        }
+        #holdList .hold-card-v2-daypnl{margin-top:8px!important;}
+        /* 今日盈亏百分比：卡片模式与列表模式统一 11px */
+        #holdList .hold-card-v2-daypnl .hcm-daypnlpct,
+        #holdList .hold-row-daypnl .list-num[data-field="dayPnlPct"]{
+            font-size:11px!important;
+        }
+    </style>
     <style id="hero-metrics-tracking-20261121">
         /* 首页主卡与“更多指标”数值：统一 0.5px 字距，百分比副值保持原样 */
         #assetHeroCard #todayPnl,
@@ -4558,6 +4581,68 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #assetHeroCard #nextDivDays,
         #assetHeroCard #nextDivAmt{
             letter-spacing:.5px!important;
+        }
+    </style>
+    <style id="page-title-compact-20261122">
+        /* 首页/统计/自选/里程碑/我的：一级页标题统一 20px / 500 / 85% 明度 */
+        .page-title{
+            font-size:20px!important;
+            font-weight:500!important;
+            opacity:.85;
+        }
+        @media (max-width:360px){
+            .page-title{font-size:20px!important;}
+        }
+        /* 标题右侧通知铃及红点：缩小视觉体量，红点改为克制的纯指示点 */
+        .notif-bell{
+            width:34px!important;
+            height:34px!important;
+        }
+        .notif-bell i{
+            font-size:14px!important;
+        }
+        .notif-badge{
+            top:4px!important;
+            right:4px!important;
+            width:6px!important;
+            min-width:6px!important;
+            height:6px!important;
+            padding:0!important;
+            border-radius:50%!important;
+            font-size:0!important;
+            line-height:0!important;
+            color:transparent!important;
+            overflow:hidden!important;
+            box-shadow:0 0 0 1px rgba(255,255,255,.82)!important;
+        }
+        /* 里程碑页与通知铃并排的设置入口同步收缩，保持同一视觉尺寸 */
+        #milestoneSettingBtn{
+            width:34px!important;
+            height:34px!important;
+        }
+        #milestoneSettingBtn i{
+            font-size:14px!important;
+        }
+    </style>
+    <style id="hero-label-tone-20261122">
+        /* 首页顶部卡字段标签：暖灰 10.5px / #B9AA92 / 400 */
+        #assetHeroCard .hero-metric-label{
+            font-size:10.5px!important;
+            color:#B9AA92!important;
+            font-weight:400!important;
+        }
+        /* 操作类文字保持更小更淡：10px / #AAA */
+        #assetHeroCard .hero-action-label{
+            font-size:10px!important;
+            color:#aaa!important;
+        }
+        /* “缺口”的数值不是标签，保持原来的暖米色，不被标签色覆盖 */
+        #assetHeroCard #sumBeGap{
+            color:rgba(207,192,166,.75)!important;
+        }
+        /* 下一笔分红里的股票名是数值信息，保持原来的 10px */
+        #assetHeroCard #nextDivStock{
+            font-size:10px!important;
         }
     </style>
 </head>
@@ -4585,7 +4670,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="pt-2.5 pb-1 flex items-start justify-between gap-3">
                     <div class="min-w-0 flex-1">
                         <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform">
-                            <span class="tracking-[.06em] font-serif">总资产</span>
+                            <span class="hero-metric-label tracking-[.06em] font-serif">总资产</span>
                             <span id="positionPctBadge" class="inline-flex items-center gap-1 rounded-[6px] border border-[#e8c88a]/20 px-1.5 py-0.5 whitespace-nowrap" style="background:rgba(232,200,138,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);" title="总市值 ÷ 总资产（含现金）">
                                 <span class="text-[8px] tracking-[.06em] text-[#cfc0a6] leading-none">仓位</span>
                                 <span class="text-[10px] font-semibold tabular-nums text-[#e8c88a] leading-none" id="positionPct">--</span>
@@ -4599,7 +4684,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                     <div class="shrink-0 text-right max-w-[55%]">
                         <button type="button" onclick="openStatsFromHold()" title="查看今日盈亏详情" class="ml-auto relative flex items-center justify-end gap-1.5 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform">
-                            <span class="tracking-[.06em] font-serif">今日盈亏</span>
+                            <span class="hero-metric-label tracking-[.06em] font-serif">今日盈亏</span>
                             <i class="fa fa-chevron-right text-[9px]"></i>
                             <span class="absolute rounded-lg" style="inset:-8px;"></span>
                         </button>
@@ -4615,19 +4700,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="grid items-start" style="grid-template-columns:1.4fr 1.04fr 1.4fr;">
                         <!-- 年度分红收入 -->
                         <div class="text-left min-w-0 pr-2">
-                            <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="h-4 whitespace-nowrap flex items-center gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-[.06em]">年度分红收入</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <button type="button" onclick="openDivDetail('year')" title="查看年度分红收入明细" class="h-4 whitespace-nowrap flex items-center gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="hero-metric-label tracking-[.06em]">年度分红收入</span><i class="fa fa-chevron-right text-[9px]"></i></button>
                             <div class="mt-1.5 flex items-baseline whitespace-nowrap">
                                 <span class="asset-cur asset-cur-metric">¥</span><span class="text-[15px] font-medium tabular-nums num-transition text-[#ffffff] leading-none" id="totalYearDiv">0.00</span>
                             </div>
                         </div>
                         <!-- 总盈利 -->
                         <div class="text-center min-w-0 px-0.5">
-                            <div class="h-4 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] leading-[16px]">总盈利</div>
+                            <div class="hero-metric-label h-4 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] leading-[16px]">总盈利</div>
                             <div class="mt-1.5 text-[15px] font-medium tabular-nums num-transition leading-none whitespace-nowrap" id="totalProfit"><span id="totalProfitSign"></span><span class="tp-yen">¥</span><span id="totalProfitVal">0.00</span></div>
                         </div>
                         <!-- 现金 -->
                         <div class="text-right min-w-0 pl-2">
-                            <button type="button" onclick="openCashFlowFromHold()" title="查看现金变动历史" class="h-4 ml-auto whitespace-nowrap flex items-center justify-end gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="tracking-[.06em]">现金</span><i class="fa fa-chevron-right text-[9px]"></i></button>
+                            <button type="button" onclick="openCashFlowFromHold()" title="查看现金变动历史" class="h-4 ml-auto whitespace-nowrap flex items-center justify-end gap-1 text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform"><span class="hero-metric-label tracking-[.06em]">现金</span><i class="fa fa-chevron-right text-[9px]"></i></button>
                             <div class="mt-1.5 flex items-baseline justify-end whitespace-nowrap"><span id="cashSign" class="text-[15px] font-medium tabular-nums text-[#ffffff] leading-none"></span><span class="asset-cur asset-cur-metric">¥</span><span id="cashVal" class="text-[15px] font-medium tabular-nums num-transition text-[#ffffff] leading-none">0.00</span></div>
                         </div>
                     </div>
@@ -4642,14 +4727,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                     <div class="hero-curve-controls">
                         <div class="hero-period-tabs" role="tablist" aria-label="总资产曲线周期">
-                            <button type="button" class="hero-period-tab is-active" data-hero-period="1D" aria-pressed="true" onclick="setHeroCurvePeriod('1D')">1D</button>
-                            <button type="button" class="hero-period-tab" data-hero-period="1M" aria-pressed="false" onclick="setHeroCurvePeriod('1M')">1M</button>
-                            <button type="button" class="hero-period-tab" data-hero-period="YTD" aria-pressed="false" onclick="setHeroCurvePeriod('YTD')">YTD</button>
-                            <button type="button" class="hero-period-tab" data-hero-period="ALL" aria-pressed="false" onclick="setHeroCurvePeriod('ALL')">ALL</button>
+                            <button type="button" class="hero-period-tab is-active" data-hero-period="1D" aria-pressed="true" onclick="setHeroCurvePeriod('1D')"><span class="hero-period-label">1D</span></button>
+                            <button type="button" class="hero-period-tab" data-hero-period="1M" aria-pressed="false" onclick="setHeroCurvePeriod('1M')"><span class="hero-period-label">1M</span></button>
+                            <button type="button" class="hero-period-tab" data-hero-period="YTD" aria-pressed="false" onclick="setHeroCurvePeriod('YTD')"><span class="hero-period-label">YTD</span></button>
+                            <button type="button" class="hero-period-tab" data-hero-period="ALL" aria-pressed="false" onclick="setHeroCurvePeriod('ALL')"><span class="hero-period-label">ALL</span></button>
                         </div>
                         <button type="button" id="moreMetricsToggle" onclick="toggleMoreMetrics()" class="hero-more-toggle active:scale-95 transition-all">
                             <i class="fa fa-plus-circle" style="color:rgba(246,196,83,.55)" id="moreMetricsIcon"></i>
-                            <span>更多指标</span>
+                            <span class="hero-action-label">更多指标</span>
                             <i class="fa fa-chevron-down transition-transform duration-300" id="moreMetricsChevron"></i>
                         </button>
                     </div>
@@ -4661,7 +4746,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div class="py-1.5 pr-1.5">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center gap-1">
                                 <i class="fa fa-line-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>今年收益</span>
+                                <span class="hero-metric-label">今年收益</span>
                             </div>
                             <div class="flex items-baseline gap-[5px] whitespace-nowrap">
                                 <span class="font-bold tabular-nums num-transition text-[#cfc0a6]" id="yearPnl" style="font-size:13px">--</span>
@@ -4671,14 +4756,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div class="py-1.5 px-2 text-center">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
                                 <i class="fa fa-briefcase text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>总投入</span>
+                                <span class="hero-metric-label">总投入</span>
                             </div>
                             <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" id="totalInvested">0.00</div>
                         </div>
                         <div class="py-1.5 pl-2 text-right">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
                                 <i class="fa fa-area-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span class="whitespace-nowrap">开户至今</span>
+                                <span class="hero-metric-label whitespace-nowrap">开户至今</span>
                             </div>
                             <div class="text-[13px] font-bold tabular-nums num-transition" id="totalReturnRate">0.00%</div>
                         </div>
@@ -4686,7 +4771,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div class="py-1.5 pr-1.5">
                             <button type="button" onclick="openDivDetail('total')" title="查看历年累计分红明细" class="h-4 whitespace-nowrap flex items-center gap-1 text-[10px] text-[#cfc0a6] active:scale-95 transition-transform">
                                 <i class="fa fa-history text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>累计分红</span>
+                                <span class="hero-metric-label">累计分红</span>
                                 <i class="fa fa-chevron-right text-[8px]"></i>
                             </button>
                             <div class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" id="totalDivReceivedWrap"><span id="totalDivReceived">0.00</span></div>
@@ -4694,14 +4779,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div class="py-1.5 px-2 text-center">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-center gap-1">
                                 <i class="fa fa-line-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>持仓盈亏</span>
+                                <span class="hero-metric-label">持仓盈亏</span>
                             </div>
                             <div class="text-[13px] font-semibold tabular-nums num-transition"><span id="totalPnl">0.00</span></div>
                         </div>
                         <div class="py-1.5 pl-2 text-right">
                             <div class="text-[#cfc0a6] text-[10px] mb-1 flex items-center justify-end gap-1">
                                 <i class="fa fa-pie-chart text-[9px]" style="color:rgba(246,196,83,.7)"></i>
-                                <span>总市值</span>
+                                <span class="hero-metric-label">总市值</span>
                             </div>
                             <div class="mt-1.5 flex items-baseline justify-end whitespace-nowrap">
                                 <span class="asset-cur asset-cur-metric">¥</span><span id="mktVal" class="text-[13px] font-semibold tabular-nums num-transition text-[#ffffff]" style="font-size:13px">0.00</span>
@@ -4710,16 +4795,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                     <!-- 回本口径：预计回本（不复投）与缺口合并到底部一行；复投不在首页展示 -->
                     <div class="pb-2 pt-2 flex items-center justify-between gap-2 text-[10px] text-[#cfc0a6]/75" style="border-top:1px solid rgba(230,210,163,0.12);">
-                        <span class="whitespace-nowrap">预计回本 <span id="sumBeNo" class="text-[11px] font-semibold tabular-nums text-white">--</span></span>
-                        <span class="whitespace-nowrap">缺口 <span id="sumBeGap" class="text-[11px] font-semibold tabular-nums text-amber-200">--</span></span>
-                        <button type="button" onclick="openBreakEvenPage()" class="flex items-center gap-1 text-[#cfc0a6] active:scale-95 transition-transform whitespace-nowrap">回本详情<i class="fa fa-chevron-right text-[8px]"></i></button>
+                        <span class="hero-metric-label whitespace-nowrap">预计回本 <span id="sumBeNo" class="text-[11px] font-semibold tabular-nums text-white">--</span></span>
+                        <span class="hero-metric-label whitespace-nowrap">缺口 <span id="sumBeGap" class="text-[11px] font-semibold tabular-nums text-amber-200">--</span></span>
+                        <button type="button" onclick="openBreakEvenPage()" class="flex items-center gap-1 text-[#cfc0a6] active:scale-95 transition-transform whitespace-nowrap"><span class="hero-action-label" style="opacity:.66;">回本详情</span><i class="fa fa-chevron-right text-[8px]"></i></button>
                     </div>
                     <!-- 下一笔分红：收进更多指标，折叠时不占主卡高度 -->
                     <div id="nextDivFooter" class="mt-2 pt-3" style="border-top:1px solid rgba(230,210,163,0.12);">
                         <div class="flex items-center justify-between gap-2">
                             <div id="nextDivCountdown" class="min-w-0 flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] text-[#cfc0a6]/80">
-                                <span id="nextDivEmpty" class="text-[10px] text-[#cfc0a6]/65">下一笔分红 · 暂无预告</span>
-                                <span id="nextDivDetail" class="hidden flex items-center gap-1.5">
+                                <span id="nextDivEmpty" class="hero-metric-label text-[10px] text-[#cfc0a6]/65">下一笔分红 · 暂无预告</span>
+                                <span id="nextDivDetail" class="hero-metric-label hidden flex items-center gap-1.5">
                                     <span id="nextDivDate" class="text-[10.5px] font-semibold text-[#e8c88a] tabular-nums">--</span>
                                     <span style="color:rgba(230,210,163,0.22)">·</span>
                                     <span id="nextDivStock" class="text-[#e8c88a] truncate" style="max-width:52px">--</span>
@@ -38036,7 +38121,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '</linearGradient>'
                 + '</defs>'
                 + '<path d="' + area + '" fill="url(#heroAssetGrad)" stroke="none"/>'
-                + '<path d="' + built.d + '" stroke="' + color + '" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+                + '<path d="' + built.d + '" stroke="' + color + '" stroke-width="1.88" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
                 + '<circle cx="' + built.end.x.toFixed(2) + '" cy="' + built.end.y.toFixed(2) + '" r="2.4" fill="' + color + '"/>';
         }
         function renderHeroAssetCurve(points, blank, keepFullSpan){
@@ -38372,7 +38457,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(totalProfitEl && totalProfitValEl){
                 if(totalProfitSignEl) totalProfitSignEl.innerText = totalProfitVal > 0 ? '+' : (totalProfitVal < 0 ? '-' : '');
                 numTween(totalProfitValEl, totalProfitVal, function(v){ return fmtMoneyTop(Math.abs(v)); }, 280, 500);
-                totalProfitEl.className = 'mt-1.5 text-[15px] font-medium tabular-nums num-transition leading-none whitespace-nowrap ' + pnlLightClass(totalProfitVal);
+                totalProfitEl.className = 'mt-1.5 text-[15px] font-medium tabular-nums num-transition leading-none whitespace-nowrap ' + (totalProfitVal > 0 ? 'text-[#e03131]' : (totalProfitVal < 0 ? 'text-[#00a05c]' : 'text-[#ffffff]'));
             }
             const pageW = document.querySelector('#pageHold') ? document.querySelector('#pageHold').getBoundingClientRect().width : 0;
             const holdCardW = pageW > 0 ? Math.min(window.innerWidth || pageW, pageW) : (window.innerWidth || 430);
@@ -38836,7 +38921,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const y = 5 + (max - end) / (max - min) * (h - 10);
             const dot = '<circle cx="' + w + '" cy="' + y.toFixed(2) + '" r="1.8" fill="' + color + '" opacity=".9"/>';
             return '<path d="' + areaD + '" fill="' + color + '" opacity=".07" stroke="none"/>'
-                + '<path d="' + d + '" stroke="' + color + '" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+                + '<path d="' + d + '" stroke="' + color + '" stroke-width="1.28" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
                 + dot;
         }
         function sparkColor(item){
@@ -39238,6 +39323,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const bodyEl = document.querySelector('#holdCardDetailBody');
             const pageEl = document.querySelector('#pageHoldCardDetail');
             if(!bodyEl || !pageEl) return;
+            // 详情页关闭动画使用 fill:both，动画结束后会残留透明/缩放状态；
+            // 再次打开前先清掉旧动画，否则页面内容会被旧动画压成 scale(.14) 且 opacity 0。
+            if(pageEl.classList.contains('hidden')){
+                try{
+                    pageEl.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+                    const oldBackdrop = document.querySelector('#holdCardDetailBackdrop');
+                    if(oldBackdrop) oldBackdrop.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+                }catch(e){}
+            }
             bodyEl.innerHTML = renderHoldCardDetailBody(item);
             holdCardDetailKey = holdSparkKey(item.marketType, item.code);
             try{ renderSimHoldCard(item); }catch(e){}
@@ -39325,16 +39419,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 pageEl.style.transformOrigin = ((r.left + r.width / 2) - pr.left).toFixed(1) + 'px ' + ((r.top + r.height / 2) - pr.top).toFixed(1) + 'px';
             }
             const backdropEl = document.querySelector('#holdCardDetailBackdrop');
+            let backdropCloseAnim = null;
             if(backdropEl){
-                backdropEl.animate([
+                backdropCloseAnim = backdropEl.animate([
                     { opacity: 1 },
                     { opacity: 0 }
                 ], { duration: 240, easing: 'ease-in', fill: 'both' });
             }
-            pageEl.animate([
+            const pageCloseAnim = pageEl.animate([
                 { opacity: 1, transform: 'scale(1)' },
                 { opacity: 0, transform: 'scale(.14)' }
-            ], { duration: 240, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'both' }).onfinish = finish;
+            ], { duration: 240, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'both' });
+            pageCloseAnim.onfinish = function(){
+                finish();
+                try{ pageCloseAnim.cancel(); }catch(e){}
+                if(backdropCloseAnim){ try{ backdropCloseAnim.cancel(); }catch(e){} }
+            };
         }
 
         // 从详情页打开子页前记录上下文；返回时只恢复这一个来源，不影响列表/统计页入口

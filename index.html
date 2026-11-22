@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261122.561';</script>
+    <script>window.APP_VERSION = '20261122.565';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -182,10 +182,10 @@
         #holdList .hold-recovered-badge{
             display:inline-flex;
             align-items:center;
-            height:14px;
+            height:15px;
             padding:0 5px;
             border-radius:999px;
-            font-size:8.5px;
+            font-size:9px;
             line-height:1;
             font-weight:600;
             color:#7c3aed;
@@ -1613,7 +1613,7 @@
         #filterGroup .filterTag{
             display:inline-flex; align-items:center; justify-content:center; gap:4px;
             min-height:30px; padding:0 10px; border-radius:9999px; border:1px solid transparent;
-            font-size:11.5px; line-height:1.2; font-weight:500;
+            font-size:11px; line-height:1.2; font-weight:500;
             color:#6b7280; background:transparent;
             transition:background-color .18s ease, color .18s ease;
             position:relative;
@@ -1710,17 +1710,15 @@
         /* 自选页列表：横向平移由 JS touch 驱动（见横向平移 IIFE），列表本身不是滚动容器（overflow visible），
            纵向触摸直接由外层整页滚动容器原生处理，保证上下滚动始终可用 */
 
-        /* 全局背景：纯 CSS 高级羊皮纸——双颗粒噪点（深浅层次）+ 横/竖/斜三层纤维 + 淡香槟暖光聚拢 + 边缘暗角；底色 #f1ede8 */
+        /* 全局背景：纯 CSS 高级羊皮纸——细颗粒 + 极淡横竖纤维 + 淡香槟暖光聚拢 + 边缘暗角；底色 #f1ede8 */
         body{
             background-color: #f1ede8;
             background-image:
-url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'120'%20height%3D'120'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.85'%20numOctaves%3D'2'%20stitchTiles%3D'stitch'/%3E%3C/filter%3E%3Crect%20width%3D'120'%20height%3D'120'%20filter%3D'url(%23n)'%20opacity%3D'0.05'/%3E%3C/svg%3E"),
-                url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'200'%20height%3D'200'%3E%3Cfilter%20id%3D'm'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.38'%20numOctaves%3D'3'%20stitchTiles%3D'stitch'/%3E%3C/filter%3E%3Crect%20width%3D'200'%20height%3D'200'%20filter%3D'url(%23m)'%20opacity%3D'0.028'/%3E%3C/svg%3E"),
-                repeating-linear-gradient(0deg, rgba(126,102,80,0.032) 0px, rgba(126,102,80,0.032) 1px, transparent 1px, transparent 3px),
-                repeating-linear-gradient(90deg, rgba(126,102,80,0.02) 0px, rgba(126,102,80,0.02) 1px, transparent 1px, transparent 3px),
-                repeating-linear-gradient(45deg, rgba(126,102,80,0.012) 0px, rgba(126,102,80,0.012) 1px, transparent 1px, transparent 5px),
-                radial-gradient(ellipse 92% 78% at 50% 20%, rgba(255,242,208,0.18), rgba(255,242,208,0) 60%, rgba(126,102,80,0.055) 100%);
-            background-repeat: repeat, repeat, repeat, repeat, repeat, no-repeat;
+url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'120'%20height%3D'120'%3E%3Cfilter%20id%3D'n'%3E%3CfeTurbulence%20type%3D'fractalNoise'%20baseFrequency%3D'0.85'%20numOctaves%3D'2'%20stitchTiles%3D'stitch'/%3E%3C/filter%3E%3Crect%20width%3D'120'%20height%3D'120'%20filter%3D'url(%23n)'%20opacity%3D'0.032'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(0deg, rgba(126,102,80,0.020) 0px, rgba(126,102,80,0.020) 1px, transparent 1px, transparent 4px),
+                repeating-linear-gradient(90deg, rgba(126,102,80,0.012) 0px, rgba(126,102,80,0.012) 1px, transparent 1px, transparent 4px),
+                radial-gradient(ellipse 92% 78% at 50% 20%, rgba(255,242,208,0.16), rgba(255,242,208,0) 60%, rgba(126,102,80,0.045) 100%);
+            background-repeat: repeat, repeat, repeat, no-repeat;
         }
         /* 吸顶标题栏滚动阴影过渡 */
         .sticky.top-0{ transition: box-shadow .25s ease; }
@@ -1735,15 +1733,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .tab-fade-in{ animation:none !important; }
             .page-enter .card-rise{ animation:none !important; }
         }
-        /* 底部导航选中态：金橙渐变图标 + 极淡橙色光晕 + 上浮 1.5px，指示点保留 */
+        /* 底部导航选中态由 .text-accent + SVG currentColor 统一控制 */
         .bottomTab i{ transition: color .3s ease, transform .3s cubic-bezier(.34,1.56,.64,1), filter .3s ease; }
-        .bottomTab.active i{
-            background: linear-gradient(180deg,#E8A33D 0%,#D45329 100%);
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 1px 3px rgba(212,83,41,.35));
-            transform: translateY(-1.5px);
-        }
         /* 资产新高全屏特效：闪光 + 彩带 + 字幕狂潮（18s，直播弹幕式） */
         #highFx{ position:fixed; inset:0; z-index:9999; pointer-events:none; overflow:hidden; }
         #highFx .fx-flash{ position:absolute; inset:0; background:radial-gradient(circle at 50% 42%, rgba(255,242,205,.96) 0%, rgba(255,205,120,.6) 26%, rgba(255,245,225,.2) 52%, transparent 74%); animation:fxFlash .9s ease-out 2; }
@@ -3491,14 +3482,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:rgba(241,211,154,.96)!important;
         }
         #assetHeroCard #todayPnl{
-            font-size:18px!important;
-            font-weight:500!important;
+            font-size:16px!important;
+            font-weight:600!important;
             letter-spacing:-.01em!important;
         }
-        #assetHeroCard #todayPnlPct{font-size:13.5px!important;}
-        /* 第二层三项金额：分红 15/500，总盈利 13.5/500，现金 13/400 */
+        #assetHeroCard #todayPnlPct{
+            font-size:12px!important;
+            font-weight:500!important;
+        }
+        /* 第二层三项金额统一 13.5/500 */
         #assetHeroCard #totalYearDiv{
-            font-size:15px!important;
+            font-size:13.5px!important;
             font-weight:500!important;
         }
         #assetHeroCard #totalProfit{
@@ -3507,11 +3501,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #assetHeroCard #cashSign,
         #assetHeroCard #cashVal{
-            font-size:13px!important;
-            font-weight:400!important;
+            font-size:13.5px!important;
+            font-weight:500!important;
         }
         @media (max-width:360px){
-            #assetHeroCard #todayPnl{font-size:18px!important;}
+            #assetHeroCard #todayPnl{font-size:16px!important;}
             #assetHeroCard #todayPnlPct{font-size:12px!important;}
         }
         #assetHeroCard .grid{
@@ -3801,7 +3795,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             box-shadow:none!important;
         }
         #assetHeroCard #positionPctBadge span{
-            font-size:9px!important;
+            font-size:9.5px!important;
             line-height:1!important;
             font-weight:400!important;
             color:#E1D7CA!important;
@@ -3975,6 +3969,235 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:#8F8275!important;
         }
     </style>
+    <style id="v562-quality-20261122">
+        /* ===== P0：最终合成对比度与操作可读性 ===== */
+        /* 深色卡上的操作文字保留 0.66 透明度，但提升底层暖米色，避免“弱到看不见” */
+        #assetHeroCard .hero-action-label{
+            color:#CFC2AC!important;
+        }
+        #assetHeroCard #moreMetricsToggle .hero-action-label,
+        #assetHeroCard #moreMetricsPanel button[onclick="openBreakEvenPage()"] .hero-action-label{
+            color:#CFC2AC!important;
+        }
+        #assetHeroCard #moreMetricsToggle{
+            position:relative;
+        }
+        #assetHeroCard #moreMetricsToggle .hero-action-label{
+            font-size:10.5px!important;
+        }
+        #assetHeroCard #moreMetricsToggle::after{
+            content:"";
+            position:absolute;
+            inset:-15px -10px;
+        }
+        #assetHeroCard .hero-more-toggle #moreMetricsChevron{
+            opacity:1!important;
+        }
+        #moreMetricsPanel button[onclick="openBreakEvenPage()"]{
+            position:relative;
+        }
+        #moreMetricsPanel button[onclick="openBreakEvenPage()"]::after{
+            content:"";
+            position:absolute;
+            inset:-15px -12px;
+        }
+        /* ===== P1：目标持仓减密 —— 标题 / 目标 / 单行洞察 / 单行预警 ===== */
+        .goal-strip{
+            border-radius:16px!important;
+            background:rgba(255,253,249,.94)!important;
+            border:1px solid rgba(126,102,80,.09)!important;
+            box-shadow:0 1px 2px rgba(72,49,31,.035),inset 0 1px 0 rgba(255,255,255,.82)!important;
+        }
+        #accountFocusCard{
+            gap:8px!important;
+            padding:13px 0 11px!important;
+        }
+        #targetSummaryStrip .target-kicker{
+            font-size:10.5px!important;
+            line-height:1!important;
+            font-weight:600!important;
+            letter-spacing:.11em!important;
+            color:#8F2437!important;
+        }
+        #targetSummaryStrip .target-done-pill{
+            opacity:1!important;
+            padding:3px 7px!important;
+            border:1px solid rgba(143,36,55,.10)!important;
+            background:#F5ECE3!important;
+            gap:3px!important;
+        }
+        #targetSummaryStrip .target-done-pill .tdp-count,
+        #targetSummaryStrip .target-done-pill .tdp-label{
+            color:#7C6150!important;
+            font-size:9.5px!important;
+            font-weight:500!important;
+            letter-spacing:.02em!important;
+        }
+        #targetSummaryStrip .target-done-pill .tdp-count{
+            color:#742034!important;
+            font-weight:600!important;
+        }
+        #targetSummaryStrip .target-done-pill.is-complete{
+            background:#EEF4EF!important;
+            border-color:rgba(79,138,110,.18)!important;
+        }
+        #targetSummaryStrip .target-done-pill.is-complete .tdp-count{
+            color:#3F7A5C!important;
+        }
+        #targetSummaryStrip .target-done-pill.is-complete .tdp-label{
+            color:#547A65!important;
+        }
+        #targetSummaryStrip .target-goal-line{
+            display:flex!important;
+            align-items:baseline!important;
+            gap:6px!important;
+            min-width:0!important;
+            margin-top:7px!important;
+            white-space:nowrap!important;
+            overflow:hidden!important;
+        }
+        #targetSummaryStrip .target-goal-name{
+            font-size:13.5px!important;
+            line-height:1.2!important;
+            font-weight:600!important;
+            letter-spacing:.01em!important;
+            color:#2F2A27!important;
+            flex-shrink:0!important;
+        }
+        #targetSummaryStrip .target-goal-shares{
+            font-size:11px!important;
+            line-height:1.2!important;
+            font-weight:400!important;
+            color:#7F7063!important;
+            font-variant-numeric:tabular-nums!important;
+            flex-shrink:0!important;
+        }
+        #targetSummaryStrip .target-goal-gap{
+            margin-left:auto!important;
+            font-size:12px!important;
+            line-height:1.2!important;
+            font-weight:500!important;
+            color:#742034!important;
+            white-space:nowrap!important;
+            flex-shrink:0!important;
+            font-variant-numeric:tabular-nums!important;
+        }
+        #targetSummaryStrip .target-priority-dot{
+            display:inline-block!important;
+            width:4px!important;
+            height:4px!important;
+            border-radius:50%!important;
+            background:#C8A24F!important;
+            align-self:center!important;
+            transform:translateY(1px)!important;
+            flex-shrink:0!important;
+        }
+        #targetSummaryStrip .target-progress{
+            height:1.5px!important;
+            margin-top:7px!important;
+            border-radius:1.5px!important;
+            background:rgba(143,36,55,.09)!important;
+            overflow:hidden!important;
+        }
+        #targetSummaryStrip .target-progress-fill{
+            display:block!important;
+            height:100%!important;
+            border-radius:1.5px!important;
+            background:linear-gradient(90deg,rgba(168,45,67,.82) 0%,rgba(116,32,52,.94) 100%)!important;
+        }
+        #accountFocusCard #tradeInsightStrip{
+            padding:7px 16px 0!important;
+            border-top:1px solid rgba(143,36,55,.08)!important;
+        }
+        #accountFocusCard #tradeInsightStrip .ti-line{
+            display:flex!important;
+            align-items:baseline!important;
+            gap:6px!important;
+            min-width:0!important;
+            line-height:1.2!important;
+        }
+        #accountFocusCard #tradeInsightStrip .ti-kicker{
+            font-size:10.5px!important;
+            font-weight:500!important;
+            letter-spacing:.03em!important;
+            color:#8F2437!important;
+            white-space:nowrap!important;
+            flex-shrink:0!important;
+        }
+        #accountFocusCard #tradeInsightStrip #tradeInsightPeriod{
+            font-size:10px!important;
+            font-weight:400!important;
+            color:#7F7063!important;
+        }
+        #accountFocusCard #tradeInsightStrip #tradeInsightTotal{
+            font-size:13px!important;
+            font-weight:600!important;
+            line-height:1!important;
+        }
+        #accountFocusCard #tradeInsightStrip #tradeInsightTotal[data-sign="up"]{
+            color:#B54040!important;
+        }
+        #accountFocusCard #tradeInsightStrip #tradeInsightTotal[data-sign="down"]{
+            color:#2F7A58!important;
+        }
+        #accountFocusCard #tradeInsightStrip .ti-sub{
+            min-width:0!important;
+            margin-left:auto!important;
+            font-size:10.5px!important;
+            line-height:1.2!important;
+            color:#7F7063!important;
+            overflow:hidden!important;
+            text-overflow:ellipsis!important;
+            white-space:nowrap!important;
+        }
+        #accountFocusCard #tradeInsightStrip .ti-chevron{
+            font-size:12px!important;
+            line-height:1!important;
+            color:#B8A793!important;
+            flex-shrink:0!important;
+        }
+        #accountFocusCard #holdWarnRow{
+            padding:6px 16px 0!important;
+        }
+        #holdWarnRow .position-warn-text{
+            color:#7F7063!important;
+            font-size:10.5px!important;
+            line-height:1.45!important;
+        }
+        #holdWarnRow .position-warn-dot{
+            width:5px!important;
+            height:5px!important;
+            margin-top:5px!important;
+            background:#B48158!important;
+            opacity:.95!important;
+        }
+        #holdWarnRow .position-warn-dismiss{
+            position:relative!important;
+            font-size:10px!important;
+            line-height:1.2!important;
+            opacity:1!important;
+            color:#7E6E60!important;
+        }
+        #holdWarnRow .position-warn-dismiss::after{
+            content:"";
+            position:absolute;
+            inset:-12px -8px;
+        }
+        /* ===== P1：材质收敛 ===== */
+        /* 回本状态收为“白卡 + 紫色小徽章”，不再让第三种色铺满卡片 */
+        #holdList .hold-card-v2.is-recovered{
+            background:#FFFFFF!important;
+            border-color:rgba(126,102,80,.09)!important;
+            box-shadow:0 5px 16px rgba(72,49,31,.065),0 1px 2px rgba(72,49,31,.035)!important;
+        }
+        #holdList .hold-card-v2.is-recovered .hold-card-v2-name{
+            color:#6F3BD4!important;
+        }
+        #holdList .hold-card-v2-badge{
+            font-size:9px!important;
+            height:15px!important;
+        }
+    </style>
     <!-- 自选页专属深色模式：仅作用于 #pageWatchSel，不改变其他页面 -->
     <style id="watch-dark-theme-20261120">
         #pageWatchSel{
@@ -4113,10 +4336,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:#77777f!important;
         }
         body:has(#pageWatchSel.watch-dark:not(.hidden)) #bottomNav .bottomTab.text-accent{
-            color:#e8c98f!important;
+            color:#CF8896!important;
         }
         body:has(#pageWatchSel.watch-dark:not(.hidden)) #bottomNav .bottomTab .bg-accent{
-            background:#e8c98f!important;
+            background:#CF8896!important;
         }
     </style>
     <!-- 自选页：分组 tab / 东方财富式指数卡 / 深色配色（20261121） -->
@@ -4330,8 +4553,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             box-shadow:0 -8px 28px rgba(0,0,0,.32)!important;
         }
         body:has(#pageWatchSel.watch-dark:not(.hidden)) #bottomNav .bottomTab{color:#7f8289!important;}
-        body:has(#pageWatchSel.watch-dark:not(.hidden)) #bottomNav .bottomTab.text-accent{color:#5b84f0!important;}
-        body:has(#pageWatchSel.watch-dark:not(.hidden)) #bottomNav .bottomTab .bg-accent{background:#5b84f0!important;}
+        body:has(#pageWatchSel.watch-dark:not(.hidden)) #bottomNav .bottomTab.text-accent{color:#CF8896!important;}
+        body:has(#pageWatchSel.watch-dark:not(.hidden)) #bottomNav .bottomTab .bg-accent{background:#CF8896!important;}
         /* 页面底部旧“管理”入口与 tab 行右侧菜单重复，自选页内不再显示 */
         #watchMgrBtnWrap{display:none!important;}
         /* 管理页：新建分组卡片与个股“编辑分组”入口 */
@@ -4670,7 +4893,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <div class="pt-2.5 pb-1 flex items-start justify-between gap-3">
                     <div class="min-w-0 flex-1">
                         <button type="button" onclick="openAssetHighModal()" title="查看总资产趋势" class="relative flex items-center gap-1.5 whitespace-nowrap text-[10px] font-normal tracking-[.06em] text-[#cfc0a6] active:scale-95 transition-transform">
-                            <span class="hero-metric-label tracking-[.06em] font-serif">总资产</span>
+                            <span class="hero-metric-label tracking-[.06em]">总资产</span>
                             <span id="positionPctBadge" class="inline-flex items-center gap-1 rounded-[6px] border border-[#e8c88a]/20 px-1.5 py-0.5 whitespace-nowrap" style="background:rgba(232,200,138,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);" title="总市值 ÷ 总资产（含现金）">
                                 <span class="text-[8px] tracking-[.06em] text-[#cfc0a6] leading-none">仓位</span>
                                 <span class="text-[10px] font-semibold tabular-nums text-[#e8c88a] leading-none" id="positionPct">--</span>
@@ -4826,17 +5049,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <!-- 账户聚焦：目标持仓常驻（标题 + 一句结论），仓位预警仅在存在时追加 -->
         <div id="accountFocusCard" class="goal-strip mb-4">
             <div id="targetSummaryStrip" class="relative z-10 px-4 pt-3 pb-2.5">
-                <div class="flex items-center gap-2"><span class="text-[10px] font-semibold tracking-[.12em]" style="color:#8f2437;">目标持仓</span></div>
+                <div class="flex items-center gap-2"><span class="target-kicker">目标持仓</span></div>
                 <div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#6f635b;">正在读取目标…</div>
             </div>
             <div id="tradeInsightStrip" class="hidden relative z-10 px-4 py-2.5 border-t cursor-pointer hover:bg-[#fdf9f3] active:bg-[#fbf6ef] transition-colors" style="border-color:rgba(143,36,55,.10);" role="button" tabindex="0" aria-label="查看交易洞察" onclick="openTradeInsight(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeInsight(event);}">
-                <div class="flex items-center gap-1.5 min-w-0">
-                    <span class="text-[10px] font-semibold tracking-[.06em]" style="color:#8f2437;">交易洞察</span>
-                    <span id="tradeInsightPeriod" class="text-[9px] font-medium" style="color:#a49382;">今日</span>
-                    <span id="tradeInsightTotal" class="ml-auto text-[13px] font-semibold tabular-nums leading-none" style="color:#d85454;">+¥0.00</span>
-                    <span class="text-[13px] leading-none" style="color:#b8a793;">›</span>
+                <div class="ti-line">
+                    <span class="ti-kicker"><span id="tradeInsightPeriod">本月</span> 做T</span>
+                    <span id="tradeInsightTotal" class="text-[13px] font-semibold tabular-nums leading-none" style="color:#d85454;">+¥0.00</span>
+                    <span id="tradeInsightSub" class="ti-sub">--</span>
+                    <span class="ti-chevron">›</span>
                 </div>
-                <div id="tradeInsightSub" class="mt-1 text-[10px] leading-[1.4] truncate" style="color:#8f7f6d;">--</div>
             </div>
             <div id="holdWarnRow" class="hidden relative z-10 px-4 pt-2.5 pb-3 border-t" style="border-color:rgba(143,36,55,.10);"></div>
         </div>
@@ -22000,13 +22222,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(totalEl){
                 totalEl.innerText = fmtTradeInsightMoney(data.total);
                 totalEl.style.color = tradeInsightColor(data.total);
+                totalEl.dataset.sign = data.total > 0.004 ? 'up' : (data.total < -0.004 ? 'down' : 'flat');
             }
             if(subEl){
                 if(info.top){
                     const topName = String(info.top.name || info.top.code || '').trim();
-                    subEl.innerHTML = '<span style="color:#6f635b">' + tiEsc(topName) + '</span> '
-                        + '<span class="font-semibold tabular-nums" style="color:' + tradeInsightColor(info.top.profit) + '">' + fmtTradeInsightMoney(info.top.profit) + '</span>'
-                        + '<span style="color:#a49382"> · ' + data.stockCount + '只参与</span>';
+                    subEl.innerHTML = '<span style="color:#7F7063">' + tiEsc(topName) + '</span>'
+                        + '<span style="color:#7F7063"> · ' + data.stockCount + '只</span>';
                 } else {
                     subEl.innerText = data.stockCount + '只参与';
                 }
@@ -22171,7 +22393,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!rows.length){
                 el.classList.remove('hidden');
                 el.innerHTML = '<div class="min-w-0">'
-                    + '<div class="flex items-center gap-2"><span class="text-[10px] font-semibold tracking-[.12em]" style="color:#8f2437;">目标持仓</span></div>'
+                    + '<div class="flex items-center gap-2"><span class="target-kicker">目标持仓</span></div>'
                     + '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#6f635b;">暂未设置目标持仓</div>'
                     + '</div>';
                 updateTradeInsightStrip();
@@ -22189,9 +22411,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return a.item.name.localeCompare(b.item.name, 'zh-CN');
             })[0] : null;
             const focusRow = allDone ? null : (priorityRow || nearestRow);
-            const focusLabel = allDone ? '全部达成' : (priorityRow ? '最高优先' : '最近可达成');
             const focusName = allDone ? '全部达成' : (focusRow ? String(focusRow.item.name || '').trim() : '');
             const focusGap = (!allDone && focusRow) ? targetFmtShares(focusRow.gap) : '';
+            const progressPct = allDone ? 100 : Math.max(0, Math.min(100, Number(focusRow && focusRow.pct) || 0));
+            const progressFill = allDone
+                ? 'width:100%;background:#4F8A6E;'
+                : ('width:' + progressPct.toFixed(1) + '%;background:linear-gradient(90deg,#A82D43 0%,#742034 100%);');
+            const priorityDot = (!allDone && priorityRow) ? '<span class="target-priority-dot" title="最高优先"></span>' : '';
             // 沿用旧目标卡逻辑：最后一行看最高优先股票；无最高优先或全部达成时看第一重仓
             const topPositionRow = (holdDataList || []).slice()
                 .filter(function(it){ return Number(it.count) > 0 && getMarketValue(it) > 0; })
@@ -22220,20 +22446,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '</div>';
             }
             el.classList.remove('hidden');
-            // 目标区只保留“标题 + 一句结论”；完整进度和股价进入目标总览/个股详情。
+            // 目标区三层：标题（含达成数）/ 目标结论 + 细进度 / 单行洞察 + 单行预警
             const bodyLine = allDone
-                ? '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#2f2a27;">全部目标已达成</div>'
-                : '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#2f2a27;">'
-                    + '<span class="text-[9.5px] mr-1" style="color:#a49382;">' + focusLabel + '</span>'
-                    + '<span class="font-semibold">' + targetEsc(focusName || '--') + '</span>'
-                    + '<span class="ml-1.5 text-[12px] tabular-nums" style="color:#6f635b;">' + targetFmtShares(focusRow.current) + '/' + targetFmtShares(focusRow.target) + '</span>'
-                    + '<span class="mx-1" style="color:#a49382;">·</span>'
-                    + '<span>还差 ' + focusGap + ' 股</span>'
-                    + '</div>';
+                ? '<div class="target-goal-line"><span class="target-goal-name">全部目标已达成</span></div>'
+                    + '<div class="target-progress" aria-hidden="true"><span class="target-progress-fill" style="' + progressFill + '"></span></div>'
+                : '<div class="target-goal-line">'
+                    + priorityDot
+                    + '<span class="target-goal-name">' + targetEsc(focusName || '--') + '</span>'
+                    + '<span class="target-goal-shares">' + targetFmtShares(focusRow.current) + '/' + targetFmtShares(focusRow.target) + ' 股</span>'
+                    + '<span class="target-goal-gap">还差 ' + focusGap + ' 股</span>'
+                    + '</div>'
+                    + '<div class="target-progress" aria-hidden="true"><span class="target-progress-fill" style="' + progressFill + '"></span></div>';
             el.innerHTML = '<div class="min-w-0 cursor-pointer active:opacity-70 transition-opacity" onclick="openTargetOverview(event)" title="查看目标持仓">'
                 + '<div class="flex items-center gap-2 min-w-0">'
-                + '<span class="text-[10px] font-semibold tracking-[.12em] flex-shrink-0" style="color:#8f2437;">目标持仓</span>'
-                + (allDone ? '' : '<span class="ml-auto target-done-pill"><span class="tdp-count">' + done + '/' + rows.length + '</span><span class="tdp-label">达成</span></span>')
+                + '<span class="target-kicker flex-shrink-0">目标持仓</span>'
+                + (allDone
+                    ? '<span class="ml-auto target-done-pill is-complete"><span class="tdp-count">' + done + '/' + rows.length + '</span><span class="tdp-label">达成</span></span>'
+                    : '<span class="ml-auto target-done-pill"><span class="tdp-count">' + done + '/' + rows.length + '</span><span class="tdp-label">达成</span></span>')
                 + '<svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
                 + '</div>'
                 + bodyLine

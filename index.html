@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261122.570';</script>
+    <script>window.APP_VERSION = '20261122.573';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -3482,7 +3482,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:rgba(241,211,154,.96)!important;
         }
         #assetHeroCard #todayPnl{
-            font-size:16px!important;
+            font-size:18px!important;
             font-weight:600!important;
             letter-spacing:-.01em!important;
         }
@@ -3505,7 +3505,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-weight:500!important;
         }
         @media (max-width:360px){
-            #assetHeroCard #todayPnl{font-size:16px!important;}
+            #assetHeroCard #todayPnl{font-size:18px!important;}
             #assetHeroCard #todayPnlPct{font-size:12px!important;}
         }
         #assetHeroCard .grid{
@@ -4886,7 +4886,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif!important;
         }
 
-        /* 主卡其余三项金额：Inter 比例数字 */
+        /* 主卡其余金额：Inter 比例数字；今日盈亏与百分比虽然实时刷新，仍按展示数字处理 */
+        #assetHeroCard #todayPnl,
+        #assetHeroCard #todayPnlPct,
         #assetHeroCard #totalYearDiv,
         #assetHeroCard #totalProfit,
         #assetHeroCard #totalProfitVal,
@@ -4904,9 +4906,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-family:var(--font-num-inter)!important;
         }
 
-        /* 今日盈亏与更多指标：等宽数字，避免实时值翻动时左右跳 */
-        #assetHeroCard #todayPnl,
-        #assetHeroCard #todayPnlPct,
+        /* 更多指标与仓位徽标：等宽数字，便于比较 */
         #assetHeroCard #yearPnl,
         #assetHeroCard #yearReturnRate,
         #assetHeroCard #totalInvested,
@@ -4960,23 +4960,30 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     </style>
     <!-- 2026-11-22：五个首页数字详情页统一数字层；主数字 Space，数据数字 Inter -->
     <style id="detail-num-layer-20261122">
-        /* 数据层：先把这些页面所有等宽数字收口到 Inter */
+        /* 默认：卡片内的独立数字用 Inter 比例字，不做无意义的等宽 */
         :is(#pageAssetHigh,#pageDivDetail,#pageStatsToday,#pageStatsCashFlow) .tabular-nums{
+            font-family:var(--font-num-inter)!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+
+        /* 例外：多行纵向对比的表格 / 清单，必须等宽对齐 */
+        :is(#assetTrendYearList,#statsTodayContribList,#statsChangeList,#divDetailYearList,#divddContribList,#divDetailList,#cashFlowList) .tabular-nums{
             font-family:var(--font-num-inter)!important;
             font-variant-numeric:tabular-nums lining-nums;
             font-feature-settings:"tnum" 1,"lnum" 1;
         }
 
-        /* 资产详情：位数不多、但原先没有 tabular 的辅助数字 */
+        /* 资产详情：页头日期、等级轨辅助数字，单值展示，不做纵向对齐 */
         #pageAssetHigh #ahHighDate,
         #pageAssetHigh #ahTierRailCount,
         #pageAssetHigh #ahTierRailGap{
             font-family:var(--font-num-inter)!important;
-            font-variant-numeric:tabular-nums lining-nums;
-            font-feature-settings:"tnum" 1,"lnum" 1;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
         }
 
-        /* 分红详情：笔数、汇总、贡献榜、累计成就、年度行 */
+        /* 分红详情：页头计数、汇总卡、累计成就、图表摘要——单值展示，用比例字 */
         #pageDivDetail #divDetailCount,
         #pageDivDetail #divDetailStocks,
         #pageDivDetail #divDetailCountLine > span,
@@ -4987,19 +4994,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageDivDetail #divDetailTrendAvg,
         #pageDivDetail .divdd-sum-value,
         #pageDivDetail .divdd-sum-sub,
-        #pageDivDetail .divdd-contrib-name span,
-        #pageDivDetail .divdd-contrib-amt,
         #pageDivDetail .divcum-value,
         #pageDivDetail .divcum-subvalue,
         #pageDivDetail .divcum-foot b,
         #pageDivDetail .divcum-share,
         #pageDivDetail .divcum-since{
             font-family:var(--font-num-inter)!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+
+        /* 分红贡献榜是逐行金额列，保持等宽对齐 */
+        #pageDivDetail .divdd-contrib-row{
+            font-family:var(--font-num-inter)!important;
             font-variant-numeric:tabular-nums lining-nums;
             font-feature-settings:"tnum" 1,"lnum" 1;
         }
 
-        /* 今日盈亏：明细卡、贡献榜、持仓涨跌表里的辅助数字 */
+        /* 今日盈亏：页头卡片与摘要——单值展示，用比例字 */
         #pageStatsToday #statsTodayWinLose,
         #pageStatsToday #statsTodayWinLoseChip,
         #pageStatsToday #statsTodayBuySell,
@@ -5008,20 +5020,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageStatsToday #statsTodayTSub,
         #pageStatsToday #statsTodayContribList .rounded-xl > div:first-child > span:last-child,
         #pageStatsToday #statsTodayContribList .rounded-xl .flex > div:first-child,
-        #pageStatsToday #statsChangeList .stock-row > div:first-child,
-        #pageStatsToday .stats-t-amount,
-        #pageStatsToday .stats-t-split-value,
-        #pageStatsToday .stats-t-metric-value,
-        #pageStatsToday .stats-t-row-amt,
-        #pageStatsToday .stats-t-row-meta,
-        #pageStatsToday .stats-t-rank-count,
-        #pageStatsToday .stats-t-rank-foot strong{
+        #pageStatsToday #statsChangeList .stock-row > div:first-child{
             font-family:var(--font-num-inter)!important;
-            font-variant-numeric:tabular-nums lining-nums;
-            font-feature-settings:"tnum" 1,"lnum" 1;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
         }
 
-        /* 现金详情：资金结构、瀑布脚注、年度账单、流水计数 */
+        /* 现金详情：资金结构、瀑布脚注、年度账单、流水计数——单值展示，用比例字 */
         #pageStatsCashFlow #cashFlowCount,
         #pageStatsCashFlow #statsCashFlowTime,
         #pageStatsCashFlow .cashstat-kpi-value,
@@ -5036,10 +5041,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageStatsCashFlow #cashstatWaterFootNet,
         #pageStatsCashFlow #cashstatWaterFootFlow,
         #pageStatsCashFlow #cashstatAnnualYears,
-        #pageStatsCashFlow #cashstatAnnualBody{
+        #pageStatsCashFlow #cashstatAnnualBody,
+        #pageStatsCashFlow .cashstat-annual-net,
+        #pageStatsCashFlow .cashstat-annual-cell-value,
+        #pageStatsCashFlow .cashstat-annual-hero small,
+        #pageStatsCashFlow .cashstat-annual-cell-sub{
             font-family:var(--font-num-inter)!important;
-            font-variant-numeric:tabular-nums lining-nums;
-            font-feature-settings:"tnum" 1,"lnum" 1;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
         }
 
         /* 主数字：每页一个（现金页的余额与全周期净变动两块大字都保留） */
@@ -5052,8 +5061,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageStatsToday #statsDayPnlAmt{
             font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif!important;
             font-weight:600!important;
-            font-variant-numeric:tabular-nums lining-nums;
-            font-feature-settings:"tnum" 1,"lnum" 1;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
         }
         #pageDivDetail #divDetailTotal{
             font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif!important;

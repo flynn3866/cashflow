@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261122.579';</script>
+    <script>window.APP_VERSION = '20261122.581';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5321,6 +5321,69 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             min-width:728px!important;
         }
     </style>
+    <!-- 2026-11-22：管理自选股参考东方财富：42px 紧凑行、圆形勾选、三横线拖拽柄、遮挡式浮层 -->
+    <style id="watch-mgr-eastmoney-20261122">
+        body:has(#pageWatchManage:not(.hidden)) #bottomNav{display:none!important;}
+        #pageWatchManage{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important;}
+        #watchMgrList{overflow:visible!important;}
+        #watchMgrList .watch-mgr-row{
+            grid-template-columns:32px minmax(0,1fr) auto 54px!important;
+            height:42px!important;min-height:42px!important;
+            padding:0 4px 0 12px!important;box-sizing:border-box;
+            background:#fff;border-bottom:1px solid #f1eee8;
+            transition:transform .16s cubic-bezier(.22,.61,.36,1),box-shadow .16s ease,background-color .16s ease;
+            will-change:transform;
+        }
+        #watchMgrList .watch-mgr-row:first-child{border-radius:16px 16px 0 0;}
+        #watchMgrList .watch-mgr-row:last-child{border-radius:0 0 16px 16px;border-bottom-color:transparent;}
+        #watchMgrList .watch-mgr-row.is-selected{background:#f7fbff;}
+        #watchMgrList .watch-mgr-row.watch-dragging{
+            position:relative;z-index:30!important;background:#fff!important;
+            box-shadow:0 16px 34px rgba(35,20,10,.24),0 0 0 1px rgba(35,20,10,.06);
+        }
+        .watch-mgr-check{
+            width:24px;height:24px;padding:0;border-radius:50%;border:1.2px solid #cacaca;
+            background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+            box-sizing:border-box;cursor:pointer;transition:background-color .12s,border-color .12s;
+        }
+        .watch-mgr-check svg{width:14px;height:14px;opacity:0;transform:scale(.82);transition:opacity .12s,transform .12s;}
+        .watch-mgr-check.is-picked{background:#3b78e7;border-color:#3b78e7;}
+        .watch-mgr-check.is-picked svg{opacity:1;transform:none;}
+        .watch-mgr-name-block{min-width:0;padding-left:7px;display:flex;flex-direction:column;justify-content:center;}
+        .watch-mgr-name{font-size:17px;font-weight:500;line-height:19px;color:#2f2a27;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .watch-mgr-code{font-size:11px;line-height:12px;color:#999;margin-top:1px;font-variant-numeric:tabular-nums;}
+        #watchMgrList .watch-mgr-edit-group{height:24px;line-height:22px;padding:0 8px;border-radius:12px;font-size:10px;font-weight:500;border-color:#e7d6bb;background-color:#fbf5ea;color:#8f2437;}
+        #watchMgrList .watch-grip{width:54px;height:42px;padding:0 4px 0 0;color:#8e8e8e;display:flex;align-items:center;justify-content:flex-end;box-sizing:border-box;}
+        #watchMgrList .watch-grip svg{width:20px;height:16px;}
+        #watchMgrList .watch-grip svg path{stroke-width:1.6;}
+        /* 底部选择条 */
+        .watch-mgr-selectbar{
+            position:fixed;left:0;right:0;bottom:0;z-index:80;background:#fff;
+            border-top:1px solid #efe4d4;padding-bottom:env(safe-area-inset-bottom);
+            box-shadow:0 -8px 24px rgba(40,20,10,.08);
+        }
+        .watch-mgr-selectbar-inner{max-width:672px;margin:0 auto;height:48px;padding:0 16px;display:flex;align-items:center;gap:10px;box-sizing:border-box;}
+        .watch-mgr-selectall{border:0;background:transparent;padding:0;display:flex;align-items:center;gap:7px;color:#5f554b;font-size:12px;font-weight:500;}
+        .watch-mgr-selectall .watch-mgr-check{width:22px;height:22px;}
+        .watch-mgr-selectall .watch-mgr-check svg{width:13px;height:13px;}
+        #watchMgrSelCount{margin-left:2px;color:#8b7e70;font-size:11px;font-variant-numeric:tabular-nums;}
+        .watch-mgr-delete{margin-left:auto;height:30px;padding:0 13px;border-radius:8px;border:1px solid #efd3d3;background:#fff4f4;color:#b84646;font-size:12px;font-weight:600;}
+        .watch-mgr-delete:disabled{opacity:.35;}
+        body:has(#pageWatchManage.watch-mgr-dark) .watch-mgr-selectbar{background:#1d1d1d;border-top-color:#2d2d2d;box-shadow:0 -8px 24px rgba(0,0,0,.36);}
+        body:has(#pageWatchManage.watch-mgr-dark) .watch-mgr-selectbar .watch-mgr-check{border-color:#5c5c5c;background:#1d1d1d;}
+        body:has(#pageWatchManage.watch-mgr-dark) .watch-mgr-selectbar .watch-mgr-check.is-picked{background:#3b78e7;border-color:#3b78e7;}
+        body:has(#pageWatchManage.watch-mgr-dark) .watch-mgr-selectall{color:#d8d8d8;}
+        body:has(#pageWatchManage.watch-mgr-dark) #watchMgrSelCount{color:#8f8f8f;}
+        body:has(#pageWatchManage.watch-mgr-dark) .watch-mgr-delete{background:#2a2020;border-color:#4a2e2e;color:#ff8f8f;}
+        #pageWatchManage.watch-mgr-dark #watchMgrList .watch-mgr-row{background:#202020!important;border-bottom-color:#2d2d2d!important;}
+        #pageWatchManage.watch-mgr-dark #watchMgrList .watch-mgr-row.is-selected{background:#1f2a3a!important;}
+        #pageWatchManage.watch-mgr-dark #watchMgrList .watch-mgr-row.watch-dragging{background:#2b2b2b!important;box-shadow:0 16px 34px rgba(0,0,0,.66),0 0 0 1px rgba(255,255,255,.08)!important;}
+        #pageWatchManage.watch-mgr-dark .watch-mgr-check{border-color:#5c5c5c;background:#202020;}
+        #pageWatchManage.watch-mgr-dark .watch-mgr-check.is-picked{background:#3b78e7;border-color:#3b78e7;}
+        #pageWatchManage.watch-mgr-dark .watch-mgr-name{color:#ededed;}
+        #pageWatchManage.watch-mgr-dark .watch-mgr-code{color:#8c8c8c;}
+        #pageWatchManage.watch-mgr-dark #watchMgrList .watch-grip{color:#8e8e8e!important;}
+    </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
@@ -6983,13 +7046,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
             <div id="watchGroupError" class="watch-group-error"></div>
         </div>
-        <!-- 提示卡 -->
-        <div class="bg-white rounded-2xl card-shadow px-4 py-3 mb-3 flex items-center gap-2.5">
-            <div class="watch-mgr-tip-box w-8 h-8 rounded-lg bg-[#f8ecef] flex items-center justify-center flex-shrink-0"><i class="fa fa-arrows-v text-[#8f2437] text-[13px]"></i></div>
-            <div class="text-[11px] text-gray-500 leading-relaxed">按住右侧 <span class="text-gray-700 font-medium">拖拽图标</span> 上下拖动调整当前 tab 的股票顺序；点「编辑分组」可勾选这只股票要放入哪些 tab；点分组行右侧「管理分组」可拖动分组排序或删除分组。点左上角"完成"保存并返回自选页。</div>
-        </div>
         <div id="watchMgrList" class="bg-white rounded-2xl card-shadow overflow-hidden">
             <div class="py-10 text-center text-gray-400 text-sm">暂无自选股票</div>
+        </div>
+    </div>
+
+    <!-- 管理自选股底部选择条：只作用于当前 tab，全选/已选/删除 -->
+    <div id="watchMgrSelectBar" class="watch-mgr-selectbar hidden" aria-hidden="true">
+        <div class="watch-mgr-selectbar-inner">
+            <button type="button" id="watchMgrSelectAllBtn" class="watch-mgr-selectall" onclick="toggleWatchMgrSelectAll()" aria-pressed="false">
+                <span class="watch-mgr-check" id="watchMgrSelectAllCircle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>
+                <span>全选</span>
+            </button>
+            <span id="watchMgrSelCount">已选 0</span>
+            <button type="button" id="watchMgrDeleteBtn" class="watch-mgr-delete" onclick="openWatchStockDeleteConfirm()" disabled>删除</button>
         </div>
     </div>
 
@@ -7019,6 +7089,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="watch-group-confirm-actions">
                 <button type="button" class="is-cancel" onclick="closeWatchGroupDeleteConfirm()">取消</button>
                 <button type="button" class="is-delete" onclick="confirmDeleteWatchGroup()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 从当前 tab 移除自选股确认（其他 tab 的成员关系不受影响） -->
+    <div id="watchStockDeleteConfirm" class="watch-group-confirm hidden" aria-hidden="true">
+        <div class="watch-group-confirm-mask" onclick="closeWatchStockDeleteConfirm()"></div>
+        <div class="watch-group-confirm-card" role="dialog" aria-modal="true" aria-labelledby="watchStockDeleteTitle">
+            <div id="watchStockDeleteTitle" class="watch-group-confirm-title">移除自选股</div>
+            <div id="watchStockDeleteMsg" class="watch-group-confirm-msg"></div>
+            <div class="watch-group-confirm-actions">
+                <button type="button" class="is-cancel" onclick="closeWatchStockDeleteConfirm()">取消</button>
+                <button type="button" class="is-delete" onclick="confirmDeleteWatchStocks()">删除</button>
             </div>
         </div>
     </div>
@@ -22095,6 +22178,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let watchActiveGroup = 'all';
         try{ watchActiveGroup = lsGet(WATCH_ACTIVE_GROUP_KEY) || 'all'; }catch(e){ watchActiveGroup = 'all'; }
         let watchMgrGroup = 'all';
+        let watchMgrSelected = {};
         let watchGroupOrderMode = false;
         let watchGroupDeleteId = null;
         let watchPickerCode = null;
@@ -25426,6 +25510,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             mgrPage.classList.toggle('watch-mgr-dark', selPage.classList.contains('watch-dark'));
             selPage.classList.add('hidden');
             mgrPage.classList.remove('hidden');
+            const selectBar = document.querySelector('#watchMgrSelectBar');
+            if(selectBar){ selectBar.classList.add('hidden'); selectBar.setAttribute('aria-hidden','true'); }
             // 自选页 tab 切到后 body/html overflow 为 hidden（自选页内部滚动模式）；
             // 管理页是整页滚动详情页，必须恢复外层滚动，否则滚轮固定死
             document.body.style.overflow = '';
@@ -25433,8 +25519,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             window.scrollTo(0, 0);
             // 管理页默认选中第一个 tab（“全部”）
             watchMgrGroup = 'all';
+            watchMgrSelected = {};
             watchGroupOrderMode = false;
             closeWatchGroupDeleteConfirm();
+            closeWatchStockDeleteConfirm();
             renderWatchManage();
         }
         function openWatchGroupForm(){
@@ -25558,6 +25646,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function setWatchMgrGroup(id){
             watchMgrGroup = id || 'all';
+            watchMgrSelected = {};
             ensureWatchMgrGroup();
             renderWatchManage();
         }
@@ -25847,103 +25936,258 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cnt = document.querySelector('#watchMgrCount');
             if(cnt) cnt.innerText = watchGroupName(watchMgrGroup) + ' · ' + list.length + ' 只';
             if(!list.length){
+                watchMgrSelected = {};
                 el.innerHTML = '<div class="py-10 text-center text-gray-400 text-sm">「' + watchHtmlEsc(watchGroupName(watchMgrGroup)) + '」暂无股票</div>';
+                updateWatchMgrSelectionUI();
                 return;
             }
+            // 只保留当前 tab 内仍存在的勾选项
+            const visible = {};
+            list.forEach(function(w){ visible[String(w.code)] = true; });
+            Object.keys(watchMgrSelected).forEach(function(code){ if(!visible[code]) delete watchMgrSelected[code]; });
             el.innerHTML = list.map(function(w){
+                const code = String(w.code);
                 const q = watchQuotes[w.code] || {};
-                return '<div class="watch-mgr-row grid items-center border-b border-gray-50" data-code="' + w.code + '">'
-                    + '<div class="pl-4 pr-2 py-3 min-w-0">'
-                    + '<div class="text-[15px] font-semibold text-gray-800 truncate">' + (q.name || w.name || w.code) + '</div>'
-                    + '<div class="mt-1 flex items-center min-w-0">'
-                    + '<span class="text-[11px] text-gray-400 tabular-nums flex-shrink-0">' + w.code + '</span>'
+                const picked = !!watchMgrSelected[code];
+                return '<div class="watch-mgr-row grid items-center' + (picked ? ' is-selected' : '') + '" data-code="' + code + '">'
+                    + '<button type="button" class="watch-mgr-check' + (picked ? ' is-picked' : '') + '" data-select-code="' + code + '" onclick="toggleWatchMgrSelection(\'' + code + '\')" aria-pressed="' + (picked ? 'true' : 'false') + '" aria-label="选择 ' + watchHtmlEsc(q.name || w.name || code) + '">'
+                    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7"/></svg></button>'
+                    + '<div class="watch-mgr-name-block">'
+                    + '<div class="watch-mgr-name">' + watchHtmlEsc(q.name || w.name || w.code) + '</div>'
+                    + '<div class="watch-mgr-code">' + code + '</div>'
                     + '</div>'
-                    + '</div>'
-                    + '<div class="watch-mgr-row-action">'
-                    + '<button type="button" class="watch-mgr-edit-group" onclick="openWatchGroupPicker(\'' + w.code + '\')">编辑分组</button>'
-                    + '</div>'
-                    + '<div class="watch-grip pl-1 pr-4 py-3 flex items-center justify-center text-gray-300 select-none touch-none"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg></div>'
+                    + '<button type="button" class="watch-mgr-edit-group" onclick="openWatchGroupPicker(\'' + code + '\')">编辑分组</button>'
+                    + '<div class="watch-grip" role="button" aria-label="按住拖动排序" title="按住拖动排序"><svg viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="M2.5 3.5h15"/><path d="M2.5 8h15"/><path d="M2.5 12.5h15"/></svg></div>'
                     + '</div>';
             }).join('');
             if(window.initWatchMgrSort) window.initWatchMgrSort();
+            updateWatchMgrSelectionUI();
         }
-        // 管理页拖拽排序（与主页 self 无关：仅两列列表，行 transform 只有 translateY 让位，松手一次性落位）
+        function watchMgrSelectedCodes(){
+            return Object.keys(watchMgrSelected).filter(function(code){ return !!watchMgrSelected[code]; });
+        }
+        function updateWatchMgrSelectionUI(){
+            const bar = document.querySelector('#watchMgrSelectBar');
+            const list = document.querySelector('#watchMgrList');
+            if(!bar || !list) return;
+            const rows = list.querySelectorAll('.watch-mgr-row');
+            const selected = watchMgrSelected;
+            for(let i = 0; i < rows.length; i++){
+                const code = String(rows[i].dataset.code);
+                const on = !!selected[code];
+                rows[i].classList.toggle('is-selected', on);
+                const btn = rows[i].querySelector('.watch-mgr-check');
+                if(btn){
+                    btn.classList.toggle('is-picked', on);
+                    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                }
+            }
+            if(!rows.length){
+                bar.classList.add('hidden');
+                bar.setAttribute('aria-hidden', 'true');
+                return;
+            }
+            const n = watchMgrSelectedCodes().length;
+            const all = n === rows.length;
+            const countEl = document.querySelector('#watchMgrSelCount');
+            const deleteBtn = document.querySelector('#watchMgrDeleteBtn');
+            const allBtn = document.querySelector('#watchMgrSelectAllCircle');
+            if(countEl) countEl.innerText = '已选 ' + n;
+            if(deleteBtn) deleteBtn.disabled = n === 0;
+            if(allBtn){
+                allBtn.classList.toggle('is-picked', all);
+                const allWrap = document.querySelector('#watchMgrSelectAllBtn');
+                if(allWrap) allWrap.setAttribute('aria-pressed', all ? 'true' : 'false');
+            }
+            bar.classList.remove('hidden');
+            bar.setAttribute('aria-hidden', 'false');
+        }
+        function toggleWatchMgrSelection(code){
+            code = String(code);
+            if(watchMgrSelected[code]) delete watchMgrSelected[code];
+            else watchMgrSelected[code] = true;
+            updateWatchMgrSelectionUI();
+        }
+        function toggleWatchMgrSelectAll(){
+            const list = document.querySelector('#watchMgrList');
+            if(!list) return;
+            const rows = list.querySelectorAll('.watch-mgr-row');
+            if(!rows.length) return;
+            const allSelected = watchMgrSelectedCodes().length === rows.length;
+            if(allSelected){
+                watchMgrSelected = {};
+            } else {
+                watchMgrSelected = {};
+                for(let i = 0; i < rows.length; i++) watchMgrSelected[String(rows[i].dataset.code)] = true;
+            }
+            updateWatchMgrSelectionUI();
+        }
+        function openWatchStockDeleteConfirm(){
+            const codes = watchMgrSelectedCodes();
+            if(!codes.length) return;
+            const gid = watchMgrGroup || 'all';
+            const gname = watchGroupName(gid);
+            const msg = document.querySelector('#watchStockDeleteMsg');
+            if(msg) msg.innerText = '将从「' + gname + '」移除 ' + codes.length + ' 只自选股。' + (gid === 'all' ? '未归属其他分组的股票会同时移出自选列表。' : '其他分组不受影响。');
+            const el = document.querySelector('#watchStockDeleteConfirm');
+            if(el){
+                el.classList.remove('hidden');
+                el.setAttribute('aria-hidden', 'false');
+            }
+            document.body.style.overflow = 'hidden';
+        }
+        function closeWatchStockDeleteConfirm(){
+            const el = document.querySelector('#watchStockDeleteConfirm');
+            if(el){
+                el.classList.add('hidden');
+                el.setAttribute('aria-hidden', 'true');
+            }
+            document.body.style.overflow = '';
+        }
+        function confirmDeleteWatchStocks(){
+            const codes = watchMgrSelectedCodes();
+            if(!codes.length){ closeWatchStockDeleteConfirm(); return; }
+            const gid = watchMgrGroup || 'all';
+            const m = loadWatchMembers();
+            const drop = {};
+            codes.forEach(function(code){ drop[String(code)] = true; });
+            if(Array.isArray(m[gid])){
+                m[gid] = m[gid].filter(function(code){ return !drop[String(code)]; });
+                saveWatchMembers(m);
+            }
+            // 只有本次移除且不再属于任何 tab 的股票才从自选总表移除；其他 tab 的成员关系不受影响
+            const nextCatalog = loadWatchList().filter(function(w){
+                return !drop[String(w.code)] || watchCodeInAnyGroup(w.code);
+            });
+            saveWatchList(nextCatalog);
+            watchMgrSelected = {};
+            closeWatchStockDeleteConfirm();
+            renderWatchManage();
+            renderWatchTabs();
+            showToast('已从「' + watchGroupName(gid) + '」移除 ' + codes.length + ' 只');
+        }
+        let watchSortAudioCtx = null;
+        function unlockWatchSortFeedback(){
+            try{
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if(!AC) return null;
+                if(!watchSortAudioCtx) watchSortAudioCtx = new AC();
+                if(watchSortAudioCtx.state === 'suspended') watchSortAudioCtx.resume().catch(function(){});
+                return watchSortAudioCtx;
+            }catch(e){ return null; }
+        }
+        function playWatchSortTick(kind){
+            const ctx = watchSortAudioCtx || unlockWatchSortFeedback();
+            if(!ctx) return;
+            if(ctx.state === 'suspended'){
+                const resume = ctx.resume();
+                if(resume && resume.then){
+                    resume.then(function(){ if(ctx.state === 'running') playWatchSortTick(kind); }).catch(function(){});
+                }
+                return;
+            }
+            if(ctx.state !== 'running') return;
+            try{
+                const t = ctx.currentTime + 0.001;
+                const dur = 0.034;
+                const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
+                const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+                const data = buf.getChannelData(0);
+                for(let i = 0; i < len; i++){
+                    const p = 1 - i / len;
+                    data[i] = (Math.random() * 2 - 1) * p * p * p;
+                }
+                const src = ctx.createBufferSource();
+                src.buffer = buf;
+                const bp = ctx.createBiquadFilter();
+                bp.type = 'bandpass'; bp.frequency.value = 1900; bp.Q.value = 0.9;
+                const gain = ctx.createGain();
+                const vol = kind === 'swap' ? 0.052 : 0.030;
+                gain.gain.setValueAtTime(0.0001, t);
+                gain.gain.exponentialRampToValueAtTime(vol, t + 0.004);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                src.connect(bp); bp.connect(gain); gain.connect(ctx.destination);
+                src.start(t); src.stop(t + dur + 0.008);
+                if(kind === 'swap'){
+                    const osc = ctx.createOscillator();
+                    const g2 = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(520, t);
+                    osc.frequency.exponentialRampToValueAtTime(300, t + 0.035);
+                    g2.gain.setValueAtTime(0.0001, t);
+                    g2.gain.exponentialRampToValueAtTime(0.016, t + 0.004);
+                    g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+                    osc.connect(g2); g2.connect(ctx.destination);
+                    osc.start(t); osc.stop(t + 0.050);
+                }
+            }catch(e){}
+        }
+        function watchSortFeedback(kind){
+            try{ if(navigator.vibrate) navigator.vibrate(kind === 'swap' ? [9] : [6]); }catch(e){}
+            playWatchSortTick(kind);
+        }
+        // 管理页拖拽排序：Pointer Events 统一触屏/鼠标；42px 紧凑行内，指针跨过相邻行中线即换位
         function initWatchMgrSort(){
             const list = document.getElementById('watchMgrList');
             if(!list) return;
-            // 桌面：HTML5 DnD（让位视觉 + drop 一次性落位），复用同一套 computeTarget/applyShift/settle；
-            // list 级监听只绑定一次（_mgrDndBound），行级 grip 每次渲染后按 _sortBound 逐个绑定
-            if(!list._mgrDndBound){
-                list._mgrDndBound = true;
-                list.addEventListener('dragover', function(e){
-                    e.preventDefault();
-                    const code = list._dragCode;
-                    if(!code) return;
-                    const over = e.target && e.target.closest ? e.target.closest('.watch-mgr-row') : null;
-                    if(!over || over.dataset.code === code) return;
-                    const dragRow = list.querySelector('.watch-mgr-row[data-code="' + code + '"]');
-                    if(!dragRow) return;
-                    if(!list._sort) list._sort = { row: dragRow, index: rowIndex(dragRow), rowH: dragRow.offsetHeight, lastTargetIdx: rowIndex(dragRow), movedSet: null };
-                    const s = list._sort;
-                    const targetIdx = computeTarget(e.clientY, dragRow);
-                    if(targetIdx !== s.lastTargetIdx){
-                        applyShift(targetIdx, dragRow, s.rowH, s);
-                        s.lastTargetIdx = targetIdx;
-                    }
-                });
-                list.addEventListener('drop', function(e){
-                    e.preventDefault();
-                    const s = list._sort;
-                    list._sort = null;
-                    list._dragActive = false;
-                    if(s){ try{ settle(s); }catch(err){} }
-                    list._dragCode = null;
-                });
+            function allRows(){
+                return Array.prototype.slice.call(list.querySelectorAll('.watch-mgr-row'));
             }
-            function rowIndex(el){
-                let i = 0, c = list.firstElementChild;
-                while(c){ if(c === el) return i; c = c.nextElementSibling; i++; }
-                return -1;
-            }
-            function computeTarget(pointerY, row){
-                const all = list.children;
-                const others = [];
-                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
-                let targetIdx = 0;
-                for(let j = 0; j < others.length; j++){
-                    const ob = others[j].getBoundingClientRect();
-                    if(pointerY >= ob.top + ob.height / 2) targetIdx = j + 1;
-                }
-                return targetIdx;
-            }
-            function applyShift(targetIdx, row, rowH, s){
-                const all = list.children;
-                const others = [];
-                for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
+            function applyShift(targetIdx, s){
                 if(s.movedSet){
                     s.movedSet.forEach(function(o){
                         o.style.transition = 'none';
                         o.style.transform = '';
-                        o.classList.remove('watch-move');
                     });
                 }
                 const moved = [];
-                const lo = Math.min(targetIdx, s.index);
-                const hi = Math.max(targetIdx, s.index);
-                const dir = targetIdx > s.index ? -1 : 1;
-                for(let j = lo; j < hi; j++){
-                    const o = others[j];
-                    if(o === row) continue;
-                    o.classList.add('watch-move');
-                    o.style.transition = '';
-                    o.style.transform = 'translateY(' + (dir * rowH) + 'px)';
-                    moved.push(o);
+                if(targetIdx > s.index){
+                    for(let j = s.index; j < targetIdx; j++){
+                        const o = s.others[j];
+                        if(!o) continue;
+                        o.el.style.transition = '';
+                        o.el.style.transform = 'translateY(' + (-s.rowH) + 'px)';
+                        moved.push(o.el);
+                    }
+                } else if(targetIdx < s.index){
+                    for(let j = targetIdx; j < s.index; j++){
+                        const o = s.others[j];
+                        if(!o) continue;
+                        o.el.style.transition = '';
+                        o.el.style.transform = 'translateY(' + s.rowH + 'px)';
+                        moved.push(o.el);
+                    }
                 }
                 s.movedSet = moved;
             }
+            function updateDrag(s, clientY){
+                s.lastY = clientY;
+                const dy = (clientY - s.grabY) + (window.scrollY - s.startScrollY);
+                s.row.style.transform = 'translate3d(0,' + dy + 'px,0)';
+                if(!s.feedbackStarted && Math.abs(dy) > 4){
+                    s.feedbackStarted = true;
+                    watchSortFeedback('start');
+                }
+                // 下行用拖拽行下边线、上行用上边线，碰到相邻行中线即换位；与东方财富一致
+                const edgeY = dy >= 0 ? (s.startTop + s.rowH + dy) : (s.startTop + dy);
+                let targetIdx = 0;
+                for(let j = 0; j < s.others.length; j++){
+                    if(edgeY > s.others[j].center) targetIdx++;
+                }
+                targetIdx = Math.max(0, Math.min(targetIdx, s.others.length));
+                if(targetIdx !== s.lastTargetIdx){
+                    applyShift(targetIdx, s);
+                    s.lastTargetIdx = targetIdx;
+                    watchSortFeedback('swap');
+                }
+            }
+            function stopAutoScroll(s){
+                if(s && s.raf){ cancelAnimationFrame(s.raf); s.raf = null; }
+            }
             function settle(s){
+                stopAutoScroll(s);
                 const row = s.row;
-                const all = list.children;
+                const all = allRows();
                 for(let j = 0; j < all.length; j++){
                     const o = all[j];
                     o.classList.remove('watch-move', 'watch-dragging');
@@ -25953,14 +26197,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const others = [];
                 for(let j = 0; j < all.length; j++) if(all[j] !== row) others.push(all[j]);
                 const targetIdx = Math.max(0, Math.min(s.lastTargetIdx == null ? s.index : s.lastTargetIdx, others.length));
-                if(targetIdx >= others.length){
-                    list.appendChild(row);
-                } else {
-                    list.insertBefore(row, others[targetIdx]);
-                }
+                if(targetIdx >= others.length) list.appendChild(row);
+                else list.insertBefore(row, others[targetIdx]);
                 row.style.transition = 'none';
                 row.style.transform = '';
-                list._dragActive = false;
+                if(list._sort === s) list._sort = null;
+                requestAnimationFrame(function(){ if(row) row.style.transition = ''; });
+            }
+            function autoScrollTick(){
+                const s = list._sort;
+                if(!s) return;
+                const y = s.lastY;
+                let delta = 0;
+                if(y < 84) delta = -9;
+                else if(y > window.innerHeight - 116) delta = 9;
+                if(delta){
+                    const before = window.scrollY;
+                    window.scrollBy(0, delta);
+                    if(window.scrollY !== before) updateDrag(s, y);
+                }
+                s.raf = requestAnimationFrame(autoScrollTick);
             }
             const rows = list.querySelectorAll('.watch-mgr-row');
             for(let i = 0; i < rows.length; i++){
@@ -25968,67 +26224,53 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     const grip = row.querySelector('.watch-grip');
                     if(!grip || grip._sortBound) return;
                     grip._sortBound = true;
-                    // 桌面：grip 可拖拽（HTML5 DnD）
-                    grip.setAttribute('draggable', 'true');
-                    grip.addEventListener('dragstart', function(e){
-                        e.dataTransfer.setData('text/plain', row.dataset.code);
-                        e.dataTransfer.effectAllowed = 'move';
-                        list._dragCode = row.dataset.code;
-                        row.classList.add('watch-dragging');
-                    });
-                    grip.addEventListener('dragend', function(){
-                        row.classList.remove('watch-dragging');
-                        const s = list._sort;
-                        list._sort = null;
-                        list._dragActive = false;
-                        if(s){ try{ settle(s); }catch(err){} }
-                        list._dragCode = null;
-                    });
-                    grip.addEventListener('touchstart', function(e){
-                        e.stopPropagation();
-                        const t = e.touches[0];
-                        const s = { row: row, grabY: t.clientY, startTop: row.getBoundingClientRect().top, rowH: row.offsetHeight, index: rowIndex(row), lastTargetIdx: rowIndex(row), movedSet: null };
-                        list._sort = s;
-                        list._dragActive = true;
-                        row.classList.add('watch-dragging');
-                        row.style.transition = 'none';
-                    }, { passive: true });
-                    grip.addEventListener('touchmove', function(e){
+                    grip.addEventListener('pointerdown', function(e){
+                        if(e.pointerType === 'mouse' && e.button !== 0) return;
+                        if(list._sort) return;
                         e.preventDefault();
                         e.stopPropagation();
+                        unlockWatchSortFeedback();
+                        const rowsNow = allRows();
+                        const rect = row.getBoundingClientRect();
+                        const s = {
+                            row: row,
+                            index: rowsNow.indexOf(row),
+                            rowH: rect.height,
+                            grabY: e.clientY,
+                            pointerId: e.pointerId,
+                            startScrollY: window.scrollY,
+                            startTop: rect.top + window.scrollY,
+                            lastY: e.clientY,
+                            lastTargetIdx: rowsNow.indexOf(row),
+                            movedSet: null,
+                            raf: null,
+                            others: rowsNow.filter(function(o){ return o !== row; }).map(function(o){
+                                const r = o.getBoundingClientRect();
+                                return { el: o, center: r.top + window.scrollY + r.height / 2 };
+                            })
+                        };
+                        list._sort = s;
+                        row.classList.add('watch-dragging');
+                        row.style.transition = 'none';
+                        try{ grip.setPointerCapture(e.pointerId); }catch(err){}
+                        s.raf = requestAnimationFrame(autoScrollTick);
+                    }, { passive: false });
+                    grip.addEventListener('pointermove', function(e){
                         const s = list._sort;
                         if(!s || s.row !== row) return;
-                        const t = e.touches[0];
-                        const dy = t.clientY - s.grabY;
-                        row.style.transform = 'translateY(' + dy + 'px)';
-                        const targetIdx = computeTarget(s.startTop + dy, row);
-                        if(targetIdx !== s.lastTargetIdx){
-                            applyShift(targetIdx, row, s.rowH, s);
-                            s.lastTargetIdx = targetIdx;
-                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                        updateDrag(s, e.clientY);
                     }, { passive: false });
-                    grip.addEventListener('touchend', function(e){
-                        e.stopPropagation();
+                    function finish(e){
+                        if(e){ e.preventDefault(); e.stopPropagation(); }
                         const s = list._sort;
-                        list._sort = null;
-                        list._dragActive = false;
-                        if(s && s.row === row){
-                            setTimeout(function(){
-                                requestAnimationFrame(function(){ try{ settle(s); }catch(err){} });
-                            }, 0);
-                        }
-                    }, { passive: true });
-                    grip.addEventListener('touchcancel', function(e){
-                        e.stopPropagation();
-                        const s = list._sort;
-                        list._sort = null;
-                        list._dragActive = false;
-                        if(s && s.row === row){
-                            setTimeout(function(){
-                                requestAnimationFrame(function(){ try{ settle(s); }catch(err){} });
-                            }, 0);
-                        }
-                    }, { passive: true });
+                        if(!s || s.row !== row) return;
+                        try{ grip.releasePointerCapture(s.pointerId); }catch(err){}
+                        settle(s);
+                    }
+                    grip.addEventListener('pointerup', finish, { passive: false });
+                    grip.addEventListener('pointercancel', finish, { passive: false });
                 })(rows[i]);
             }
         }
@@ -26036,6 +26278,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 结束分组输入焦点，避免移动端键盘/缩放状态带到返回页
             const groupInput = document.querySelector('#watchGroupNameInput');
             if(groupInput) groupInput.blur();
+            const selectBar = document.querySelector('#watchMgrSelectBar');
+            if(selectBar){ selectBar.classList.add('hidden'); selectBar.setAttribute('aria-hidden','true'); }
             // 只重排当前 tab 自己的成员数组；其他 tab 的成员与顺序完全不动
             const gid = watchMgrGroup || 'all';
             const mgr = document.querySelector('#watchMgrList');

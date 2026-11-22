@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261122.575';</script>
+    <script>window.APP_VERSION = '20261122.578';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5313,6 +5313,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-feature-settings:"pnum" 1,"lnum" 1;
         }
     </style>
+    <!-- 2026-11-22：自选数值列起始于“最新”，列缝整体 +5px；列宽不变 -->
+    <style id="watch-col-gap-20261122">
+        #watchSelHeadRow,
+        #watchSelList .watch-row{
+            column-gap:9px!important;
+            min-width:728px!important;
+        }
+    </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
     <!-- max‑2xl 加宽页面容器，电脑端更宽，手机自动适配 -->
@@ -6888,7 +6896,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>
 
             <!-- 表头行（横向随列表镜像滑动、同源无脱节；表头首列 JS 固定不动） -->
-            <div id="watchSelHeadRow" class="min-w-[698px] grid gap-x-1 grid-cols-[126px_96px_90px_86px_96px_82px_98px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
+            <div id="watchSelHeadRow" class="min-w-[728px] grid gap-x-1 grid-cols-[126px_96px_90px_86px_96px_82px_98px] border-b border-gray-100 bg-white rounded-t-lg will-change-transform" style="margin:0 -0.75rem;">
                 <div id="watchSelHeadFirst" class="relative bg-white z-50 pl-[16px] pr-[8px] py-2 text-[12px] leading-[18px] text-gray-500 font-normal" data-fixcol>股票</div>
                 <div class="pl-2 pr-4 py-2 text-[12px] leading-[18px] text-gray-500 font-normal text-right">最新</div>
                 <div class="pl-2 pr-4 py-2 text-[12px] leading-[18px] text-gray-500 font-normal text-right">涨幅</div>
@@ -26113,7 +26121,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const peCls = pe != null ? 'text-gray-800' : 'text-gray-400';
                 const pbCls = pb != null ? 'text-gray-800' : 'text-gray-400';
                 const debtCls = debtVal != null ? 'text-gray-800' : 'text-gray-400';
-                html += '<div class="watch-row min-w-[698px] grid gap-x-1 grid-cols-[126px_96px_90px_86px_96px_82px_98px] border-b border-gray-50 cursor-pointer" data-code="' + w.code + '" data-name="' + String(nameText).replace(/"/g, '&quot;') + '" onclick="openStockDetail(\'' + w.code + '\',\'' + w.market + '\',\'' + String(nameText).replace(/\'/g, "\\'") + '\')">'
+                html += '<div class="watch-row min-w-[728px] grid gap-x-1 grid-cols-[126px_96px_90px_86px_96px_82px_98px] border-b border-gray-50 cursor-pointer" data-code="' + w.code + '" data-name="' + String(nameText).replace(/"/g, '&quot;') + '" onclick="openStockDetail(\'' + w.code + '\',\'' + w.market + '\',\'' + String(nameText).replace(/\'/g, "\\'") + '\')">'
                     + '<div class="relative bg-white z-20 pl-[16px] pr-[8px] py-1.5 flex items-center gap-2 min-w-0" data-fixcol>'
                     + '<div class="min-w-0">'
                     + '<div class="' + nameFontCls + ' leading-[20px] font-normal tracking-[0.3px] text-gray-800">' + nameText + '</div>'
@@ -39595,13 +39603,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const y = 5 + (max - end) / (max - min) * (h - 10);
             const dot = '<circle cx="' + w + '" cy="' + y.toFixed(2) + '" r="1.8" fill="' + color + '" opacity=".9"/>';
             return '<path d="' + areaD + '" fill="' + color + '" opacity=".07" stroke="none"/>'
-                + '<path d="' + d + '" stroke="' + color + '" stroke-width="1.28" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+                + '<path d="' + d + '" stroke="' + color + '" stroke-width="1.28" fill="none" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'
                 + dot;
         }
         function sparkColor(item){
-            const pct = getEffectiveChangePct(item.changePct);
-            if(pct == null || isNaN(pct)) return '#b8a58f';
-            return pct > 0 ? '#d85454' : (pct < 0 ? '#389973' : '#b8a58f');
+            return '#9499A3';
         }
         function sparkSvg(item, w, h, cls){
             const color = sparkColor(item);
@@ -42410,7 +42416,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return true;
             }
             function calcMax(){
-                // 行 width:100% 跟随容器，行盒宽不能代表内容宽；grid 列固定合计 698px（含 6×4px 列间距）且行 overflow visible，
+                // 行 width:100% 跟随容器，行盒宽不能代表内容宽；grid 列固定 + 6×9px 列间距合计 728px，
                 // scrollWidth 可靠反映内容总宽，是 maxX 的正确来源
                 maxX = Math.max(0, listEl.scrollWidth - listEl.clientWidth);
                 if(X > maxX) X = maxX;

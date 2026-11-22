@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261122.573';</script>
+    <script>window.APP_VERSION = '20261122.575';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5074,6 +5074,241 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageStatsCashFlow #cashstatNet{
             font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif!important;
             font-weight:600!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+    </style>
+    <!-- 2026-11-22：首页主卡四档字号与操作控件最终收口 -->
+    <style id="home-type-scale-20261122">
+        /* T1 主数字：总资产 32/600，Space Grotesk；不再另起字号档 */
+        #assetHeroCard #totalMarket{
+            font-size:32px!important;
+            font-weight:600!important;
+            line-height:1!important;
+            letter-spacing:-.02em!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+
+        /* T2 关键值：今日盈亏 18/600；三项次级指标 16/500，统一比例字 */
+        #assetHeroCard #todayPnl{
+            font-size:18px!important;
+            font-weight:600!important;
+            line-height:1!important;
+        }
+        #assetHeroCard #totalYearDiv,
+        #assetHeroCard #totalProfitVal,
+        #assetHeroCard #totalProfitSign,
+        #assetHeroCard #cashVal,
+        #assetHeroCard #cashSign{
+            font-family:var(--font-num-inter)!important;
+            font-size:16px!important;
+            font-weight:500!important;
+            line-height:1.05!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+
+        /* T3 正文：百分比 12/500；周期与更多指标 11/500 */
+        #assetHeroCard #todayPnlPct{
+            font-size:12px!important;
+            font-weight:500!important;
+            line-height:1!important;
+        }
+        #assetHeroCard .hero-period-label,
+        #assetHeroCard .hero-action-label{
+            font-size:11px!important;
+            font-weight:500!important;
+            line-height:1.2!important;
+        }
+        #assetHeroCard .hero-action-label{
+            color:#D5C7B4!important;
+            opacity:1!important;
+            letter-spacing:.02em!important;
+        }
+        #assetHeroCard #moreMetricsToggle .hero-action-label{
+            font-size:11px!important;
+            font-weight:500!important;
+            line-height:1.2!important;
+        }
+
+        /* T4 辅助：标签 10/500，仓位读数 10/500；货币符号 10/500 不抢数值 */
+        #assetHeroCard .hero-metric-label{
+            font-size:10px!important;
+            font-weight:500!important;
+            letter-spacing:.04em!important;
+            color:#B9AA92!important;
+        }
+        #assetHeroCard #positionPctBadge > span:first-child{
+            font-size:10px!important;
+            font-weight:500!important;
+            letter-spacing:.04em!important;
+            color:#B9AA92!important;
+        }
+        #assetHeroCard #positionPct{
+            font-family:var(--font-num-inter)!important;
+            font-size:10px!important;
+            font-weight:500!important;
+            line-height:1!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        /* 旧层里有一条 #assetHeroCard #positionPctBadge #positionPct 的三重 ID 规则，显式压过 */
+        #assetHeroCard #positionPctBadge #positionPct{
+            font-family:var(--font-num-inter)!important;
+            font-size:10px!important;
+            font-weight:500!important;
+            line-height:1!important;
+            font-variant-numeric:proportional-nums lining-nums !important;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        #assetHeroCard .asset-cur-main{
+            font-size:11px!important;
+            font-weight:500!important;
+            line-height:1!important;
+        }
+        #assetHeroCard .asset-cur-metric,
+        #assetHeroCard .tp-yen{
+            font-size:10px!important;
+            font-weight:500!important;
+            line-height:1!important;
+        }
+
+        /* 更多指标展开区：数值收进 12/500–600，不再出现 13/700 */
+        #assetHeroCard #moreMetricsPanel #yearPnl{
+            font-family:var(--font-num-inter)!important;
+            font-size:12px!important;
+            font-weight:600!important;
+            line-height:1.05!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        :is(#assetHeroCard #totalInvested,#assetHeroCard #totalReturnRate,#assetHeroCard #totalDivReceived,#assetHeroCard #totalPnl,#assetHeroCard #mktVal){
+            font-family:var(--font-num-inter)!important;
+            font-size:12px!important;
+            font-weight:500!important;
+            line-height:1.05!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        #assetHeroCard #moreMetricsPanel #totalPnl{
+            font-family:var(--font-num-inter)!important;
+            font-size:12px!important;
+            font-weight:500!important;
+            line-height:1.05!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        #assetHeroCard #yearReturnRate,
+        #assetHeroCard #sumBeNo,
+        #assetHeroCard #sumBeGap{
+            font-family:var(--font-num-inter)!important;
+            font-size:11px!important;
+            font-weight:500!important;
+            line-height:1.2!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        #assetHeroCard #sumBeNo,
+        #assetHeroCard #sumBeGap{
+            font-weight:600!important;
+        }
+        #assetHeroCard #nextDivDate,
+        #assetHeroCard #nextDivDays,
+        #assetHeroCard #nextDivAmt{
+            font-family:var(--font-num-inter)!important;
+            font-size:10px!important;
+            font-weight:500!important;
+            line-height:1.15!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        #assetHeroCard #nextDivFooter button{
+            font-size:11px!important;
+            font-weight:500!important;
+            color:#D5C7B4!important;
+        }
+
+        /* 目标行个股名收进 12/600，保持新档位一致 */
+        #targetSummaryStrip .target-goal-name{
+            font-size:12px!important;
+            font-weight:600!important;
+            line-height:1.25!important;
+        }
+
+        /* 目标达成胶囊：视觉保持轻量，计数 600 以建立焦点 */
+        #targetSummaryStrip .target-kicker{
+            font-size:10px!important;
+            font-weight:600!important;
+            letter-spacing:.08em!important;
+        }
+        #targetSummaryStrip .target-done-pill{
+            gap:4px!important;
+            padding:3px 8px!important;
+        }
+        #targetSummaryStrip .target-done-pill .tdp-count,
+        #targetSummaryStrip .target-done-pill .tdp-label{
+            font-size:10.5px!important;
+            font-weight:500!important;
+            line-height:1.15!important;
+        }
+        #targetSummaryStrip .target-done-pill .tdp-count{
+            font-weight:600!important;
+        }
+        /* 目标条整体点击，透明 44px 热区，不改变视觉高度 */
+        #targetSummaryStrip [onclick]{
+            position:relative!important;
+            min-height:44px!important;
+        }
+        #targetSummaryStrip [onclick]::after{
+            content:"";
+            position:absolute;
+            inset:-6px 0;
+        }
+
+        /* 忽略：提升为清晰次要操作，透明 44×44 热区 */
+        #holdWarnRow .position-warn-text{
+            font-size:11px!important;
+            font-weight:400!important;
+            line-height:1.5!important;
+            color:#7F7063!important;
+        }
+        #holdWarnRow .position-warn-dismiss{
+            font-size:11px!important;
+            font-weight:500!important;
+            line-height:1.2!important;
+            opacity:1!important;
+            color:#7E6E60!important;
+            touch-action:manipulation;
+        }
+        #holdWarnRow .position-warn-dismiss::after{
+            content:"";
+            position:absolute;
+            inset:-16px -12px;
+        }
+
+        /* 操作控件统一去掉移动端点击延迟 */
+        #assetHeroCard #moreMetricsToggle,
+        #targetSummaryStrip [onclick]{
+            touch-action:manipulation;
+        }
+    </style>
+    <!-- 2026-11-22：我的页总资产与首页主数字完全同款字体/字重/数字比例 -->
+    <style id="mine-total-sync-20261122">
+        #pageMine .mine-asset-line .mine-currency{
+            font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif!important;
+            font-size:11px!important;
+            font-weight:500!important;
+            line-height:1!important;
+            font-variant-numeric:proportional-nums lining-nums;
+            font-feature-settings:"pnum" 1,"lnum" 1;
+        }
+        #pageMine #mineTotalAsset{
+            font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif!important;
+            font-size:32px!important;
+            font-weight:600!important;
+            line-height:1!important;
+            letter-spacing:-.02em!important;
             font-variant-numeric:proportional-nums lining-nums;
             font-feature-settings:"pnum" 1,"lnum" 1;
         }
@@ -22604,7 +22839,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 el.classList.remove('hidden');
                 el.innerHTML = '<div class="min-w-0">'
                     + '<div class="flex items-center gap-2"><span class="target-kicker">目标持仓</span></div>'
-                    + '<div class="mt-1.5 text-[13px] leading-[1.55]" style="color:#6f635b;">暂未设置目标持仓</div>'
+                    + '<div class="mt-1.5 text-[12px] leading-[1.55]" style="color:#6f635b;">暂未设置目标持仓</div>'
                     + '</div>';
                 updateTradeInsightStrip();
                 return;

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261123.618';</script>
+    <script>window.APP_VERSION = '20261124.620';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -9685,6 +9685,60 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 flex:0 1 auto;min-width:0;
             }
             .page-asset .asset-mini-amount.is-liab{color:#1F1F1F}
+            /* 资产主页：生活续航摘要条（完整分析在流动资金详情页） */
+            .page-asset .asset-life-strip{
+                position:relative;display:flex;align-items:center;gap:14px;
+                margin-top:14px;padding:14px 15px 13px;border-radius:16px;overflow:hidden;
+                background:linear-gradient(118deg,#F8FCFA 0%,#F0FAF5 62%,#E8F5EE 100%);
+                border:1px solid rgba(21,134,91,.17);
+                box-shadow:0 8px 22px -18px rgba(17,91,64,.58),inset 0 1px 0 rgba(255,255,255,.92);
+                cursor:pointer;transition:transform .16s ease,box-shadow .16s ease;
+                -webkit-tap-highlight-color:transparent;
+            }
+            .page-asset .asset-life-strip:before{
+                content:"";position:absolute;right:-42px;top:-52px;width:150px;height:150px;border-radius:50%;
+                background:radial-gradient(circle,rgba(21,134,91,.07),rgba(21,134,91,0) 68%);pointer-events:none;
+            }
+            .page-asset .asset-life-strip:active{transform:scale(.985);box-shadow:0 4px 14px -16px rgba(17,91,64,.55),inset 0 1px 0 rgba(255,255,255,.92)}
+            .page-asset .asset-life-main{position:relative;z-index:1;flex:1;min-width:0}
+            .page-asset .asset-life-kicker{
+                display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.12em;
+                color:#4D7A65;line-height:1;
+            }
+            .page-asset .asset-life-kicker:before{
+                content:"";width:5px;height:5px;border-radius:50%;background:#2B8C67;
+                box-shadow:0 0 0 3px rgba(43,140,103,.10);
+            }
+            .page-asset .asset-life-number-row{display:flex;align-items:baseline;gap:3px;margin-top:5px;min-width:0}
+            .page-asset #assetLifeRunway{
+                font-size:28px;line-height:.98;font-weight:760;letter-spacing:-.045em;color:#0E5A42;
+                font-variant-numeric:tabular-nums;white-space:nowrap;
+            }
+            .page-asset #assetLifeUnit{font-size:10.5px;font-weight:650;color:#4C7864;letter-spacing:.02em}
+            .page-asset .asset-life-sub{
+                display:block;margin-top:4px;font-size:9.5px;line-height:1.3;color:#6A8275;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            }
+            .page-asset .asset-life-side{
+                position:relative;z-index:1;flex:0 0 122px;min-width:0;padding-left:14px;
+                border-left:1px solid rgba(21,134,91,.13);text-align:right;
+            }
+            .page-asset .asset-life-label{display:block;font-size:9px;letter-spacing:.05em;color:#6A8275}
+            .page-asset #assetLifeAvg{
+                display:block;margin-top:4px;font-size:12.5px;font-weight:720;color:#2E4E40;
+                letter-spacing:-.015em;font-variant-numeric:tabular-nums;white-space:nowrap;
+                overflow:hidden;text-overflow:ellipsis;
+            }
+            .page-asset .asset-life-note{
+                display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:6px;
+                font-size:9px;color:#71877B;white-space:nowrap;
+            }
+            .page-asset .asset-life-note i{font-size:8px;color:#9AAEA2}
+            .page-asset .asset-life-strip.is-empty{opacity:.92}
+            .page-asset .asset-life-strip.is-empty #assetLifeRunway{
+                font-size:20px;font-weight:720;letter-spacing:-.02em;color:#466B58;line-height:1.15;
+            }
+
             .page-asset .asset-structure-card{
                 position:relative;border-radius:14px;background:#fff;border:1px solid #EDE9E4;
                 box-shadow:0 1px 2px rgba(40,30,20,.02);padding:19px 18px 17px;
@@ -9933,6 +9987,185 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             #pageAssetCategory .asset-change-arrow{text-align:center;color:#C8BDB2;font-size:12px;padding-bottom:2px}
             #pageAssetCategory .asset-detail-chart{height:148px;width:100%}
+            /* 流动资金详情：生活支出与续航 */
+            #pageAssetCategory .asset-life-section.hidden{display:none!important}
+            #pageAssetCategory .asset-life-section.is-empty #assetLifeDetailRunway{
+                font-size:20px;font-weight:720;letter-spacing:-.02em;color:#466B58;line-height:1.15;
+            }
+            #pageAssetCategory .asset-life-card{
+                position:relative;overflow:hidden;border-radius:16px;background:#fff;
+                border:1px solid #E6EEE9;box-shadow:0 2px 10px -8px rgba(21,78,57,.18);
+            }
+            #pageAssetCategory .asset-life-runway{
+                position:relative;padding:16px 16px 13px;
+                background:linear-gradient(135deg,#F8FCFA 0%,#F1FAF5 60%,#E9F6EF 100%);
+                border-bottom:1px solid rgba(21,134,91,.10);overflow:hidden;
+            }
+            #pageAssetCategory .asset-life-runway:after{
+                content:"";position:absolute;right:-46px;top:-54px;width:150px;height:150px;border-radius:50%;
+                background:radial-gradient(circle,rgba(21,134,91,.08),rgba(21,134,91,0) 70%);pointer-events:none;
+            }
+            #pageAssetCategory .asset-life-runway-top{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+            #pageAssetCategory .asset-life-eyebrow{
+                display:block;font-size:8.5px;font-weight:700;letter-spacing:.14em;color:#4E7B67;line-height:1;
+            }
+            #pageAssetCategory .asset-life-big{display:flex;align-items:baseline;gap:4px;margin-top:7px;min-width:0}
+            #pageAssetCategory #assetLifeDetailRunway{
+                font-size:31px;line-height:.94;font-weight:770;letter-spacing:-.05em;color:#0D593F;
+                font-variant-numeric:tabular-nums;white-space:nowrap;
+            }
+            #pageAssetCategory #assetLifeDetailUnit{font-size:11px;font-weight:650;color:#4E7B67;letter-spacing:.02em}
+            #pageAssetCategory #assetLifeDetailHint{
+                margin:6px 0 0;font-size:9.5px;line-height:1.45;color:#668071;max-width:210px;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            }
+            #pageAssetCategory .asset-life-balance{flex:0 0 auto;text-align:right;padding-top:1px}
+            #pageAssetCategory .asset-life-balance span{display:block;font-size:8.5px;color:#688171;letter-spacing:.02em}
+            #pageAssetCategory .asset-life-balance b{
+                display:block;margin-top:5px;font-size:13px;font-weight:700;color:#315847;
+                font-variant-numeric:tabular-nums;white-space:nowrap;
+            }
+            #pageAssetCategory .asset-life-track{margin-top:13px;position:relative}
+            #pageAssetCategory .asset-life-track-rail{height:5px;border-radius:999px;background:#DCEDE4;overflow:hidden;position:relative}
+            #pageAssetCategory .asset-life-track-fill{
+                display:block;width:0;height:100%;border-radius:999px;
+                background:linear-gradient(90deg,#79B49B 0%,#2B8C67 100%);
+                transition:width .55s cubic-bezier(.2,.8,.2,1);
+            }
+            #pageAssetCategory .asset-life-track-fill.is-open{
+                background:repeating-linear-gradient(135deg,#9CCDB7 0 5px,#C3E2D5 5px 10px);
+            }
+            #pageAssetCategory .asset-life-track-ticks{display:flex;justify-content:space-between;margin-top:4px;padding:0 1px}
+            #pageAssetCategory .asset-life-track-ticks i{font-style:normal;font-size:8px;color:#94A99D;line-height:1}
+            #pageAssetCategory .asset-life-kpis{
+                display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:13px 8px 12px;
+                border-bottom:1px solid #F0F5F2;
+            }
+            #pageAssetCategory .asset-life-kpi{min-width:0;padding:0 8px;text-align:center}
+            #pageAssetCategory .asset-life-kpi + .asset-life-kpi{border-left:1px solid #EDF3EF}
+            #pageAssetCategory .asset-life-kpi span{display:block;font-size:9px;color:#71877B;letter-spacing:.02em;white-space:nowrap}
+            #pageAssetCategory .asset-life-kpi b{
+                display:block;margin-top:4px;font-size:12.5px;font-weight:720;color:#283F34;
+                letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap;
+                overflow:hidden;text-overflow:ellipsis;
+            }
+            #pageAssetCategory .asset-life-kpi em{
+                display:block;margin-top:3px;font-style:normal;font-size:8.5px;color:#98A79E;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            }
+            #pageAssetCategory .asset-life-kpi .asset-life-kpi-runway{
+                display:block;margin-top:3px;font-size:8.5px;font-weight:650;line-height:1.1;color:#3F8268;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            }
+            #pageAssetCategory .asset-life-chart-head{
+                display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+                padding:14px 16px 0;
+            }
+            #pageAssetCategory .asset-life-chart-title{font-size:14px;font-weight:720;color:#263C31;letter-spacing:-.01em}
+            #pageAssetCategory .asset-life-chart-caption{margin-top:3px;font-size:9px;color:#829287;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #pageAssetCategory .asset-life-chart-tools{display:flex;align-items:center;gap:7px;flex-shrink:0}
+            #pageAssetCategory .asset-life-seg{
+                display:flex;align-items:center;padding:2px;border-radius:9px;background:#F2F7F3;
+                border:1px solid #E1ECE5;box-shadow:inset 0 1px 2px rgba(21,78,57,.03);
+            }
+            #pageAssetCategory .asset-life-seg button{
+                height:24px;padding:0 7px;border-radius:7px;font-size:9px;font-weight:650;color:#7C9185;
+                line-height:1;transition:background .16s ease,color .16s ease,box-shadow .16s ease;
+            }
+            #pageAssetCategory .asset-life-seg button.is-on{background:#fff;color:#1B654C;box-shadow:0 1px 3px rgba(21,78,57,.10)}
+            #pageAssetCategory .asset-life-yearnav{display:flex;align-items:center;gap:1px}
+            #pageAssetCategory .asset-life-yearnav button{
+                width:21px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+                font-size:13px;color:#4D7A65;background:#F5FAF7;border:1px solid #E1ECE5;line-height:1;
+            }
+            #pageAssetCategory .asset-life-yearnav button:disabled{opacity:.3}
+            #pageAssetCategory .asset-life-yearnav span{
+                min-width:33px;text-align:center;font-size:9.5px;font-weight:700;color:#315847;
+                font-variant-numeric:tabular-nums;white-space:nowrap;
+            }
+            #pageAssetCategory .asset-life-chart-focus{
+                display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+                padding:9px 16px 0;min-height:16px;
+            }
+            #pageAssetCategory #assetLifeFocusLabel{font-size:9px;color:#849389;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #pageAssetCategory #assetLifeFocusValue{font-size:12px;font-weight:700;color:#8F4F3F;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAssetCategory #assetLifeFocusValue.is-negative{color:#2B8C67}
+            #pageAssetCategory .asset-life-chart{height:176px;margin:2px 16px 0;position:relative}
+            #pageAssetCategory .asset-life-chart-empty{height:176px;display:flex;align-items:center;justify-content:center;color:#A0AEA5;font-size:9px}
+            #pageAssetCategory .asset-life-chart-empty.hidden{display:none!important}
+            #pageAssetCategory .asset-life-yaxis{
+                position:absolute;left:0;top:7px;bottom:22px;width:34px;
+                padding-right:4px;box-sizing:border-box;
+            }
+            #pageAssetCategory .asset-life-yaxis span{
+                position:absolute;right:4px;font-size:8px;line-height:1;color:#9CA99F;
+                font-variant-numeric:tabular-nums;white-space:nowrap;transform:translateY(-50%);
+            }
+            #pageAssetCategory .asset-life-plot{position:absolute;left:38px;right:0;top:7px;bottom:22px}
+            #pageAssetCategory .asset-life-grid{position:absolute;inset:0;pointer-events:none}
+            #pageAssetCategory .asset-life-grid i{position:absolute;left:0;right:0;border-top:1px dashed #EEF3EF}
+            #pageAssetCategory .asset-life-grid i.is-zero{border-top-style:solid;border-top-color:#DCD2C7}
+            #pageAssetCategory .asset-life-bars{position:absolute;inset:0;display:flex;gap:3px}
+            #pageAssetCategory .asset-life-bar-col{
+                position:relative;flex:1 1 0;min-width:0;height:100%;
+            }
+            #pageAssetCategory .asset-life-bar{
+                position:absolute;left:50%;transform:translateX(-50%);
+                width:calc(100% - 2px);max-width:18px;min-height:0;border-radius:3px 3px 0 0;
+                background:linear-gradient(180deg,#D8AE9A 0%,#BC765E 100%);
+                transition:height .35s cubic-bezier(.2,.8,.2,1),bottom .35s cubic-bezier(.2,.8,.2,1),background .16s ease,opacity .16s ease;
+                -webkit-tap-highlight-color:transparent;
+            }
+            #pageAssetCategory .asset-life-bar.is-selected{
+                background:linear-gradient(180deg,#B96D58 0%,#8F2437 100%);
+                box-shadow:0 0 0 2px rgba(255,255,255,.92),0 0 0 3px rgba(143,36,55,.10);
+            }
+            #pageAssetCategory .asset-life-bar.is-negative{
+                background:linear-gradient(180deg,#8FC6AE 0%,#3B9874 100%);
+            }
+            #pageAssetCategory .asset-life-bar.is-negative.is-selected{
+                background:linear-gradient(180deg,#4F9E7C 0%,#1B654C 100%);
+                box-shadow:0 0 0 2px rgba(255,255,255,.92),0 0 0 3px rgba(27,101,76,.12);
+            }
+            #pageAssetCategory .asset-life-bar.is-provisional{
+                background:repeating-linear-gradient(135deg,rgba(188,118,94,.72) 0 4px,rgba(188,118,94,.36) 4px 8px);
+            }
+            #pageAssetCategory .asset-life-bar.is-negative.is-provisional{
+                background:repeating-linear-gradient(135deg,rgba(59,152,116,.74) 0 4px,rgba(59,152,116,.36) 4px 8px);
+            }
+            #pageAssetCategory .asset-life-bar.is-zero{height:1px!important;background:#D7C6B9!important;box-shadow:none!important;border-radius:0}
+            #pageAssetCategory .asset-life-avgline{
+                position:absolute;left:0;right:0;border-top:1px dashed rgba(143,36,55,.34);
+                pointer-events:none;z-index:2;
+            }
+            #pageAssetCategory .asset-life-avgline.is-negative{border-top-color:rgba(43,140,103,.4)}
+            #pageAssetCategory .asset-life-avgline span{
+                position:absolute;right:0;top:-12px;padding-left:5px;background:#fff;font-size:8px;color:#9B8173;
+                white-space:nowrap;font-variant-numeric:tabular-nums;
+            }
+            #pageAssetCategory .asset-life-avgline.is-negative span{color:#3F8268}
+            #pageAssetCategory .asset-life-xaxis{position:absolute;left:38px;right:0;bottom:0;height:18px}
+            #pageAssetCategory .asset-life-xaxis span{
+                position:absolute;bottom:1px;transform:translateX(-50%);font-size:8px;line-height:1;
+                color:#9AA69D;white-space:nowrap;font-variant-numeric:tabular-nums;
+            }
+            #pageAssetCategory .asset-life-xaxis span:first-child{transform:translateX(0)}
+            #pageAssetCategory .asset-life-xaxis span:last-child{transform:translateX(-100%)}
+            #pageAssetCategory .asset-life-empty{
+                padding:18px 22px 20px;text-align:center;color:#7E8F84;
+            }
+            #pageAssetCategory .asset-life-empty.hidden{display:none!important}
+            #pageAssetCategory .asset-life-empty-mark{
+                width:34px;height:34px;border-radius:50%;margin:0 auto 7px;display:flex;align-items:center;justify-content:center;
+                background:#F1F8F4;border:1px solid #E0EFE7;color:#88AE9C;font-size:13px;
+            }
+            #pageAssetCategory .asset-life-empty b{display:block;font-size:10.5px;font-weight:650;color:#5E7568}
+            #pageAssetCategory .asset-life-empty span{display:block;margin:5px auto 0;max-width:250px;font-size:9px;line-height:1.6;color:#87988D}
+            #pageAssetCategory .asset-life-footnote{
+                padding:1px 16px 13px;font-size:8.5px;line-height:1.65;color:#84958A;
+            }
+            #pageAssetCategory .asset-life-footnote b{font-weight:650;color:#6D8276}
+
             #pageAssetCategory .asset-detail-empty{
                 padding:18px 12px 20px;text-align:center;color:#7A6E63;font-size:10.5px;line-height:1.65;
             }
@@ -10207,6 +10440,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
             </div>
 
+            <section class="asset-life-strip" id="assetLifeStrip" role="button" tabindex="0" aria-label="查看流动资金生活支出与续航" onclick="openAssetCategory('liquid', event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAssetCategory('liquid', event);}">
+                <div class="asset-life-main">
+                    <span class="asset-life-kicker">生活续航</span>
+                    <div class="asset-life-number-row">
+                        <b id="assetLifeRunway" class="asset-money">--</b><span id="assetLifeUnit">个月</span>
+                    </div>
+                    <span class="asset-life-sub" id="assetLifeSub">至少需要两个相邻月末快照</span>
+                </div>
+                <div class="asset-life-side">
+                    <span class="asset-life-label">月均净流出</span>
+                    <b id="assetLifeAvg" class="asset-money">--</b>
+                    <span class="asset-life-note">仅流动资金 <i class="fa fa-chevron-right"></i></span>
+                </div>
+            </section>
+
             <div class="asset-sec-head">
                 <div class="asset-sec-title">资产负债结构</div>
             </div>
@@ -10304,6 +10552,84 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
             </section>
 
+            <section id="assetLifeSection" class="asset-life-section hidden" aria-label="生活支出与续航">
+                <div class="asset-detail-sec-head">
+                    <div class="asset-detail-sec-title">生活支出与续航</div>
+                    <span id="assetLifeSample" class="asset-detail-sec-note">等待样本</span>
+                </div>
+                <section class="asset-life-card">
+                    <div class="asset-life-runway">
+                        <div class="asset-life-runway-top">
+                            <div style="min-width:0">
+                                <span class="asset-life-eyebrow">LIFE RUNWAY</span>
+                                <div class="asset-life-big">
+                                    <b id="assetLifeDetailRunway" class="asset-money">--</b><span id="assetLifeDetailUnit">个月</span>
+                                </div>
+                                <p id="assetLifeDetailHint">至少需要两个相邻月末快照</p>
+                            </div>
+                            <div class="asset-life-balance">
+                                <span>当前流动资金</span>
+                                <b id="assetLifeDetailBalance" class="asset-money">--</b>
+                            </div>
+                        </div>
+                        <div class="asset-life-track">
+                            <div class="asset-life-track-rail"><span id="assetLifeTrackFill" class="asset-life-track-fill"></span></div>
+                            <div class="asset-life-track-ticks" aria-hidden="true"><i>0</i><i>12</i><i>24</i><i>36+</i></div>
+                        </div>
+                    </div>
+                    <div class="asset-life-kpis">
+                        <div class="asset-life-kpi">
+                            <span>今年月均</span>
+                            <b id="assetLifeYtdAvg" class="asset-money">--</b>
+                            <em id="assetLifeYtdNote">已完整月份</em>
+                            <small id="assetLifeYtdRunway" class="asset-life-kpi-runway">续航 --</small>
+                        </div>
+                        <div class="asset-life-kpi">
+                            <span>历史月均</span>
+                            <b id="assetLifeAllAvg" class="asset-money">--</b>
+                            <em id="assetLifeAllNote">全部月份</em>
+                            <small id="assetLifeAllRunway" class="asset-life-kpi-runway">续航 --</small>
+                        </div>
+                        <div class="asset-life-kpi">
+                            <span>历史年均</span>
+                            <b id="assetLifeYearAvg" class="asset-money">--</b>
+                            <em id="assetLifeYearNote">完整年度</em>
+                            <small id="assetLifeYearRunway" class="asset-life-kpi-runway">续航 --</small>
+                        </div>
+                    </div>
+                    <div class="asset-life-chart-head">
+                        <div style="min-width:0">
+                            <div class="asset-life-chart-title">净流出趋势</div>
+                            <div class="asset-life-chart-caption" id="assetLifeChartCaption">--</div>
+                        </div>
+                        <div class="asset-life-chart-tools" id="assetLifeChartTools">
+                            <div class="asset-life-seg" id="assetLifeMode" role="group" aria-label="净流出视图">
+                                <button type="button" data-mode="monthly" class="is-on" aria-pressed="true" onclick="setLiquidSpendMode('monthly')">月度</button>
+                                <button type="button" data-mode="annual" aria-pressed="false" onclick="setLiquidSpendMode('annual')">年度</button>
+                            </div>
+                            <div class="asset-life-yearnav" id="assetLifeYearNav">
+                                <button type="button" id="assetLifeYearPrev" aria-label="上一年" onclick="shiftLiquidSpendYear(-1)">‹</button>
+                                <span id="assetLifeYear">--</span>
+                                <button type="button" id="assetLifeYearNext" aria-label="下一年" onclick="shiftLiquidSpendYear(1)">›</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-life-chart-focus">
+                        <span id="assetLifeFocusLabel">--</span>
+                        <b id="assetLifeFocusValue">--</b>
+                    </div>
+                    <div id="assetLifeChart" class="asset-life-chart"></div>
+                    <div id="assetLifeEmpty" class="asset-life-empty hidden">
+                        <span class="asset-life-empty-mark"><i class="fa fa-area-chart"></i></span>
+                        <b>还需要一个月的余额快照</b>
+                        <span>净流出按“上月末流动资金 − 本月末流动资金”计算，负数表示当月为净流入。至少两个相邻月份后才会生成趋势。</span>
+                    </div>
+                    <div class="asset-life-footnote">
+                        <b>口径：</b>净流出 = 上月末流动资金 − 本月末流动资金；负数表示当月从其他途径获得资金，是净流入，不会按 0 截断。含入账、转账与报销影响。仅按流动资金计算，不含投资账户；只使用相邻月份快照，缺失月份不插值。今年月均只计今年已完整月份；历史年均只计完整 12 个有效月的年度；本月为至今值，不进入平均值。斜纹柱表示不完整年度或本月至今。
+                    </div>
+                </section>
+            </section>
+
             <div class="asset-detail-sec-head">
                 <div class="asset-detail-sec-title">区间变化</div>
                 <span id="assetDetailPeriod" class="asset-detail-period">暂无区间数据</span>
@@ -10332,7 +10658,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </section>
 
             <div class="asset-detail-sec-head">
-                <div class="asset-detail-sec-title">月度趋势</div>
+                <div class="asset-detail-sec-title">余额趋势</div>
             </div>
             <section class="asset-section-card" style="padding-bottom:6px">
                 <div id="assetDetailChart" class="asset-detail-chart"></div>
@@ -22875,6 +23201,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let assetCurrentGroup = null;
         let assetCategoryOriginKey = null;
         let assetDetailRange = 12;
+        let liquidSpendMode = 'monthly';
+        let liquidSpendYear = new Date().getFullYear();
+        let liquidSpendSelectedKey = '';
         let assetRecordTarget = null;
         let assetRecordScopeGroup = null;
         let assetRecordEditId = null;
@@ -23121,6 +23450,473 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const result = getAssetSnapshotSeries([field], months)[0];
             return result ? result.points : [];
         }
+        // ============ 流动资金：生活净流出 / 续航 ============
+        // 用户明确选择“账户净流出”口径：上月末余额 − 本月末余额。
+        // 差额可以为负：负数表示当月从其他途径获得资金，是净流入，不截断为 0。
+        // 只使用相邻月份快照，不跨缺口插值。
+        function liquidSpendRows(){
+            const pts = getAssetSnapshotPoints('liquid', 'all').filter(function(p){
+                return p && /^\d{4}-\d{2}$/.test(p.month || '') && isFinite(Number(p.value));
+            });
+            const rows = [];
+            for(let i=1;i<pts.length;i++){
+                const prev = pts[i-1];
+                const cur = pts[i];
+                if(assetMonthOffset(prev.month, 1) !== cur.month) continue;
+                const prevValue = Number(prev.value) || 0;
+                const endValue = Number(cur.value) || 0;
+                const net = prevValue - endValue;
+                rows.push({
+                    month: cur.month,
+                    prevValue: prevValue,
+                    endValue: endValue,
+                    net: net,
+                    outflow: net,
+                    inflow: net < 0 ? -net : 0,
+                    provisional: cur.month === assetSnapshotMonth()
+                });
+            }
+            return rows;
+        }
+        function liquidSpendStats(currentLiquid){
+            const rows = liquidSpendRows();
+            const currentMonth = assetSnapshotMonth();
+            const currentYear = currentMonth.slice(0, 4);
+            const completed = rows.filter(function(r){ return r.month < currentMonth; });
+            const ytdRows = completed.filter(function(r){ return r.month.slice(0, 4) === currentYear; });
+            const recent = completed.slice(-12);
+            const sumOut = function(list){
+                return list.reduce(function(s, r){ return s + (Number(r.net) || 0); }, 0);
+            };
+            const ytdAvg = ytdRows.length ? sumOut(ytdRows) / ytdRows.length : null;
+            const allAvg = completed.length ? sumOut(completed) / completed.length : null;
+            const recentAvg = recent.length ? sumOut(recent) / recent.length : null;
+            const annualMap = {};
+            rows.forEach(function(r){
+                const y = r.month.slice(0, 4);
+                if(!annualMap[y]) annualMap[y] = { total:0, monthCount:0, provisional:false };
+                annualMap[y].total += Number(r.net) || 0;
+                annualMap[y].monthCount++;
+                if(r.provisional) annualMap[y].provisional = true;
+            });
+            const years = Object.keys(annualMap).sort();
+            const fullYears = years.filter(function(y){
+                return y !== currentYear && annualMap[y].monthCount === 12;
+            });
+            const annualAvg = fullYears.length
+                ? fullYears.reduce(function(s, y){ return s + annualMap[y].total; }, 0) / fullYears.length
+                : null;
+            const runway = liquidSpendRunwayInfo(recentAvg, currentLiquid, false);
+            return {
+                rows: rows,
+                completed: completed,
+                completedCount: completed.length,
+                ytdRows: ytdRows,
+                ytdCount: ytdRows.length,
+                ytdAvg: ytdAvg,
+                allAvg: allAvg,
+                recent: recent,
+                recentCount: recent.length,
+                recentAvg: recentAvg,
+                years: years,
+                annualMap: annualMap,
+                fullYears: fullYears,
+                fullYearCount: fullYears.length,
+                annualAvg: annualAvg,
+                runway: runway,
+                currentMonth: currentMonth,
+                currentYear: currentYear
+            };
+        }
+        function liquidSpendMoney(v){
+            if(assetMasked) return '••••••';
+            return assetYuanText(Number(v) || 0);
+        }
+        function liquidSpendAxisMoney(v){
+            if(assetMasked) return '••';
+            const n = Number(v) || 0;
+            const abs = Math.abs(n);
+            let s;
+            if(abs >= 100000000){
+                s = (abs / 100000000).toFixed(abs >= 1000000000 ? 1 : 2) + '亿';
+            }else if(abs >= 10000){
+                const w = abs / 10000;
+                s = (w >= 10 ? w.toFixed(0) : w.toFixed(w % 1 ? 1 : 0)) + '万';
+            }else{
+                s = abs.toLocaleString('en-US', { maximumFractionDigits:0 });
+            }
+            return (n < 0 ? '−¥' : '¥') + s;
+        }
+        function liquidSpendRunwayDisplay(months){
+            if(!(Number(months) > 0)) return { value:'--', unit:'' };
+            if(Number(months) >= 120) return { value:String(Math.floor(Number(months) / 12)), unit:'年' };
+            if(Number(months) < 1) return { value:'<1', unit:'个月' };
+            return { value:String(Math.max(1, Math.round(Number(months)))), unit:'个月' };
+        }
+        function liquidSpendRunwayInfo(avg, currentLiquid, annual){
+            const a = Number(avg);
+            const liquid = Number(currentLiquid) || 0;
+            if(avg == null || !Number.isFinite(a)) return { mode:'empty', months:null, value:'--', unit:'' };
+            // 净流出为负，表示当月/当年是净流入，余额不会被消耗。
+            if(a < 0) return { mode:'growing', months:null, value:'持续增加', unit:'' };
+            if(a === 0) return { mode:'stable', months:null, value:'不消耗', unit:'' };
+            if(!(liquid > 0)) return { mode:'empty', months:null, value:'--', unit:'' };
+            const months = annual ? (liquid / a * 12) : (liquid / a);
+            const display = liquidSpendRunwayDisplay(months);
+            return { mode:'finite', months:months, value:display.value, unit:display.unit };
+        }
+        function liquidSpendRunwayHint(info){
+            if(!info || info.mode === 'empty') return '至少需要两个相邻月末快照';
+            if(info.mode === 'growing') return '月均为净流入，余额会继续增加';
+            if(info.mode === 'stable') return '月均净流出为 0';
+            const n = Math.floor(Number(info.months));
+            if(n >= 12){
+                const y = Math.floor(n / 12);
+                const m = n % 12;
+                return '约 ' + y + ' 年' + (m ? ' ' + m + ' 个月' : '');
+            }
+            return '约 ' + Math.max(1, n) + ' 个月';
+        }
+        function liquidSpendDurationShort(months){
+            if(!(Number(months) > 0)) return '--';
+            if(Number(months) >= 12){
+                return (Number(months) / 12).toFixed(1).replace(/\.0$/, '') + '年';
+            }
+            return Math.max(1, Math.round(Number(months))) + '个月';
+        }
+        function liquidSpendRunwayShort(info){
+            if(!info || info.mode === 'empty') return '--';
+            if(info.mode === 'growing') return '持续增加';
+            if(info.mode === 'stable') return '不消耗';
+            return liquidSpendDurationShort(info.months);
+        }
+        function liquidSpendYearRows(rows, year){
+            return (rows || []).filter(function(r){ return String(r.month).slice(0, 4) === String(year); });
+        }
+        function liquidSpendNiceMax(value){
+            if(!(Number(value) > 0)) return 1000;
+            const n = Number(value);
+            const power = Math.pow(10, Math.floor(Math.log(n) / Math.LN10));
+            const part = n / power;
+            const step = part <= 1 ? 1 : (part <= 2 ? 2 : (part <= 5 ? 5 : 10));
+            return step * power;
+        }
+        function renderAssetLifeSummary(t){
+            const strip = document.getElementById('assetLifeStrip');
+            if(!strip) return;
+            const stats = liquidSpendStats(Number(t && t.liquid) || 0);
+            const visible = (Number(t && t.liquid) > 0) || stats.rows.length > 0;
+            strip.classList.toggle('hidden', !visible);
+            strip.classList.toggle('is-empty', !stats.completedCount);
+            if(!visible) return;
+            const display = stats.runway;
+            if(!stats.completedCount){
+                display.value = '待积累';
+                display.unit = '';
+            }
+            const runwayEl = document.getElementById('assetLifeRunway');
+            const unitEl = document.getElementById('assetLifeUnit');
+            const subEl = document.getElementById('assetLifeSub');
+            const avgEl = document.getElementById('assetLifeAvg');
+            if(runwayEl) runwayEl.innerText = display.value;
+            if(unitEl){
+                unitEl.innerText = display.unit;
+                unitEl.style.display = display.unit ? '' : 'none';
+            }
+            if(subEl){
+                subEl.innerText = stats.recentAvg == null
+                    ? '至少需要两个相邻月末快照'
+                    : (stats.runway.mode === 'growing'
+                        ? '近 ' + stats.recentCount + ' 个有效月为净流入'
+                        : (stats.runway.mode === 'stable'
+                            ? '近 ' + stats.recentCount + ' 个有效月净流出为 0'
+                            : '按近 ' + stats.recentCount + ' 个有效月月均'));
+            }
+            if(avgEl){
+                avgEl.innerText = stats.recentAvg == null ? '--' : liquidSpendMoney(stats.recentAvg);
+            }
+            strip.setAttribute('aria-label', '生活续航 ' + display.value + display.unit + '，月均净流出 ' + (stats.recentAvg == null ? '暂无数据' : liquidSpendMoney(stats.recentAvg)));
+        }
+        function renderLiquidSpendSection(key){
+            const sec = document.getElementById('assetLifeSection');
+            if(!sec) return;
+            if(key !== 'liquid'){
+                sec.classList.add('hidden');
+                return;
+            }
+            sec.classList.remove('hidden');
+            const currentLiquid = assetGroupSum('liquid');
+            const stats = liquidSpendStats(currentLiquid);
+            const years = stats.years;
+            if(!years.length){
+                liquidSpendYear = Number(stats.currentYear) || new Date().getFullYear();
+            }else if(years.indexOf(String(liquidSpendYear)) < 0){
+                liquidSpendYear = Number(years[years.length - 1]);
+            }
+            const display = stats.runway;
+            if(!stats.completedCount){
+                display.value = '待积累';
+                display.unit = '';
+            }
+            sec.classList.toggle('is-empty', !stats.completedCount);
+            const setText = function(id, text){ const el = document.getElementById(id); if(el) el.innerText = text; };
+            setText('assetLifeSample', stats.completedCount ? '样本 ' + stats.completedCount + ' 个有效月' : '等待样本');
+            setText('assetLifeDetailBalance', liquidSpendMoney(currentLiquid));
+            setText('assetLifeDetailRunway', display.value);
+            const unitEl = document.getElementById('assetLifeDetailUnit');
+            if(unitEl){
+                unitEl.innerText = display.unit;
+                unitEl.style.display = display.unit ? '' : 'none';
+            }
+            let detailHint = '至少需要两个相邻月末快照';
+            if(stats.recentAvg != null){
+                if(stats.runway.mode === 'growing'){
+                    detailHint = '近 ' + stats.recentCount + ' 个有效月月均为净流入 ' + liquidSpendMoney(Math.abs(stats.recentAvg));
+                }else if(stats.runway.mode === 'stable'){
+                    detailHint = '近 ' + stats.recentCount + ' 个有效月月均净流出为 0';
+                }else{
+                    detailHint = '按近 ' + stats.recentCount + ' 个有效月月均 ' + liquidSpendMoney(stats.recentAvg);
+                }
+            }
+            setText('assetLifeDetailHint', detailHint);
+            const fill = document.getElementById('assetLifeTrackFill');
+            if(fill){
+                const fillPct = !stats.completedCount ? 0 : (stats.runway.mode === 'finite' ? Math.min(100, stats.runway.months / 36 * 100) : 100);
+                fill.style.width = fillPct.toFixed(2) + '%';
+                fill.classList.toggle('is-open', stats.completedCount > 0 && stats.runway.mode !== 'finite');
+            }
+            setText('assetLifeYtdAvg', stats.ytdAvg == null ? '--' : liquidSpendMoney(stats.ytdAvg));
+            setText('assetLifeYtdNote', stats.ytdCount ? stats.ytdCount + ' 个完整月' : '暂无完整月');
+            setText('assetLifeAllAvg', stats.allAvg == null ? '--' : liquidSpendMoney(stats.allAvg));
+            setText('assetLifeAllNote', stats.completedCount ? stats.completedCount + ' 个有效月' : '样本不足');
+            setText('assetLifeYearAvg', stats.annualAvg == null ? '--' : liquidSpendMoney(stats.annualAvg));
+            setText('assetLifeYearNote', stats.fullYearCount ? stats.fullYearCount + ' 个年度' : '完整年度不足');
+            const ytdRunway = liquidSpendRunwayInfo(stats.ytdAvg, currentLiquid, false);
+            const allRunway = liquidSpendRunwayInfo(stats.allAvg, currentLiquid, false);
+            const annualRunway = liquidSpendRunwayInfo(stats.annualAvg, currentLiquid, true);
+            setText('assetLifeYtdRunway', '续航 ' + liquidSpendRunwayShort(ytdRunway));
+            setText('assetLifeAllRunway', '续航 ' + liquidSpendRunwayShort(allRunway));
+            setText('assetLifeYearRunway', '续航 ' + liquidSpendRunwayShort(annualRunway));
+            ['assetLifeYtdRunway','assetLifeAllRunway','assetLifeYearRunway'].forEach(function(id){
+                const el = document.getElementById(id);
+                if(el) el.style.display = stats.rows.length ? '' : 'none';
+            });
+            const modeWrap = document.getElementById('assetLifeMode');
+            if(modeWrap){
+                modeWrap.querySelectorAll('button').forEach(function(b){
+                    const on = b.getAttribute('data-mode') === liquidSpendMode;
+                    b.classList.toggle('is-on', on);
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+            }
+            const yearEl = document.getElementById('assetLifeYear');
+            if(yearEl) yearEl.innerText = liquidSpendMode === 'annual' ? '全部' : String(liquidSpendYear);
+            const yearNav = document.getElementById('assetLifeYearNav');
+            if(yearNav) yearNav.style.display = (liquidSpendMode === 'monthly' && stats.rows.length) ? 'flex' : 'none';
+            const prevBtn = document.getElementById('assetLifeYearPrev');
+            const nextBtn = document.getElementById('assetLifeYearNext');
+            if(prevBtn) prevBtn.disabled = !years.length || liquidSpendYear <= Number(years[0]);
+            if(nextBtn) nextBtn.disabled = !years.length || liquidSpendYear >= Number(years[years.length - 1]);
+            const tools = document.getElementById('assetLifeChartTools');
+            if(tools) tools.style.display = stats.rows.length ? 'flex' : 'none';
+            renderLiquidSpendChart(stats);
+        }
+        function liquidSpendSelectMonth(month){
+            if(!/^\d{4}-\d{2}$/.test(String(month))) return;
+            liquidSpendMode = 'monthly';
+            liquidSpendYear = Number(String(month).slice(0, 4));
+            liquidSpendSelectedKey = String(month);
+            renderLiquidSpendSection('liquid');
+        }
+        function liquidSpendSelectYear(year){
+            const n = Number(year);
+            if(!Number.isFinite(n)) return;
+            liquidSpendMode = 'monthly';
+            liquidSpendYear = n;
+            liquidSpendSelectedKey = '';
+            renderLiquidSpendSection('liquid');
+        }
+        function setLiquidSpendMode(mode){
+            liquidSpendMode = mode === 'annual' ? 'annual' : 'monthly';
+            liquidSpendSelectedKey = '';
+            renderLiquidSpendSection('liquid');
+        }
+        function shiftLiquidSpendYear(delta){
+            const stats = liquidSpendStats(assetGroupSum('liquid'));
+            const years = stats.years;
+            if(!years.length) return;
+            const idx = Math.max(0, years.indexOf(String(liquidSpendYear)));
+            const next = Math.min(years.length - 1, Math.max(0, idx + (Number(delta) > 0 ? 1 : -1)));
+            liquidSpendYear = Number(years[next]);
+            liquidSpendSelectedKey = '';
+            renderLiquidSpendSection('liquid');
+        }
+        function renderLiquidSpendChart(stats){
+            const el = document.getElementById('assetLifeChart');
+            const empty = document.getElementById('assetLifeEmpty');
+            const focus = document.querySelector('.asset-life-chart-focus');
+            const caption = document.getElementById('assetLifeChartCaption');
+            if(!el || !empty) return;
+            const rows = stats.rows || [];
+            if(!rows.length){
+                el.style.display = 'none';
+                el.innerHTML = '';
+                empty.classList.remove('hidden');
+                if(focus) focus.style.display = 'none';
+                if(caption) caption.innerText = '至少需要两个相邻月末快照';
+                return;
+            }
+            el.style.display = '';
+            empty.classList.add('hidden');
+            if(focus) focus.style.display = 'flex';
+            const mode = liquidSpendMode;
+            let items = [];
+            let avg = null;
+            let avgLabel = '月均';
+            let selectedKey = '';
+            if(mode === 'annual'){
+                const years = stats.years || [];
+                items = years.map(function(y){
+                    const meta = stats.annualMap[y];
+                    return {
+                        key: y,
+                        label: y,
+                        value: meta.total,
+                        provisional: meta.monthCount < 12,
+                        current: !!meta.provisional,
+                        meta: meta
+                    };
+                });
+                avg = stats.annualAvg;
+                avgLabel = '年均';
+                selectedKey = years.indexOf(String(liquidSpendSelectedKey)) >= 0
+                    ? String(liquidSpendSelectedKey)
+                    : (years.length ? years[years.length - 1] : '');
+                liquidSpendSelectedKey = selectedKey;
+                if(caption) caption.innerText = years.length ? (years[0] + '–' + years[years.length - 1] + ' · 年度合计') : '暂无年度数据';
+            }else{
+                const year = String(liquidSpendYear);
+                const yearRows = liquidSpendYearRows(rows, year);
+                const rowMap = {};
+                yearRows.forEach(function(r){ rowMap[r.month] = r; });
+                const yearCompleted = yearRows.filter(function(r){ return !r.provisional; });
+                if(yearCompleted.length){
+                    avg = yearCompleted.reduce(function(s, r){ return s + r.net; }, 0) / yearCompleted.length;
+                }
+                const pad = function(n){ return n < 10 ? '0' + n : String(n); };
+                for(let m=1;m<=12;m++){
+                    const key = year + '-' + pad(m);
+                    const row = rowMap[key];
+                    items.push({
+                        key: key,
+                        label: String(m),
+                        value: row ? row.net : null,
+                        provisional: row ? !!row.provisional : false,
+                        meta: row || null
+                    });
+                }
+                const latest = yearRows.length ? yearRows[yearRows.length - 1] : null;
+                selectedKey = String(liquidSpendSelectedKey).slice(0, 4) === year && rowMap[liquidSpendSelectedKey]
+                    ? liquidSpendSelectedKey
+                    : (latest ? latest.month : '');
+                liquidSpendSelectedKey = selectedKey;
+                if(caption){
+                    caption.innerText = year + ' 年 · ' + yearCompleted.length + ' 个完整月'
+                        + (yearRows.some(function(r){ return r.provisional; }) ? ' · 含本月至今' : '');
+                }
+            }
+            const values = items.map(function(item){ return item.value == null ? null : Number(item.value) || 0; });
+            let posMax = 0;
+            let negMax = 0;
+            values.forEach(function(v){
+                if(v == null) return;
+                if(v > posMax) posMax = v;
+                if(-v > negMax) negMax = -v;
+            });
+            if(avg != null){
+                if(avg > posMax) posMax = avg;
+                if(-avg > negMax) negMax = -avg;
+            }
+            const yTop = posMax > 0 ? liquidSpendNiceMax(posMax) : 0;
+            const yBottom = negMax > 0 ? liquidSpendNiceMax(negMax) : 0;
+            const ySpan = yTop + yBottom || 1;
+            const zeroPct = yBottom / ySpan * 100;
+            const bars = items.map(function(item, i){
+                if(item.value == null){
+                    return '<div class="asset-life-bar-col"></div>';
+                }
+                const value = Number(item.value) || 0;
+                const classes = ['asset-life-bar'];
+                if(value < 0) classes.push('is-negative');
+                if(value === 0) classes.push('is-zero');
+                if(item.provisional) classes.push('is-provisional');
+                if(item.key === selectedKey) classes.push('is-selected');
+                const monthLabel = mode === 'annual' ? (item.label + ' 年') : (liquidSpendYear + '年' + item.label + '月');
+                const amountText = assetMasked
+                    ? '金额已隐藏'
+                    : (value < 0 ? ('净流入 ' + liquidSpendMoney(Math.abs(value))) : ('净流出 ' + liquidSpendMoney(value)));
+                const action = mode === 'annual'
+                    ? "liquidSpendSelectYear('" + item.key + "')"
+                    : "liquidSpendSelectMonth('" + item.key + "')";
+                const heightPct = value === 0 ? 0 : (Math.abs(value) / ySpan * 100);
+                const bottomPct = value >= 0 ? zeroPct : ((value + yBottom) / ySpan * 100);
+                return '<div class="asset-life-bar-col">'
+                    + '<button type="button" class="' + classes.join(' ') + '" style="height:' + (value === 0 ? '1px' : heightPct.toFixed(2) + '%') + ';bottom:' + bottomPct.toFixed(2) + '%" '
+                    + 'aria-label="' + monthLabel + ' ' + amountText + '" aria-pressed="' + (item.key === selectedKey ? 'true' : 'false') + '" '
+                    + 'onclick="' + action + '"></button>'
+                    + '</div>';
+            }).join('');
+            const xLabels = [];
+            const xCount = items.length;
+            items.forEach(function(item, i){
+                if(mode === 'annual'){
+                    const stride = xCount >= 12 ? 5 : (xCount > 8 ? 2 : 1);
+                    if(i !== 0 && i !== xCount - 1 && i % stride !== 0) return;
+                }
+                const left = xCount > 1 ? ((i + 0.5) / xCount * 100) : 50;
+                xLabels.push('<span style="left:' + left.toFixed(2) + '%">' + item.label + '</span>');
+            });
+            const yLabels = [];
+            if(yTop > 0){
+                yLabels.push('<span style="top:0;transform:none">' + liquidSpendAxisMoney(yTop) + '</span>');
+            }
+            yLabels.push('<span style="top:' + (100 - zeroPct).toFixed(2) + '%;transform:' + (zeroPct >= 98 ? 'none' : (zeroPct <= 2 ? 'translateY(-100%)' : 'translateY(-50%)')) + '">¥0</span>');
+            if(yBottom > 0){
+                yLabels.push('<span style="top:100%;transform:translateY(-100%)">' + liquidSpendAxisMoney(-yBottom) + '</span>');
+            }
+            const avgPct = avg == null ? null : (avg + yBottom) / ySpan * 100;
+            const avgNegative = avg != null && avg < 0;
+            const avgHtml = avgPct == null ? '' : '<div class="asset-life-avgline' + (avgNegative ? ' is-negative' : '') + '" style="bottom:' + Math.max(0, Math.min(100, avgPct)).toFixed(2) + '%"><span>' + avgLabel + ' ' + liquidSpendAxisMoney(avg) + '</span></div>';
+            el.innerHTML = '<div class="asset-life-yaxis">' + yLabels.join('') + '</div>'
+                + '<div class="asset-life-plot">'
+                + '<div class="asset-life-grid"><i style="bottom:0"></i><i class="is-zero" style="bottom:' + zeroPct.toFixed(2) + '%"></i><i style="bottom:100%"></i></div>'
+                + '<div class="asset-life-bars">' + bars + '</div>'
+                + avgHtml
+                + '</div>'
+                + '<div class="asset-life-xaxis">' + xLabels.join('') + '</div>';
+            const focusLabel = document.getElementById('assetLifeFocusLabel');
+            const focusValue = document.getElementById('assetLifeFocusValue');
+            if(focusLabel) focusLabel.innerText = formatLiquidSpendFocusLabel(mode, selectedKey, items);
+            if(focusValue){
+                const selectedItem = items.filter(function(item){ return item.key === selectedKey; })[0];
+                focusValue.innerText = selectedItem && selectedItem.value != null ? liquidSpendMoney(selectedItem.value) : '--';
+                focusValue.classList.toggle('is-negative', !!(selectedItem && selectedItem.value != null && selectedItem.value < 0));
+            }
+        }
+        function formatLiquidSpendFocusLabel(mode, key, items){
+            if(!key) return '--';
+            if(mode === 'annual'){
+                const item = items.filter(function(x){ return x.key === key; })[0];
+                if(item && item.provisional){
+                    return key + ' 年' + (item.current ? ' · 含本月至今' : ' · 仅 ' + item.meta.monthCount + ' 个月');
+                }
+                return key + ' 年';
+            }
+            const row = items.filter(function(x){ return x.key === key; })[0];
+            if(!row || row.value == null) return '--';
+            return liquidSpendYear + ' 年 ' + Number(String(key).slice(5)) + ' 月' + (row.provisional ? ' · 本月至今' : '');
+        }
+
         function renderAssetMain(){
             const t = assetTotals();
             const totalCount = assetGroupCount('invest') + assetGroupCount('liquid') + assetGroupCount('fixed') + assetGroupCount('receivable') + assetGroupCount('liability');
@@ -23162,6 +23958,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderAssetStructure(t);
             renderAssetHealth(t);
             recordAssetSnapshot(t);
+            renderAssetLifeSummary(t);
             renderAssetInvestCard(t);
             renderAssetNetTrend(t);
         }
@@ -23477,6 +24274,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             assetCategoryOriginKey = key;
             assetCategoryClosing = false;
             assetDetailRange = 12;
+            if(key === 'liquid'){
+                liquidSpendMode = 'monthly';
+                liquidSpendYear = Number(assetSnapshotMonth().slice(0, 4));
+                liquidSpendSelectedKey = '';
+            }
             assetOpenRecordKey = null;
             assetMainScroll = window.scrollY || 0;
             renderAssetCategoryPage();
@@ -23612,6 +24414,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderAssetDetailRecords(key);
             renderAssetDetailChart(key);
             renderAssetDcaSection(key);
+            renderLiquidSpendSection(key);
             const detailRange = document.getElementById('assetDetailRange');
             if(detailRange) detailRange.querySelectorAll('button').forEach(function(b){
                 const on = Number(b.dataset.range) === assetDetailRange;

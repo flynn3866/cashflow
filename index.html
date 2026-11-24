@@ -3725,6 +3725,48 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageHoldCardDetail .hcd-change-amt{font-size:17px!important;}
         #pageHoldCardDetail .hcd-change-pct{font-size:15px!important;}
         #pageHoldCardDetail .hcd-cards{gap:12px!important;margin:14px 12px 0!important;}
+        #pageHoldCardDetail .hcd-risk{
+            display:flex;align-items:center;gap:9px;min-width:0;
+            margin:12px 12px 0;padding:10px 12px 10px 11px;
+            border-radius:14px;
+            background:
+                radial-gradient(120% 130% at 100% 0%,rgba(217,138,61,.08) 0%,rgba(217,138,61,0) 62%),
+                linear-gradient(135deg,#FFFCF7 0%,#FBF1E6 100%);
+            border:1px solid rgba(199,119,54,.20);
+            box-shadow:0 1px 2px rgba(120,78,38,.03),inset 0 1px 0 rgba(255,255,255,.9);
+            animation:hcdRiskIn .26s cubic-bezier(.22,.61,.36,1) both;
+        }
+        #pageHoldCardDetail .hcd-risk-ic{
+            width:25px;height:25px;border-radius:9px;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            color:#B96E2B;background:rgba(217,138,61,.11);
+            border:1px solid rgba(199,119,54,.16);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+        }
+        #pageHoldCardDetail .hcd-risk-ic i{font-size:10px;}
+        #pageHoldCardDetail .hcd-risk-main{min-width:0;flex:1;}
+        #pageHoldCardDetail .hcd-risk-kicker{
+            display:block;font-size:9px;line-height:1.1;font-weight:650;
+            letter-spacing:.08em;color:#A8642E;text-transform:uppercase;
+        }
+        #pageHoldCardDetail .hcd-risk-line{
+            margin-top:3px;font-size:10.5px;line-height:1.4;color:#7E6250;
+        }
+        #pageHoldCardDetail .hcd-risk-line b{
+            font-family:var(--font-num-inter);font-weight:700;color:#8F4E1E;
+            font-variant-numeric:tabular-nums lining-nums;
+        }
+        #pageHoldCardDetail .hcd-risk-dismiss{
+            flex-shrink:0;padding:6px 2px 6px 6px;background:transparent;border:0;
+            font-size:9.5px;line-height:1.2;font-weight:450;color:#A49382;
+            position:relative;touch-action:manipulation;
+        }
+        #pageHoldCardDetail .hcd-risk-dismiss::after{content:"";position:absolute;inset:-8px -6px;}
+        #pageHoldCardDetail .hcd-risk-dismiss:active{opacity:.55;}
+        @keyframes hcdRiskIn{
+            from{opacity:0;transform:translateY(-4px);}
+            to{opacity:1;transform:translateY(0);}
+        }
         #pageHoldCardDetail .hcd-card{
             border-radius:12px!important;
             border-color:rgba(126,102,80,.10)!important;
@@ -4011,7 +4053,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #accountFocusCard{
             gap:8px!important;
-            padding:13px 0 11px!important;
+            padding:9px 0 11px!important;
         }
         #targetSummaryStrip .target-kicker{
             font-size:10.5px!important;
@@ -4197,6 +4239,343 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #holdList .hold-card-v2-badge{
             font-size:9px!important;
             height:15px!important;
+        }
+        /* ===== 目标持仓：环形进度卡（2026-11-24） ===== */
+        #targetSummaryStrip{
+            padding:0 14px 2px!important;
+        }
+        #targetSummaryStrip .target-kicker{
+            position:relative;padding-left:9px;
+        }
+        #targetSummaryStrip .target-kicker::before{
+            content:"";position:absolute;left:0;top:50%;width:2px;height:10px;border-radius:1px;
+            transform:translateY(-50%);
+            background:linear-gradient(180deg,#B0485E 0%,#742034 100%);
+            box-shadow:0 0 0 1px rgba(255,255,255,.55);
+        }
+        .tring-head{
+            display:flex;align-items:center;gap:7px;min-width:0;
+            cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+            transition:opacity .18s ease;
+        }
+        .tring-head:active{opacity:.72;}
+        .tring-head .target-done-pill{
+            margin-left:auto!important;
+            flex-shrink:0;
+        }
+        .tring-head-chev{
+            width:12px;height:12px;flex-shrink:0;color:#B49A8C;
+        }
+        .tring-rail{
+            display:flex;align-items:stretch;gap:9px;
+            margin-top:9px;padding:1px 0 2px;
+            overflow-x:auto;overflow-y:hidden;
+            scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+            overscroll-behavior-x:contain;scrollbar-width:none;
+        }
+        .tring-rail::-webkit-scrollbar{display:none;}
+        .tring-pager{
+            display:none;align-items:center;justify-content:center;gap:5px;
+            height:6px;margin:3px 0 0;padding:0;
+            pointer-events:none;user-select:none;
+        }
+        .tring-pager.is-visible{display:flex;}
+        .tring-pager-dot{
+            width:4px;height:4px;border-radius:50%;flex-shrink:0;
+            background:rgba(126,108,94,.18);
+            box-shadow:0 0 0 1px rgba(255,255,255,.55);
+            transition:background-color .18s ease,transform .18s ease;
+        }
+        .tring-pager-dot.is-active{
+            background:rgba(143,36,55,.55);
+            transform:scale(1.18);
+        }
+        .tring-rail .tring-card{
+            flex:0 0 calc((100% - 9px) / 2);
+            scroll-snap-align:start;
+        }
+        @media (min-width:401px){
+            .tring-rail{gap:8px;}
+            .tring-rail .tring-card{flex-basis:calc((100% - 16px) / 3);}
+        }
+        .tring-dash-empty{
+            width:100%;display:flex;align-items:center;gap:7px;min-height:44px;
+            margin-top:8px;padding:9px 12px;border-radius:13px;
+            background:linear-gradient(135deg,rgba(255,253,249,.96) 0%,rgba(249,242,234,.9) 100%);
+            border:1px dashed rgba(143,36,55,.16);
+            text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;
+        }
+        .tring-dash-empty-dot{
+            width:5px;height:5px;border-radius:50%;flex-shrink:0;
+            background:#CDA36A;box-shadow:0 0 0 2px rgba(200,162,79,.1);
+        }
+        .tring-dash-empty-text{
+            flex:1;min-width:0;font-size:10.5px;line-height:1.35;color:#8C7768;
+        }
+        .tring-dash-empty-cta{
+            flex-shrink:0;font-size:10px;font-weight:600;color:#8F2437;white-space:nowrap;
+        }
+        .tring-dash-empty-cta i{font-style:normal;color:#B49A8C;margin-left:1px;}
+        .tring-card{
+            --tring-ring:74px;
+            position:relative;overflow:hidden;isolation:isolate;
+            display:flex;flex-direction:column;align-items:center;
+            min-width:0;min-height:144px;padding:10px 9px 8px;
+            border-radius:19px;
+            background:
+                radial-gradient(135% 90% at 100% 0%,rgba(168,45,67,.075) 0%,rgba(168,45,67,0) 62%),
+                radial-gradient(90% 60% at 0% 100%,rgba(200,162,79,.045) 0%,rgba(200,162,79,0) 70%),
+                linear-gradient(162deg,#FFFEFC 0%,#FCF7F1 58%,#FAF1E9 100%);
+            border:1px solid rgba(126,58,68,.16);
+            box-shadow:0 8px 22px rgba(80,52,38,.07),0 1.5px 3px rgba(80,52,38,.035),inset 0 1px 0 rgba(255,255,255,.98);
+            cursor:pointer;-webkit-tap-highlight-color:transparent;
+            transition:transform .18s cubic-bezier(.22,.61,.36,1),box-shadow .18s ease,border-color .18s ease,background .18s ease;
+        }
+        .tring-card::before{
+            content:"";position:absolute;left:11px;right:11px;top:0;height:1px;z-index:1;
+            background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.98) 18%,rgba(255,255,255,.98) 82%,rgba(255,255,255,0));
+            pointer-events:none;
+        }
+        .tring-card:active{transform:scale(.975);box-shadow:0 4px 12px rgba(80,52,38,.06),inset 0 1px 0 rgba(255,255,255,.96);}
+        .tring-card.is-open{
+            border-color:rgba(143,36,55,.28);
+            box-shadow:0 10px 26px rgba(116,32,52,.11),0 1px 2px rgba(80,52,38,.04),inset 0 1px 0 rgba(255,255,255,.98);
+        }
+        .tring-card.is-achieved{
+            background:
+                radial-gradient(135% 90% at 100% 0%,rgba(47,125,90,.065) 0%,rgba(47,125,90,0) 62%),
+                linear-gradient(162deg,#FDFFFD 0%,#F3FAF6 58%,#ECF6F0 100%);
+            border-color:rgba(47,125,90,.22);
+        }
+        .tring-card-top{
+            width:100%;display:flex;align-items:center;gap:4px;min-width:0;
+            position:relative;z-index:2;
+        }
+        .tring-name{
+            min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+            font-size:13px;line-height:1.2;font-weight:650;letter-spacing:.005em;color:#2C2724;
+        }
+        .tring-market{
+            display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+            height:15px;min-width:18px;padding:0 3.5px;border-radius:5px;
+            font-size:7.5px;line-height:1;font-weight:700;letter-spacing:.02em;
+            color:#B03939;background:rgba(217,75,75,.11);
+            border:1px solid rgba(217,75,75,.20);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+        }
+        .tring-market.is-hk{color:#3774A5;background:rgba(78,143,201,.11);border-color:rgba(78,143,201,.21);}
+        .tring-priority-dot{
+            width:2px;height:9px;border-radius:1px;flex-shrink:0;
+            background:linear-gradient(180deg,#D9B96F 0%,#C8A24F 100%);
+            box-shadow:0 0 0 1px rgba(200,162,79,.10);
+        }
+        .tring-warn-dot{
+            width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-left:1px;
+            background:linear-gradient(180deg,#E4A052 0%,#CF7B30 100%);
+            box-shadow:0 0 0 2.5px rgba(255,252,247,.95),0 0 0 3.5px rgba(217,138,61,.14),0 2px 5px rgba(160,92,30,.16);
+            animation:tringWarnPulse 2.8s ease-in-out infinite;
+        }
+        @keyframes tringWarnPulse{
+            0%,100%{box-shadow:0 0 0 2.5px rgba(255,252,247,.95),0 0 0 3.5px rgba(217,138,61,.14),0 2px 5px rgba(160,92,30,.16);}
+            50%{box-shadow:0 0 0 2.5px rgba(255,252,247,.95),0 0 0 4.5px rgba(217,138,61,.20),0 2px 6px rgba(160,92,30,.18);}
+        }
+        .tring-ring-wrap{
+            position:relative;width:var(--tring-ring);height:var(--tring-ring);
+            margin:7px auto 3px;flex-shrink:0;
+            filter:drop-shadow(0 5px 9px rgba(116,32,52,.07));
+        }
+        .tring-ring-wrap::before{
+            content:"";position:absolute;inset:12px;border-radius:50%;z-index:0;
+            background:radial-gradient(circle at 50% 34%,#FFFFFF 0%,#FFFCF8 58%,#FBF0EA 100%);
+            box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 2px rgba(118,60,50,.045);
+        }
+        .tring-ring-wrap::after{
+            content:"";position:absolute;inset:2px;border-radius:50%;z-index:2;pointer-events:none;
+            border:1px solid rgba(143,36,55,.055);
+        }
+        .tring-card.is-achieved .tring-ring-wrap{filter:drop-shadow(0 5px 9px rgba(47,125,90,.07));}
+        .tring-card.is-achieved .tring-ring-wrap::before{
+            background:radial-gradient(circle at 50% 34%,#FFFFFF 0%,#FBFEFC 58%,#EFF8F2 100%);
+        }
+        .tring-ring-svg{display:block;width:100%;height:100%;position:relative;z-index:1;}
+        .tring-ring-track{
+            fill:none;stroke:#EFDFE1;stroke-width:7;
+        }
+        .tring-card.is-achieved .tring-ring-track{stroke:#D9EBE0;}
+        .tring-ring-progress{
+            fill:none;stroke-width:7;stroke-linecap:round;
+            transition:stroke-dashoffset .52s cubic-bezier(.16,.84,.34,1);
+        }
+        .tring-ring-center{
+            position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+            pointer-events:none;z-index:2;
+        }
+        .tring-pct{
+            display:inline-flex;align-items:baseline;gap:.5px;
+            font-family:var(--font-num-inter);
+            font-size:19px;line-height:1;font-weight:750;letter-spacing:-.025em;
+            color:#7A2034;font-variant-numeric:tabular-nums lining-nums;
+        }
+        .tring-card.is-achieved .tring-pct{color:#2F7D5A;}
+        .tring-pct-sign{font-size:10px;font-weight:650;letter-spacing:0;opacity:.62;transform:translateY(-1px);}
+        .tring-gap-line{
+            display:flex;align-items:baseline;justify-content:center;gap:2px;
+            min-height:17px;width:100%;white-space:nowrap;overflow:hidden;
+            font-family:var(--font-num-inter);
+            font-size:10.5px;line-height:1.2;font-weight:450;color:#8D7B6C;
+            position:relative;z-index:2;
+        }
+        .tring-gap-val{
+            font-size:13.5px;line-height:1.1;font-weight:700;letter-spacing:-.015em;
+            color:#8F2437;font-variant-numeric:tabular-nums lining-nums;
+        }
+        .tring-gap-unit{font-size:9.5px;color:#8D7B6C;}
+        .tring-done{
+            display:inline-flex;align-items:center;gap:3px;
+            font-size:10px;font-weight:600;color:#2F7D5A;
+        }
+        .tring-done i{font-size:8px;}
+        .tring-detail{
+            display:flex;align-items:flex-start;gap:7px;min-width:0;
+            margin-top:8px;padding:9px 10px 9px 9px;border-radius:12px;
+            background:linear-gradient(135deg,rgba(255,250,244,.98) 0%,rgba(251,242,236,.95) 100%);
+            border:1px solid rgba(217,138,61,.22);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
+            animation:tringDetailIn .24s cubic-bezier(.22,.61,.36,1) both;
+        }
+        .tring-detail.is-calm{
+            background:linear-gradient(135deg,rgba(255,253,249,.98) 0%,rgba(248,242,235,.95) 100%);
+            border-color:rgba(143,36,55,.10);
+        }
+        .tring-detail-dot{
+            width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px;
+            background:#D98A3D;box-shadow:0 0 0 2px rgba(217,138,61,.10);
+        }
+        .tring-detail.is-calm .tring-detail-dot{background:#B79A88;box-shadow:none;}
+        .tring-detail-text{
+            min-width:0;flex:1;font-size:10.5px;line-height:1.5;color:#7C6150;
+        }
+        .tring-detail-text b{color:#8F2437;font-weight:650;font-variant-numeric:tabular-nums;}
+        .tring-detail.is-calm .tring-detail-text b{color:#5F4C3D;}
+        .tring-detail-action{
+            flex-shrink:0;font-size:10px;line-height:1.2;font-weight:600;color:#8F2437;
+            padding:3px 0 3px 4px;background:transparent;border:0;
+        }
+        .tring-detail-action:active{opacity:.6;}
+        .tring-detail-dismiss{
+            flex-shrink:0;font-size:9.5px;line-height:1.2;font-weight:450;color:#A49382;
+            padding:3px 0;background:transparent;border:0;
+        }
+        .tring-detail-dismiss:active{opacity:.6;}
+        .tring-more{
+            width:auto;min-width:132px;display:flex;align-items:center;justify-content:center;gap:5px;
+            margin:8px auto 0;padding:6px 12px 5px;border-radius:999px;
+            border:1px solid rgba(143,36,55,.10);
+            background:linear-gradient(180deg,rgba(255,253,249,.92) 0%,rgba(249,241,233,.82) 100%);
+            box-shadow:0 2px 7px rgba(80,52,38,.035),inset 0 1px 0 rgba(255,255,255,.9);
+            font-size:10px;line-height:1.2;font-weight:500;color:#7B5F50;
+            cursor:pointer;-webkit-tap-highlight-color:transparent;
+        }
+        .tring-more:active{opacity:.72;transform:scale(.985);}
+        .tring-more-chev{
+            font-size:12px;line-height:1;color:#B49A8C;
+            transition:transform .2s ease;
+        }
+        .tring-more-chev.is-open{transform:rotate(90deg);}
+        .tring-more-list{
+            display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+            margin-top:7px;animation:tringDetailIn .24s cubic-bezier(.22,.61,.36,1) both;
+        }
+        .tring-more-row{
+            display:flex;align-items:center;gap:4px;min-width:0;
+            padding:7px 8px;border-radius:10px;border:1px solid rgba(143,36,55,.09);
+            background:rgba(255,253,249,.9);text-align:left;
+            cursor:pointer;-webkit-tap-highlight-color:transparent;
+        }
+        .tring-more-row:active{background:#FCF7F1;}
+        .tring-more-name{
+            min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+            font-size:10.5px;font-weight:600;color:#4A3B31;
+        }
+        .tring-more-pct{
+            flex-shrink:0;font-size:10px;font-weight:650;color:#8F2437;
+            font-variant-numeric:tabular-nums;
+        }
+        .tring-more-gap{
+            flex-shrink:0;font-size:9px;color:#978474;font-variant-numeric:tabular-nums;
+        }
+        .tring-more-all{
+            grid-column:1/-1;justify-self:center;
+            padding:5px 2px 0;border:0;background:transparent;
+            font-size:9.5px;font-weight:500;color:#8F2437;
+        }
+        /* 目标总览：仪表盘标记与长按拖拽排序 */
+        #targetOverviewList{display:flex;flex-direction:column;gap:10px;}
+        #targetOverviewList > *{margin-top:0!important;}
+        .target-overview-row{position:relative;-webkit-user-select:none;user-select:none;}
+        .target-drag-grip{
+            width:11px;height:18px;flex-shrink:0;display:grid;
+            grid-template-columns:repeat(2,3px);grid-template-rows:repeat(3,3px);
+            gap:3px 3px;align-content:center;justify-content:center;
+            opacity:.82;touch-action:none;cursor:grab;
+        }
+        .target-drag-grip i{display:block;width:3px;height:3px;border-radius:50%;background:#B3937B;}
+        .target-dash-chip{
+            width:15px;height:15px;border-radius:5px;flex-shrink:0;
+            display:inline-flex;align-items:center;justify-content:center;
+            color:#9B713F;background:rgba(200,162,79,.10);
+            border:1px solid rgba(200,162,79,.18);
+        }
+        .target-dash-chip i{font-size:7px;}
+        .target-overview-row.is-dragging{
+            position:fixed!important;z-index:160;pointer-events:none;
+            margin:0!important;transform:scale(1.012);
+            box-shadow:0 18px 46px rgba(74,42,28,.18),0 3px 10px rgba(74,42,28,.08)!important;
+            border-color:rgba(143,36,55,.26)!important;
+            cursor:grabbing;
+        }
+        .target-drag-placeholder{
+            border-radius:16px;border:1px dashed rgba(143,36,55,.22);
+            background:linear-gradient(180deg,rgba(255,253,249,.55),rgba(249,241,233,.4));
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+            pointer-events:none;
+        }
+        body.target-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing;}
+        body.target-dragging #targetOverviewSheet{overflow:hidden;}
+        @media (prefers-reduced-motion:reduce){
+            .target-overview-row.is-dragging{transform:none;}
+        }
+        .tring-empty{
+            display:flex;align-items:center;gap:8px;min-height:44px;padding:2px 0;
+        }
+        .tring-empty-text{
+            margin:0;flex:1;min-width:0;
+            font-size:11.5px;line-height:1.35;color:#6F635B;
+        }
+        .tring-empty-cta{
+            flex-shrink:0;display:inline-flex;align-items:center;gap:2px;
+            font-size:10.5px;line-height:1.2;font-weight:600;color:#8F2437;
+            white-space:nowrap;text-decoration:none;
+        }
+        .tring-empty-cta i{font-size:11px;font-style:normal;color:#B49A8C;}
+        @keyframes tringDetailIn{
+            from{opacity:0;transform:translateY(-3px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+        @media (min-width:401px){
+            .tring-card{--tring-ring:64px;min-height:136px;padding:9px 8px 7px;border-radius:18px;}
+            .tring-name{font-size:12px;}
+            .tring-market{height:14px;min-width:17px;font-size:7px;}
+            .tring-pct{font-size:17px;}
+            .tring-pct-sign{font-size:9px;}
+            .tring-gap-line{font-size:9.5px;min-height:16px;}
+            .tring-gap-val{font-size:12.5px;}
+            .tring-gap-unit{font-size:9px;}
+        }
+        @media (prefers-reduced-motion:reduce){
+            .tring-card,.tring-ring-progress,.tring-head,.tring-more-chev{transition:none!important;}
+            .tring-detail,.tring-more-list{animation:none!important;}
+            .tring-warn-dot{animation:none!important;}
         }
     </style>
     <!-- 自选页专属深色模式：仅作用于 #pageWatchSel，不改变其他页面 -->
@@ -5266,6 +5645,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             content:"";
             position:absolute;
             inset:-6px 0;
+        }
+        /* 标题行不再为了 44px 热区撑高视觉行，热区仍由透明层补足 */
+        #targetSummaryStrip .tring-head{
+            min-height:34px!important;
+        }
+        /* 环形卡保留自身的视觉高度，仅用透明扩展层补足点击热区 */
+        #targetSummaryStrip .tring-card{
+            min-height:144px!important;
+        }
+        #targetSummaryStrip .tring-card::after{
+            inset:-6px 0!important;
+        }
+        @media (min-width:401px){
+            #targetSummaryStrip .tring-card{min-height:130px!important;}
         }
 
         /* 忽略：提升为清晰次要操作，透明 44×44 热区 */
@@ -9247,16 +9640,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .page-asset .asset-invest-sparkbox{width:88px;flex:0 0 88px;min-width:0}
             .page-asset .asset-invest-spark{height:40px;width:100%;overflow:hidden}
             .page-asset .asset-invest-spark svg{display:block;width:100%;height:100%}
-            .page-asset .asset-invest-spark-note{
-                margin-top:2px;text-align:right;font-size:10px;line-height:1.3;color:#746C65;
-                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            .page-asset .asset-share{
+                display:inline-flex;align-items:baseline;justify-content:flex-end;gap:2px;
+                font-size:9.5px;line-height:1.15;color:#7A716A;white-space:nowrap;
+                letter-spacing:.01em;pointer-events:none;
             }
-            .page-asset .asset-invest-foot{
-                display:flex;align-items:center;justify-content:flex-end;gap:8px;
-                margin-top:8px;min-width:0;
+            .page-asset .asset-share b{
+                font-size:10.5px;font-weight:700;color:#2A2521;letter-spacing:-.01em;
+                font-variant-numeric:tabular-nums;
             }
-            .page-asset .asset-invest-share{font-size:10.5px;line-height:1.3;color:#7A716A;white-space:nowrap;text-align:right}
-            .page-asset .asset-invest-share b{font-size:11.5px;font-weight:700;color:#2A2521;letter-spacing:-.01em;margin-left:3px}
+            .page-asset .asset-invest-share{
+                display:flex;justify-content:flex-end;text-align:right;margin-top:2px;
+            }
+            .page-asset .asset-mini-share{
+                margin-left:auto;padding-left:6px;flex:0 0 auto;text-align:right;
+                font-size:10.5px;line-height:1.05;font-weight:700;color:#2A2521;
+                letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap;
+            }
+            .page-asset .asset-mini-share.is-liab{color:#8C4A4D}
             .page-asset .asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
             .page-asset .asset-mini{
                 position:relative;display:flex;flex-direction:column;min-height:100px;padding:14px;border-radius:14px;background:#FFFFFF;
@@ -9276,10 +9677,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             .page-asset .asset-mini-count{font-size:11px;font-weight:500;color:#6E6660;margin-left:auto;white-space:nowrap}
             .page-asset .asset-mini-amount-row{display:flex;align-items:baseline;gap:1px;margin-top:auto;padding-top:12px;min-width:0}
-            .page-asset .asset-mini-cur{font-size:18px;line-height:1.1;font-weight:650;color:#1F1F1F;flex:0 0 auto}
+            .page-asset .asset-mini-cur{font-size:16.5px;line-height:1.1;font-weight:650;color:#1F1F1F;flex:0 0 auto}
             .page-asset .asset-mini-amount{
-                font-size:19.5px;line-height:1.05;font-weight:730;letter-spacing:-.03em;color:#1F1F1F;
+                font-size:18px;line-height:1.05;font-weight:730;letter-spacing:-.025em;color:#1F1F1F;
                 font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                flex:0 1 auto;min-width:0;
             }
             .page-asset .asset-mini-amount.is-liab{color:#1F1F1F}
             .page-asset .asset-structure-card{
@@ -9740,11 +10142,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                     <div class="asset-invest-sparkbox">
                         <div id="assetInvestSpark" class="asset-invest-spark" aria-hidden="true"></div>
-                        <div id="assetInvestSparkNote" class="asset-invest-spark-note">近 1 年</div>
+                        <div class="asset-share asset-invest-share"><span>资产占比</span><b id="assetInvestShare">--</b></div>
                     </div>
-                </div>
-                <div class="asset-invest-foot">
-                    <span class="asset-invest-share">资产占比 <b id="assetInvestShare">--</b></span>
                 </div>
             </div>
 
@@ -9761,7 +10160,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span class="asset-mini-title">流动资金</span>
                         <span id="assetLiquidMeta" class="asset-mini-count">0 项</span>
                     </div>
-                    <div class="asset-mini-amount-row"><span class="asset-mini-cur">¥</span><div id="assetLiquidAmount" class="asset-mini-amount asset-money">0.00</div></div>
+                    <div class="asset-mini-amount-row"><span class="asset-mini-cur">¥</span><div id="assetLiquidAmount" class="asset-mini-amount asset-money">0.00</div><span id="assetLiquidShare" class="asset-mini-share">--</span></div>
                 </div>
                 <div class="asset-mini" data-asset-card="fixed" role="button" tabindex="0" onclick="openAssetCategory('fixed', event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAssetCategory('fixed', event);}">
                     <div class="asset-mini-head">
@@ -9775,7 +10174,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span class="asset-mini-title">固定资产</span>
                         <span id="assetFixedMeta" class="asset-mini-count">0 项</span>
                     </div>
-                    <div class="asset-mini-amount-row"><span class="asset-mini-cur">¥</span><div id="assetFixedAmount" class="asset-mini-amount asset-money">0.00</div></div>
+                    <div class="asset-mini-amount-row"><span class="asset-mini-cur">¥</span><div id="assetFixedAmount" class="asset-mini-amount asset-money">0.00</div><span id="assetFixedShare" class="asset-mini-share">--</span></div>
                 </div>
                 <div class="asset-mini" data-asset-card="receivable" role="button" tabindex="0" onclick="openAssetCategory('receivable', event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAssetCategory('receivable', event);}">
                     <div class="asset-mini-head">
@@ -9789,7 +10188,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span class="asset-mini-title">应收款</span>
                         <span id="assetReceivableMeta" class="asset-mini-count">0 项</span>
                     </div>
-                    <div class="asset-mini-amount-row"><span class="asset-mini-cur">¥</span><div id="assetReceivableAmount" class="asset-mini-amount asset-money">0.00</div></div>
+                    <div class="asset-mini-amount-row"><span class="asset-mini-cur">¥</span><div id="assetReceivableAmount" class="asset-mini-amount asset-money">0.00</div><span id="assetReceivableShare" class="asset-mini-share">--</span></div>
                 </div>
                 <div class="asset-mini" data-asset-card="liability" role="button" tabindex="0" onclick="openAssetCategory('liability', event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAssetCategory('liability', event);}">
                     <div class="asset-mini-head">
@@ -9803,7 +10202,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <span class="asset-mini-title">负债</span>
                         <span id="assetLiabMeta" class="asset-mini-count">0 项</span>
                     </div>
-                    <div class="asset-mini-amount-row"><span class="asset-mini-cur is-liab">¥</span><div id="assetLiabAmount" class="asset-mini-amount is-liab asset-money">0.00</div></div>
+                    <div class="asset-mini-amount-row"><span class="asset-mini-cur is-liab">¥</span><div id="assetLiabAmount" class="asset-mini-amount is-liab asset-money">0.00</div><span id="assetLiabShare" class="asset-mini-share is-liab">--</span></div>
                 </div>
             </div>
 
@@ -11619,6 +12018,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
             </div>
 
+            <div class="mt-2.5 rounded-xl bg-[#fbf7ef] ring-1 ring-[#eadcc7] px-3.5 py-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#f1e4d1;color:#8a6034;"><i class="fa fa-desktop text-[11px]"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <div class="text-[12.5px] font-semibold text-[#6f5236]">在仪表盘展示</div>
+                        <div class="text-[9.5px] text-[#9a7d60] mt-0.5 leading-relaxed">开启后常驻首页横向卡片 · 达成后仍保留</div>
+                    </div>
+                    <button id="targetDashboardBtn" type="button" onclick="targetToggleDashboard()" class="flex flex-col items-end gap-1 flex-shrink-0 active:opacity-80 transition-opacity" title="切换是否在首页仪表盘展示" aria-pressed="false">
+                        <span id="targetDashboardState" class="text-[9px] font-medium text-gray-400">已关闭</span>
+                        <span id="targetDashboardTrack" class="relative block w-9 h-5 rounded-full bg-gray-300 transition-colors"><span id="targetDashboardKnob" class="absolute top-0.5 left-[2px] w-4 h-4 rounded-full bg-white shadow-sm transition-all"></span></span>
+                    </button>
+                </div>
+            </div>
+
             <button id="targetRemindBtn" type="button" onclick="targetToggleRemind()" class="w-full flex items-center gap-2.5 mt-4 py-2.5 text-left active:opacity-80 transition-opacity">
                 <span id="targetRemindTrack" class="relative w-9 h-5 rounded-full bg-accent flex-shrink-0 transition-colors"><span id="targetRemindKnob" class="absolute top-0.5 left-[18px] w-4 h-4 rounded-full bg-white shadow-sm transition-all"></span></span>
                 <span class="text-[12px] font-medium text-gray-700">达标前每日提醒</span>
@@ -11648,9 +12061,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
                 <div id="targetOverviewRail" class="mt-3"></div>
             </div>
-            <div class="text-[10.5px] text-gray-400 mb-3 mt-1.5">未达成目标会每天提醒；达标后自动停止，并保留“已达成”状态。</div>
+            <div class="text-[10.5px] text-gray-400 mb-3 mt-1.5">未达成目标会每天提醒；长按卡片拖动可调整顺序；达成后自动收进下方，不影响首页展示顺序。</div>
             <div id="targetOverviewList" class="space-y-2.5"></div>
-            <div class="text-center text-[10px] text-gray-400 mt-4">点击任意股票可调整目标，或从个股详情页进入设置</div>
+            <div class="text-center text-[10px] text-gray-400 mt-4">点击任意股票可调整目标；长按拖动左侧把手可排序</div>
         </div>
     </div>
 
@@ -22726,6 +23139,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             setText('assetFixedAmount', assetMoneyText(t.fixed));
             setText('assetReceivableAmount', assetMoneyText(t.receivable));
             setText('assetLiabAmount', assetMoneyText(t.liab));
+            const shareOfTotal = function(v){
+                return t.assets > 0 ? ((Number(v) || 0) / t.assets * 100).toFixed(1) + '%' : '--';
+            };
+            setText('assetInvestShare', shareOfTotal(t.invest));
+            setText('assetLiquidShare', shareOfTotal(t.liquid));
+            setText('assetFixedShare', shareOfTotal(t.fixed));
+            setText('assetReceivableShare', shareOfTotal(t.receivable));
+            setText('assetLiabShare', shareOfTotal(t.liab));
             setText('assetInvestSub', '独立资产记录 · 手动维护');
             const currencyEl = document.getElementById('assetCurrency');
             if(currencyEl) currencyEl.innerText = assetMasked ? '' : (t.net < 0 ? '−¥' : '¥');
@@ -22745,13 +23166,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function renderAssetInvestCard(t){
             const spark = document.getElementById('assetInvestSpark');
-            const note = document.getElementById('assetInvestSparkNote');
-            const share = document.getElementById('assetInvestShare');
-            const total = Number(t && t.assets) || 0;
-            const invest = Number(t && t.invest) || 0;
-            if(share){
-                share.innerText = total > 0 ? (invest / total * 100).toFixed(1) + '%' : '--';
-            }
             if(!spark) return;
             const pts = getAssetSnapshotPoints('invest', 12).filter(function(p){
                 return Number.isFinite(Number(p.value));
@@ -22760,14 +23174,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 spark.innerHTML = '<svg viewBox="0 0 88 40" fill="none" aria-hidden="true">'
                     + '<line x1="4" y1="20" x2="82" y2="20" stroke="#EEEAE4" stroke-width="1.1" stroke-dasharray="3 4" stroke-linecap="round"/>'
                     + '</svg>';
-                if(note) note.innerText = '暂无趋势';
                 return;
             }
             if(pts.length === 1){
                 spark.innerHTML = '<svg viewBox="0 0 88 40" fill="none" aria-hidden="true">'
                     + '<line x1="4" y1="20" x2="82" y2="20" stroke="#E9E3DD" stroke-width="1.1" stroke-dasharray="3 4" stroke-linecap="round"/>'
                     + '</svg>';
-                if(note) note.innerText = '仅 1 个记录';
                 return;
             }
             const monthIndex = function(m){
@@ -22795,7 +23207,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<circle cx="' + end.x.toFixed(2) + '" cy="' + end.y.toFixed(2) + '" r="4.8" fill="#5C56C4" fill-opacity=".10"/>'
                 + '<circle cx="' + end.x.toFixed(2) + '" cy="' + end.y.toFixed(2) + '" r="2.5" fill="#5C56C4"/>'
                 + '</svg>';
-            if(note) note.innerText = '近 1 年';
         }
         function renderAssetStructure(t){
             const parts = [
@@ -24365,6 +24776,37 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function targetSaveGoals(o){
             try{ lsSet(HOLDING_GOALS_KEY, JSON.stringify(o || {})); }catch(e){}
         }
+        function targetGoalDashboardOn(g){
+            // 旧版本目标没有 dashboard 字段：默认保留在仪表盘，避免升级后卡片凭空消失。
+            // 新建目标会显式写入 false，必须手动开启才会进入首页横向卡片。
+            return !g || g.dashboard !== false;
+        }
+        function targetSortOrderValue(g){
+            const n = Number(g && g.sortOrder);
+            return Number.isFinite(n) && n > 0 ? n : 9999;
+        }
+        function targetNextSortOrder(map, exceptKey){
+            let max = 0;
+            Object.keys(map || {}).forEach(function(k){
+                if(exceptKey && k === exceptKey) return;
+                const n = Number(map[k] && map[k].sortOrder) || 0;
+                if(n > max) max = n;
+            });
+            return max + 1;
+        }
+        function targetApplyPriorityTop(map, key){
+            if(!map || !map[key]) return;
+            const others = Object.keys(map).filter(function(k){ return k !== key; }).sort(function(a, b){
+                const ao = targetSortOrderValue(map[a]);
+                const bo = targetSortOrderValue(map[b]);
+                if(ao !== bo) return ao - bo;
+                return String(a).localeCompare(String(b), 'zh-CN');
+            });
+            map[key].sortOrder = 1;
+            others.forEach(function(k, i){
+                if(map[k]) map[k].sortOrder = i + 2;
+            });
+        }
         function targetSyncPriority(){
             const map = targetLoadGoals();
             let changed = false;
@@ -24391,6 +24833,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 targetShares: Math.max(1, Math.round(n)),
                 remind: g.remind !== false,
                 priority: g.priority === true,
+                dashboard: targetGoalDashboardOn(g),
+                sortOrder: Number(g.sortOrder) > 0 ? Number(g.sortOrder) : 0,
                 updatedAt: Number(g.updatedAt) || 0,
                 lastNotified: String(g.lastNotified || ''),
                 reachedAt: String(g.reachedAt || '')
@@ -24419,13 +24863,62 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     achieved: current >= target, gap: Math.max(0, target - current), pct: pct
                 });
             });
+            const seedMissingOrder = rows.some(function(r){ return !(Number(r.goal.sortOrder) > 0); });
             rows.sort(function(a, b){
                 if(!!a.goal.priority !== !!b.goal.priority) return a.goal.priority ? -1 : 1;
+                const ao = targetSortOrderValue(a.goal);
+                const bo = targetSortOrderValue(b.goal);
+                if(!seedMissingOrder && ao !== bo) return ao - bo;
                 if(a.achieved !== b.achieved) return a.achieved ? 1 : -1;
                 if(a.gap !== b.gap) return b.gap - a.gap;
                 return a.item.name.localeCompare(b.item.name, 'zh-CN');
             });
+            if(seedMissingOrder && rows.length){
+                // 首次升级：按旧版目标卡的视觉顺序（优先、未达成进度降序、已达成）初始化序号，
+                // 让已有目标不会因为新排序字段而突然换位。
+                const seeded = targetRingSortedRows(rows.slice()).map(function(r){
+                    return targetKey(r.item.marketType, r.item.code);
+                });
+                const map = targetLoadGoals();
+                seeded.forEach(function(key, i){
+                    if(map[key]) map[key].sortOrder = i + 1;
+                });
+                targetSaveGoals(map);
+                rows.sort(function(a, b){
+                    if(!!a.goal.priority !== !!b.goal.priority) return a.goal.priority ? -1 : 1;
+                    const ao = seeded.indexOf(targetKey(a.item.marketType, a.item.code));
+                    const bo = seeded.indexOf(targetKey(b.item.marketType, b.item.code));
+                    return ao - bo;
+                });
+                rows.forEach(function(r){
+                    const key = targetKey(r.item.marketType, r.item.code);
+                    if(map[key]) r.goal.sortOrder = Number(map[key].sortOrder) || 0;
+                });
+            }
             return rows;
+        }
+        function targetDashboardRows(rows){
+            const base = rows || targetRows();
+            return base.filter(function(r){ return r.goal.dashboard !== false; }).sort(function(a, b){
+                if(!!a.goal.priority !== !!b.goal.priority) return a.goal.priority ? -1 : 1;
+                const ao = targetSortOrderValue(a.goal);
+                const bo = targetSortOrderValue(b.goal);
+                if(ao !== bo) return ao - bo;
+                return a.item.name.localeCompare(b.item.name, 'zh-CN');
+            });
+        }
+        // 管理列表按状态分组：待完成在上，已达成统一沉底。
+        // 首页仪表盘的顺序仍由 priority + sortOrder 决定，不随“达成”状态自动重排。
+        function targetManageRows(rows){
+            const base = (rows || targetRows()).slice();
+            return base.sort(function(a, b){
+                if(a.achieved !== b.achieved) return a.achieved ? 1 : -1;
+                if(!a.achieved && (!!a.goal.priority !== !!b.goal.priority)) return a.goal.priority ? -1 : 1;
+                const ao = targetSortOrderValue(a.goal);
+                const bo = targetSortOrderValue(b.goal);
+                if(ao !== bo) return ao - bo;
+                return a.item.name.localeCompare(b.item.name, 'zh-CN');
+            });
         }
         function targetMoneyText(row){
             const price = Number(row.item.nowPrice) || 0;
@@ -24851,88 +25344,202 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
 
 
+        let _targetRingOpenKey = '';
+        let _targetMoreOpen = false;
+        let _targetRingAnimMap = {};
+        let _targetRingResizeTimer = null;
+
+        function targetFmtSharesShort(v){
+            const n = Math.max(0, Math.round(Number(v) || 0));
+            if(n < 10000) return n.toLocaleString('en-US');
+            const w = n / 10000;
+            if(w < 10) return w.toFixed(1) + '万';
+            if(w < 100) return (Math.round(w * 10) / 10).toFixed(1).replace(/\.0$/, '') + '万';
+            return Math.round(w).toLocaleString('en-US') + '万';
+        }
+        function targetRingVisibleCount(){
+            return (window.innerWidth >= 401) ? 3 : 2;
+        }
+        function targetRingSortedRows(rows){
+            const priority = rows.filter(function(r){ return r.goal.priority === true && !r.achieved; });
+            const pending = rows.filter(function(r){ return !r.achieved && r.goal.priority !== true; }).sort(function(a, b){
+                if(Math.abs(a.pct - b.pct) > 0.01) return b.pct - a.pct;
+                if(a.gap !== b.gap) return a.gap - b.gap;
+                return a.item.name.localeCompare(b.item.name, 'zh-CN');
+            });
+            const achieved = rows.filter(function(r){ return r.achieved; }).sort(function(a, b){
+                return String(a.item.name || '').localeCompare(String(b.item.name || ''), 'zh-CN');
+            });
+            return priority.concat(pending, achieved);
+        }
+        function targetWarnLimit(){
+            try{ return Number(POSITION_WARN_LIMIT) || 30; }catch(e){ return 30; }
+        }
+        function targetRingConcentrationPct(row, totalMarket){
+            const total = Number(totalMarket) || 0;
+            if(!(total > 0)) return null;
+            const price = Number(row.item.nowPrice) > 0 ? Number(row.item.nowPrice) : (Number(row.item.costPrice) || 0);
+            if(!(price > 0)) return null;
+            const fx = row.item.marketType === 'HK' ? hkFxRate : 1;
+            const mv = (Number(row.item.count) || 0) * price * fx;
+            return mv > 0 ? (mv / total * 100) : null;
+        }
+        function targetRingJs(v){
+            return String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+        function toggleTargetRingDetail(ev, key){
+            if(ev){ ev.stopPropagation(); }
+            _targetRingOpenKey = (_targetRingOpenKey === key) ? '' : key;
+            updateTargetSummaryStrip();
+        }
+        function toggleTargetMore(ev){
+            if(ev){ ev.stopPropagation(); }
+            _targetMoreOpen = !_targetMoreOpen;
+            updateTargetSummaryStrip();
+        }
+        function openTargetEmptySetup(ev){
+            if(ev){ ev.stopPropagation(); }
+            const first = (holdDataList || [])[0];
+            if(!first){ showToast('请先在持仓页添加股票'); return; }
+            openTargetEditorByCode(first.code, first.marketType, false, ev);
+        }
+        function openTargetDashboardDetail(id, ev){
+            if(ev && ev.stopPropagation) ev.stopPropagation();
+            const originEl = ev && ev.currentTarget ? ev.currentTarget : null;
+            openHoldCardDetail(id, ev, false, originEl);
+        }
+        function targetRingCardHtml(row, idx){
+            const it = row.item;
+            const key = targetKey(it.marketType, it.code);
+            const pct = Math.max(0, Math.min(100, Number(row.pct) || 0));
+            let visualPct = row.achieved ? 100 : Math.round(pct);
+            if(!row.achieved && pct > 0 && visualPct === 0) visualPct = 1;
+            if(!row.achieved && visualPct >= 100) visualPct = 99;
+            const achieved = !!row.achieved;
+            const priority = row.goal.priority === true && !achieved;
+            const C = 2 * Math.PI * 29;
+            const offset = C * (1 - pct / 100);
+            const animate = _targetRingAnimMap[key] === undefined || Math.abs(_targetRingAnimMap[key] - pct) > 0.01;
+            _targetRingAnimMap[key] = pct;
+            const gid = 'tringGrad' + idx;
+            const start = achieved ? '#6FB894' : '#B63A52';
+            const end = achieved ? '#2F7D5A' : '#742034';
+            const name = targetEsc(String(it.name || '').trim() || '--');
+            const doneCls = achieved ? ' is-achieved' : '';
+            const gapText = achieved
+                ? '<span class="tring-done"><i class="fa fa-check"></i>已达成</span>'
+                : '<span>还差</span><span class="tring-gap-val">' + targetFmtSharesShort(row.gap) + '</span><span class="tring-gap-unit">股</span>';
+            return '<div class="tring-card' + doneCls + '" role="button" tabindex="0" aria-label="' + name + ' 目标进度 ' + visualPct + '%，' + (achieved ? '已达成' : '还差 ' + targetFmtSharesShort(row.gap) + ' 股') + '，打开持仓详情" onclick="openTargetDashboardDetail(\'' + targetRingJs(it.id) + '\',event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTargetDashboardDetail(\'' + targetRingJs(it.id) + '\',event);}">'
+                + '<div class="tring-card-top">'
+                + (priority ? '<span class="tring-priority-dot" title="最高优先"></span>' : '')
+                + '<span class="tring-name">' + name + '</span>'
+                + '</div>'
+                + '<div class="tring-ring-wrap">'
+                + '<svg class="tring-ring-svg" viewBox="0 0 72 72" aria-hidden="true">'
+                + '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + start + '"></stop><stop offset="1" stop-color="' + end + '"></stop></linearGradient></defs>'
+                + '<circle class="tring-ring-track" cx="36" cy="36" r="29"></circle>'
+                + '<circle class="tring-ring-progress" cx="36" cy="36" r="29" stroke="url(#' + gid + ')" stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + (animate ? C.toFixed(2) : offset.toFixed(2)) + '" data-offset="' + offset.toFixed(2) + '" data-animate="' + (animate ? '1' : '0') + '" transform="rotate(-90 36 36)"></circle>'
+                + '</svg>'
+                + '<div class="tring-ring-center"><span class="tring-pct">' + visualPct + '<span class="tring-pct-sign">%</span></span></div>'
+                + '</div>'
+                + '<div class="tring-gap-line">' + gapText + '</div>'
+                + '</div>';
+        }
+        function targetBindRailPager(rail){
+            const pager = rail.parentElement ? rail.parentElement.querySelector('.tring-pager') : null;
+            if(!pager || rail.__targetPagerBound) return;
+            rail.__targetPagerBound = true;
+            const total = rail.querySelectorAll('.tring-card').length;
+            const dotCount = Math.min(5, total);
+            let dots = [];
+            function updatePager(){
+                const maxScroll = rail.scrollWidth - rail.clientWidth;
+                if(total < 2 || dotCount < 2 || maxScroll <= 2){
+                    pager.classList.remove('is-visible');
+                    pager.innerHTML = '';
+                    dots = [];
+                    return;
+                }
+                if(pager.childElementCount !== dotCount){
+                    pager.innerHTML = '';
+                    for(let i = 0; i < dotCount; i++){
+                        const dot = document.createElement('span');
+                        dot.className = 'tring-pager-dot';
+                        dot.setAttribute('aria-hidden', 'true');
+                        pager.appendChild(dot);
+                    }
+                    dots = Array.prototype.slice.call(pager.children);
+                }
+                pager.classList.add('is-visible');
+                const progress = maxScroll > 0 ? Math.min(1, Math.max(0, rail.scrollLeft / maxScroll)) : 0;
+                const active = Math.round(progress * (dotCount - 1));
+                dots.forEach(function(dot, i){ dot.classList.toggle('is-active', i === active); });
+            }
+            rail.addEventListener('scroll', function(){ requestAnimationFrame(updatePager); }, {passive:true});
+            requestAnimationFrame(updatePager);
+            setTimeout(updatePager, 180);
+            if(window.ResizeObserver){
+                const ro = new ResizeObserver(function(){ requestAnimationFrame(updatePager); });
+                ro.observe(rail);
+                rail.__targetPagerRO = ro;
+            }
+        }
         function updateTargetSummaryStrip(){
             const el = document.querySelector('#targetSummaryStrip');
             if(!el) return;
             const rows = targetRows();
             if(!rows.length){
                 el.classList.remove('hidden');
-                el.innerHTML = '<div class="min-w-0">'
-                    + '<div class="flex items-center gap-2"><span class="target-kicker">目标持仓</span></div>'
-                    + '<div class="mt-1.5 text-[12px] leading-[1.55]" style="color:#6f635b;">暂未设置目标持仓</div>'
+                el.innerHTML = '<div class="tring-empty" role="button" tabindex="0" aria-label="设置目标持仓" onclick="openTargetEmptySetup(event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTargetEmptySetup(event);}">'
+                    + '<span class="target-kicker">目标持仓</span>'
+                    + '<span class="tring-empty-text">暂未设置目标持仓</span>'
+                    + '<span class="tring-empty-cta">去设置 <i>›</i></span>'
                     + '</div>';
                 updateTradeInsightStrip();
                 return;
             }
             const done = rows.filter(function(r){ return r.achieved; }).length;
             const allDone = done === rows.length;
-            const rail = allDone ? '#4f8a6e' : '#742034';
-            const chevron = allDone ? '#547a65' : '#8f5f67';
-            // 沿用旧目标卡逻辑：最高优先优先；没有最高优先时取“最近可达成”
-            const priorityRow = rows.find(function(r){ return r.goal.priority === true; }) || null;
-            const nearestRow = !allDone ? rows.filter(function(r){ return !r.achieved; }).sort(function(a, b){
-                if(a.gap !== b.gap) return a.gap - b.gap;
-                if(a.pct !== b.pct) return b.pct - a.pct;
-                return a.item.name.localeCompare(b.item.name, 'zh-CN');
-            })[0] : null;
-            const focusRow = allDone ? null : (priorityRow || nearestRow);
-            const focusName = allDone ? '全部达成' : (focusRow ? String(focusRow.item.name || '').trim() : '');
-            const focusGap = (!allDone && focusRow) ? targetFmtShares(focusRow.gap) : '';
-            const progressPct = allDone ? 100 : Math.max(0, Math.min(100, Number(focusRow && focusRow.pct) || 0));
-            const progressFill = allDone
-                ? 'width:100%;background:#4F8A6E;'
-                : ('width:' + progressPct.toFixed(1) + '%;background:linear-gradient(90deg,#A82D43 0%,#742034 100%);');
-            const priorityDot = (!allDone && priorityRow) ? '<span class="target-priority-dot" title="最高优先"></span>' : '';
-            // 沿用旧目标卡逻辑：最后一行看最高优先股票；无最高优先或全部达成时看第一重仓
-            const topPositionRow = (holdDataList || []).slice()
-                .filter(function(it){ return Number(it.count) > 0 && getMarketValue(it) > 0; })
-                .sort(function(a, b){ return getMarketValue(b) - getMarketValue(a); })[0] || null;
-            const quoteItem = (!allDone && priorityRow) ? priorityRow.item : topPositionRow;
-            let quoteLine = '';
-            if(quoteItem){
-                const quotePct = getEffectiveChangePct(quoteItem.changePct);
-                const quoteChg = getEffectiveChange(quoteItem.change);
-                const quoteName = String(quoteItem.name || '').trim() || '--';
-                const quotePrice = Number(quoteItem.nowPrice) > 0 ? fmtListPrice(quoteItem.nowPrice) : '--';
-                const quotePriceText = quotePrice === '--' ? '--' : ((quoteItem.marketType === 'HK' ? 'HK$' : '') + quotePrice);
-                const quoteChgText = (quoteChg == null || isNaN(quoteChg)) ? '--' : ((quoteChg > 0 ? '+' : '') + quoteChg.toFixed(3));
-                const quotePctText = (quotePct == null || isNaN(quotePct)) ? '--' : ((quotePct > 0 ? '+' : '') + quotePct.toFixed(2) + '%');
-                const quoteTone = (quotePct == null || isNaN(quotePct))
-                    ? ((quoteChg == null || isNaN(quoteChg)) ? '#8a7a67' : (quoteChg > 0 ? '#e03131' : (quoteChg < 0 ? '#00a05c' : '#8a7a67')))
-                    : (quotePct > 0 ? '#e03131' : (quotePct < 0 ? '#00a05c' : '#8a7a67'));
-                quoteLine = '<div class="mt-2 flex items-center gap-1.5 text-[10.5px] leading-none">'
-                    + '<span class="font-medium truncate" style="color:#6f635b;max-width:88px">' + targetEsc(quoteName) + '</span>'
-                    + '<span style="color:#a49382">现价</span>'
-                    + '<span class="font-semibold tabular-nums" style="color:#2f2a27">' + quotePriceText + '</span>'
-                    + '<span class="ml-auto" style="color:#a49382">今日</span>'
-                    + '<span class="font-semibold tabular-nums" style="color:' + quoteTone + '">' + quoteChgText + '</span>'
-                    + '<span style="color:#c8b6a4">·</span>'
-                    + '<span class="font-medium tabular-nums" style="color:' + quoteTone + '">' + quotePctText + '</span>'
-                    + '</div>';
-            }
+            const dashboardRows = targetDashboardRows(rows);
+            const cards = dashboardRows.map(function(r, idx){ return targetRingCardHtml(r, idx); }).join('');
+            const dashboardBody = dashboardRows.length
+                ? '<div class="tring-rail" aria-label="首页仪表盘目标持仓">' + cards + '</div>'
+                : '<button type="button" class="tring-dash-empty" onclick="openTargetOverview(event)" aria-label="进入目标管理，开启在仪表盘展示">'
+                    + '<span class="tring-dash-empty-dot"></span>'
+                    + '<span class="tring-dash-empty-text">仪表盘暂无展示目标</span>'
+                    + '<span class="tring-dash-empty-cta">去管理 <i>›</i></span>'
+                    + '</button>';
+            const pager = dashboardRows.length ? '<div class="tring-pager" id="targetRingPager" aria-hidden="true"></div>' : '';
             el.classList.remove('hidden');
-            // 目标区三层：标题（含达成数）/ 目标结论 + 细进度 / 单行洞察 + 单行预警
-            const bodyLine = allDone
-                ? '<div class="target-goal-line"><span class="target-goal-name">全部目标已达成</span></div>'
-                    + '<div class="target-progress" aria-hidden="true"><span class="target-progress-fill" style="' + progressFill + '"></span></div>'
-                : '<div class="target-goal-line">'
-                    + priorityDot
-                    + '<span class="target-goal-name">' + targetEsc(focusName || '--') + '</span>'
-                    + '<span class="target-goal-shares">' + targetFmtShares(focusRow.current) + '/' + targetFmtShares(focusRow.target) + ' 股</span>'
-                    + '<span class="target-goal-gap">还差 ' + focusGap + ' 股</span>'
-                    + '</div>'
-                    + '<div class="target-progress" aria-hidden="true"><span class="target-progress-fill" style="' + progressFill + '"></span></div>';
-            el.innerHTML = '<div class="min-w-0 cursor-pointer active:opacity-70 transition-opacity" onclick="openTargetOverview(event)" title="查看目标持仓">'
-                + '<div class="flex items-center gap-2 min-w-0">'
-                + '<span class="target-kicker flex-shrink-0">目标持仓</span>'
-                + (allDone
-                    ? '<span class="ml-auto target-done-pill is-complete"><span class="tdp-count">' + done + '/' + rows.length + '</span><span class="tdp-label">达成</span></span>'
-                    : '<span class="ml-auto target-done-pill"><span class="tdp-count">' + done + '/' + rows.length + '</span><span class="tdp-label">达成</span></span>')
-                + '<svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="' + chevron + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>'
+            const oldRail = el.querySelector('.tring-rail');
+            if(oldRail && oldRail.__targetPagerRO){ oldRail.__targetPagerRO.disconnect(); oldRail.__targetPagerRO = null; }
+            el.innerHTML = '<div class="tring-head" role="button" tabindex="0" aria-label="查看目标持仓总览" onclick="openTargetOverview(event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTargetOverview(event);}">'
+                + '<span class="target-kicker">目标持仓</span>'
+                + '<span class="target-done-pill' + (allDone ? ' is-complete' : '') + '"><span class="tdp-count">' + done + '/' + rows.length + '</span><span class="tdp-label">达成</span></span>'
+                + '<svg class="tring-head-chev" viewBox="0 0 24 24" fill="none" stroke="#B49A8C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>'
                 + '</div>'
-                + bodyLine
-                + '</div>';
+                + dashboardBody + pager;
+            const rail = el.querySelector('.tring-rail');
+            if(rail) targetBindRailPager(rail);
             updateTradeInsightStrip();
+            const animated = el.querySelectorAll('.tring-ring-progress[data-animate="1"]');
+            if(animated.length){
+                requestAnimationFrame(function(){
+                    requestAnimationFrame(function(){
+                        animated.forEach(function(c){ c.style.strokeDashoffset = c.getAttribute('data-offset'); });
+                    });
+                });
+            }
+        }
+        if(!window.__targetRingResizeBound){
+            window.__targetRingResizeBound = true;
+            window.addEventListener('resize', function(){
+                clearTimeout(_targetRingResizeTimer);
+                _targetRingResizeTimer = setTimeout(function(){
+                    const el = document.querySelector('#targetSummaryStrip');
+                    if(el) updateTargetSummaryStrip();
+                }, 120);
+            });
         }
         function holdDetailItemNow(){
             if(!holdCardDetailKey) return null;
@@ -25513,6 +26120,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let targetEditStock = null;
         let targetRemindOn = true;
         let targetPriorityOn = false;
+        let targetDashboardOn = false;
         let targetReturnOverview = false;
         let _targetOverviewOrigin = null; // 首页目标卡打开总览时的 Peek/Pop 原点
         let _targetEditorOrigin = null;   // 持仓详情“目标”按钮打开设置时的 Peek/Pop 原点
@@ -25594,6 +26202,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             targetPriorityOn = !targetPriorityOn;
             targetUpdatePriorityUI();
         }
+        function targetUpdateDashboardUI(){
+            const track = document.querySelector('#targetDashboardTrack');
+            const knob = document.querySelector('#targetDashboardKnob');
+            const btn = document.querySelector('#targetDashboardBtn');
+            const state = document.querySelector('#targetDashboardState');
+            if(!track || !knob) return;
+            track.style.background = targetDashboardOn ? '#B8874E' : '#d1d5db';
+            knob.style.left = targetDashboardOn ? '18px' : '2px';
+            if(state){
+                state.innerText = targetDashboardOn ? '已开启' : '已关闭';
+                state.classList.remove('text-accent', 'text-gray-400');
+                state.style.color = targetDashboardOn ? '#8A6034' : '#9ca3af';
+            }
+            if(btn) btn.setAttribute('aria-pressed', targetDashboardOn ? 'true' : 'false');
+        }
+        function targetToggleDashboard(){
+            targetDashboardOn = !targetDashboardOn;
+            targetUpdateDashboardUI();
+        }
         function targetUpdateHint(){
             const hint = document.querySelector('#targetEditorHint');
             const input = document.querySelector('#targetSharesInput');
@@ -25639,12 +26266,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const g = targetGetGoal(item.code, item.marketType);
             targetRemindOn = g ? g.remind !== false : true;
             targetPriorityOn = g ? g.priority === true : false;
+            // 旧目标缺省视为已展示；新建目标默认关闭，需手动开启才进入首页横向卡片
+            targetDashboardOn = g ? (g.dashboard !== false) : false;
             document.querySelector('#targetEditStockLine').innerText = item.name + ' · ' + item.code + ' · ' + (item.marketType === 'HK' ? '港股' : 'A股');
             document.querySelector('#targetEditCurrent').innerText = targetFmtShares(item.count);
             document.querySelector('#targetSharesInput').value = g ? String(g.targetShares) : '';
             document.querySelector('#targetClearBtn').classList.toggle('hidden', !g);
             targetUpdateRemindUI();
             targetUpdatePriorityUI();
+            targetUpdateDashboardUI();
             targetUpdateHint();
             const modal = document.querySelector('#targetEditorModal');
             modal.classList.remove('hidden'); modal.classList.add('flex');
@@ -25764,6 +26394,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const key = targetKey(targetEditStock.marketType, targetEditStock.code);
             const old = map[key] || {};
             const changed = !old.targetShares || Number(old.targetShares) !== n || (old.remind !== false) !== targetRemindOn;
+            const baseOrder = Number(old.sortOrder) > 0 ? Number(old.sortOrder) : targetNextSortOrder(map, key);
             if(targetPriorityOn){
                 Object.keys(map).forEach(function(k){
                     if(k !== key && map[k]) map[k].priority = false;
@@ -25773,10 +26404,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 targetShares: n,
                 remind: targetRemindOn,
                 priority: targetPriorityOn,
+                dashboard: targetDashboardOn,
+                sortOrder: baseOrder,
                 updatedAt: Date.now(),
                 lastNotified: changed ? '' : String(old.lastNotified || ''),
                 reachedAt: changed ? '' : String(old.reachedAt || '')
             };
+            if(targetPriorityOn) targetApplyPriorityTop(map, key);
             targetSaveGoals(map);
             if(!targetRemindOn) targetRemoveTodayItems(targetEditStock.code, targetEditStock.marketType);
             ensureHoldingTargetNotifs();
@@ -25865,6 +26499,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!modal || modal.classList.contains('hidden')) return;
             const sheet = document.querySelector('#targetOverviewSheet');
             const finish = function(){
+                if(_targetDrag || _targetPress) targetCancelDrag();
                 if(sheet){
                     try{ sheet.getAnimations().forEach(function(a){ a.cancel(); }); }catch(e){}
                     sheet.style.transform = '';
@@ -25899,7 +26534,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sheetAnim.onfinish = finish;
         }
         function renderTargetOverview(){
-            const rows = targetRows();
+            const rows = targetManageRows();
             const summary = document.querySelector('#targetOverviewSummary');
             const list = document.querySelector('#targetOverviewList');
             if(!list) return;
@@ -25932,7 +26567,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 list.innerHTML = '<div class="bg-white rounded-2xl border border-[#eadfcf] px-4 py-8 text-center text-[12px] text-gray-400">还没有设置目标持仓</div>';
                 return;
             }
+            let doneDividerShown = false;
             list.innerHTML = rows.map(function(r){
+                const doneDivider = (r.achieved && !doneDividerShown && pending > 0)
+                    ? '<div class="flex items-center gap-2.5 px-1 pb-0.5 text-[9.5px] text-[#6b8f7d]"><span class="h-px flex-1" style="background:#d8e9df;"></span><span class="font-semibold tracking-wide">已达成 ' + done + '</span><span class="h-px flex-1" style="background:#d8e9df;"></span></div>'
+                    : '';
+                if(r.achieved) doneDividerShown = true;
                 const it = r.item, g = r.goal;
                 const tag = it.marketType === 'HK'
                     ? '<span class="inline-flex items-center justify-center h-[14px] min-w-[16px] px-0.5 rounded-[3px] text-[8px] text-white bg-blue-500 flex-shrink-0">HK</span>'
@@ -25942,6 +26582,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     : '<span class="text-[10px] font-semibold text-[#8f2437] bg-[#fdf0f1] ring-1 ring-[#e4c6ca] rounded-full px-2 py-0.5 flex-shrink-0">待完成</span>';
                 const priorityChip = r.goal.priority === true
                     ? '<span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-[#ffe5bb] bg-[#742034] ring-1 ring-[#8e2b43] rounded-full px-1.5 py-0.5 flex-shrink-0"><i class="fa fa-bolt text-[7px]"></i>最高优先</span>'
+                    : '';
+                const sortable = !r.achieved && r.goal.priority !== true;
+                const dashChip = r.goal.dashboard !== false
+                    ? '<span class="target-dash-chip" title="在仪表盘展示"><i class="fa fa-desktop"></i></span>'
+                    : '';
+                const grip = sortable
+                    ? '<span class="target-drag-grip" title="排序 ' + (Number(r.goal.sortOrder) || 0) + ' · 长按拖动" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>'
                     : '';
                 const cardStyle = r.achieved ? ' style="border-left:3px solid #4f9c78"' : '';
                 const cardClass = r.achieved
@@ -25956,9 +26603,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const valueLabel = r.achieved ? '#6b8f7d' : '#9b7a7d';
                 const valueCurrent = r.achieved ? '#2f6b52' : '#4a3520';
                 const valueDivider = r.achieved ? '#cfe4d9' : '#e8d4d7';
-                return '<div class="' + cardClass + '"' + cardStyle + ' onclick="openTargetEditorByCode(\'' + String(it.code) + '\',\'' + String(it.marketType) + '\',true,event)">'
+                return doneDivider + '<div class="' + cardClass + ' target-overview-row" data-target-key="' + targetEsc(targetKey(it.marketType, it.code)) + '" data-target-sortable="' + (sortable ? '1' : '0') + '"' + cardStyle + ' onclick="openTargetEditorByCode(\'' + String(it.code) + '\',\'' + String(it.marketType) + '\',true,event)">'
                     + '<div class="flex items-center gap-1.5 min-w-0">'
-                    + '<span class="text-[16px] font-semibold text-gray-800 truncate">' + targetEsc(it.name) + '</span>' + tag + priorityChip + status
+                    + grip
+                    + '<span class="text-[16px] font-semibold text-gray-800 truncate">' + targetEsc(it.name) + '</span>' + tag + priorityChip + dashChip + status
                     + '<span class="ml-auto text-[15px] font-bold tabular-nums ' + (r.achieved ? 'text-[#2f7d5a]' : 'text-[#a82d43]') + '">' + r.pct.toFixed(1) + '%</span>'
                     + '</div>'
                     + '<div class="text-[9px] text-gray-400 mt-0.5 tabular-nums">' + String(it.code) + '</div>'
@@ -25987,6 +26635,243 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '</div>';
             }).join('');
         }
+
+        // ===== 目标总览：长按/拖动排序（只允许未完成且非最高优先的条目） =====
+        let _targetDrag = null;
+        let _targetPress = null;
+        let _targetDragSuppressClick = false;
+        function targetOverviewRowKey(row){
+            return row ? String(row.getAttribute('data-target-key') || '') : '';
+        }
+        function targetDragResetCard(card){
+            if(!card) return;
+            card.classList.remove('is-dragging');
+            card.style.position = '';
+            card.style.left = '';
+            card.style.top = '';
+            card.style.width = '';
+            card.style.height = '';
+            card.style.margin = '';
+            card.style.zIndex = '';
+            card.style.boxSizing = '';
+            card.style.pointerEvents = '';
+        }
+        function targetDragUpdateSlot(y){
+            const d = _targetDrag;
+            if(!d) return;
+            const rows = Array.from(d.list.querySelectorAll('.target-overview-row[data-target-key]'));
+            let before = null;
+            for(let i = 0; i < rows.length; i++){
+                const r = rows[i].getBoundingClientRect();
+                if(y < r.top + r.height / 2){
+                    before = rows[i];
+                    break;
+                }
+            }
+            if(before) d.list.insertBefore(d.placeholder, before);
+            else d.list.appendChild(d.placeholder);
+            // 边缘自动滚动：只移动占位符，卡片仍跟随手指
+            const sheet = document.querySelector('#targetOverviewSheet');
+            if(sheet){
+                const sr = sheet.getBoundingClientRect();
+                const edge = 58;
+                let delta = 0;
+                if(y < sr.top + edge) delta = -10;
+                else if(y > sr.bottom - edge) delta = 10;
+                if(delta){
+                    const max = Math.max(0, sheet.scrollHeight - sheet.clientHeight);
+                    const next = Math.min(max, Math.max(0, sheet.scrollTop + delta));
+                    if(next !== sheet.scrollTop){
+                        sheet.scrollTop = next;
+                        requestAnimationFrame(function(){
+                            if(_targetDrag) targetDragUpdateSlot(_targetDrag.lastY);
+                        });
+                    }
+                }
+            }
+        }
+        function targetBeginDrag(card, pointerId, clientY){
+            if(!card || _targetDrag) return;
+            const list = document.querySelector('#targetOverviewList');
+            if(!list || !list.contains(card)) return;
+            const rect = card.getBoundingClientRect();
+            const ph = document.createElement('div');
+            ph.className = 'target-drag-placeholder';
+            ph.style.height = rect.height + 'px';
+            list.insertBefore(ph, card.nextSibling);
+            document.body.appendChild(card);
+            card.classList.add('is-dragging');
+            card.style.position = 'fixed';
+            card.style.left = rect.left + 'px';
+            card.style.top = rect.top + 'px';
+            card.style.width = rect.width + 'px';
+            card.style.height = rect.height + 'px';
+            card.style.margin = '0';
+            card.style.zIndex = '160';
+            card.style.boxSizing = 'border-box';
+            card.style.pointerEvents = 'none';
+            _targetDrag = {
+                card: card, list: list, placeholder: ph,
+                key: targetOverviewRowKey(card),
+                pointerId: pointerId,
+                startY: Number(clientY) || 0,
+                lastY: Number(clientY) || 0,
+                startTop: rect.top,
+                offsetY: (Number(clientY) || 0) - rect.top,
+                moved: false
+            };
+            document.body.classList.add('target-dragging');
+        }
+        function targetDragMove(ev){
+            const d = _targetDrag;
+            if(!d) return;
+            if(d.pointerId != null && ev.pointerId != null && ev.pointerId !== d.pointerId) return;
+            const y = Number(ev.clientY);
+            if(!isFinite(y)) return;
+            d.lastY = y;
+            if(Math.abs(y - d.startY) > 4) d.moved = true;
+            d.card.style.top = (d.startTop + (y - d.startY)) + 'px';
+            targetDragUpdateSlot(y);
+        }
+        function targetPersistOverviewOrder(draggedKey){
+            const list = document.querySelector('#targetOverviewList');
+            if(!list || !draggedKey) return;
+            const keys = Array.from(list.querySelectorAll('.target-overview-row[data-target-key]')).map(function(row){
+                return targetOverviewRowKey(row);
+            }).filter(Boolean);
+            if(!keys.length) return;
+            const map = targetLoadGoals();
+            if(!map[draggedKey]) return;
+            const draggedIndex = keys.indexOf(draggedKey);
+            if(draggedIndex < 0) return;
+
+            const currentRows = targetRows();
+            const keyOf = function(r){ return targetKey(r.item.marketType, r.item.code); };
+            const achievedSet = new Set(currentRows.filter(function(r){ return r.achieved; }).map(keyOf));
+            const pendingKeys = keys.filter(function(k){ return !achievedSet.has(k); });
+
+            let priorityKey = null;
+            if(draggedIndex === 0){
+                priorityKey = draggedKey;
+            }else{
+                const topRow = currentRows.find(function(r){ return r.goal.priority === true; });
+                if(topRow) priorityKey = keyOf(topRow);
+            }
+
+            // 只重排“待完成”部分；已达成在首页的槽位保持不动，避免达成状态把卡片顶走。
+            const pendingNonPriority = pendingKeys.filter(function(k){ return k !== priorityKey; });
+            const currentNonPriority = currentRows.filter(function(r){ return r.goal.priority !== true; }).map(keyOf);
+            const finalNonPriority = [];
+            let p = 0;
+            currentNonPriority.forEach(function(slotKey){
+                if(achievedSet.has(slotKey)){
+                    finalNonPriority.push(slotKey);
+                }else if(pendingNonPriority[p]){
+                    finalNonPriority.push(pendingNonPriority[p++]);
+                }else{
+                    finalNonPriority.push(slotKey);
+                }
+            });
+            while(p < pendingNonPriority.length) finalNonPriority.push(pendingNonPriority[p++]);
+
+            const finalKeys = (priorityKey ? [priorityKey] : []).concat(finalNonPriority);
+            const unique = [];
+            const seen = Object.create(null);
+            finalKeys.forEach(function(k){
+                if(!k || seen[k] || !map[k]) return;
+                seen[k] = true;
+                unique.push(k);
+            });
+            keys.forEach(function(k){
+                if(!seen[k] && map[k]){ seen[k] = true; unique.push(k); }
+            });
+            unique.forEach(function(k) { if(map[k]) map[k].priority = (k === priorityKey); });
+            unique.forEach(function(k, i){ if(map[k]) map[k].sortOrder = i + 1; });
+            targetSaveGoals(map);
+            if(draggedIndex === 0){
+                showToast('已置顶，并设为最高优先');
+            }
+        }
+        function targetEndDrag(shouldPersist){
+            const d = _targetDrag;
+            if(!d) return;
+            _targetDrag = null;
+            document.body.classList.remove('target-dragging');
+            const card = d.card;
+            const ph = d.placeholder;
+            try{
+                if(ph && ph.parentNode) ph.parentNode.insertBefore(card, ph);
+                if(ph) ph.remove();
+            }catch(e){}
+            targetDragResetCard(card);
+            if(shouldPersist !== false && d.moved){
+                try{ targetPersistOverviewOrder(d.key); }catch(e){}
+                targetRefreshUI();
+            }
+            _targetDragSuppressClick = true;
+            setTimeout(function(){ _targetDragSuppressClick = false; }, 360);
+        }
+        function targetCancelDrag(){
+            if(_targetDrag) targetEndDrag(false);
+            if(_targetPress){
+                clearTimeout(_targetPress.timer);
+                _targetPress = null;
+            }
+        }
+        function targetOverviewPointerDown(ev){
+            if(_targetDrag) return;
+            if(ev.pointerType === 'mouse' && ev.button !== 0) return;
+            const row = ev.target && ev.target.closest ? ev.target.closest('.target-overview-row[data-target-sortable="1"]') : null;
+            if(!row) return;
+            const isGrip = !!(ev.target.closest && ev.target.closest('.target-drag-grip'));
+            if(isGrip){
+                targetBeginDrag(row, ev.pointerId, ev.clientY);
+                return;
+            }
+            if(_targetPress){
+                clearTimeout(_targetPress.timer);
+                _targetPress = null;
+            }
+            const press = {
+                row: row, pointerId: ev.pointerId,
+                startX: Number(ev.clientX) || 0, startY: Number(ev.clientY) || 0,
+                moved: false, timer: null
+            };
+            _targetPress = press;
+            press.timer = setTimeout(function(){
+                if(!_targetPress || _targetPress !== press || press.moved) return;
+                _targetPress = null;
+                targetBeginDrag(press.row, press.pointerId, press.startY);
+            }, 260);
+        }
+        function targetOverviewPointerMove(ev){
+            if(_targetDrag){
+                if(ev.cancelable) ev.preventDefault();
+                targetDragMove(ev);
+                return;
+            }
+            if(!_targetPress) return;
+            if(_targetPress.pointerId != null && ev.pointerId != null && ev.pointerId !== _targetPress.pointerId) return;
+            const dx = (Number(ev.clientX) || 0) - _targetPress.startX;
+            const dy = (Number(ev.clientY) || 0) - _targetPress.startY;
+            if(Math.sqrt(dx * dx + dy * dy) > 8){
+                _targetPress.moved = true;
+                clearTimeout(_targetPress.timer);
+                _targetPress = null;
+            }
+        }
+        function targetOverviewPointerUp(ev){
+            if(_targetDrag){
+                if(ev && ev.cancelable) ev.preventDefault();
+                targetEndDrag(true);
+                return;
+            }
+            if(_targetPress){
+                clearTimeout(_targetPress.timer);
+                _targetPress = null;
+            }
+        }
+
         function openTargetNotifDetail(code, market){
             const item = targetGetHolding(code, market);
             if(!item){ showToast('该股票已不在持仓'); return; }
@@ -26013,7 +26898,24 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 overview.addEventListener('click', function(e){ if(e.target === overview) closeTargetOverview(); });
                 const close = document.querySelector('#targetOverviewCloseBtn');
                 if(close) close.addEventListener('click', closeTargetOverview);
+                const list = document.querySelector('#targetOverviewList');
+                if(list){
+                    list.addEventListener('pointerdown', targetOverviewPointerDown);
+                    list.addEventListener('click', function(e){
+                        if(!_targetDragSuppressClick) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        _targetDragSuppressClick = false;
+                    }, true);
+                }
+                // 卡片被提到 body 后仍要阻断页面滚动；只在拖拽期间生效
+                window.addEventListener('touchmove', function(e){
+                    if(_targetDrag && e.cancelable) e.preventDefault();
+                }, {passive:false});
             }
+            window.addEventListener('pointermove', targetOverviewPointerMove, {passive:false});
+            window.addEventListener('pointerup', targetOverviewPointerUp);
+            window.addEventListener('pointercancel', targetOverviewPointerUp);
         })();
 
         // 除权提醒：扫描分红缓存，今天股权登记 / 今天除权除息 的股票生成提醒（每日更新，同日去重）
@@ -39877,6 +40779,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             try{
                 if(sessionStorage.getItem('positionWarnDismissed') === '1'){
                     positionWarnMessage = '';
+                    positionWarnItems = [];
                     document.body.classList.remove('has-position-warn');
                     updateHoldInsight(calcSummary());
                     return;
@@ -39891,16 +40794,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const mv = (Number(it.count) || 0) * p0 * fx;
                 const pct = total > 0 ? (mv / total * 100) : 0;
                 if(pct > POSITION_WARN_LIMIT){
-                    warns.push({ name: it.name, code: it.code, pct: pct });
+                    warns.push({ name: it.name, code: it.code, market: it.marketType, pct: pct });
                 }
             });
             if(!warns.length){
                 positionWarnMessage = '';
+                positionWarnItems = [];
                 document.body.classList.remove('has-position-warn');
                 updateHoldInsight(sum);
                 return;
             }
             warns.sort(function(a, b){ return b.pct - a.pct; });
+            positionWarnItems = warns;
             positionWarnMessage = '个股仓位预警：' + warns.map(function(w){
                 return w.name + ' ' + w.pct.toFixed(1) + '%';
             }).join('、') + ' 已超 ' + POSITION_WARN_LIMIT + '% 上限。';
@@ -39910,8 +40815,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closePositionWarn(){
             try{ sessionStorage.setItem('positionWarnDismissed', '1'); }catch(e){}
             positionWarnMessage = '';
+            positionWarnItems = [];
             document.body.classList.remove('has-position-warn');
             updateHoldInsight(calcSummary());
+            updateTargetSummaryStrip();
         }
         // ============ 最大回撤（每年年末资产快照序列，经典"创新高点"算法） ============
         // ① 遍历每条快照作为候选高点（仅创出新高的点才参与配对） ② 高点之后找最小总资产
@@ -40789,6 +41696,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         // 首页账户聚焦：预警仅在有真实预警时追加到目标结论下方
         var positionWarnMessage = '';
+        var positionWarnItems = [];
         var _todayPnlLoadStartedAt = 0;
         var _todayPnlLoadTimer = null;
         var _todayPnlNow = null;
@@ -41492,7 +42400,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function updateHoldInsight(sum){
             const el = document.querySelector('#holdWarnRow');
             if(!el) return;
-            const warnText = String(positionWarnMessage || '').replace(/^个股仓位预警：/, '');
+            const rows = targetRows();
+            let warnText = '';
+            if(rows.length){
+                const targetKeys = {};
+                rows.forEach(function(r){ targetKeys[targetKey(r.item.marketType, r.item.code)] = true; });
+                const uncovered = (positionWarnItems || []).filter(function(w){
+                    return !targetKeys[targetKey(w.market, w.code)];
+                });
+                // 目标卡已用橙点表达的集中度提示不再重复堆文字；只保留没有目标卡可承载的预警。
+                if(!uncovered.length){
+                    el.classList.add('hidden');
+                    el.innerHTML = '';
+                    return;
+                }
+                warnText = '个股仓位预警：' + uncovered.map(function(w){
+                    return w.name + ' ' + w.pct.toFixed(1) + '%';
+                }).join('、') + ' 已超 ' + targetWarnLimit() + '% 上限。';
+            }else{
+                warnText = String(positionWarnMessage || '').replace(/^个股仓位预警：/, '');
+            }
             if(!warnText){
                 el.classList.add('hidden');
                 el.innerHTML = '';
@@ -42072,6 +42999,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // ===== 卡片点击后的轻量持仓详情（非 K 线页） =====
         var holdCardDetailKey = null;
+        var holdCardDetailOriginEl = null;
         // 仅记录“从持仓详情页进入子页”的返回上下文；列表/统计页入口不设置，保持原有返回首页行为
         var holdCardDetailReturnState = null;
 
@@ -42258,6 +43186,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cumTText = formatPnl(cumT);
             const cumTColor = cumT > 0 ? HCD_UP : (cumT < 0 ? HCD_DOWN : HCD_FLAT);
             const recentTradeLabel = hcdRecentTradeLabel(item);
+            const totalMarket = Number(calcSummary().totalMarket) || 0;
+            const concPct = targetRingConcentrationPct({ item: item }, totalMarket);
+            const riskLimit = targetWarnLimit();
+            let riskDismissed = false;
+            try{ riskDismissed = sessionStorage.getItem('positionWarnDismissed') === '1'; }catch(e){}
+            const riskHtml = (concPct != null && concPct > riskLimit && !riskDismissed)
+                ? '<div class="hcd-risk" role="status">'
+                    + '<span class="hcd-risk-ic"><i class="fa fa-exclamation"></i></span>'
+                    + '<div class="hcd-risk-main">'
+                    + '<span class="hcd-risk-kicker">集中度偏高</span>'
+                    + '<div class="hcd-risk-line">个股市值占比 <b>' + concPct.toFixed(1) + '%</b>，超过 <b>' + riskLimit + '%</b> 上限</div>'
+                    + '</div>'
+                    + '<button type="button" class="hcd-risk-dismiss" onclick="event.stopPropagation();closePositionWarn();this.closest(\'.hcd-risk\').remove();">忽略</button>'
+                    + '</div>'
+                : '';
             return `<div class="hcd-topbar">
                 <button type="button" class="hcd-back" onclick="closeHoldCardDetail()" aria-label="返回">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
@@ -42283,6 +43226,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     </div>
                 </div>
             </div>
+            ${riskHtml}
             <div class="hcd-cards">
                 <div class="hcd-card">
                     <button type="button" class="hcd-card-head" onclick="toggleHoldCardSection(this)" aria-expanded="true">
@@ -42387,7 +43331,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>`;
         }
 
-        function openHoldCardDetail(id, ev, skipAnim){
+        function openHoldCardDetail(id, ev, skipAnim, originEl){
             const item = holdDataList.find(function(it){ return String(it.id) === String(id); });
             if(!item) return;
             const bodyEl = document.querySelector('#holdCardDetailBody');
@@ -42425,7 +43369,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 backdropEl.classList.remove('hidden');
                 backdropEl.style.opacity = '0';
             }
-            const card = ev && ev.currentTarget ? ev.currentTarget.closest('.hold-card-v2') : document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]');
+            const card = originEl || (ev && ev.currentTarget ? ev.currentTarget.closest('.hold-card-v2') : document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]'));
+            holdCardDetailOriginEl = card || null;
             if(skipAnim || !card || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
                 pageEl.style.transform = '';
                 pageEl.style.opacity = '1';
@@ -42477,12 +43422,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const fabEl = document.querySelector('#openModalBtn');
                 if(fabEl) fabEl.classList.remove('hold-fab-hidden');
                 holdCardDetailKey = null;
+                holdCardDetailOriginEl = null;
             };
             if(immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
                 finish();
                 return;
             }
-            const card = holdCardDetailKey ? document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]') : null;
+            const card = (holdCardDetailOriginEl && holdCardDetailOriginEl.isConnected)
+                ? holdCardDetailOriginEl
+                : (holdCardDetailKey ? document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]') : null);
             if(card){
                 const r = card.getBoundingClientRect();
                 const pr = pageEl.getBoundingClientRect();

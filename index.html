@@ -10180,12 +10180,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             #pageAnnualReport .ar-brand-sub{font-size:8px;letter-spacing:.14em;color:rgba(247,215,175,.58);margin-top:3px}
             #pageAnnualReport .ar-year-btn{
-                width:27px;height:27px;border-radius:50%;border:1px solid rgba(227,180,107,.28);
-                color:#f0d2a2;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;
+                width:27px;height:27px;border-radius:50%;border:1px solid rgba(255,232,196,.50);
+                color:#ffe8c4;background:rgba(255,255,255,.09);display:flex;align-items:center;justify-content:center;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
                 transition:transform .16s ease,background .16s ease;flex:0 0 auto;
             }
-            #pageAnnualReport .ar-year-btn:active{transform:scale(.94);background:rgba(255,255,255,.1)}
-            #pageAnnualReport .ar-year-btn:disabled{opacity:.24}
+            #pageAnnualReport .ar-year-btn i{font-size:12px;line-height:1;color:inherit;text-shadow:0 0 7px rgba(247,214,160,.22)}
+            #pageAnnualReport .ar-year-btn:active{transform:scale(.94);background:rgba(255,255,255,.14)}
+            #pageAnnualReport .ar-year-btn:disabled{
+                opacity:1;color:rgba(255,236,204,.60);border-color:rgba(255,232,196,.30);background:rgba(255,255,255,.055);
+                box-shadow:none;
+            }
+            #pageAnnualReport .ar-year-btn:disabled i{color:inherit;text-shadow:none}
             #pageAnnualReport .ar-year-label{font-size:20px;font-weight:700;letter-spacing:.12em;color:#f7d6a0;line-height:1.15;font-variant-numeric:tabular-nums}
             #pageAnnualReport .ar-year-cap{font-size:8px;letter-spacing:.2em;color:rgba(247,214,160,.48);line-height:1.2;text-align:center;margin-bottom:2px}
             #pageAnnualReport .ar-hero-kicker{font-size:9px;letter-spacing:.22em;color:rgba(247,215,175,.56);margin-bottom:7px}
@@ -10612,12 +10618,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <button id="arPrevYearBtn" class="ar-year-btn" title="上一年度报告"><i class="fa fa-chevron-left text-[9px]"></i></button>
+                        <button id="arPrevYearBtn" class="ar-year-btn" title="上一年度报告" aria-label="查看上一年度报告"><i class="fa fa-chevron-left text-[12px]"></i></button>
                         <div class="min-w-[54px]">
                             <div class="ar-year-cap">报告年度</div>
                             <div class="ar-year-label text-center" id="arYearLabel">2026</div>
                         </div>
-                        <button id="arNextYearBtn" class="ar-year-btn" title="下一年度报告"><i class="fa fa-chevron-right text-[9px]"></i></button>
+                        <button id="arNextYearBtn" class="ar-year-btn" title="下一年度报告" aria-label="查看下一年度报告"><i class="fa fa-chevron-right text-[12px]"></i></button>
                     </div>
                 </div>
 
@@ -15226,13 +15232,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             const pr = calcPnlRet();
             const setTxt = function(id, v, color){ const el = document.querySelector('#' + id); if(!el) return; el.innerText = v; if(color) el.style.color = color; };
-            // 总资产 Hero：用“万”单位保持大字可读，完整金额放在 title 里兜底
-            setTxt('ahTotalAsset', fmtMoney(pr.totalAsset));
+            // 总资产 Hero：详情页主数字用完整元金额，不折算“万/亿”
+            setTxt('ahTotalAsset', fmtMoneyFull(pr.totalAsset));
             updateAssetTierBadge(pr.totalAsset);
             const __taEl = document.querySelector('#ahTotalAsset');
             if(__taEl){
                 const __taLen = __taEl.innerText.length;
-                __taEl.style.fontSize = __taLen >= 9 ? '28px' : '32px';
+                __taEl.style.whiteSpace = 'nowrap';
+                __taEl.style.fontSize = __taLen >= 16 ? '20px' : (__taLen >= 14 ? '24px' : (__taLen >= 12 ? '28px' : '32px'));
                 __taEl.title = Number(pr.totalAsset).toFixed(2);
             }
             const pnlTone = pr.pnl > 0 ? '#e03131' : (pr.pnl < 0 ? '#00a05c' : '#1f2937');
@@ -18773,6 +18780,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function fmtMoneyExact(v){
             const n = Number(v) || 0;
             return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        // 详情页顶部主数字：完整元金额，不使用万/亿单位
+        function fmtMoneyFull(v){
+            return fmtMoneyExact(v);
+        }
+        function fmtPnlFull(v){
+            const n = Number(v) || 0;
+            return (n > 0 ? '+' : (n < 0 ? '-' : '')) + fmtMoneyFull(Math.abs(n));
         }
         // Toast 提示：显示一条消息，2秒后自动消失
         let toastTimer = null;
@@ -26805,6 +26820,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!total && !grandTotal && progressBar) progressBar.style.width = '0%';
         }
 
+        // 顶部汇总主数字：详情页指定的“年度/累计”用完整元金额，其余模式保持原紧凑格式
+        function setDivDetailTotal(value, fullAmount){
+            const el = document.querySelector('#divDetailTotal');
+            if(!el) return;
+            el.innerText = fullAmount ? fmtMoneyFull(value) : fmtMoney(Number(value));
+            el.style.whiteSpace = 'nowrap';
+            const len = el.innerText.length;
+            el.style.fontSize = len >= 14 ? '20px' : (len >= 12 ? '23px' : '26px');
+        }
+
         // 渲染分红明细：received=今年已收 / year=年度分红收入 / total=累计分红总额（历年）
         function renderDivDetail(){
             const mode = divDetailMode;
@@ -26841,7 +26866,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 entries.sort(function(a, b){ return b.y.localeCompare(a.y); });
                 let sumT = 0;
                 entries.forEach(function(e){ sumT += e.amount; });
-                document.querySelector('#divDetailTotal').innerText = fmtMoney(sumT);
+                setDivDetailTotal(sumT, true);
                 var countLineT = document.querySelector('#divDetailCountLine');
                 if(countLineT) countLineT.innerHTML = '年度 <span class="font-semibold" style="color:#742034">' + entries.length + '</span> 个';
                 var stocksLineT = document.querySelector('#divDetailStocksLine');
@@ -27010,7 +27035,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 let sum = 0;
                 entries.forEach(function(e){ sum += e.amount; });
                 const listElY = document.querySelector('#divDetailList');
-                document.querySelector('#divDetailTotal').innerText = fmtMoney(sum);
+                setDivDetailTotal(sum, true);
                 document.querySelector('#divDetailCount').innerText = entries.length + ' 笔';
                 const stockCountY = {};
                 entries.forEach(function(e){ if(e.kind !== 'manual') stockCountY[(e.market || '') + '|' + (e.code || '')] = 1; });
@@ -27155,7 +27180,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
             });
             // 汇总横幅
-            document.querySelector('#divDetailTotal').innerText = fmtMoney(Number(total));
+            setDivDetailTotal(Number(total), false);
             document.querySelector('#divDetailCount').innerText = entries.length + ' 笔';
             const stockSet = {};
             rows.forEach(function(r){ stockSet[r.code] = true; });
@@ -33411,9 +33436,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const cardPnlEl = document.querySelector('#statsCardTodayPnl');
             const cardPnlPctEl = document.querySelector('#statsCardTodayPnlPct');
             if(cardPnlEl && cardPnlPctEl){
-                if(dsAmtEl && dsAmtEl.innerText && dsAmtEl.innerText !== '--'){
+                const dsAmtCompact = dsAmtEl && dsAmtEl.dataset ? dsAmtEl.dataset.compact : '';
+                if(dsAmtCompact && dsAmtCompact !== '--'){
                     const cardCls = 'text-[13px] font-bold tabular-nums ' + (dsAmtEl.className.indexOf('text-[#e03131]') > -1 ? 'text-[#e03131]' : (dsAmtEl.className.indexOf('text-[#00a05c]') > -1 ? 'text-[#00a05c]' : 'text-gray-500'));
-                    cardPnlEl.innerText = dsAmtEl.innerText;
+                    cardPnlEl.innerText = dsAmtCompact;
                     cardPnlEl.className = cardCls;
                     cardPnlPctEl.innerText = dsPctEl ? dsPctEl.innerText : '--';
                     cardPnlPctEl.className = cardCls;
@@ -36674,13 +36700,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const dayPnlPct = hasPct ? Number(todaySnap.dayPnlPct) : null;
                 const amtCls = todaySnap.totalDayPnl > 0.01 ? 'text-[#e03131]' : (todaySnap.totalDayPnl < -0.01 ? 'text-[#00a05c]' : 'text-[#1f2937]');
                 const pctCls = !hasPct ? 'text-[#9a8b76]' : (dayPnlPct > 0.005 ? 'text-[#e03131]' : (dayPnlPct < -0.005 ? 'text-[#00a05c]' : 'text-[#1f2937]'));
-                numTween(dayPnlAmtEl, todaySnap.totalDayPnl, fmtPnlNum);
+                const amtFullText = fmtPnlFull(todaySnap.totalDayPnl);
+                numTween(dayPnlAmtEl, todaySnap.totalDayPnl, fmtPnlFull);
+                dayPnlAmtEl.dataset.compact = fmtPnlNum(todaySnap.totalDayPnl);
+                dayPnlAmtEl.style.whiteSpace = 'nowrap';
                 dayPnlAmtEl.className = 'text-[26px] font-bold tabular-nums leading-none ' + amtCls;
+                const amtLen = amtFullText.length;
+                dayPnlAmtEl.style.fontSize = amtLen >= 14 ? '20px' : (amtLen >= 12 ? '23px' : '26px');
                 const pctText = hasPct ? ((dayPnlPct > 0.005 ? '+' : '') + dayPnlPct.toFixed(2) + '%') : '--';
                 dayPnlPctEl.innerText = pctText;
                 dayPnlPctEl.className = 'text-[15px] font-semibold tabular-nums leading-none mb-0.5 ' + pctCls;
             } else {
                 dayPnlAmtEl.innerText = '--';
+                dayPnlAmtEl.removeAttribute('data-compact');
+                dayPnlAmtEl.style.fontSize = '';
                 dayPnlAmtEl.className = 'text-[26px] font-bold tabular-nums leading-none text-[#9a8b76]';
                 dayPnlPctEl.innerText = '--';
                 dayPnlPctEl.className = 'text-[15px] font-semibold tabular-nums leading-none mb-0.5 text-[#9a8b76]';

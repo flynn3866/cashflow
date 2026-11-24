@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261124.620';</script>
+    <script>window.APP_VERSION = '20261125.624';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -7032,17 +7032,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <div class="relative z-10 grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top:1px solid #eadfce">
                 <div class="min-w-0 text-left">
                     <div class="text-[9px] mb-1" style="color:#8a7354">总盈利</div>
-                    <div id="analysisCumPnl" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
+                    <div id="analysisCumPnl" class="text-[17px] leading-tight font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
                     <div id="analysisCumPnlPct" class="text-[8px] mt-0.5 tabular-nums truncate" style="color:#9a8b76">总收益率 --</div>
                 </div>
                 <div class="min-w-0 px-2 text-center" style="border-left:1px solid #efe2ca">
                     <div class="text-[9px] mb-1" style="color:#8a7354">今年盈利</div>
-                    <div id="analysisYearDiv" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
+                    <div id="analysisYearDiv" class="text-[17px] leading-tight font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
                     <div id="analysisYearDivPct" class="text-[8px] mt-0.5 tabular-nums truncate" style="color:#9a8b76">今年收益率 --</div>
                 </div>
                 <div class="min-w-0 pl-2 text-right" style="border-left:1px solid #efe2ca">
                     <div class="text-[9px] mb-1" style="color:#8a7354">总投入</div>
-                    <div id="analysisYearReturn" class="text-[13px] font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
+                    <div id="analysisYearReturn" class="text-[17px] leading-tight font-semibold tabular-nums truncate" style="color:#1f2937">--</div>
                 </div>
             </div>
 
@@ -22124,6 +22124,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             // 导航切换时不恢复滚动位置（详情页直接导航切换等效返回，清空记忆栈防错位）
             if(__scrollStack) __scrollStack.length = 0;
+            // 持仓卡片详情是浮层；切底部导航时必须一并收起并解锁外层滚动，不能只切页面
+            try{
+                const holdCardDetailEl = document.querySelector('#pageHoldCardDetail');
+                if(holdCardDetailEl && !holdCardDetailEl.classList.contains('hidden')){
+                    closeHoldCardDetail(true);
+                }else{
+                    unlockHoldCardDetailScroll();
+                }
+            }catch(e){}
+            // 导航切换时先彻底收起资产分类详情：仅 hidden 页面不够，蒙层仍在会盖住底部导航
+            try{ forceCloseAssetCategoryForTab(); }catch(e){}
             // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心/股票详情），等效于点击左上角返回
             document.querySelector('#pageStockDetail').classList.add('hidden');
             document.querySelector('#pageSettings').classList.add('hidden');
@@ -24377,6 +24388,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 try{ pageCloseAnim.cancel(); }catch(e){}
                 if(backdropCloseAnim){ try{ backdropCloseAnim.cancel(); }catch(e){} }
             };
+        }
+        // 底部导航切换：资产分类详情没有“返回”可点，必须强制清理页面、蒙层和进行中的动画。
+        // 只隐藏页面而留下 #assetCategoryBackdrop，会让全屏蒙层继续覆盖底部导航，表现为整页点不动。
+        function forceCloseAssetCategoryForTab(){
+            const pageEl = document.querySelector('#pageAssetCategory');
+            const backdropEl = document.querySelector('#assetCategoryBackdrop');
+            try{
+                if(pageEl) pageEl.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+                if(backdropEl) backdropEl.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+            }catch(e){}
+            if(pageEl){
+                pageEl.classList.add('hidden');
+                pageEl.style.transform = '';
+                pageEl.style.opacity = '';
+                pageEl.style.transformOrigin = '';
+                pageEl.style.transition = '';
+                pageEl.scrollTop = 0;
+            }
+            if(backdropEl){
+                backdropEl.classList.add('hidden');
+                backdropEl.style.opacity = '0';
+            }
+            document.body.classList.remove('asset-detail-open');
+            assetCategoryOriginKey = null;
+            assetCategoryClosing = false;
         }
         function renderAssetCategoryPage(){
             const key = assetCurrentGroup;
@@ -42695,13 +42731,26 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         // 原始采样清洗：去掉历史 seed 估算点，只保留可绘制的时间/资产点。
         function heroCleanIntradayPoints(points){
-            return (points || []).map(function(p){
+            var cleaned = (points || []).map(function(p){
                 return { t: Number(p && p.t), v: Number(p && p.v), seed: !!(p && p.seed) };
             }).filter(function(p){
                 return !p.seed && isFinite(p.t) && isFinite(p.v) && p.v > 0;
             }).map(function(p){
                 return { t: p.t, v: p.v };
             }).sort(function(a, b){ return a.t - b.t; });
+            // 启动瞬间可能先写入持仓/现金尚未就绪的极小总资产（例如 2 万），
+            // 它会把整条 1D 的纵轴压扁成横线；只剔除开头明显不完整的快照，后面的真实点全部保留。
+            if(cleaned.length >= 3){
+                var maxV = 0;
+                cleaned.forEach(function(p){ if(p.v > maxV) maxV = p.v; });
+                var floorV = maxV * 0.2;
+                var firstValid = 0;
+                while(firstValid < cleaned.length && cleaned[firstValid].v < floorV) firstValid++;
+                if(firstValid > 0 && firstValid < cleaned.length){
+                    cleaned = cleaned.slice(firstValid);
+                }
+            }
+            return cleaned;
         }
         // 保存“上一个完整交易日”的 1D 曲线；跨天后原曲线不能被当天新采样覆盖。
         function readHeroIntradayPrevData(){
@@ -42753,8 +42802,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             var v = Number(baseline) || 0;
             if(!(v > 0)) return pts;
             if(!pts.length) return [{ t: HERO_INTRADAY_START, v: v }];
-            if(Number(pts[0].t) <= HERO_INTRADAY_START + 1.1){
-                pts[0] = { t: HERO_INTRADAY_START, v: v };
+            var first = pts[0];
+            if(Number(first.t) <= HERO_INTRADAY_START + 0.5){
+                // 第一个真实采样不能丢：起始点固定在 09:15，采样若也在 09:15，就顺延半分钟保留下来。
+                pts.unshift({ t: HERO_INTRADAY_START, v: v });
+                if(Number(pts[1].t) <= HERO_INTRADAY_START + 0.5){
+                    pts[1] = { t: HERO_INTRADAY_START + 0.5, v: Number(pts[1].v) };
+                }
             }else{
                 pts.unshift({ t: HERO_INTRADAY_START, v: v });
             }
@@ -42863,6 +42917,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 .filter(function(p){ return isFinite(p.t) && isFinite(p.v) && p.v > 0; })
                 .sort(function(a, b){ return a.t - b.t; });
         }
+        // 当天一个采样都没落盘时，也至少把“当前总资产”画成一个点，避免主卡只剩空白或一条假横线。
+        function heroIntradayDrawPoints(total){
+            var pts = getHeroIntradayPoints();
+            var val = Number(total) || 0;
+            if(!pts.length && val > 0){
+                pts = [{ t: heroIntradayTime(new Date()), v: val }];
+            }
+            return pts;
+        }
         function heroMergeCurrent(points, total){
             var todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
             var out = (points || []).filter(function(p){
@@ -42925,9 +42988,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             var padY = 4;
             var built = heroCurvePath(points, w, h, padY, domain);
             if(!built){
-                // 1D 无数据时只给一条淡色虚线基准；其他周期保持原来的暖灰细实线，避免影响别处。
+                // 1D 没有任何点时保持空白，不再用一条整宽横线冒充“已采样曲线”。
+                // 起始点由上一交易日收盘价补入后，曲线才会从真实位置起画。
                 if(domain){
-                    return '<path d="M0,' + (h - padY) + ' L' + w + ',' + (h - padY) + '" stroke="rgba(207,192,166,.28)" stroke-width="1" stroke-dasharray="4 6" fill="none"/>';
+                    return '';
                 }
                 return '<path d="M0,' + (h - padY) + ' L' + w + ',' + (h - padY) + '" stroke="rgba(207,192,166,.32)" stroke-width="1.5" fill="none"/>';
             }
@@ -42969,9 +43033,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 drawPoints = heroApplyBaselineToPoints(drawPoints, _heroCurveBaseline);
             }
             drawPoints = heroDownsampleForRender(drawPoints, w);
-            var domain = (_heroCurvePeriod === '1D' && !keepFullSpan)
-                ? { start: HERO_INTRADAY_START, end: HERO_INTRADAY_END }
-                : null;
+            var domain = null;
+            if(_heroCurvePeriod === '1D' && !keepFullSpan){
+                var domainStart = HERO_INTRADAY_START;
+                // 没有昨收起点时（例如看的是上一交易日归档曲线），不要再把第一个已知点顶到 09:15 右侧；
+                // 直接从第一个已知点起画，避免主卡左侧留下一段没有意义的空白。
+                if(!(_heroCurveBaseline > 0) && drawPoints.length){
+                    var firstT = Number(drawPoints[0].t);
+                    if(isFinite(firstT)){
+                        domainStart = Math.max(HERO_INTRADAY_START, Math.min(HERO_INTRADAY_END, firstT));
+                    }
+                }
+                domain = { start: domainStart, end: HERO_INTRADAY_END };
+            }
             svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
             svg.setAttribute('preserveAspectRatio', 'none');
             svg.innerHTML = heroCurveSvg(drawPoints, w, h, domain);
@@ -43078,18 +43152,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function renderHeroPrevClosePoint(fallback){
             getHeroPrevCurvePoints(); // 先归档跨天遗留的上一交易日采样
+            var basePrev = heroPrevCloseBaseValue();
             var cachedPrev = (_heroPrevCloseDay === todayStr() && _heroPrevClose != null) ? (Number(_heroPrevClose) || 0) : 0;
-            if(cachedPrev > 0){
-                _heroCurveBaseline = 0;
-                _heroCurveToken++;
-                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: cachedPrev }], false, false);
-                return;
-            }
             var archiveClose = getHeroPrevArchiveClose();
-            if(archiveClose > 0){
+            if(basePrev > 0 || cachedPrev > 0 || archiveClose > 0){
                 _heroCurveBaseline = 0;
                 _heroCurveToken++;
-                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: archiveClose }], false, false);
+                var closeValue = basePrev > 0 ? basePrev : (cachedPrev > 0 ? cachedPrev : archiveClose);
+                renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: closeValue }], false, false);
                 return;
             }
             var token = ++_heroCurveToken;
@@ -43097,15 +43167,37 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(el) el.classList.add('is-loading');
             loadHeroPrevClose().then(function(prev){
                 if(token !== _heroCurveToken || _heroCurvePeriod !== '1D') return;
-                var pv = Number(prev) > 0 ? Number(prev) : getHeroPrevArchiveClose();
+                var baseNow = heroPrevCloseBaseValue();
+                var pv = baseNow > 0 ? baseNow : (Number(prev) > 0 ? Number(prev) : getHeroPrevArchiveClose());
                 if(!(pv > 0)) pv = Number(fallback) || 0;
                 _heroCurveBaseline = 0;
                 renderHeroAssetCurve([{ t: HERO_INTRADAY_START, v: pv }], false, false);
             });
         }
+        function heroPrevCloseBaseValue(){
+            // 1D 起点用“今天之前最近一条日线总资产”，也就是昨日收盘总资产；
+            // 盘前 09:05 这类 PnL 归属日仍指向昨天时，不能误用更早一天的盈亏分母。
+            var today = todayStr();
+            var bestDate = '';
+            var bestTotal = 0;
+            Object.keys(historyData.dailyAssets || {}).forEach(function(d){
+                if(!/^\d{4}-\d{2}-\d{2}$/.test(d) || d >= today) return;
+                var v = Number(historyData.dailyAssets[d]) || 0;
+                if(v > 0 && (!bestDate || d > bestDate)){
+                    bestDate = d;
+                    bestTotal = v;
+                }
+            });
+            if(bestTotal > 0) return bestTotal;
+            var ref = pnlReferenceDateStr();
+            var v = (_prevCloseAssetBaseForDay === ref) ? Number(_prevCloseAssetBase) : 0;
+            return v > 0 ? v : 0;
+        }
         function refreshHero1D(total){
             var now = new Date();
             var val = Number(total) || 0;
+            // 起点优先复用“今日盈亏”的同一分母；还没加载时主动补一次，避免曲线从当天半途才开始。
+            if(_prevCloseAssetBaseForDay !== pnlReferenceDateStr()) ensurePrevCloseAssetBaseForDisplay();
             if(heroShowPrevClose(now)){
                 // 开盘前/非交易日：优先显示上一完整交易日的 1D 曲线，而不是压成一条直线。
                 var prevPts = getHeroPrevCurvePoints();
@@ -43127,18 +43219,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 09:15 起：当天真实采样；起始点补上一交易日收盘价，只有一个采样时就是一个点。
             _heroCurveToken++;
             recordHeroIntradayPoint(val);
-            var todayPts = getHeroIntradayPoints();
+            var todayPts = heroIntradayDrawPoints(val);
+            var basePrev = heroPrevCloseBaseValue();
             var cachedPrev = (_heroPrevCloseDay === todayStr() && _heroPrevClose != null) ? (Number(_heroPrevClose) || 0) : 0;
-            _heroCurveBaseline = cachedPrev > 0 ? cachedPrev : 0;
+            var knownPrev = basePrev > 0 ? basePrev : cachedPrev;
+            if(!(knownPrev > 0)) knownPrev = getHeroPrevArchiveClose();
+            _heroCurveBaseline = knownPrev > 0 ? knownPrev : 0;
             renderHeroAssetCurve(todayPts, false, false);
-            if(!(cachedPrev > 0)){
+            if(!(knownPrev > 0)){
                 var token = _heroCurveToken;
                 loadHeroPrevClose().then(function(prev){
                     if(token !== _heroCurveToken || _heroCurvePeriod !== '1D') return;
-                    var pv = Number(prev) > 0 ? Number(prev) : getHeroPrevArchiveClose();
+                    var baseNow = heroPrevCloseBaseValue();
+                    var pv = baseNow > 0 ? baseNow : (Number(prev) > 0 ? Number(prev) : getHeroPrevArchiveClose());
                     if(pv > 0){
                         _heroCurveBaseline = pv;
-                        renderHeroAssetCurve(getHeroIntradayPoints(), false, false);
+                        renderHeroAssetCurve(heroIntradayDrawPoints(val), false, false);
                     }
                 });
             }
@@ -44171,12 +44267,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             </div>`;
         }
 
+        // 持仓详情是盖在首页上的浮层：打开期间锁住外层文档滚动，只允许详情容器自己滚。
+        // 关闭/切底部导航时恢复原来的 overflow，避免首页持仓列表在背后跟着滚。
+        let holdCardDetailScrollLock = null;
+        function lockHoldCardDetailScroll(){
+            if(holdCardDetailScrollLock) return;
+            const body = document.body;
+            const html = document.documentElement;
+            holdCardDetailScrollLock = {
+                bodyOverflow: body.style.overflow,
+                htmlOverflow: html.style.overflow
+            };
+            body.style.overflow = 'hidden';
+            html.style.overflow = 'hidden';
+        }
+        function unlockHoldCardDetailScroll(){
+            if(!holdCardDetailScrollLock) return;
+            const prev = holdCardDetailScrollLock;
+            holdCardDetailScrollLock = null;
+            document.body.style.overflow = prev.bodyOverflow;
+            document.documentElement.style.overflow = prev.htmlOverflow;
+        }
         function openHoldCardDetail(id, ev, skipAnim, originEl){
             const item = holdDataList.find(function(it){ return String(it.id) === String(id); });
             if(!item) return;
             const bodyEl = document.querySelector('#holdCardDetailBody');
             const pageEl = document.querySelector('#pageHoldCardDetail');
             if(!bodyEl || !pageEl) return;
+            lockHoldCardDetailScroll();
             // 详情页关闭动画使用 fill:both，动画结束后会残留透明/缩放状态；
             // 再次打开前先清掉旧动画，否则页面内容会被旧动画压成 scale(.14) 且 opacity 0。
             if(pageEl.classList.contains('hidden')){
@@ -44246,7 +44364,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function closeHoldCardDetail(immediate){
             const pageEl = document.querySelector('#pageHoldCardDetail');
-            if(!pageEl || pageEl.classList.contains('hidden')) return;
+            if(!pageEl || pageEl.classList.contains('hidden')){
+                unlockHoldCardDetailScroll();
+                return;
+            }
             const finish = function(){
                 pageEl.classList.add('hidden');
                 pageEl.style.transform = '';
@@ -44263,6 +44384,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(fabEl) fabEl.classList.remove('hold-fab-hidden');
                 holdCardDetailKey = null;
                 holdCardDetailOriginEl = null;
+                unlockHoldCardDetailScroll();
             };
             if(immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
                 finish();

@@ -12061,7 +12061,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 </div>
                 <div id="targetOverviewRail" class="mt-3"></div>
             </div>
-            <div class="text-[10.5px] text-gray-400 mb-3 mt-1.5">未达成目标会每天提醒；长按卡片拖动可调整顺序；达成后自动收进下方，不影响首页展示顺序。</div>
+            <div class="text-[10.5px] text-gray-400 mb-3 mt-1.5">未达成会每天提醒；长按拖动排序，拖到列表边缘会自动滚动；已达成沉底，不影响首页。</div>
             <div id="targetOverviewList" class="space-y-2.5"></div>
             <div class="text-center text-[10px] text-gray-400 mt-4">点击任意股票可调整目标；长按拖动左侧把手可排序</div>
         </div>
@@ -26640,6 +26640,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let _targetDrag = null;
         let _targetPress = null;
         let _targetDragSuppressClick = false;
+        let _targetAutoScrollRaf = 0;
         function targetOverviewRowKey(row){
             return row ? String(row.getAttribute('data-target-key') || '') : '';
         }
@@ -26670,28 +26671,51 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             if(before) d.list.insertBefore(d.placeholder, before);
             else d.list.appendChild(d.placeholder);
-            // 边缘自动滚动：只移动占位符，卡片仍跟随手指
-            const sheet = document.querySelector('#targetOverviewSheet');
-            if(sheet){
-                const sr = sheet.getBoundingClientRect();
-                const edge = 58;
-                let delta = 0;
-                if(y < sr.top + edge) delta = -10;
-                else if(y > sr.bottom - edge) delta = 10;
-                if(delta){
-                    const max = Math.max(0, sheet.scrollHeight - sheet.clientHeight);
-                    const next = Math.min(max, Math.max(0, sheet.scrollTop + delta));
-                    if(next !== sheet.scrollTop){
-                        sheet.scrollTop = next;
-                        requestAnimationFrame(function(){
-                            if(_targetDrag) targetDragUpdateSlot(_targetDrag.lastY);
-                        });
-                    }
-                }
+        }
+        function targetAutoScrollStop(){
+            if(_targetAutoScrollRaf){
+                cancelAnimationFrame(_targetAutoScrollRaf);
+                _targetAutoScrollRaf = 0;
             }
+        }
+        // 拖到可见列表顶部/底部时持续滚动；越靠边越快，手指停住也会继续滚。
+        function targetAutoScrollTick(){
+            _targetAutoScrollRaf = 0;
+            const d = _targetDrag;
+            if(!d) return;
+            const sheet = document.querySelector('#targetOverviewSheet');
+            if(!sheet) return;
+            const header = document.querySelector('#targetOverviewStickyHeader');
+            const sr = sheet.getBoundingClientRect();
+            const topLine = header ? Math.max(sr.top, header.getBoundingClientRect().bottom) : sr.top;
+            const bottomLine = sr.bottom;
+            const edge = Math.min(76, Math.max(46, (bottomLine - topLine) * 0.14));
+            const y = Number(d.lastY);
+            let dir = 0, strength = 0;
+            if(y < topLine + edge){
+                dir = -1;
+                strength = Math.min(1, (topLine + edge - y) / edge);
+            }else if(y > bottomLine - edge){
+                dir = 1;
+                strength = Math.min(1, (y - (bottomLine - edge)) / edge);
+            }
+            if(!dir) return;
+            const max = Math.max(0, sheet.scrollHeight - sheet.clientHeight);
+            if(max <= 0) return;
+            const speed = 2 + strength * 12;
+            const next = Math.max(0, Math.min(max, sheet.scrollTop + dir * speed));
+            if(next === sheet.scrollTop) return;
+            sheet.scrollTop = next;
+            targetDragUpdateSlot(y);
+            _targetAutoScrollRaf = requestAnimationFrame(targetAutoScrollTick);
+        }
+        function targetAutoScrollKick(){
+            if(_targetAutoScrollRaf) return;
+            _targetAutoScrollRaf = requestAnimationFrame(targetAutoScrollTick);
         }
         function targetBeginDrag(card, pointerId, clientY){
             if(!card || _targetDrag) return;
+            targetAutoScrollStop();
             const list = document.querySelector('#targetOverviewList');
             if(!list || !list.contains(card)) return;
             const rect = card.getBoundingClientRect();
@@ -26732,6 +26756,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(Math.abs(y - d.startY) > 4) d.moved = true;
             d.card.style.top = (d.startTop + (y - d.startY)) + 'px';
             targetDragUpdateSlot(y);
+            targetAutoScrollKick();
         }
         function targetPersistOverviewOrder(draggedKey){
             const list = document.querySelector('#targetOverviewList');
@@ -26795,6 +26820,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function targetEndDrag(shouldPersist){
             const d = _targetDrag;
             if(!d) return;
+            targetAutoScrollStop();
             _targetDrag = null;
             document.body.classList.remove('target-dragging');
             const card = d.card;

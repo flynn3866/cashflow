@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261123.616';</script>
+    <script>window.APP_VERSION = '20261123.618';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -4275,11 +4275,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         .tring-rail::-webkit-scrollbar{display:none;}
         .tring-pager{
-            display:none;align-items:center;justify-content:center;gap:5px;
+            display:flex;align-items:center;justify-content:center;gap:5px;
             height:6px;margin:3px 0 0;padding:0;
+            visibility:hidden;
             pointer-events:none;user-select:none;
         }
-        .tring-pager.is-visible{display:flex;}
+        .tring-pager.is-visible{visibility:visible;}
         .tring-pager-dot{
             width:4px;height:4px;border-radius:50%;flex-shrink:0;
             background:rgba(126,108,94,.18);
@@ -4321,7 +4322,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             position:relative;overflow:hidden;isolation:isolate;
             display:flex;flex-direction:column;align-items:center;
             min-width:0;min-height:144px;padding:10px 9px 8px;
-            border-radius:19px;
+            border-radius:14px;
             background:
                 radial-gradient(135% 90% at 100% 0%,rgba(168,45,67,.075) 0%,rgba(168,45,67,0) 62%),
                 radial-gradient(90% 60% at 0% 100%,rgba(200,162,79,.045) 0%,rgba(200,162,79,0) 70%),
@@ -4563,7 +4564,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             to{opacity:1;transform:translateY(0);}
         }
         @media (min-width:401px){
-            .tring-card{--tring-ring:64px;min-height:136px;padding:9px 8px 7px;border-radius:18px;}
+            .tring-card{--tring-ring:64px;min-height:136px;padding:9px 8px 7px;border-radius:14px;}
             .tring-name{font-size:12px;}
             .tring-market{height:14px;min-width:17px;font-size:7px;}
             .tring-pct{font-size:17px;}
@@ -25445,6 +25446,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="tring-gap-line">' + gapText + '</div>'
                 + '</div>';
         }
+        function targetDashboardPerView(){
+            try{
+                return (window.matchMedia && window.matchMedia('(min-width:401px)').matches) ? 3 : 2;
+            }catch(e){
+                return window.innerWidth >= 401 ? 3 : 2;
+            }
+        }
         function targetBindRailPager(rail){
             const pager = rail.parentElement ? rail.parentElement.querySelector('.tring-pager') : null;
             if(!pager || rail.__targetPagerBound) return;
@@ -25476,6 +25484,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 dots.forEach(function(dot, i){ dot.classList.toggle('is-active', i === active); });
             }
             rail.addEventListener('scroll', function(){ requestAnimationFrame(updatePager); }, {passive:true});
+            updatePager();
             requestAnimationFrame(updatePager);
             setTimeout(updatePager, 180);
             if(window.ResizeObserver){
@@ -25509,7 +25518,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + '<span class="tring-dash-empty-text">仪表盘暂无展示目标</span>'
                     + '<span class="tring-dash-empty-cta">去管理 <i>›</i></span>'
                     + '</button>';
-            const pager = dashboardRows.length ? '<div class="tring-pager" id="targetRingPager" aria-hidden="true"></div>' : '';
+            const pager = (dashboardRows.length > targetDashboardPerView())
+                ? '<div class="tring-pager" id="targetRingPager" aria-hidden="true"></div>'
+                : '';
             el.classList.remove('hidden');
             const oldRail = el.querySelector('.tring-rail');
             if(oldRail && oldRail.__targetPagerRO){ oldRail.__targetPagerRO.disconnect(); oldRail.__targetPagerRO = null; }

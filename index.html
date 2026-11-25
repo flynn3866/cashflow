@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261125.624';</script>
+    <script>window.APP_VERSION = '20261125.649';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -3418,6 +3418,48 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             -webkit-backdrop-filter:blur(18px) saturate(1.12);
             backdrop-filter:blur(18px) saturate(1.12);
         }
+        /* 自选股票详情顶栏：与年度投资报告详情页同一套吸顶与材质 */
+        #pageStockDetail{padding-top:0!important;}
+        #pageStockDetail #sdTopBar{
+            top:0;
+            margin-top:calc(1.5rem + env(safe-area-inset-top));
+            padding:12px 16px!important;
+            border-radius:16px!important;
+            border:1px solid rgba(116,32,52,.12)!important;
+            background:rgba(255,253,249,.94)!important;
+            box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 28px -24px rgba(45,33,28,.55)!important;
+            overflow:visible!important;
+            -webkit-backdrop-filter:blur(14px);
+            backdrop-filter:blur(14px);
+        }
+        #pageStockDetail #sdTopBar::before{
+            content:"";position:absolute;left:0;right:0;top:0;height:2px;border-radius:16px 16px 0 0;
+            background:linear-gradient(90deg,transparent,#742034 18%,#C99A4B 50%,#742034 82%,transparent);
+            pointer-events:none;
+        }
+        #pageStockDetail .sd-back{
+            width:36px;height:36px;border-radius:12px!important;
+            border:1px solid #EAD8C9!important;background:#F8F0E8!important;color:#6D5347!important;
+        }
+        #pageStockDetail .sd-back i{font-size:13px!important;}
+        #pageStockDetail .sd-kicker{
+            font-size:8px;line-height:1.2;font-weight:600;letter-spacing:.18em;color:#9D8574;
+            font-family:"Noto Serif SC","Songti SC",Georgia,serif;
+        }
+        #pageStockDetail #sdTitle{
+            margin-top:2px;
+            font-family:"Noto Serif SC","Songti SC",Georgia,serif;
+            font-size:16px!important;line-height:1.2;font-weight:700;letter-spacing:.04em;
+            color:#2C211C;max-width:210px;
+        }
+        #pageStockDetail #sdCode{font-size:8.5px;line-height:1.2;color:#9D8574;letter-spacing:.06em;}
+        #pageStockDetail #sdTime{
+            flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+            padding:5px 10px;border-radius:999px;
+            border:1px solid #EAD8C9;background:#F8EFE7;
+            font-size:9.5px;line-height:1.2;font-weight:600;color:#742034;
+            white-space:nowrap;
+        }
         #pageHoldCardDetail .hcd-topbar{
             border-radius:20px 20px 0 0!important;
             background:rgba(249,247,244,.88)!important;
@@ -5355,6 +5397,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             font-variant-numeric:tabular-nums lining-nums;
             font-feature-settings:"tnum" 1,"lnum" 1;
         }
+        #pageStatsToday #statsTodayContribList .contrib-amt{font-size:10.5px;line-height:1.2;font-weight:600}
+        #pageStatsToday #statsTodayContribList .contrib-pct{font-size:8px;line-height:1.2;font-weight:500;margin-top:2px}
 
         /* 资产详情：页头日期、等级轨辅助数字，单值展示，不做纵向对齐 */
         #pageAssetHigh #ahHighDate,
@@ -5779,6 +5823,383 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageWatchManage.watch-mgr-dark .watch-mgr-name{color:#ededed;}
         #pageWatchManage.watch-mgr-dark .watch-mgr-code{color:#8c8c8c;}
         #pageWatchManage.watch-mgr-dark #watchMgrList .watch-grip{color:#8e8e8e!important;}
+    </style>
+    <style id="collection-hall-20261125">
+        /* 藏品馆：白底画廊 + 首页总资产同款墨黑酒红主卡；暗棕文字、酒红结构线、香槟金只做高光 */
+        #pageCollection{
+            --col-wine:#722A3A;
+            --col-wine-soft:#8F5A62;
+            --col-bronze:#7A5A3D;
+            --col-ink:#35261F;
+            --col-muted:#97897C;
+            --col-line:rgba(106,82,56,.18);
+            --col-cream:#F7F2EA;
+            position:relative;
+            min-height:100vh;
+            padding:calc(1.5rem + env(safe-area-inset-top)) 12px calc(92px + env(safe-area-inset-bottom));
+            color:var(--col-ink);
+            background:#FFFFFF;
+        }
+        #pageCollection .collection-topbar{
+            position:sticky;top:0;z-index:40;
+            display:flex;align-items:center;gap:10px;
+            padding:12px 16px;border-radius:16px;
+            border:1px solid rgba(116,32,52,.12);
+            background:rgba(255,253,249,.94);
+            -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+            box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 28px -24px rgba(45,33,28,.55);
+        }
+        #pageCollection .collection-topbar::before{
+            content:"";position:absolute;left:0;right:0;top:0;height:2px;border-radius:16px 16px 0 0;
+            background:linear-gradient(90deg,transparent,#742034 18%,#C99A4B 50%,#742034 82%,transparent);
+            pointer-events:none;
+        }
+        #pageCollection .collection-back{
+            width:36px;height:36px;border-radius:12px;flex:0 0 auto;
+            display:flex;align-items:center;justify-content:center;
+            border:1px solid #EAD8C9;
+            background:#F8F0E8;color:#6D5347;
+            -webkit-tap-highlight-color:transparent;
+        }
+        #pageCollection .collection-back i{font-size:13px}
+        #pageCollection .collection-back:active{transform:scale(.96)}
+        #pageCollection .collection-topbar-title{min-width:0;flex:1}
+        #pageCollection .collection-topbar-name{margin-top:2px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:16px;font-weight:700;line-height:1.2;letter-spacing:.04em;color:#2C211C}
+        #pageCollection .collection-topbar-kicker{font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:8px;line-height:1.2;font-weight:600;letter-spacing:.18em;color:#9D8574}
+        #pageCollection .collection-top-count{
+            flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;
+            padding:5px 10px;border-radius:999px;
+            border:1px solid #EAD8C9;background:#F8EFE7;
+            font-size:10px;font-weight:600;color:#742034;font-variant-numeric:tabular-nums;white-space:nowrap;
+        }
+        #pageCollection .collection-top-count i{font-size:8px;color:#B28A4D}
+
+        #pageCollection .collection-hero{
+            position:relative;overflow:hidden;margin-top:13px;
+            padding:17px 16px 14px;border-radius:24px;
+            border:1px solid #EADFCE;
+            background:
+                url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='220'%20height='120'%3E%3Cfilter%20id='paper'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.03%200.45'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23paper)'%20opacity='0.045'/%3E%3C/svg%3E") repeat,
+                radial-gradient(92% 128% at 18% 100%,rgba(159,128,94,.045),transparent 62%),
+                linear-gradient(180deg,#FFFDF8 0%,#FFFAF3 100%);
+            box-shadow:0 3px 12px rgba(82,55,32,.06),inset 0 1px 0 rgba(255,255,255,.86);
+        }
+        #pageCollection .collection-hero::before{content:"";position:absolute;left:18px;right:18px;top:0;height:2px;border-radius:0 0 2px 2px;background:linear-gradient(90deg,transparent,#8F2437 22%,#A82D43 50%,#8F2437 78%,transparent);pointer-events:none}
+        #pageCollection .collection-hero::after{content:"";position:absolute;right:-52px;top:-74px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(168,45,67,.07),transparent 68%);pointer-events:none}
+        #pageCollection .collection-hero-eyebrow{font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:7.5px;letter-spacing:.19em;color:rgba(143,36,55,.62);position:relative;z-index:1}
+        #pageCollection .collection-hero-eyebrow::before{content:"";display:inline-block;width:16px;height:1px;margin-right:7px;vertical-align:2px;background:rgba(143,36,55,.38)}
+        #pageCollection .collection-hero-main{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:9px}
+        #pageCollection .collection-hero-count{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+        #pageCollection #collectionHeroCount{font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:46px;line-height:.92;font-weight:600;letter-spacing:-.03em;color:#3D2C24;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-hero-count small{font-size:9px;font-weight:500;color:#8A7354;letter-spacing:.08em}
+        #pageCollection .collection-hero-copy{text-align:right;font-size:10.5px;line-height:1.65;color:#9A8978;letter-spacing:.03em;padding-left:0;border-left:0}
+        #pageCollection .collection-hero-foot{position:relative;z-index:1;display:flex;align-items:center;gap:7px;margin-top:11px;padding-top:9px;border-top:1px solid #EADFCE;font-size:8.5px;color:#A78B5D;letter-spacing:.03em}
+        #pageCollection .collection-hero-foot i{font-size:8px;color:#C1A46D}
+        #pageCollection .collection-hero-foot .dot{width:2px;height:2px;border-radius:50%;background:#C8B686}
+        #pageCollection .collection-hero-year{font-weight:600;color:#A98552;font-variant-numeric:tabular-nums}
+
+        #pageCollection .collection-tabs{
+            position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;
+            margin:14px 0 2px;padding:4px;border-radius:14px;
+            border:1px solid #E7DFD4;background:#F7F6F3;
+            box-shadow:inset 0 1px 2px rgba(35,25,18,.03);
+        }
+        #pageCollection .collection-tab{
+            position:relative;display:flex;align-items:center;justify-content:center;gap:6px;
+            min-height:34px;padding:7px 8px;border:0;border-radius:10px;
+            background:transparent;color:#7E7165;font-size:11.5px;font-weight:600;
+            letter-spacing:.03em;-webkit-tap-highlight-color:transparent;
+        }
+        #pageCollection .collection-tab.is-active{background:#FFFFFF;color:#722A3A;font-weight:750;box-shadow:0 2px 8px rgba(35,25,18,.055),inset 0 1px 0 rgba(255,255,255,.95)}
+        #pageCollection .collection-tab.is-active::after{content:"";position:absolute;left:28%;right:28%;bottom:3px;height:1.5px;border-radius:2px;background:linear-gradient(90deg,transparent,#722A3A,transparent)}
+        #pageCollection .collection-tab-count{font-size:8.5px;font-weight:650;line-height:1;padding:3px 5px;border-radius:999px;background:#EDE9E3;color:#7E6F61;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-tab.is-active .collection-tab-count{background:rgba(114,42,58,.09);color:#7A3541}
+
+
+        #pageCollection .collection-year{margin-top:21px}
+        #pageCollection .collection-year-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;min-width:0}
+        #pageCollection .collection-year-title{display:inline-flex;align-items:center;gap:7px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:17px;font-weight:650;line-height:1;color:#3D2C24;letter-spacing:.03em;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-year-title::before,
+        #pageCollection .collection-year-title::after{content:"";width:14px;height:1px;flex:0 0 auto;background:linear-gradient(90deg,rgba(176,140,82,0),rgba(176,140,82,.72))}
+        #pageCollection .collection-year-title::after{background:linear-gradient(90deg,rgba(176,140,82,.72),rgba(176,140,82,0))}
+        #pageCollection .collection-year-count{font-size:8.5px;color:#9A8C80;letter-spacing:.04em;white-space:nowrap}
+        #pageCollection .collection-year-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(176,140,82,.24),rgba(176,140,82,0));margin-left:2px}
+        #pageCollection .collection-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;row-gap:20px;align-items:stretch}
+
+        #pageCollection .collection-card{
+            --pct:0%;
+            position:relative;overflow:hidden;display:flex;flex-direction:column;
+            width:100%;padding:14px 16px;
+            border-radius:16px;border:1px solid #D8CDBE;
+            background:linear-gradient(158deg,#FBF8F2 0%,#FAF6EF 100%);
+            box-shadow:0 4px 12px rgba(88,61,40,.10),inset 0 1px 0 rgba(255,255,255,.96);
+            text-align:left;font-family:inherit;color:#35261F;cursor:pointer;
+            -webkit-tap-highlight-color:transparent;
+            transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+        }
+        #pageCollection .collection-card:active{transform:scale(.975)}
+        #pageCollection .collection-card.is-done{
+            border:1px solid rgba(210,190,143,.58);
+            background:
+                radial-gradient(112% 78% at 10% 0,rgba(176,62,84,.30),transparent 64%),
+                radial-gradient(112% 72% at 100% 0,rgba(154,56,74,.14),transparent 68%),
+                linear-gradient(155deg,#8D4150 0%,#7A3442 52%,#682C37 100%);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,.10) inset,
+                0 0 0 1px rgba(210,190,143,.10) inset,
+                0 4px 12px rgba(94,55,45,.10);
+        }
+        #pageCollection .collection-card.is-done::before{
+            content:"";position:absolute;left:12px;right:12px;top:0;height:1.5px;
+            background:linear-gradient(90deg,transparent,#D2BE8F 16%,#E6D6AE 48%,#D2BE8F 82%,transparent);
+            box-shadow:0 0 7px rgba(210,190,143,.18);
+            border-radius:0 0 2px 2px;
+            pointer-events:none;
+        }
+        #pageCollection .collection-card.is-done::after{
+            content:"";position:absolute;inset:0;border-radius:15px;
+            background:
+                radial-gradient(120% 86% at 100% 0,rgba(210,190,143,.08),transparent 62%),
+                repeating-linear-gradient(118deg,rgba(255,255,255,.014) 0 1px,transparent 1px 9px);
+            pointer-events:none;
+        }
+        #pageCollection .collection-card.is-locked{
+            border-color:#D8CDBE;
+            background:linear-gradient(158deg,#FBF8F2 0%,#FAF6EF 100%);
+            box-shadow:0 4px 12px rgba(88,61,40,.10),inset 0 1px 0 rgba(255,255,255,.96);
+            color:#73685E;
+        }
+        #pageCollection .collection-card.is-locked::before{
+            content:"";position:absolute;inset:0;border-radius:15px;
+            background:repeating-linear-gradient(135deg,rgba(106,82,56,.008) 0 1px,transparent 1px 9px);
+            pointer-events:none;
+        }
+        #pageCollection .collection-card > *{position:relative;z-index:1}
+        #pageCollection .collection-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px}
+        #pageCollection .collection-logo{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid #DED3C6;background:#FFFFFF;box-shadow:0 1px 3px rgba(40,30,22,.04)}
+        #pageCollection .collection-card.is-done .collection-logo{border-color:rgba(210,190,143,.42);background:linear-gradient(145deg,#FFFDF7,#F4EBD9);box-shadow:0 1px 4px rgba(32,18,18,.18),inset 0 1px 0 rgba(255,255,255,.95)}
+        #pageCollection .collection-card.is-locked .collection-logo{opacity:.72;border-color:#DED3C6;background:#FAF8F4;box-shadow:none}
+        #pageCollection .collection-card.is-locked .collection-logo img{filter:grayscale(1) contrast(.9) opacity(.75)!important}
+        #pageCollection .collection-complete{display:flex;align-items:center;flex:0 0 auto}
+        #pageCollection .collection-seal{
+            width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            position:relative;color:#D2BE8F;
+            background:
+                radial-gradient(circle at 36% 28%,rgba(210,190,143,.05),rgba(210,190,143,.012) 55%,transparent 72%);
+            border:1px solid rgba(210,190,143,.58);
+            box-shadow:
+                inset 0 1px 1px rgba(35,10,16,.22),
+                inset 0 -1px 1px rgba(255,238,190,.06);
+            transform:rotate(-4deg);
+            transform-origin:50% 50%;
+        }
+        #pageCollection .collection-seal::before{content:none}
+        #pageCollection .collection-seal::after{content:"";position:absolute;inset:4px;border-radius:50%;border:.55px solid rgba(210,190,143,.15);pointer-events:none}
+        #pageCollection .collection-seal-char{
+            display:block;font-family:"Noto Serif SC","Songti SC",Georgia,serif;
+            font-size:15px;line-height:1;font-weight:600;letter-spacing:.02em;
+            color:#D2BE8F;
+            text-shadow:0 1px 0 rgba(30,8,14,.32),0 -1px 0 rgba(255,240,200,.10);
+        }
+        #pageCollection .collection-ring{
+            width:32px;height:32px;border-radius:50%;position:relative;flex:0 0 auto;
+            display:flex;align-items:center;justify-content:center;
+            background:conic-gradient(#AD9C86 0 var(--pct),#EEE7DB var(--pct) 100%);
+            box-shadow:0 0 0 1px rgba(106,82,56,.05),inset 0 1px 1px rgba(255,255,255,.7);
+        }
+        #pageCollection .collection-ring::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#FAF6EF}
+        #pageCollection .collection-ring b{position:relative;z-index:1;font-size:10px;line-height:1;font-weight:750;color:#7E7063;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-ring b i{font-size:7px;font-style:normal;font-weight:600;margin-left:.5px;color:#A29687}
+        #pageCollection .collection-name{margin-top:8px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:18px;line-height:1.2;font-weight:650;letter-spacing:.03em;color:#39271F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-code-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;margin-top:8px}
+        #pageCollection .collection-code{min-width:0;font-size:12px;line-height:1.2;color:#9A8D80;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-target{flex:0 0 auto;display:inline-flex;align-items:baseline;gap:3px;font-size:12px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;color:#7C6E62}
+        #pageCollection .collection-target span{font-size:10px;line-height:1.2;color:#9B8F83;letter-spacing:.02em}
+        #pageCollection .collection-target b{font-size:12px;line-height:1.2;font-weight:600;color:#6F6258}
+        #pageCollection .collection-target i{font-size:10px;line-height:1.2;font-style:normal;color:#9B8F83}
+        #pageCollection .collection-card.is-done .collection-name{color:#FFFFFF}
+        #pageCollection .collection-card.is-done .collection-code,
+        #pageCollection .collection-card.is-done .collection-target{color:rgba(245,239,228,.64)}
+        #pageCollection .collection-card.is-done .collection-target span,
+        #pageCollection .collection-card.is-done .collection-target i{color:rgba(245,239,228,.52)}
+        #pageCollection .collection-card.is-done .collection-target b{color:#D2BE8F;font-weight:600}
+        #pageCollection .collection-card.is-locked .collection-code{color:#A19588}
+        #pageCollection .collection-card-foot{margin-top:24px;padding:0;display:flex;align-items:baseline;justify-content:flex-end;gap:4px;text-align:right;min-width:0}
+        #pageCollection .collection-date{font-size:12px;line-height:1.2;color:rgba(142,119,104,.72);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-date b{font-size:12px;line-height:1.2;font-weight:650;color:#7A2A38;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-card.is-done .collection-date{color:rgba(210,190,143,.78)}
+        #pageCollection .collection-card.is-done .collection-date b{color:#D2BE8F}
+        #pageCollection .collection-gap{font-size:12px;line-height:1.2;color:rgba(140,125,113,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-gap b{font-size:12px;line-height:1.2;font-weight:700;color:#7A2A38;font-variant-numeric:tabular-nums}
+
+        #pageCollection .collection-empty{
+            margin-top:20px;padding:38px 22px 30px;border-radius:18px;text-align:center;
+            border:1px dashed rgba(114,42,58,.24);
+            background:linear-gradient(160deg,#FFFFFF 0%,#FCFBF8 100%);
+            box-shadow:0 6px 16px rgba(40,30,22,.035),inset 0 1px 0 rgba(255,255,255,.95);
+        }
+        #pageCollection .collection-empty-seal{
+            width:58px;height:58px;margin:0 auto 14px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            color:#762F3D;font-size:20px;
+            border:1px solid rgba(182,141,74,.42);
+            background:#FFFFFF;
+            box-shadow:0 0 0 4px rgba(199,163,92,.05),0 7px 16px rgba(110,76,40,.07),inset 0 1px 0 rgba(255,255,255,.95);
+        }
+        #pageCollection .collection-empty-title{font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:16px;font-weight:650;color:#3D2C24;letter-spacing:.02em}
+        #pageCollection .collection-empty-sub{margin-top:7px;font-size:10.5px;line-height:1.7;color:#938478}
+        #pageCollection .collection-empty-cta{
+            margin-top:15px;display:inline-flex;align-items:center;gap:5px;
+            padding:8px 16px;border-radius:999px;border:1px solid rgba(114,42,58,.24);
+            background:#FFFFFF;color:#722A3A;font-size:10.5px;font-weight:650;
+            box-shadow:0 4px 10px rgba(114,42,58,.045);
+        }
+        #pageCollection .collection-empty-cta:active{transform:scale(.975)}
+
+        #pageCollection .collection-footnote{padding:24px 6px 4px;text-align:center;font-size:8.5px;line-height:1.7;color:#B4A89B;letter-spacing:.03em}
+        #pageCollection .collection-footnote i{font-size:8px;color:rgba(169,134,81,.68);margin-right:4px}
+
+        /* 我的页入口：不新增底部导航，保持 5 个主入口；从“我的”一步进入 */
+        #pageMine .collection-entry{
+            width:100%;display:flex;align-items:center;gap:13px;position:relative;overflow:hidden;
+            margin-bottom:16px;padding:14px 15px;border-radius:18px;text-align:left;
+            border:1px solid #E1D3C0;
+            background:linear-gradient(138deg,#FDF8EF 0%,#F8F0E3 100%);
+            box-shadow:0 10px 24px rgba(65,44,26,.065),inset 0 1px 0 rgba(255,255,255,.92);
+            -webkit-tap-highlight-color:transparent;
+        }
+        #pageMine .collection-entry::before{content:"";position:absolute;left:18px;right:18px;top:0;height:1.5px;background:linear-gradient(90deg,transparent,#722A3A 32%,#955460 55%,transparent);opacity:.72}
+        #pageMine .collection-entry::after{content:"";position:absolute;right:-24px;top:-42px;width:98px;height:98px;border-radius:50%;border:1px solid rgba(164,126,72,.13);box-shadow:0 0 0 9px rgba(255,250,241,.10);pointer-events:none}
+        #pageMine .collection-entry:active{transform:scale(.985)}
+        #pageMine .collection-entry-emblem{
+            width:36px;height:36px;border-radius:50%;flex:0 0 auto;position:relative;z-index:1;
+            display:flex;align-items:center;justify-content:center;
+            color:#F1E0B7;font-size:13px;
+            background:linear-gradient(145deg,#823646 0%,#6C2634 58%,#581B27 100%);
+            border:1px solid rgba(200,182,134,.72);
+            box-shadow:0 0 0 3px rgba(200,182,134,.10),0 4px 10px rgba(82,28,40,.18),inset 0 1px 0 rgba(255,255,255,.18);
+        }
+        #pageMine .collection-entry-emblem::after{content:"";position:absolute;inset:4px;border-radius:50%;border:1px solid rgba(232,216,172,.28);pointer-events:none}
+        #pageMine .collection-entry-main{min-width:0;flex:1;position:relative;z-index:1}
+        #pageMine .collection-entry-kicker{font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:7px;letter-spacing:.18em;color:#8E6D50}
+        #pageMine .collection-entry-title{display:flex;align-items:center;gap:7px;margin-top:2px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:17px;font-weight:650;line-height:1.2;color:#2F211B;letter-spacing:.035em}
+        #pageMine .collection-entry-count{font-family:inherit;font-size:9px;font-weight:650;line-height:1;padding:3px 6px;border-radius:999px;background:rgba(114,42,58,.10);color:#7A3541;font-variant-numeric:tabular-nums}
+        #pageMine .collection-entry-sub{margin-top:4px;font-size:9.5px;line-height:1.45;color:#827267;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageMine .collection-entry-side{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;z-index:1;min-width:20px}
+        #pageMine .collection-entry-year{font-size:8px;line-height:1;letter-spacing:.08em;color:#9A856D;font-variant-numeric:tabular-nums;white-space:nowrap}
+        #pageMine .collection-entry-mark{
+            width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            border:1px solid rgba(178,139,76,.56);
+            background:rgba(200,182,134,.12);
+            color:#A67E3C;box-shadow:0 0 0 2px rgba(200,182,134,.08),inset 0 1px 0 rgba(255,255,255,.65);
+        }
+        #pageMine .collection-entry-mark i{display:none;font-size:9px;line-height:1}
+        #pageMine .collection-entry-mark b{display:block;width:4px;height:4px;border-radius:50%;background:#B09566;opacity:.55}
+        #pageMine .collection-entry.has-collection .collection-entry-mark i{display:block}
+        #pageMine .collection-entry.has-collection .collection-entry-mark b{display:none}
+
+        /* 里程碑 toast：固定在屏幕顶部安全区下方，不挡当前卡片和底部导航 */
+        #targetMilestoneToastHost{
+            position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));z-index:125;
+            width:min(92vw,410px);transform:translateX(-50%);pointer-events:none;
+        }
+        #targetMilestoneToastHost .tmt-toast{
+            display:flex;align-items:center;gap:10px;
+            padding:10px 12px 9px;border-radius:15px;
+            border:1px solid rgba(173,132,64,.34);
+            background:rgba(255,251,243,.96);
+            -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+            box-shadow:0 12px 30px rgba(70,38,20,.16),0 0 0 1px rgba(255,255,255,.4) inset;
+            opacity:0;transform:translateY(-14px) scale(.965);
+            transition:opacity .24s ease,transform .32s cubic-bezier(.2,.9,.2,1.15);
+        }
+        #targetMilestoneToastHost.is-visible .tmt-toast{opacity:1;transform:translateY(0) scale(1)}
+        #targetMilestoneToastHost .tmt-medal{
+            width:36px;height:36px;border-radius:50%;flex:0 0 auto;
+            display:flex;align-items:center;justify-content:center;position:relative;
+            color:#5B1828;font-size:12px;font-weight:750;
+            background:linear-gradient(145deg,#F3DCA5,#D5AE61 64%,#C09442);
+            border:1px solid rgba(255,255,255,.7);
+            box-shadow:0 4px 10px rgba(171,129,54,.2),inset 0 1px 0 rgba(255,255,255,.8);
+            font-variant-numeric:tabular-nums;
+        }
+        #targetMilestoneToastHost .tmt-medal i{font-size:7px;margin-left:1px;font-style:normal;opacity:.8}
+        #targetMilestoneToastHost .tmt-main{min-width:0;flex:1}
+        #targetMilestoneToastHost .tmt-kicker{font-size:7.5px;letter-spacing:.14em;color:#B08B54;font-family:"Noto Serif SC","Songti SC",Georgia,serif}
+        #targetMilestoneToastHost .tmt-title{margin-top:2px;font-size:12px;line-height:1.35;font-weight:700;color:#4A2A2E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #targetMilestoneToastHost .tmt-title b{color:#8F2437;font-weight:750}
+        #targetMilestoneToastHost .tmt-sub{margin-top:2px;font-size:8.5px;line-height:1.3;color:#9A897B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #targetMilestoneToastHost .tmt-bar{height:2.5px;margin-top:5px;border-radius:2px;background:#EFE3D2;overflow:hidden}
+        #targetMilestoneToastHost .tmt-bar span{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#B98F4C,#E0BF7B);width:0;transition:width .55s ease}
+        #targetMilestoneToastHost .tmt-close{width:20px;height:20px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#B09A84;background:#F7EFE3;font-size:9px;pointer-events:auto}
+
+        /* 100% 达成：底部 Sheet + 低饱和三色纸屑 */
+        #targetMilestoneModal{position:fixed;inset:0;z-index:130;display:none;overflow:hidden}
+        #targetMilestoneModal.is-open{display:block}
+        #targetMilestoneBackdrop{position:absolute;inset:0;background:rgba(30,20,18,.36);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;transition:opacity .3s ease}
+        #targetMilestoneModal.is-open #targetMilestoneBackdrop{opacity:1}
+        #targetMilestoneConfetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+        #targetMilestoneConfetti span{position:absolute;top:-12vh;display:block;opacity:0;border-radius:2px;animation:tmsConfettiFall linear forwards}
+        @keyframes tmsConfettiFall{
+            0%{transform:translate3d(0,-10vh,0) rotate(0deg);opacity:0}
+            12%{opacity:.72}
+            78%{opacity:.55}
+            100%{transform:translate3d(var(--drift),115vh,0) rotate(var(--rot));opacity:0}
+        }
+        #targetMilestoneSheet{
+            position:absolute;left:50%;bottom:0;z-index:2;
+            width:min(100%,36rem);max-height:92vh;overflow-y:auto;
+            transform:translate(-50%,108%);
+            transition:transform .42s cubic-bezier(.22,.85,.22,1);
+            border-radius:26px 26px 0 0;
+            border-top:3px solid #742034;
+            background:linear-gradient(180deg,#FFFDF8 0%,#FBF3E7 58%,#F5E8D7 100%);
+            box-shadow:0 -20px 60px rgba(35,20,16,.24),inset 0 1px 0 rgba(255,255,255,.9);
+            padding:10px 18px calc(20px + env(safe-area-inset-bottom));
+        }
+        #targetMilestoneModal.is-open #targetMilestoneSheet{transform:translate(-50%,0)}
+        #targetMilestoneSheet::before{content:"";position:absolute;left:22px;right:22px;top:0;height:1px;background:linear-gradient(90deg,transparent,#DDC086,transparent)}
+        #targetMilestoneSheet .tms-grab{width:36px;height:4px;border-radius:999px;background:#DED0BE;margin:0 auto 12px}
+        #targetMilestoneSheet .tms-close{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#F5EEE4;color:#9C8A79;font-size:11px;border:1px solid rgba(173,132,64,.14)}
+        #targetMilestoneSheet .tms-close:active{transform:scale(.95)}
+        #targetMilestoneSheet .tms-seal{
+            width:66px;height:66px;margin:4px auto 12px;border-radius:50% 50% 48% 52%;
+            display:flex;align-items:center;justify-content:center;position:relative;
+            color:#5B1828;font-size:23px;
+            background:linear-gradient(145deg,#F5DFA8 0%,#D9B46A 56%,#BE9140 100%);
+            border:1px solid rgba(255,255,255,.75);
+            box-shadow:0 10px 24px rgba(171,129,54,.22),inset 0 1px 0 rgba(255,255,255,.82);
+        }
+        #targetMilestoneSheet .tms-seal::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px dashed rgba(190,151,78,.36);transform:rotate(8deg)}
+        #targetMilestoneSheet .tms-eyebrow{text-align:center;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:8px;letter-spacing:.22em;color:#B08B54}
+        #targetMilestoneSheet .tms-title{margin:7px auto 0;max-width:19rem;text-align:center;font-size:19px;line-height:1.45;font-weight:750;color:#5B1828;letter-spacing:.01em}
+        #targetMilestoneSheet .tms-sub{margin:6px auto 0;max-width:19rem;text-align:center;font-size:10px;line-height:1.65;color:#8E7A6B}
+        #targetMilestoneSheet .tms-rule{height:1px;margin:15px 0 12px;background:linear-gradient(90deg,transparent,rgba(185,145,78,.30),transparent)}
+        #targetMilestoneSheet .tms-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;border-radius:13px;overflow:hidden;border:1px solid rgba(173,132,64,.18);background:rgba(173,132,64,.10)}
+        #targetMilestoneSheet .tms-stat{background:rgba(255,252,246,.82);padding:9px 6px 8px;text-align:center;min-width:0}
+        #targetMilestoneSheet .tms-stat-label{font-size:8px;color:#9B897A;letter-spacing:.04em}
+        #targetMilestoneSheet .tms-stat-value{margin-top:4px;font-size:12px;font-weight:700;color:#4E3830;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #targetMilestoneSheet .tms-actions{display:flex;flex-direction:column;gap:8px;margin-top:17px}
+        #targetMilestoneSheet .tms-primary{
+            width:100%;min-height:44px;border:0;border-radius:13px;
+            background:linear-gradient(125deg,#8F2437,#742034);color:#FFEBC9;
+            font-size:12px;font-weight:700;letter-spacing:.04em;
+            box-shadow:0 8px 18px rgba(116,32,52,.20),inset 0 1px 0 rgba(255,255,255,.12);
+            outline:none;
+        }
+        #targetMilestoneSheet .tms-primary:active{transform:scale(.985)}
+        #targetMilestoneSheet .tms-secondary{width:100%;min-height:34px;color:#9B8171;font-size:10px;letter-spacing:.03em}
+        #targetMilestoneSheet .tms-caption{text-align:center;margin-top:8px;font-size:8px;color:#A99787}
+
+        @media (max-width:359px){
+            #pageCollection .collection-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+        }
+        @media (prefers-reduced-motion:reduce){
+            #targetMilestoneToastHost .tmt-toast,
+            #targetMilestoneSheet,
+            #targetMilestoneBackdrop{transition:none!important}
+            #targetMilestoneConfetti span{display:none!important}
+        }
     </style>
 </head>
 <body class="bg-pageBg min-h-screen pb-28">
@@ -7505,15 +7926,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- ===== 股票详情页（自选股点击进入；点击即加载，无后台自动刷新） ===== -->
     <div id="pageStockDetail" class="hidden detail-page fixed inset-0 z-30 overflow-y-auto overscroll-none max-w-2xl mx-auto px-3 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-24" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior:none;">
         <!-- 标题栏 -->
-        <div class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 overflow-hidden sticky top-0 z-40">
-            <div class="absolute top-0 left-0 right-0 h-[3px]" style="background:linear-gradient(90deg,transparent,#a9642a,#f0c987,#a9642a,transparent)"></div>
+        <div id="sdTopBar" class="app-topbar relative bg-white rounded-2xl px-4 py-3.5 card-shadow mb-4 sticky top-0 z-40">
             <div class="flex items-center gap-2.5 relative z-10">
-                <button onclick="closeStockDetail()" class="w-9 h-9 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
-                <div class="min-w-0">
-                    <div id="sdTitle" class="text-gray-800 text-[17px] font-semibold tracking-wide truncate max-w-[200px]">股票详情</div>
+                <button onclick="closeStockDetail()" class="sd-back w-9 h-9 rounded-xl flex items-center justify-center active:scale-95 transition-transform"><i class="fa fa-arrow-left text-[14px]"></i></button>
+                <div class="min-w-0 flex-1">
+                    <div class="sd-kicker">WATCHLIST · STOCK</div>
+                    <div id="sdTitle" class="text-gray-800 text-[17px] font-semibold tracking-wide truncate">股票详情</div>
                     <div id="sdCode" class="text-[10px] text-gray-400 mt-0.5 tabular-nums">--</div>
                 </div>
-                <span class="ml-auto text-[10px] text-gray-400 whitespace-nowrap" id="sdTime">点击进入加载</span>
+                <span class="ml-auto whitespace-nowrap" id="sdTime">点击进入加载</span>
             </div>
         </div>
         <!-- 行情卡（深色，与首页汇总卡同气质） -->
@@ -9100,6 +9521,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             <!-- 持仓概览数据项网格：由 mineOverviewItems 动态渲染，后续新增数据项只需在数组加一条记录 -->
             <div id="mineOverviewGrid" class="mine-overview-grid"></div>
         </div>
+        <!-- 藏品馆入口：目标完成后的收藏成就，放在个人页而不是挤占首页目标卡 -->
+        <button id="collectionEntryBtn" class="card-rise collection-entry" onclick="openCollection('trophy')" aria-label="打开藏品馆">
+            <span class="collection-entry-emblem"><i class="fa fa-trophy"></i></span>
+            <span class="collection-entry-main">
+                <span class="collection-entry-kicker">SAVE POINT · COLLECTION</span>
+                <span class="collection-entry-title">藏品馆<span id="collectionEntryCount" class="collection-entry-count">0 件</span></span>
+                <span id="collectionEntrySub" class="collection-entry-sub">完成第一个目标，点亮第一件藏品</span>
+            </span>
+            <span class="collection-entry-side">
+                <span id="collectionEntryMark" class="collection-entry-mark" aria-hidden="true"><i class="fa fa-check"></i><b></b></span>
+                <span id="collectionEntryYear" class="collection-entry-year">--</span>
+            </span>
+        </button>
         <!-- 年度投资报告入口：与上下卡片同一浅卡体系，仅左侧图标用香槟金强调 -->
         <button id="annualReportBtn" class="card-rise mine-card mine-report-card active:scale-[0.985] transition-transform">
             <span class="mine-report-icon"><i class="fa fa-file-text-o"></i></span>
@@ -9178,6 +9612,41 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             数据保存在浏览器本地，清除浏览器数据会丢失<br>
             <span id="appVersionLine">版本 --</span>
         </div>
+    </div>
+
+    <!-- 藏品馆：已完成目标的收藏卡；二级页面，从“我的”进入 -->
+    <div id="pageCollection" class="hidden max-w-2xl mx-auto">
+        <div class="collection-topbar">
+            <button class="collection-back" onclick="closeCollection()" aria-label="返回我的">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <div class="collection-topbar-title">
+                <div class="collection-topbar-kicker">COLLECTION ARCHIVE</div>
+                <div class="collection-topbar-name">藏品馆</div>
+            </div>
+            <span class="collection-top-count"><i class="fa fa-trophy"></i><span id="collectionTopCount">--</span></span>
+        </div>
+
+        <section class="collection-hero">
+            <div class="collection-hero-eyebrow">SAVE POINT · LIFETIME COLLECTION</div>
+            <div class="collection-hero-main">
+                <div class="collection-hero-count"><span id="collectionHeroCount">0</span><small>件藏品</small></div>
+                <div class="collection-hero-copy">把每一个集齐的目标，<br>收进你的长期主义年鉴。</div>
+            </div>
+            <div class="collection-hero-foot">
+                <span class="collection-hero-year" id="collectionHeroYear">--</span>
+                <span class="dot"></span>
+                <span id="collectionHeroStats">--</span>
+            </div>
+        </section>
+
+        <div class="collection-tabs" role="tablist" aria-label="藏品分类">
+            <button id="collectionTabTrophy" class="collection-tab is-active" role="tab" aria-selected="true" onclick="setCollectionTab('trophy')">战利品<span class="collection-tab-count" id="collectionTrophyCount">0</span></button>
+            <button id="collectionTabAll" class="collection-tab" role="tab" aria-selected="false" onclick="setCollectionTab('all')">图鉴全集<span class="collection-tab-count" id="collectionAllCount">0</span></button>
+        </div>
+
+        <div id="collectionBody"></div>
+        <div class="collection-footnote"><i class="fa fa-circle-o"></i>只记录已完成的持仓目标 · 重新设置目标后，收藏状态会自动同步</div>
     </div>
 
     <!-- 年度快照页面：每年年末手动一键保存组合快照，永久留存用于多年回溯与报表 -->
@@ -11126,13 +11595,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             #sdSimCard .sds-compare-item + .sds-compare-item{border-left:1px dashed #e4cfb9;padding-left:9px}
             #sdSimCard .sds-compare-label{font-size:9px;color:#9b8a7c;white-space:nowrap;flex-shrink:0}
             #sdSimCard .sds-compare-val{font-size:12px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
-            #sdSimCard .sds-pnl-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:12px;margin-top:11px;padding-top:11px;border-top:1px solid rgba(201,154,75,.22);min-width:0}
-            #sdSimCard .sds-pnl-block{min-width:0}
-            #sdSimCard .sds-pnl-block + .sds-pnl-block{border-left:1px dashed #e4cfb9;padding-left:12px}
-            #sdSimCard .sds-pnl-real{text-align:right}
+            #sdSimCard .sds-diff-hero{margin-top:12px;padding-top:12px;border-top:1px solid rgba(201,154,75,.22);min-width:0}
+            #sdSimCard .sds-diff-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+            #sdSimCard .sds-diff-title{font-size:9.5px;font-weight:650;color:#8d6d58;letter-spacing:.06em;white-space:nowrap}
+            #sdSimCard .sds-diff{font-size:clamp(30px,8.6vw,37px);font-weight:800;line-height:1.02;letter-spacing:-.04em;white-space:nowrap;margin-top:5px;font-variant-numeric:tabular-nums}
+            #sdSimCard .sds-diff-formula{font-size:8.5px;color:#a08e7f;line-height:1.3;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #sdSimCard .sds-diff-tag{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;line-height:1;border-radius:999px;padding:5px 8px;margin-top:1px;white-space:nowrap}
+            #sdSimCard .sds-pnl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;padding-top:0;border-top:0;min-width:0}
+            #sdSimCard .sds-pnl-block{min-width:0;padding:9px 10px 8px;border:1px solid #ead8c2;border-radius:12px;background:rgba(255,252,247,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+            #sdSimCard .sds-pnl-block + .sds-pnl-block{border-left:1px solid #ead8c2;padding-left:10px}
+            #sdSimCard .sds-pnl-real{text-align:left}
             #sdSimCard .sds-pnl-label{font-size:9px;color:#9b8a7c;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-            #sdSimCard .sds-pnl-amount{font-size:clamp(22px,6.6vw,30px);font-weight:800;line-height:1.03;letter-spacing:-.035em;white-space:nowrap;margin-top:4px;font-variant-numeric:tabular-nums}
-            #sdSimCard .sds-pnl-real .sds-pnl-amount{font-size:clamp(18px,5.4vw,24px)}
+            #sdSimCard .sds-pnl-amount{font-size:clamp(16px,4.6vw,19px);font-weight:800;line-height:1.08;letter-spacing:-.02em;white-space:nowrap;margin-top:5px;font-variant-numeric:tabular-nums}
+            #sdSimCard .sds-pnl-real .sds-pnl-amount{font-size:clamp(16px,4.6vw,19px)}
             #sdSimCard .sds-pnl-rate{font-size:8.5px;color:#9b8a7c;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
             #sdSimCard .sds-delta{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;row-gap:2px;margin-top:9px;padding:7px 9px;border-radius:10px;border:1px solid #ecd7bd;background:linear-gradient(90deg,#fbf1e5,#fffaf4)}
             #sdSimCard .sds-delta-label{font-size:9px;color:#8d6d58;white-space:nowrap}
@@ -11165,9 +11640,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 #sdSimCard .sds-row-val{font-size:10.5px}
                 #sdSimCard .sds-foot{gap:5px}
                 #sdSimCard .sds-pnl-grid{gap:8px}
-                #sdSimCard .sds-pnl-block + .sds-pnl-block{padding-left:8px}
-                #sdSimCard .sds-pnl-amount{font-size:clamp(21px,6.2vw,27px)}
-                #sdSimCard .sds-pnl-real .sds-pnl-amount{font-size:clamp(17px,5vw,21px)}
+                #sdSimCard .sds-pnl-block + .sds-pnl-block{padding-left:10px}
+                #sdSimCard .sds-pnl-amount{font-size:clamp(16px,4.6vw,18px)}
+                #sdSimCard .sds-pnl-real .sds-pnl-amount{font-size:clamp(16px,4.6vw,18px)}
+                #sdSimCard .sds-diff{font-size:clamp(29px,8.4vw,34px)}
                 #sdSimCard .sds-delta{padding:7px 8px}
                 #sdSimCard .sds-delta-val{font-size:12px}
                 #sdSimCard .sds-detail-grid{gap:5px}
@@ -12035,6 +12511,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
     <!-- Toast 提示 -->
     <div id="toast" class="fixed top-1/3 left-1/2 -translate-x-1/2 bg-black/80 text-white px-5 py-3 rounded-xl text-sm z-[100] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+    <!-- 目标里程碑：顶部轻提示，独立于普通 Toast，避免影响原有提示 -->
+    <div id="targetMilestoneToastHost" role="status" aria-live="polite"></div>
+
+    <!-- 目标 100%：低饱和庆祝 Sheet -->
+    <div id="targetMilestoneModal" class="hidden" aria-hidden="true">
+        <div id="targetMilestoneBackdrop" onclick="closeTargetMilestoneSheet()"></div>
+        <div id="targetMilestoneConfetti" aria-hidden="true"></div>
+        <section id="targetMilestoneSheet" role="dialog" aria-modal="true" aria-labelledby="targetMilestoneTitle">
+            <div class="tms-grab" aria-hidden="true"></div>
+            <button class="tms-close" onclick="closeTargetMilestoneSheet()" aria-label="关闭"><i class="fa fa-times"></i></button>
+            <div class="tms-seal"><i class="fa fa-trophy"></i></div>
+            <div class="tms-eyebrow">MILESTONE 100% · SAVEPOINT</div>
+            <div id="targetMilestoneTitle" class="tms-title">🎉 恭喜集齐目标仓位</div>
+            <div id="targetMilestoneSub" class="tms-sub">这一笔长期主义，已经收进你的藏品馆。</div>
+            <div class="tms-rule"></div>
+            <div class="tms-stats">
+                <div class="tms-stat"><div class="tms-stat-label">目标股数</div><div class="tms-stat-value" id="targetMilestoneShares">--</div></div>
+                <div class="tms-stat"><div class="tms-stat-label">平均成本</div><div class="tms-stat-value" id="targetMilestoneCost">--</div></div>
+                <div class="tms-stat"><div class="tms-stat-label">加仓次数</div><div class="tms-stat-value" id="targetMilestoneAdds">--</div></div>
+            </div>
+            <div class="tms-actions">
+                <button class="tms-primary" onclick="targetMilestoneOpenCollection()">收入藏品馆 <i class="fa fa-arrow-right" style="font-size:9px;margin-left:4px"></i></button>
+                <button class="tms-secondary" onclick="closeTargetMilestoneSheet()">留在当前页</button>
+            </div>
+            <div class="tms-caption" id="targetMilestoneDate">集齐日期 --</div>
+        </section>
+    </div>
 
     <!-- 确认删除弹窗 -->
     <div id="confirmModal" class="fixed inset-0 bg-black/50 z-[100] hidden flex justify-center items-center px-4">
@@ -22160,6 +22664,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.body.classList.remove('bs-open');
             try{ closeBsQuickAdd(); }catch(e){}
             document.querySelector('#pageYearSnapshot').classList.add('hidden');
+            document.querySelector('#pageCollection').classList.add('hidden');
             document.querySelector('#pageIndustryMap').classList.add('hidden');
             document.querySelector('#pageFundTransfer').classList.add('hidden');
             document.querySelector('#pageFundTransferAdd').classList.add('hidden');
@@ -22843,6 +23348,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function renderMinePage(){
             renderMineOverview();
+            try{ renderCollectionEntry(); }catch(e){}
             const sum = calcSummary();
             // 我的页按天数据（今年分红/累计分红/数量等）：每个交易日 6:00 / 20:00 刷新一次并存储，
             // 其他时间直接读取存储展示（不随点击导航变化）；总资产与实时股价相关，保持实时计算
@@ -25676,8 +26182,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 dashboard: targetGoalDashboardOn(g),
                 sortOrder: Number(g.sortOrder) > 0 ? Number(g.sortOrder) : 0,
                 updatedAt: Number(g.updatedAt) || 0,
+                createdAt: String(g.createdAt || ''),
                 lastNotified: String(g.lastNotified || ''),
-                reachedAt: String(g.reachedAt || '')
+                reachedAt: String(g.reachedAt || ''),
+                milestones: (g.milestones && typeof g.milestones === 'object' && !Array.isArray(g.milestones)) ? g.milestones : null,
+                milestoneTarget: Number(g.milestoneTarget) || 0
             };
         }
         function targetGetHolding(code, market){
@@ -25909,6 +26418,503 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 updateNotifBadge();
                 const page = document.querySelector('#pageNotifCenter');
                 if(page && !page.classList.contains('hidden')) renderNotifCenter();
+            }
+            // 里程碑只做“新跨过”的增量庆祝；旧目标首次接入本功能时先建基线，不补弹历史节点
+            try{ targetMilestoneScan(); }catch(e){}
+        }
+
+        // ==================== 目标里程碑 + 藏品馆 ====================
+        const TARGET_MILESTONE_LEVELS = [25, 50, 75, 100];
+        let _targetMilestoneToastQueue = [];
+        let _targetMilestoneToastTimer = null;
+        let _targetMilestoneToastBusy = false;
+        let _targetMilestoneSheetEvent = null;
+        let _targetMilestoneSheetHideTimer = null;
+        let _targetMilestoneConfettiTimer = null;
+
+        function targetMilestoneISO(v){
+            if(!v) return '';
+            const s = String(v);
+            if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+            const n = Number(v);
+            if(!isFinite(n) || n <= 0) return '';
+            const d = new Date(n);
+            if(isNaN(d.getTime())) return '';
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function targetMilestoneFormatDate(iso){
+            return String(iso || '').slice(0, 10).replace(/-/g, '.');
+        }
+        function targetMilestoneBaseline(current, target, date){
+            const map = {};
+            TARGET_MILESTONE_LEVELS.forEach(function(level){
+                if(current * 100 >= target * level) map[level] = date;
+            });
+            return map;
+        }
+        function targetMilestoneScan(){
+            if(!_holdDataLoaded || _allDataClearing) return [];
+            const goals = targetLoadGoals();
+            const today = todayStr();
+            let changed = false;
+            const events = [];
+            (holdDataList || []).forEach(function(it){
+                const key = targetKey(it.marketType, it.code);
+                const g = goals[key];
+                if(!g) return;
+                const target = Math.max(1, Math.round(Number(g.targetShares) || 0));
+                const current = Math.max(0, Math.round(Number(it.count) || 0));
+                if(target <= 0) return;
+                const milestones = (g.milestones && typeof g.milestones === 'object' && !Array.isArray(g.milestones)) ? g.milestones : null;
+                const targetChanged = !(Number(g.milestoneTarget) > 0) || Number(g.milestoneTarget) !== target;
+                if(!milestones || targetChanged){
+                    // 首次启用或目标被重新设置：先按当前进度建立基线，不补庆祝历史节点
+                    g.milestones = targetMilestoneBaseline(current, target, today);
+                    g.milestoneTarget = target;
+                    if(!g.createdAt) g.createdAt = today;
+                    changed = true;
+                    return;
+                }
+                const crossed = TARGET_MILESTONE_LEVELS.filter(function(level){
+                    return current * 100 >= target * level && !milestones[level];
+                });
+                if(!crossed.length) return;
+                crossed.forEach(function(level){ milestones[level] = today; });
+                g.milestones = milestones;
+                changed = true;
+                events.push({
+                    key: key, item: it, target: target, current: current,
+                    milestone: crossed[crossed.length - 1], crossed: crossed, date: today,
+                    pct: Math.min(100, current / target * 100)
+                });
+            });
+            if(changed) targetSaveGoals(goals);
+            if(events.length){
+                events.forEach(function(ev){
+                    const delay = 70 + Math.min(220, events.indexOf(ev) * 90);
+                    setTimeout(function(){
+                        targetMilestonePulse(ev.key);
+                        if(ev.milestone >= 100){
+                            showTargetMilestoneSheet(ev);
+                        }else{
+                            targetMilestoneToast(ev);
+                        }
+                    }, delay);
+                });
+            }
+            return events;
+        }
+
+        function targetMilestonePulse(key, attempt){
+            const reduced = (function(){
+                try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; }
+            })();
+            const selectorKey = targetEsc(String(key || ''));
+            const nodes = document.querySelectorAll('.tring-card[data-target-key="' + selectorKey + '"], #sdTargetCard[data-target-key="' + selectorKey + '"]');
+            if(!nodes.length && (attempt || 0) < 2){
+                setTimeout(function(){ targetMilestonePulse(key, (attempt || 0) + 1); }, 180);
+                return;
+            }
+            if(reduced) return;
+            Array.prototype.forEach.call(nodes, function(el){
+                try{
+                    if(el.animate){
+                        el.animate([
+                            { transform: 'scale(1)' },
+                            { transform: 'scale(1.035)', offset: .34 },
+                            { transform: 'scale(.996)', offset: .72 },
+                            { transform: 'scale(1)' }
+                        ], { duration: 520, easing: 'cubic-bezier(.2,.9,.2,1)' });
+                    }
+                }catch(e){}
+            });
+        }
+
+        function targetMilestoneAdds(item){
+            const txs = item && Array.isArray(item.transactions) ? item.transactions : [];
+            return txs.filter(function(t){ return Number(t && t.delta) > 0; }).length;
+        }
+        function targetMilestoneCost(item){
+            const isHk = item && item.marketType === 'HK';
+            const n = Number(item && item.costPrice);
+            if(!isFinite(n)) return '--';
+            return (isHk ? 'HK$' : '¥') + fmtListCost(n);
+        }
+
+        function targetMilestoneToast(ev){
+            _targetMilestoneToastQueue.push(ev);
+            if(!_targetMilestoneToastBusy) targetMilestoneToastNext();
+        }
+        function targetMilestoneToastNext(){
+            const host = document.querySelector('#targetMilestoneToastHost');
+            if(!host){ _targetMilestoneToastQueue = []; _targetMilestoneToastBusy = false; return; }
+            const ev = _targetMilestoneToastQueue.shift();
+            if(!ev){ _targetMilestoneToastBusy = false; host.classList.remove('is-visible'); return; }
+            _targetMilestoneToastBusy = true;
+            clearTimeout(_targetMilestoneToastTimer);
+            const name = targetEsc(String(ev.item.name || ev.item.code || '--'));
+            const level = Number(ev.milestone) || 0;
+            const crossed = ev.crossed && ev.crossed.length > 1
+                ? '连续跨过 ' + ev.crossed.map(function(x){ return x + '%'; }).join(' · ') + ' · '
+                : '';
+            const gap = Math.max(0, Number(ev.target) - Number(ev.current));
+            const sub = crossed + '还差 ' + targetFmtShares(gap) + ' 股 · 已持有 ' + targetFmtShares(ev.current) + ' / ' + targetFmtShares(ev.target) + ' 股';
+            host.innerHTML = '<div class="tmt-toast">'
+                + '<div class="tmt-medal">' + level + '<i>%</i></div>'
+                + '<div class="tmt-main">'
+                + '<div class="tmt-kicker">MILESTONE · 目标持仓</div>'
+                + '<div class="tmt-title"><b>' + name + '</b> 到达 ' + level + '% 里程碑</div>'
+                + '<div class="tmt-sub">' + targetEsc(sub) + '</div>'
+                + '<div class="tmt-bar"><span></span></div>'
+                + '</div>'
+                + '<button class="tmt-close" onclick="dismissTargetMilestoneToast()" aria-label="关闭"><i class="fa fa-times"></i></button>'
+                + '</div>';
+            const bar = host.querySelector('.tmt-bar span');
+            if(bar){
+                bar.style.width = '0%';
+                requestAnimationFrame(function(){ requestAnimationFrame(function(){ bar.style.width = Math.min(100, Number(ev.pct) || 0) + '%'; }); });
+            }
+            host.classList.remove('is-visible');
+            void host.offsetWidth;
+            host.classList.add('is-visible');
+            _targetMilestoneToastTimer = setTimeout(function(){ dismissTargetMilestoneToast(); }, 3000);
+        }
+        function dismissTargetMilestoneToast(){
+            clearTimeout(_targetMilestoneToastTimer);
+            const host = document.querySelector('#targetMilestoneToastHost');
+            if(host) host.classList.remove('is-visible');
+            setTimeout(function(){
+                const nextHost = document.querySelector('#targetMilestoneToastHost');
+                if(nextHost) nextHost.innerHTML = '';
+                _targetMilestoneToastBusy = false;
+                if(_targetMilestoneToastQueue.length) targetMilestoneToastNext();
+            }, 240);
+        }
+
+        function targetMilestoneConfettiFire(){
+            const layer = document.querySelector('#targetMilestoneConfetti');
+            if(!layer) return;
+            clearTimeout(_targetMilestoneConfettiTimer);
+            layer.innerHTML = '';
+            const reduced = (function(){
+                try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; }
+            })();
+            if(reduced) return;
+            const colors = ['#D8B56A', '#8F2437', '#F6EBD8'];
+            const count = 34;
+            for(let i = 0; i < count; i++){
+                const p = document.createElement('span');
+                const tall = i % 4 === 0;
+                p.style.left = (4 + Math.random() * 92) + '%';
+                p.style.width = (tall ? 3 + Math.random() * 2 : 4 + Math.random() * 3) + 'px';
+                p.style.height = (tall ? 9 + Math.random() * 5 : 3 + Math.random() * 3) + 'px';
+                p.style.background = colors[i % colors.length];
+                p.style.opacity = '0';
+                p.style.borderRadius = i % 3 === 0 ? '50%' : '2px';
+                p.style.setProperty('--drift', (-42 + Math.random() * 84) + 'px');
+                p.style.setProperty('--rot', (-260 + Math.random() * 620) + 'deg');
+                p.style.animationDelay = (Math.random() * .65) + 's';
+                p.style.animationDuration = (2.8 + Math.random() * 1.4) + 's';
+                layer.appendChild(p);
+            }
+            _targetMilestoneConfettiTimer = setTimeout(function(){ if(layer) layer.innerHTML = ''; }, 4600);
+        }
+        function showTargetMilestoneSheet(ev){
+            if(!ev) return;
+            const modal = document.querySelector('#targetMilestoneModal');
+            if(!modal) return;
+            _targetMilestoneSheetEvent = ev;
+            clearTimeout(_targetMilestoneSheetHideTimer);
+            const name = String(ev.item.name || ev.item.code || '').trim() || '--';
+            const title = document.querySelector('#targetMilestoneTitle');
+            const sub = document.querySelector('#targetMilestoneSub');
+            const shares = document.querySelector('#targetMilestoneShares');
+            const cost = document.querySelector('#targetMilestoneCost');
+            const adds = document.querySelector('#targetMilestoneAdds');
+            const date = document.querySelector('#targetMilestoneDate');
+            if(title) title.innerText = '🎉 恭喜集齐' + name + '目标仓位';
+            if(sub) sub.innerText = '目标仓位已经达成，收藏卡已在藏品馆等你。';
+            if(shares) shares.innerText = targetFmtShares(ev.target) + ' 股';
+            if(cost) cost.innerText = targetMilestoneCost(ev.item);
+            if(adds) adds.innerText = targetMilestoneAdds(ev.item) + ' 次';
+            if(date) date.innerText = '集齐日期 ' + targetMilestoneFormatDate(ev.date);
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            void modal.offsetWidth;
+            modal.classList.add('is-open');
+            targetLockBody();
+            targetMilestoneConfettiFire();
+        }
+        function closeTargetMilestoneSheet(immediate){
+            const modal = document.querySelector('#targetMilestoneModal');
+            if(!modal || modal.classList.contains('hidden')) return;
+            clearTimeout(_targetMilestoneSheetHideTimer);
+            clearTimeout(_targetMilestoneConfettiTimer);
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            try{ targetUnlockBody(); }catch(e){}
+            const finish = function(){
+                modal.classList.add('hidden');
+                const layer = document.querySelector('#targetMilestoneConfetti');
+                if(layer) layer.innerHTML = '';
+            };
+            if(immediate) finish();
+            else _targetMilestoneSheetHideTimer = setTimeout(finish, 300);
+        }
+        function targetMilestoneOpenCollection(){
+            closeTargetMilestoneSheet(true);
+            try{
+                const editor = document.querySelector('#targetEditorModal');
+                if(editor && !editor.classList.contains('hidden')) closeTargetEditor(true);
+            }catch(e){}
+            try{
+                const overview = document.querySelector('#targetOverviewModal');
+                if(overview && !overview.classList.contains('hidden')) closeTargetOverview();
+            }catch(e){}
+            try{ switchTab('mine'); }catch(e){}
+            openCollection('trophy');
+        }
+
+        // ---------- 藏品馆数据 ----------
+        let collectionTab = 'trophy';
+        let collectionReturnScroll = 0;
+        let collectionReturnTab = 'mine';
+        function collectionDateISO(v){ return targetMilestoneISO(v); }
+        function collectionToday(){
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function collectionInferReached(item, target){
+            const txs = item && Array.isArray(item.transactions) ? item.transactions.slice() : [];
+            if(!txs.length) return '';
+            txs.sort(function(a, b){ return (Number(a.t) || 0) - (Number(b.t) || 0); });
+            let cum = 0;
+            for(let i = 0; i < txs.length; i++){
+                cum += Math.round(Number(txs[i].delta) || 0);
+                if(cum >= target) return collectionDateISO(txs[i].t);
+            }
+            return '';
+        }
+        function collectionCompletionISO(row){
+            const reached = collectionDateISO(row.goal.reachedAt);
+            if(reached) return reached;
+            const inferred = collectionInferReached(row.item, row.target);
+            if(inferred) return inferred;
+            return collectionDateISO(row.goal.updatedAt) || collectionToday();
+        }
+        function collectionSetISO(row){
+            const created = collectionDateISO(row.goal.createdAt);
+            if(created) return created;
+            const updated = collectionDateISO(row.goal.updatedAt);
+            if(updated) return updated;
+            const txs = row.item && Array.isArray(row.item.transactions) ? row.item.transactions : [];
+            if(txs.length){
+                let earliest = Infinity;
+                txs.forEach(function(t){ const n = Number(t.t); if(isFinite(n) && n > 0 && n < earliest) earliest = n; });
+                if(earliest < Infinity) return collectionDateISO(earliest);
+            }
+            return collectionToday();
+        }
+        function collectionModel(){
+            const rows = targetRows();
+            const items = rows.map(function(row){
+                const done = !!row.achieved;
+                const completedAt = done ? collectionCompletionISO(row) : '';
+                const setAt = collectionSetISO(row);
+                const sortDate = done ? completedAt : setAt;
+                return {
+                    key: targetKey(row.item.marketType, row.item.code),
+                    item: row.item, goal: row.goal, current: row.current,
+                    target: row.target, done: done, pct: done ? 100 : (Number(row.pct) || 0),
+                    gap: row.gap, completedAt: completedAt, setAt: setAt,
+                    year: String(sortDate || collectionToday()).slice(0, 4),
+                    adds: targetMilestoneAdds(row.item)
+                };
+            });
+            const completed = items.filter(function(x){ return x.done; }).sort(function(a, b){
+                return String(b.completedAt).localeCompare(String(a.completedAt)) || a.item.name.localeCompare(b.item.name, 'zh-CN');
+            });
+            const inProgress = items.filter(function(x){ return !x.done; }).sort(function(a, b){
+                return b.pct - a.pct || b.target - a.target || a.item.name.localeCompare(b.item.name, 'zh-CN');
+            });
+            return { all: items, completed: completed, inProgress: inProgress };
+        }
+        function collectionCompletedCount(){
+            try{ return collectionModel().completed.length; }catch(e){ return 0; }
+        }
+        function collectionGroupYears(items, mode){
+            const groups = {};
+            items.forEach(function(x){
+                if(!groups[x.year]) groups[x.year] = [];
+                groups[x.year].push(x);
+            });
+            return Object.keys(groups).sort(function(a, b){ return Number(b) - Number(a); }).map(function(year){
+                const list = groups[year].slice();
+                list.sort(function(a, b){
+                    if(a.done !== b.done) return a.done ? -1 : 1;
+                    if(a.done && b.done) return String(b.completedAt).localeCompare(String(a.completedAt));
+                    return b.pct - a.pct || a.item.name.localeCompare(b.item.name, 'zh-CN');
+                });
+                return {
+                    year: year, list: list,
+                    doneCount: list.filter(function(x){ return x.done; }).length,
+                    buildCount: list.filter(function(x){ return !x.done; }).length
+                };
+            });
+        }
+        function collectionCountText(group, mode){
+            if(mode === 'trophy') return '· ' + group.doneCount + ' 件藏品';
+            return '· ' + group.doneCount + ' 件已集齐 · ' + group.buildCount + ' 件在建';
+        }
+        function collectionCardHtml(x){
+            const item = x.item;
+            const name = targetEsc(String(item.name || item.code || '--'));
+            const key = targetEsc(x.key);
+            const rawPct = Math.max(0, Number(x.pct) || 0);
+            const pct = x.done ? 100 : Math.min(99.9, rawPct);
+            const pctText = x.done ? '100' : (rawPct > 0 && rawPct < 1 ? '&lt;1' : String(Math.min(99, Math.round(rawPct))));
+            const pctStyle = (x.done ? 100 : pct).toFixed(1) + '%';
+            const ring = x.done
+                ? '<div class="collection-complete"><span class="collection-seal" aria-label="已集齐"><span class="collection-seal-char">集</span></span></div>'
+                : '<div class="collection-ring" style="--pct:' + pctStyle + '" aria-label="目标进度 ' + pctText + '%"><b>' + pctText + '<i>%</i></b></div>';
+            const code = targetEsc(String(item.code || ''));
+            const date = x.done ? targetMilestoneFormatDate(x.completedAt) : '';
+            const foot = x.done
+                ? '<div class="collection-date">集齐 <b>' + date + '</b></div>'
+                : '<div class="collection-gap">还差 <b>' + targetFmtShares(x.gap) + '</b> 股</div>';
+            return '<button type="button" class="collection-card ' + (x.done ? 'is-done' : 'is-locked') + '" data-collection-key="' + key + '" onclick="openCollectionCard(' + Number(item.id) + ',event)" aria-label="' + name + (x.done ? ' 已集齐' : ' 在建中') + '">'
+                + '<div class="collection-card-top"><span class="collection-logo">' + stockLogoHtml(item, 24) + '</span>' + ring + '</div>'
+                + '<div class="collection-name">' + name + '</div>'
+                + '<div class="collection-code-row"><span class="collection-code">' + code + '</span><span class="collection-target"><span>目标</span><b>' + targetFmtShares(x.target) + '</b><i>股</i></span></div>'
+                + '<div class="collection-card-foot">' + foot + '</div>'
+                + '</button>';
+        }
+        function collectionEmptyHtml(mode, model){
+            const hasAny = model.all.length > 0;
+            const title = hasAny ? '第一件藏品还在路上' : '还没有目标持仓';
+            const sub = hasAny ? '把目标拆成一次次加仓，集齐后就会点亮在这里。' : '先为一只股票设一个目标，让长期主义有一个可见的刻度。';
+            return '<div class="collection-empty">'
+                + '<div class="collection-empty-seal"><i class="fa ' + (hasAny ? 'fa-trophy' : 'fa-bullseye') + '"></i></div>'
+                + '<div class="collection-empty-title">' + title + '</div>'
+                + '<div class="collection-empty-sub">' + sub + '</div>'
+                + '<button class="collection-empty-cta" onclick="collectionOpenTargets()">' + (hasAny ? '查看在建目标' : '设置第一个目标') + ' <i class="fa fa-arrow-right" style="font-size:8px"></i></button>'
+                + '</div>';
+        }
+        function collectionOpenTargets(){
+            if(targetRows().length){
+                openTargetOverview();
+            }else{
+                const first = (holdDataList || [])[0];
+                if(first) openTargetEditorByCode(first.code, first.marketType, false);
+                else showToast('请先添加一只持仓股票');
+            }
+        }
+        function openCollectionCard(id, ev){
+            try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
+            openHoldCardDetail(Number(id), ev, false, ev && ev.currentTarget);
+        }
+
+        function renderCollectionPage(){
+            const page = document.querySelector('#pageCollection');
+            if(!page) return;
+            const model = collectionModel();
+            const completed = model.completed.length;
+            const total = model.all.length;
+            const body = document.querySelector('#collectionBody');
+            const topCount = document.querySelector('#collectionTopCount');
+            const heroCount = document.querySelector('#collectionHeroCount');
+            const heroYear = document.querySelector('#collectionHeroYear');
+            const heroStats = document.querySelector('#collectionHeroStats');
+            const trophyCount = document.querySelector('#collectionTrophyCount');
+            const allCount = document.querySelector('#collectionAllCount');
+            const tabTrophy = document.querySelector('#collectionTabTrophy');
+            const tabAll = document.querySelector('#collectionTabAll');
+            if(topCount) topCount.innerText = completed + ' / ' + total;
+            if(heroCount) heroCount.innerText = String(completed);
+            if(trophyCount) trophyCount.innerText = String(completed);
+            if(allCount) allCount.innerText = String(total);
+            const nowYear = collectionToday().slice(0, 4);
+            const yearDone = model.completed.filter(function(x){ return x.year === nowYear; }).length;
+            if(heroYear) heroYear.innerText = nowYear + ' 年度';
+            if(heroStats) heroStats.innerText = '已集齐 ' + completed + ' / ' + total + ' 个目标 · 本年 ' + yearDone + ' 件';
+            if(tabTrophy){
+                tabTrophy.classList.toggle('is-active', collectionTab === 'trophy');
+                tabTrophy.setAttribute('aria-selected', collectionTab === 'trophy' ? 'true' : 'false');
+            }
+            if(tabAll){
+                tabAll.classList.toggle('is-active', collectionTab === 'all');
+                tabAll.setAttribute('aria-selected', collectionTab === 'all' ? 'true' : 'false');
+            }
+            if(!body) return;
+            const items = collectionTab === 'trophy' ? model.completed : model.all;
+            const groups = collectionGroupYears(items, collectionTab);
+            if(!groups.length){
+                body.innerHTML = collectionEmptyHtml(collectionTab, model);
+                return;
+            }
+            body.innerHTML = groups.map(function(group){
+                return '<section class="collection-year">'
+                    + '<div class="collection-year-head"><span class="collection-year-title">' + targetEsc(group.year) + '</span><span class="collection-year-count">' + targetEsc(collectionCountText(group, collectionTab)) + '</span><span class="collection-year-line"></span></div>'
+                    + '<div class="collection-grid">' + group.list.map(collectionCardHtml).join('') + '</div>'
+                    + '</section>';
+            }).join('');
+        }
+        function setCollectionTab(tab){
+            collectionTab = tab === 'all' ? 'all' : 'trophy';
+            renderCollectionPage();
+        }
+        function openCollection(tab){
+            const page = document.querySelector('#pageCollection');
+            if(!page) return;
+            const alreadyOpen = !page.classList.contains('hidden');
+            if(!alreadyOpen){
+                collectionReturnTab = activeTab || 'mine';
+                collectionReturnScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+                if(collectionReturnTab !== 'mine'){
+                    try{ switchTab('mine'); }catch(e){}
+                    collectionReturnScroll = 0;
+                }
+                document.querySelector('#pageMine').classList.add('hidden');
+            }
+            collectionTab = tab === 'all' ? 'all' : 'trophy';
+            page.classList.remove('hidden');
+            renderCollectionPage();
+            if(!alreadyOpen) window.scrollTo(0, 0);
+        }
+        function closeCollection(){
+            const page = document.querySelector('#pageCollection');
+            if(!page || page.classList.contains('hidden')) return;
+            page.classList.add('hidden');
+            const target = collectionReturnScroll;
+            try{ switchTab('mine'); }catch(e){
+                const mine = document.querySelector('#pageMine');
+                if(mine) mine.classList.remove('hidden');
+            }
+            if(target > 0){
+                setTimeout(function(){
+                    try{ window.scrollTo(0, Math.max(0, target)); }catch(e){}
+                }, 80);
+            }
+        }
+        function renderCollectionEntry(){
+            const btn = document.querySelector('#collectionEntryBtn');
+            if(!btn) return;
+            let model;
+            try{ model = collectionModel(); }catch(e){ return; }
+            const completed = model.completed.length;
+            const total = model.all.length;
+            const count = document.querySelector('#collectionEntryCount');
+            const sub = document.querySelector('#collectionEntrySub');
+            const year = document.querySelector('#collectionEntryYear');
+            btn.classList.toggle('has-collection', completed > 0);
+            if(count) count.innerText = completed + ' 件';
+            if(completed){
+                const latest = model.completed[0];
+                if(sub) sub.innerText = String(latest.item.name || latest.item.code) + ' · ' + targetMilestoneFormatDate(latest.completedAt) + ' 集齐' + (model.inProgress.length ? ' · ' + model.inProgress.length + ' 件在建' : '');
+                if(year) year.innerText = String(latest.year || collectionToday().slice(0, 4));
+            }else{
+                if(sub) sub.innerText = total ? '已完成 0 / ' + total + ' 个目标，第一件藏品等你点亮' : '完成第一个目标，点亮第一件藏品';
+                if(year) year.innerText = 'COLLECT';
             }
         }
 
@@ -26269,7 +27275,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const gapText = achieved
                 ? '<span class="tring-done"><i class="fa fa-check"></i>已达成</span>'
                 : '<span>还差</span><span class="tring-gap-val">' + targetFmtSharesShort(row.gap) + '</span><span class="tring-gap-unit">股</span>';
-            return '<div class="tring-card' + doneCls + '" role="button" tabindex="0" aria-label="' + name + ' 目标进度 ' + visualPct + '%，' + (achieved ? '已达成' : '还差 ' + targetFmtSharesShort(row.gap) + ' 股') + '，打开持仓详情" onclick="openTargetDashboardDetail(\'' + targetRingJs(it.id) + '\',event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTargetDashboardDetail(\'' + targetRingJs(it.id) + '\',event);}">'
+            return '<div class="tring-card' + doneCls + '" data-target-key="' + targetEsc(key) + '" role="button" tabindex="0" aria-label="' + name + ' 目标进度 ' + visualPct + '%，' + (achieved ? '已达成' : '还差 ' + targetFmtSharesShort(row.gap) + ' 股') + '，打开持仓详情" onclick="openTargetDashboardDetail(\'' + targetRingJs(it.id) + '\',event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTargetDashboardDetail(\'' + targetRingJs(it.id) + '\',event);}">'
                 + '<div class="tring-card-top">'
                 + (priority ? '<span class="tring-priority-dot" title="最高优先"></span>' : '')
                 + '<span class="tring-name">' + name + '</span>'
@@ -26409,8 +27415,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!item){
                 box.classList.add('hidden');
                 box.innerHTML = '';
+                try{ delete box.dataset.targetKey; }catch(e){}
                 return;
             }
+            box.dataset.targetKey = targetKey(item.marketType, item.code);
             const g = targetGetGoal(item.code, item.marketType);
             const current = Math.max(0, Math.round(Number(item.count) || 0));
             if(!g){
@@ -26722,7 +27730,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pnlDiff = st.pnlDiff;
             const pnlDiffZero = pnlDiff != null && Math.abs(pnlDiff) < 0.005;
             const pnlDiffText = pnlDiff == null ? '--' : (pnlDiffZero ? '¥0.00' : sdSimSignedMoney(pnlDiff));
-            const pnlDiffColor = pnlDiff == null ? '#a99a8c' : (pnlDiff < -0.005 ? '#00a05c' : '#e03131');
+            const pnlDiffColor = pnlDiff == null ? '#a99a8c' : (pnlDiffZero ? '#8a7354' : (pnlDiff < 0 ? '#00a05c' : '#e03131'));
+            let diffTagHtml = '';
+            if(pnlDiff != null){
+                const tagText = pnlDiffZero ? '两者持平' : (pnlDiff > 0 ? '真实更高' : '模拟更高');
+                const tagFg = pnlDiffZero ? '#8a7354' : (pnlDiff > 0 ? '#8f2437' : '#0f7a57');
+                const tagBg = pnlDiffZero ? '#f7f1e8' : (pnlDiff > 0 ? '#f8ecef' : '#edf6f1');
+                const tagBorder = pnlDiffZero ? '#e8dcc9' : (pnlDiff > 0 ? '#e8cdd4' : '#cfe6da');
+                diffTagHtml = '<span class="sds-diff-tag" style="color:' + tagFg + ';background:' + tagBg + ';border:1px solid ' + tagBorder + '">' + tagText + '</span>';
+            }
+            const diffHeroHtml = '<div class="sds-diff-hero">'
+                + '<div class="sds-diff-head"><div class="sds-diff-title">差额（真实 − 模拟）</div>' + diffTagHtml + '</div>'
+                + '<div class="sds-diff" style="color:' + pnlDiffColor + '">' + pnlDiffText + '</div>'
+                + '<div class="sds-diff-formula">真实持仓盈亏 − 模拟持仓盈亏</div>'
+                + '</div>';
             const exNote = st.simExCount > 0
                 ? '已按 ' + st.simExCount + ' 笔现金分红除权 · 仅调整模拟成本'
                 : '按当前价估算 · 仅作模拟对照';
@@ -26735,11 +27756,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 box.classList.remove('hidden');
                 box.innerHTML = '<div class="sds-card"><div class="sds-orb"></div><div class="sds-orb2"></div><div class="sds-pad">'
                     + sdSimHeaderHtml('')
+                    + diffHeroHtml
                     + '<div class="sds-pnl-grid">'
                     + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">模拟持仓盈亏</div><div class="sds-pnl-amount" style="color:#a99a8c">--</div><div class="sds-pnl-rate">添加后计算</div></div>'
                     + '<div class="sds-pnl-block sds-pnl-real"><div class="sds-pnl-label">真实持仓盈亏</div><div class="sds-pnl-amount" style="color:' + realPnlColor + '">' + realPnlText + '</div><div class="sds-pnl-rate">' + realRateText + '</div></div>'
                     + '</div>'
-                    + '<div class="sds-delta"><span class="sds-delta-label">差额（真实 − 模拟）</span><span class="sds-delta-val" style="color:#a99a8c">--</span></div>'
                     + detailHtml
                     + '<button type="button" class="sds-add" aria-label="添加模拟数据" onclick="openSimHoldEditor()"><i class="fa fa-plus text-[10px]"></i>添加模拟数据</button>'
                     + '</div></div>';
@@ -26748,11 +27769,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             box.classList.remove('hidden');
             box.innerHTML = '<div class="sds-card"><div class="sds-orb"></div><div class="sds-orb2"></div><div class="sds-pad">'
                 + sdSimHeaderHtml(editBtn)
+                + diffHeroHtml
                 + '<div class="sds-pnl-grid">'
                 + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">模拟持仓盈亏</div><div class="sds-pnl-amount" style="color:' + simPnlColor + '">' + simPnlText + '</div><div class="sds-pnl-rate">' + simRateText + '</div></div>'
                 + '<div class="sds-pnl-block sds-pnl-real"><div class="sds-pnl-label">真实持仓盈亏</div><div class="sds-pnl-amount" style="color:' + realPnlColor + '">' + realPnlText + '</div><div class="sds-pnl-rate">' + realRateText + '</div></div>'
                 + '</div>'
-                + '<div class="sds-delta"><span class="sds-delta-label">差额（真实 − 模拟）</span><span class="sds-delta-val" style="color:' + pnlDiffColor + '">' + pnlDiffText + '</span></div>'
                 + detailHtml
                 + '<div class="sds-note">' + exNote + '</div>'
                 + '</div></div>';
@@ -26975,46 +27996,94 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let _targetOverviewOrigin = null; // 首页目标卡打开总览时的 Peek/Pop 原点
         let _targetEditorOrigin = null;   // 持仓详情“目标”按钮打开设置时的 Peek/Pop 原点
         let _targetLockPrev = null;
-        function targetLockBody(){
-            if(_targetLockPrev) return;
+        // 统一管理“弹层/详情页”对 body 滚动的锁定，避免多个层各自保存旧状态后互相覆盖，
+        // 造成关闭后 body 仍是 overflow:hidden、页面无法滚动。
+        let _appScrollLockBase = null;
+        let _appScrollLocks = new Map();
+        let _appScrollWasFixed = false;
+        function appScrollLock(owner, opts){
+            if(!_appScrollLockBase){
+                const body = document.body;
+                const html = document.documentElement;
+                _appScrollLockBase = {
+                    bodyOverflow: body.style.overflow,
+                    htmlOverflow: html.style.overflow,
+                    bodyPosition: body.style.position,
+                    bodyTop: body.style.top,
+                    bodyLeft: body.style.left,
+                    bodyRight: body.style.right,
+                    bodyWidth: body.style.width,
+                    scrollY: window.pageYOffset || html.scrollTop || 0
+                };
+            }
+            _appScrollLocks.set(owner, { fixed: !!(opts && opts.fixed) });
+            appScrollApply();
+        }
+        function appScrollApply(){
+            const base = _appScrollLockBase;
+            if(!base) return;
+            let needFixed = false;
+            _appScrollLocks.forEach(function(v){ if(v && v.fixed) needFixed = true; });
             const body = document.body;
             const html = document.documentElement;
-            const y = window.pageYOffset || html.scrollTop || 0;
-            _targetLockPrev = {
-                bodyOverflow: body.style.overflow,
-                htmlOverflow: html.style.overflow,
-                bodyPosition: body.style.position,
-                bodyTop: body.style.top,
-                bodyLeft: body.style.left,
-                bodyRight: body.style.right,
-                bodyWidth: body.style.width,
-                scrollY: y
-            };
             body.style.overflow = 'hidden';
             html.style.overflow = 'hidden';
-            body.style.position = 'fixed';
-            body.style.top = '-' + y + 'px';
-            body.style.left = '0';
-            body.style.right = '0';
-            body.style.width = '100%';
+            if(needFixed){
+                body.style.position = 'fixed';
+                body.style.top = '-' + base.scrollY + 'px';
+                body.style.left = '0';
+                body.style.right = '0';
+                body.style.width = '100%';
+            } else {
+                body.style.position = base.bodyPosition;
+                body.style.top = base.bodyTop;
+                body.style.left = base.bodyLeft;
+                body.style.right = base.bodyRight;
+                body.style.width = base.bodyWidth;
+                if(_appScrollWasFixed){
+                    try{ window.scrollTo(0, base.scrollY); }catch(e){}
+                }
+            }
+            _appScrollWasFixed = needFixed;
+        }
+        function appScrollUnlock(owner){
+            if(!_appScrollLocks.has(owner)) return;
+            _appScrollLocks.delete(owner);
+            if(_appScrollLocks.size){
+                appScrollApply();
+                return;
+            }
+            const base = _appScrollLockBase;
+            _appScrollLockBase = null;
+            _appScrollWasFixed = false;
+            if(!base) return;
+            const body = document.body;
+            const html = document.documentElement;
+            body.style.overflow = base.bodyOverflow;
+            html.style.overflow = base.htmlOverflow;
+            body.style.position = base.bodyPosition;
+            body.style.top = base.bodyTop;
+            body.style.left = base.bodyLeft;
+            body.style.right = base.bodyRight;
+            body.style.width = base.bodyWidth;
+            try{ window.scrollTo(0, base.scrollY); }catch(e){}
+        }
+        function targetLockBody(){
+            if(_targetLockPrev) return;
+            _targetLockPrev = true;
+            appScrollLock('target', { fixed: true });
         }
         function targetUnlockBody(){
             if(!_targetLockPrev) return;
             const editor = document.querySelector('#targetEditorModal');
             const overview = document.querySelector('#targetOverviewModal');
-            if((editor && !editor.classList.contains('hidden')) || (overview && !overview.classList.contains('hidden'))) return;
-            const prev = _targetLockPrev;
+            const milestone = document.querySelector('#targetMilestoneModal');
+            const milestoneOpen = !!(milestone && !milestone.classList.contains('hidden') && milestone.getAttribute('aria-hidden') !== 'true');
+            if((editor && !editor.classList.contains('hidden')) ||
+               (overview && !overview.classList.contains('hidden')) ||
+               milestoneOpen) return;
             _targetLockPrev = null;
-            const body = document.body;
-            const html = document.documentElement;
-            body.style.overflow = prev.bodyOverflow;
-            html.style.overflow = prev.htmlOverflow;
-            body.style.position = prev.bodyPosition;
-            body.style.top = prev.bodyTop;
-            body.style.left = prev.bodyLeft;
-            body.style.right = prev.bodyRight;
-            body.style.width = prev.bodyWidth;
-            window.scrollTo(0, prev.scrollY);
+            appScrollUnlock('target');
         }
         function targetUpdateRemindUI(){
             const track = document.querySelector('#targetRemindTrack');
@@ -27223,6 +28292,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function targetRefreshUI(){
             updateTargetSummaryStrip();
             renderStockTargetCard();
+            try{ renderCollectionEntry(); }catch(e){}
+            const collection = document.querySelector('#pageCollection');
+            if(collection && !collection.classList.contains('hidden')) renderCollectionPage();
             const overview = document.querySelector('#targetOverviewModal');
             if(overview && !overview.classList.contains('hidden')) renderTargetOverview();
             const notif = document.querySelector('#pageNotifCenter');
@@ -27244,6 +28316,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const key = targetKey(targetEditStock.marketType, targetEditStock.code);
             const old = map[key] || {};
             const changed = !old.targetShares || Number(old.targetShares) !== n || (old.remind !== false) !== targetRemindOn;
+            const targetChanged = !old.targetShares || Number(old.targetShares) !== n;
             const baseOrder = Number(old.sortOrder) > 0 ? Number(old.sortOrder) : targetNextSortOrder(map, key);
             if(targetPriorityOn){
                 Object.keys(map).forEach(function(k){
@@ -27257,8 +28330,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 dashboard: targetDashboardOn,
                 sortOrder: baseOrder,
                 updatedAt: Date.now(),
+                createdAt: String(old.createdAt || todayStr()),
                 lastNotified: changed ? '' : String(old.lastNotified || ''),
-                reachedAt: changed ? '' : String(old.reachedAt || '')
+                reachedAt: targetChanged ? '' : String(old.reachedAt || ''),
+                milestones: targetChanged ? null : (old.milestones && typeof old.milestones === 'object' && !Array.isArray(old.milestones) ? old.milestones : null),
+                milestoneTarget: n
             };
             if(targetPriorityOn) targetApplyPriorityTop(map, key);
             targetSaveGoals(map);
@@ -38623,9 +39699,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     '<div class="w-[17px] h-[17px] rounded-full ' + badgeCls + ' flex items-center justify-center text-[9px] font-bold shrink-0">' + (idx + 1) + '</div>' +
                     '<div class="min-w-0 flex-1">' +
                         '<div class="text-[11px] font-semibold text-gray-800 truncate leading-tight">' + esc(it.name) + '</div>' +
-                        '<div class="mt-[3px] text-[8px] text-gray-400 tabular-nums truncate">' + esc(it.code || '') + ' · ' + pctText + '</div>' +
+                        '<div class="mt-[3px] text-[8px] text-gray-400 tabular-nums truncate">' + esc(it.code || '') + '</div>' +
                     '</div>' +
-                    '<div class="shrink-0 text-right text-[10.5px] font-semibold tabular-nums ' + pnlClass(pnl) + '">' + fmtPnlNum(pnl) + '</div>' +
+                    '<div class="shrink-0 text-right tabular-nums">' +
+                        '<div class="contrib-amt ' + pnlClass(pnl) + '">' + fmtPnlNum(pnl) + '</div>' +
+                        '<div class="contrib-pct ' + pnlClass(pnl) + '">' + pctText + '</div>' +
+                    '</div>' +
                 '</div>';
             }
             function contribColumn(title, isWin, list, total, sum, emptyText){
@@ -44272,21 +45351,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let holdCardDetailScrollLock = null;
         function lockHoldCardDetailScroll(){
             if(holdCardDetailScrollLock) return;
-            const body = document.body;
-            const html = document.documentElement;
-            holdCardDetailScrollLock = {
-                bodyOverflow: body.style.overflow,
-                htmlOverflow: html.style.overflow
-            };
-            body.style.overflow = 'hidden';
-            html.style.overflow = 'hidden';
+            holdCardDetailScrollLock = true;
+            appScrollLock('holdDetail', { fixed: false });
         }
         function unlockHoldCardDetailScroll(){
             if(!holdCardDetailScrollLock) return;
-            const prev = holdCardDetailScrollLock;
             holdCardDetailScrollLock = null;
-            document.body.style.overflow = prev.bodyOverflow;
-            document.documentElement.style.overflow = prev.htmlOverflow;
+            appScrollUnlock('holdDetail');
         }
         function openHoldCardDetail(id, ev, skipAnim, originEl){
             const item = holdDataList.find(function(it){ return String(it.id) === String(id); });

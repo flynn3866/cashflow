@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261125.652';</script>
+    <script>window.APP_VERSION = '20261125.653';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5893,10 +5893,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection #collectionHeroCount{font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:46px;line-height:.92;font-weight:600;letter-spacing:-.03em;color:#3D2C24;font-variant-numeric:tabular-nums}
         #pageCollection .collection-hero-count small{font-size:9px;font-weight:500;color:#8A7354;letter-spacing:.08em}
         #pageCollection .collection-hero-copy{text-align:right;font-size:10.5px;line-height:1.65;color:#9A8978;letter-spacing:.03em;padding-left:0;border-left:0}
-        #pageCollection .collection-hero-foot{position:relative;z-index:1;display:flex;align-items:center;gap:7px;margin-top:11px;padding-top:9px;border-top:1px solid #EADFCE;font-size:8.5px;color:#A78B5D;letter-spacing:.03em}
+        #pageCollection .collection-hero-foot{position:relative;z-index:1;display:flex;align-items:center;gap:7px;margin-top:11px;padding-top:9px;border-top:1px solid #EADFCE;font-size:9.5px;color:#9C825A;letter-spacing:.035em}
         #pageCollection .collection-hero-foot i{font-size:8px;color:#C1A46D}
         #pageCollection .collection-hero-foot .dot{width:2px;height:2px;border-radius:50%;background:#C8B686}
         #pageCollection .collection-hero-year{font-weight:600;color:#A98552;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-hero-progress{position:relative;z-index:1;display:flex;align-items:stretch;gap:3px;height:3px;margin-top:10px}
+        #pageCollection .collection-hero-progress:empty{display:none}
+        #pageCollection .collection-hero-progress i{display:block;flex:1 1 0;min-width:0;height:3px;border-radius:1.5px;background:rgba(139,110,77,.14);box-shadow:inset 0 1px 1px rgba(72,49,30,.06)}
+        #pageCollection .collection-hero-progress i.is-on{background:linear-gradient(90deg,#B0884D 0%,#D8C28E 100%);box-shadow:0 0 4px rgba(210,190,143,.25),inset 0 1px 0 rgba(255,250,232,.45)}
 
         #pageCollection .collection-tabs{
             position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;
@@ -5912,7 +5916,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #pageCollection .collection-tab.is-active{background:#FFFFFF;color:#722A3A;font-weight:750;box-shadow:0 2px 8px rgba(35,25,18,.055),inset 0 1px 0 rgba(255,255,255,.95)}
         #pageCollection .collection-tab.is-active::after{content:"";position:absolute;left:28%;right:28%;bottom:3px;height:1.5px;border-radius:2px;background:linear-gradient(90deg,transparent,#722A3A,transparent)}
-        #pageCollection .collection-tab-count{font-size:8.5px;font-weight:650;line-height:1;padding:3px 5px;border-radius:999px;background:#EDE9E3;color:#7E6F61;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-tab-count{font-size:9px;font-weight:650;line-height:1;padding:3px 5px;border-radius:999px;background:#EDE9E3;color:#7E6F61;font-variant-numeric:tabular-nums}
         #pageCollection .collection-tab.is-active .collection-tab-count{background:rgba(114,42,58,.09);color:#7A3541}
 
 
@@ -5922,7 +5926,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection .collection-year-title::before,
         #pageCollection .collection-year-title::after{content:"";width:14px;height:1px;flex:0 0 auto;background:linear-gradient(90deg,rgba(176,140,82,0),rgba(176,140,82,.72))}
         #pageCollection .collection-year-title::after{background:linear-gradient(90deg,rgba(176,140,82,.72),rgba(176,140,82,0))}
-        #pageCollection .collection-year-count{font-size:8.5px;color:#9A8C80;letter-spacing:.04em;white-space:nowrap}
+        #pageCollection .collection-year-count{font-size:9.5px;color:#948475;letter-spacing:.04em;white-space:nowrap}
         #pageCollection .collection-year-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(176,140,82,.24),rgba(176,140,82,0));margin-left:2px}
         #pageCollection .collection-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;row-gap:20px;align-items:stretch}
 
@@ -5939,15 +5943,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #pageCollection .collection-card:active{transform:scale(.975)}
         #pageCollection .collection-card.is-done{
-            border:1px solid rgba(210,190,143,.58);
+            border:1px solid rgba(215,195,149,.62);
             background:
-                radial-gradient(112% 78% at 10% 0,rgba(176,62,84,.30),transparent 64%),
-                radial-gradient(112% 72% at 100% 0,rgba(154,56,74,.14),transparent 68%),
-                linear-gradient(155deg,#8D4150 0%,#7A3442 52%,#682C37 100%);
+                radial-gradient(120% 84% at 8% -8%,rgba(198,94,112,.34),transparent 60%),
+                radial-gradient(100% 92% at 96% 108%,rgba(28,8,14,.20),transparent 64%),
+                linear-gradient(155deg,#924957 0%,#7B3442 50%,#672A35 100%);
             box-shadow:
-                0 1px 0 rgba(255,255,255,.10) inset,
-                0 0 0 1px rgba(210,190,143,.10) inset,
-                0 4px 12px rgba(94,55,45,.10);
+                0 1px 0 rgba(255,248,230,.14) inset,
+                0 0 0 1px rgba(210,190,143,.11) inset,
+                0 -1px 0 rgba(24,7,12,.16) inset,
+                0 6px 16px rgba(78,32,35,.14);
         }
         #pageCollection .collection-card.is-done::before{
             content:"";position:absolute;left:12px;right:12px;top:0;height:1.5px;
@@ -5959,8 +5964,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection .collection-card.is-done::after{
             content:"";position:absolute;inset:0;border-radius:15px;
             background:
-                radial-gradient(120% 86% at 100% 0,rgba(210,190,143,.08),transparent 62%),
-                repeating-linear-gradient(118deg,rgba(255,255,255,.014) 0 1px,transparent 1px 9px);
+                radial-gradient(120% 78% at 10% -18%,rgba(255,244,218,.10),transparent 52%),
+                linear-gradient(180deg,transparent 56%,rgba(28,8,13,.10) 100%),
+                repeating-linear-gradient(118deg,rgba(255,255,255,.018) 0 1px,transparent 1px 9px);
             pointer-events:none;
         }
         #pageCollection .collection-card.is-locked{
@@ -5976,8 +5982,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #pageCollection .collection-card > *{position:relative;z-index:1}
         #pageCollection .collection-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;width:100%}
-        #pageCollection .collection-logo{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid #DED3C6;background:#FFFFFF;box-shadow:0 1px 3px rgba(40,30,22,.04)}
-        #pageCollection .collection-card.is-done .collection-logo{border-color:rgba(210,190,143,.42);background:linear-gradient(145deg,#FFFDF7,#F4EBD9);box-shadow:0 1px 4px rgba(32,18,18,.18),inset 0 1px 0 rgba(255,255,255,.95)}
+        #pageCollection .collection-logo{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid rgba(216,201,180,.78);background:linear-gradient(145deg,#FFFDF8 0%,#F7EEDF 100%);box-shadow:0 1px 3px rgba(40,30,22,.06),inset 0 0 0 1px rgba(255,255,255,.55)}
+        #pageCollection .collection-logo img{background:transparent!important;box-shadow:none!important;border-radius:6px!important;object-fit:contain!important;mix-blend-mode:multiply;filter:drop-shadow(0 1px 2px rgba(35,15,12,.16))!important}
+        #pageCollection .collection-card.is-done .collection-logo{border-color:rgba(226,205,166,.52);background:linear-gradient(145deg,#FFFDF7 0%,#F5EAD7 100%);box-shadow:0 2px 6px rgba(30,12,12,.18),inset 0 0 0 1px rgba(255,255,255,.62),inset 0 1px 0 rgba(255,255,255,.96)}
         #pageCollection .collection-card.is-locked .collection-logo{opacity:.72;border-color:#DED3C6;background:#FAF8F4;box-shadow:none}
         #pageCollection .collection-card.is-locked .collection-logo img{filter:grayscale(1) contrast(.9) opacity(.75)!important}
         #pageCollection .collection-complete{display:flex;align-items:center;flex:0 0 auto;margin-left:auto}
@@ -6010,27 +6017,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection .collection-ring::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#FAF6EF}
         #pageCollection .collection-ring b{position:relative;z-index:1;font-size:10px;line-height:1;font-weight:750;color:#7E7063;font-variant-numeric:tabular-nums}
         #pageCollection .collection-ring b i{font-size:7px;font-style:normal;font-weight:600;margin-left:.5px;color:#A29687}
-        #pageCollection .collection-name{margin-top:8px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:18px;line-height:1.2;font-weight:650;letter-spacing:.03em;color:#39271F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-name{margin-top:8px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:18.5px;line-height:1.18;font-weight:650;letter-spacing:.035em;color:#39271F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         #pageCollection .collection-code-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;width:100%;margin-top:8px}
-        #pageCollection .collection-code{min-width:0;font-size:12px;line-height:1.2;color:#9A8D80;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        #pageCollection .collection-target{flex:0 0 auto;display:inline-flex;align-items:baseline;gap:3px;margin-left:auto;font-size:12px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;color:#7C6E62}
-        #pageCollection .collection-target span{font-size:10px;line-height:1.2;color:#9B8F83;letter-spacing:.02em}
-        #pageCollection .collection-target b{font-size:12px;line-height:1.2;font-weight:600;color:#6F6258}
-        #pageCollection .collection-target i{font-size:10px;line-height:1.2;font-style:normal;color:#9B8F83}
-        #pageCollection .collection-card.is-done .collection-name{color:#FFFFFF}
+        #pageCollection .collection-code{min-width:0;font-size:11.5px;line-height:1.2;color:#958779;letter-spacing:.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-target{flex:0 0 auto;display:inline-flex;align-items:baseline;gap:3px;margin-left:auto;font-size:13px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;color:#7C6E62}
+        #pageCollection .collection-target span{font-size:9.5px;line-height:1.2;color:#A09284;letter-spacing:.03em}
+        #pageCollection .collection-target b{font-size:13.5px;line-height:1.2;font-weight:650;color:#67594E;letter-spacing:-.005em}
+        #pageCollection .collection-target i{font-size:9.5px;line-height:1.2;font-style:normal;color:#A09284}
+        #pageCollection .collection-card.is-done .collection-name{color:#FFF9EF}
         #pageCollection .collection-card.is-done .collection-code,
-        #pageCollection .collection-card.is-done .collection-target{color:rgba(245,239,228,.64)}
+        #pageCollection .collection-card.is-done .collection-target{color:rgba(245,239,228,.74)}
         #pageCollection .collection-card.is-done .collection-target span,
-        #pageCollection .collection-card.is-done .collection-target i{color:rgba(245,239,228,.52)}
-        #pageCollection .collection-card.is-done .collection-target b{color:#D2BE8F;font-weight:600}
+        #pageCollection .collection-card.is-done .collection-target i{color:rgba(245,239,228,.60)}
+        #pageCollection .collection-card.is-done .collection-target b{color:#DBC79A;font-weight:650}
         #pageCollection .collection-card.is-locked .collection-code{color:#A19588}
-        #pageCollection .collection-card-foot{margin-top:24px;padding:0;display:flex;align-items:baseline;justify-content:flex-end;gap:4px;text-align:right;min-width:0;width:100%}
-        #pageCollection .collection-date{display:block;margin-left:auto;text-align:right;font-size:12px;line-height:1.2;color:rgba(142,119,104,.72);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        #pageCollection .collection-date b{font-size:12px;line-height:1.2;font-weight:650;color:#7A2A38;font-variant-numeric:tabular-nums}
-        #pageCollection .collection-card.is-done .collection-date{color:rgba(210,190,143,.78)}
-        #pageCollection .collection-card.is-done .collection-date b{color:#D2BE8F}
-        #pageCollection .collection-gap{display:block;margin-left:auto;text-align:right;font-size:12px;line-height:1.2;color:rgba(140,125,113,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        #pageCollection .collection-gap b{font-size:12px;line-height:1.2;font-weight:700;color:#7A2A38;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-card-foot{margin-top:22px;padding:0;display:flex;align-items:baseline;justify-content:flex-end;gap:4px;text-align:right;min-width:0;width:100%}
+        #pageCollection .collection-date{display:block;margin-left:auto;text-align:right;font-size:11.5px;line-height:1.25;color:rgba(142,119,104,.72);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-date-label{font-size:10.5px;line-height:1.2;color:rgba(142,119,104,.62);letter-spacing:.04em;margin-right:2px}
+        #pageCollection .collection-date b{font-size:12.5px;line-height:1.2;font-weight:650;color:#7A2A38;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+        #pageCollection .collection-card.is-done .collection-date{color:rgba(210,190,143,.86)}
+        #pageCollection .collection-card.is-done .collection-date-label{color:rgba(210,190,143,.66)}
+        #pageCollection .collection-card.is-done .collection-date b{color:#E4CFA3}
+        #pageCollection .collection-gap{display:block;margin-left:auto;text-align:right;font-size:11.5px;line-height:1.25;color:rgba(140,125,113,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-gap-label{font-size:10.5px;line-height:1.2;color:rgba(140,125,113,.66);letter-spacing:.04em;margin-right:2px}
+        #pageCollection .collection-gap b{font-size:12.5px;line-height:1.2;font-weight:700;color:#7A2A38;font-variant-numeric:tabular-nums}
+        #pageCollection .collection-gap i{font-size:9.5px;line-height:1.2;font-style:normal;color:rgba(140,125,113,.66);margin-left:3px}
 
         #pageCollection .collection-empty{
             margin-top:20px;padding:38px 22px 30px;border-radius:18px;text-align:center;
@@ -9657,6 +9668,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 <span class="dot"></span>
                 <span id="collectionHeroStats">--</span>
             </div>
+            <div class="collection-hero-progress" id="collectionProgress" aria-hidden="true"></div>
         </section>
 
         <div class="collection-tabs" role="tablist" aria-label="藏品分类">
@@ -26933,10 +26945,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const code = targetEsc(String(item.code || ''));
             const date = x.done ? targetMilestoneFormatDate(x.completedAt) : '';
             const foot = x.done
-                ? '<div class="collection-date">集齐 <b>' + date + '</b></div>'
-                : '<div class="collection-gap">还差 <b>' + targetFmtShares(x.gap) + '</b> 股</div>';
+                ? '<div class="collection-date"><span class="collection-date-label">集齐</span> <b>' + date + '</b></div>'
+                : '<div class="collection-gap"><span class="collection-gap-label">还差</span> <b>' + targetFmtShares(x.gap) + '</b><i>股</i></div>';
             return '<button type="button" class="collection-card ' + (x.done ? 'is-done' : 'is-locked') + '" data-collection-key="' + key + '" onclick="openCollectionCard(' + Number(item.id) + ',event)" aria-label="' + name + (x.done ? ' 已集齐' : ' 在建中') + '">'
-                + '<div class="collection-card-top"><span class="collection-logo">' + stockLogoHtml(item, 24) + '</span>' + ring + '</div>'
+                + '<div class="collection-card-top"><span class="collection-logo">' + stockLogoHtml(item, 26) + '</span>' + ring + '</div>'
                 + '<div class="collection-name">' + name + '</div>'
                 + '<div class="collection-code-row"><span class="collection-code">' + code + '</span><span class="collection-target"><span>目标</span><b>' + targetFmtShares(x.target) + '</b><i>股</i></span></div>'
                 + '<div class="collection-card-foot">' + foot + '</div>'
@@ -26967,6 +26979,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             openHoldCardDetail(Number(id), ev, false, ev && ev.currentTarget);
         }
 
+        function collectionProgressHtml(completed, total){
+            const n = Math.min(24, Math.max(0, Number(total) || 0));
+            if(!n) return '';
+            const safeTotal = Math.max(1, Number(total) || 0);
+            const done = Math.max(0, Math.min(n, Math.round((Number(completed) || 0) / safeTotal * n)));
+            let html = '';
+            for(let i = 0; i < n; i++){
+                html += '<i class="' + (i < done ? 'is-on' : '') + '"></i>';
+            }
+            return html;
+        }
+
         function renderCollectionPage(){
             const page = document.querySelector('#pageCollection');
             if(!page) return;
@@ -26978,12 +27002,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const heroCount = document.querySelector('#collectionHeroCount');
             const heroYear = document.querySelector('#collectionHeroYear');
             const heroStats = document.querySelector('#collectionHeroStats');
+            const heroProgress = document.querySelector('#collectionProgress');
             const trophyCount = document.querySelector('#collectionTrophyCount');
             const allCount = document.querySelector('#collectionAllCount');
             const tabTrophy = document.querySelector('#collectionTabTrophy');
             const tabAll = document.querySelector('#collectionTabAll');
             if(topCount) topCount.innerText = completed + ' / ' + total;
             if(heroCount) heroCount.innerText = String(completed);
+            if(heroProgress) heroProgress.innerHTML = collectionProgressHtml(completed, total);
             if(trophyCount) trophyCount.innerText = String(completed);
             if(allCount) allCount.innerText = String(total);
             const nowYear = collectionToday().slice(0, 4);

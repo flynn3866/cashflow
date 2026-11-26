@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261125.659';</script>
+    <script>window.APP_VERSION = '20261125.662';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -397,41 +397,22 @@
                 height:88px;
                 padding:0 14px;
                 border-radius:16px;
-                background:
-                    radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.97) 0%, rgba(255,255,255,0) 48%),
-                    linear-gradient(152deg,#fffdf8 0%,#fcf7ed 50%,#f7efe1 100%);
-                border:1px solid rgba(143,36,55,.16);
-                box-shadow:
-                    0 6px 18px rgba(72,49,31,.065),
-                    0 1px 2px rgba(72,49,31,.035),
-                    inset 0 1px 0 rgba(255,255,255,.92),
-                    inset 0 -1px 0 rgba(210,190,143,.16);
+                background:#fff;
+                border:1px solid rgba(143,36,55,.20);
+                box-shadow:0 5px 16px rgba(72,49,31,.065), 0 1px 2px rgba(72,49,31,.035);
                 cursor:pointer;
                 overflow:hidden;
                 -webkit-tap-highlight-color:transparent;
                 transition:transform .16s ease, box-shadow .2s ease, border-color .2s ease;
             }
-            #holdList .hold-card-v2::before{
-                content:"";
-                position:absolute;
-                top:0;
-                left:14px;
-                right:14px;
-                height:1px;
-                pointer-events:none;
-                background:linear-gradient(90deg,rgba(210,190,143,0) 0%,rgba(210,190,143,.82) 18%,rgba(143,36,55,.36) 50%,rgba(210,190,143,.82) 82%,rgba(210,190,143,0) 100%);
-                opacity:.72;
-            }
             #holdList .hold-card-v2:active{
                 transform:scale(.992);
-                box-shadow:0 2px 8px rgba(72,49,31,.06), inset 0 1px 0 rgba(255,255,255,.9);
+                box-shadow:0 2px 8px rgba(72,49,31,.06);
             }
             #holdList .hold-card-v2.is-recovered{
-                background:
-                    radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.96) 0%, rgba(255,255,255,0) 48%),
-                    linear-gradient(135deg,#fdfbff 0%,#fffaf2 52%,#fbf6ff 100%);
-                border-color:rgba(124,58,237,.18);
-                box-shadow:0 6px 18px rgba(124,58,237,.07), 0 1px 2px rgba(72,49,31,.03), inset 0 1px 0 rgba(255,255,255,.9);
+                background:#fff;
+                border-color:rgba(143,36,55,.20);
+                box-shadow:0 5px 16px rgba(72,49,31,.065), 0 1px 2px rgba(72,49,31,.035);
             }
             #holdList .hold-card-v2-id{
                 display:flex;
@@ -439,22 +420,39 @@
                 gap:10px;
                 min-width:0;
             }
-            #holdList .hold-card-v2-logo{
-                width:42px;
-                height:42px;
-                flex:0 0 42px;
+            #holdList .hold-card-v2-logo-plate{
                 display:flex;
                 align-items:center;
                 justify-content:center;
+                width:42px;
+                height:42px;
                 border-radius:13px;
-                background:linear-gradient(145deg,#fffdf9 0%,#fff8ec 100%);
-                box-shadow:0 0 0 1px rgba(210,190,143,.38), 0 3px 9px rgba(72,49,31,.075), inset 0 1px 0 rgba(255,255,255,.95);
+                flex-shrink:0;
+                background:linear-gradient(145deg,#FFFDF7 0%,#F5EAD7 100%);
+                border:1px solid rgba(226,205,166,.52);
+                box-shadow:0 2px 5px rgba(72,49,31,.10), inset 0 0 0 1px rgba(255,255,255,.62), inset 0 1px 0 rgba(255,255,255,.96);
                 overflow:hidden;
+            }
+            #holdList .hold-card-v2-logo-plate > span{
+                background:transparent!important;
+                border-radius:8px!important;
+            }
+            #holdList .hold-card-v2-logo-plate img{
+                width:38px!important;
+                height:38px!important;
+                border-radius:8px!important;
+                background:transparent!important;
+                box-shadow:none!important;
+                object-fit:contain!important;
+                mix-blend-mode:multiply;
+                filter:drop-shadow(0 1px 2px rgba(35,15,12,.10))!important;
             }
             #holdList .hold-card-v2-title{
                 display:flex;
+                flex-direction:row;
+                flex-wrap:wrap;
                 align-items:center;
-                gap:5px;
+                gap:4px;
                 min-width:0;
             }
             #holdList .hold-card-v2-name{
@@ -463,13 +461,14 @@
                 line-height:1.18;
                 letter-spacing:.5px;
                 color:#2d2925;
-                white-space:normal;
-                overflow:visible;
-                overflow-wrap:anywhere;
-                word-break:break-word;
-                text-overflow:clip;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                overflow-wrap:normal;
+                word-break:normal;
                 min-width:0;
-                flex-shrink:1;
+                max-width:100%;
+                flex:0 0 auto;
             }
             #holdList .hold-card-v2.is-recovered .hold-card-v2-name{
                 color:#6f3bd4;
@@ -579,12 +578,12 @@
                 font-feature-settings:"tnum" 1;
             }
             #holdList .hold-card-v2-mv-label{
-                font-size:10.5px;
+                font-size:9px;
                 line-height:1;
                 font-weight:500;
-                letter-spacing:.02em;
+                letter-spacing:.06em;
                 color:#a49382;
-                margin-bottom:4px;
+                margin-bottom:3px;
             }
             #holdList .hold-card-v2-price{
                 font-family:"Space Grotesk",Bahnschrift,system-ui,sans-serif;
@@ -3111,8 +3110,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:var(--c-ink-3)!important;
         }
         #holdList .hold-card-v2-tag{font-size:9px!important;height:14px!important;min-width:16px!important;}
-        #holdList .hold-card-v2-badge{font-size:9px!important;height:15px!important;padding:0 5px!important;}
-        #holdList .hold-card-v2{border-color:rgba(126,102,80,.10)!important;box-shadow:var(--shadow-card)!important;}
+        #holdList .hold-card-v2-badge{font-size:8.5px!important;height:15px!important;padding:0 4px!important;}
+        #holdList .hold-card-v2{border-color:rgba(143,36,55,.20)!important;box-shadow:var(--shadow-card)!important;}
         #pageHoldCardDetail .hcd-card{border-color:var(--c-line-soft)!important;box-shadow:var(--shadow-card)!important;}
         #pageHoldCardDetail .hcd-card-title{font-size:13.5px;color:var(--c-ink);}
         #pageHoldCardDetail .hcd-card-meta{font-size:11px;color:var(--c-ink-3);}
@@ -3694,7 +3693,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #holdList .hold-card-v2{
             border-radius:12px!important;
             padding:0 16px!important;
-            border-color:rgba(126,102,80,.10)!important;
+            border-color:rgba(143,36,55,.20)!important;
             box-shadow:0 1px 2px rgba(72,49,31,.025),0 4px 12px rgba(72,49,31,.04)!important;
         }
         #holdList .hold-card-v2-name{font-size:16.5px!important;}
@@ -3707,7 +3706,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             #holdList .hold-card-v2:hover{
                 transform:translateY(-1px);
                 box-shadow:0 1px 2px rgba(72,49,31,.025),0 5px 14px rgba(72,49,31,.055)!important;
-                border-color:rgba(126,102,80,.16)!important;
+                border-color:rgba(143,36,55,.30)!important;
             }
         }
         .goal-strip{
@@ -4303,15 +4302,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         /* 回本状态收为“白卡 + 紫色小徽章”，不再让第三种色铺满卡片 */
         #holdList .hold-card-v2.is-recovered{
             background:#FFFFFF!important;
-            border-color:rgba(126,102,80,.09)!important;
+            border-color:rgba(143,36,55,.20)!important;
             box-shadow:0 5px 16px rgba(72,49,31,.065),0 1px 2px rgba(72,49,31,.035)!important;
         }
         #holdList .hold-card-v2.is-recovered .hold-card-v2-name{
             color:#6F3BD4!important;
         }
         #holdList .hold-card-v2-badge{
-            font-size:9px!important;
+            font-size:8.5px!important;
             height:15px!important;
+            padding:0 4px!important;
         }
         /* ===== 目标持仓：环形进度卡（2026-11-24） ===== */
         #targetSummaryStrip{
@@ -5192,8 +5192,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
     <!-- 首页持仓：卡片/列表数字规格统一，不随 390/428 宽度降档 -->
     <style id="hold-name-value-type-20261121">
         #holdList .hold-card-v2{
-            grid-template-columns:minmax(0,1fr) 66px 100px!important;
-            gap:10px!important;
+            grid-template-columns:minmax(0,1fr) 56px 98px!important;
+            gap:9px!important;
             padding:0 14px!important;
         }
         #holdList .hold-card-v2-name,
@@ -6269,74 +6269,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             #targetMilestoneSheet,
             #targetMilestoneBackdrop{transition:none!important}
             #targetMilestoneConfetti span{display:none!important}
-        }
-    </style>
-    <style id="hold-card-paper-20261125">
-        /* 首页持仓卡片：暖纸底 + 酒红细边 + 香槟高光 */
-        #holdList .hold-card-v2{
-            background:
-                radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.98) 0%, rgba(255,255,255,0) 48%),
-                linear-gradient(152deg,#fffdf8 0%,#fcf7ed 50%,#f7efe1 100%)!important;
-            border-color:rgba(143,36,55,.20)!important;
-            box-shadow:
-                0 6px 18px rgba(72,49,31,.065),
-                0 1px 2px rgba(72,49,31,.035),
-                inset 0 0 0 1px rgba(210,190,143,.20),
-                inset 0 1px 0 rgba(255,255,255,.94),
-                inset 0 -1px 0 rgba(210,190,143,.18)!important;
-        }
-        #holdList .hold-card-v2::before{
-            content:"";
-            position:absolute;
-            top:0;
-            left:14px;
-            right:14px;
-            height:1px;
-            pointer-events:none;
-            background:linear-gradient(90deg,rgba(210,190,143,0) 0%,rgba(210,190,143,.88) 18%,rgba(143,36,55,.42) 50%,rgba(210,190,143,.88) 82%,rgba(210,190,143,0) 100%);
-            opacity:.86;
-        }
-        #holdList .hold-card-v2-logo{
-            width:42px;
-            height:42px;
-            flex:0 0 42px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            border-radius:13px;
-            background:linear-gradient(145deg,#fffdf9 0%,#fff8ec 100%);
-            box-shadow:0 0 0 1px rgba(210,190,143,.38), 0 3px 9px rgba(72,49,31,.075), inset 0 1px 0 rgba(255,255,255,.95);
-            overflow:hidden;
-        }
-        #holdList .hold-card-v2-title{flex-wrap:wrap;row-gap:2px;}
-        #holdList .hold-card-v2.is-recovered .hold-card-v2-name{
-            white-space:nowrap!important;
-            overflow-wrap:normal!important;
-            word-break:normal!important;
-        }
-        #holdList .hold-card-v2.is-recovered{
-            background:
-                radial-gradient(120% 150% at 0% 0%, rgba(255,255,255,.97) 0%, rgba(255,255,255,0) 48%),
-                linear-gradient(135deg,#fdfbff 0%,#fffaf2 52%,#fbf6ff 100%)!important;
-            border-color:rgba(124,58,237,.20)!important;
-            box-shadow:
-                0 6px 18px rgba(124,58,237,.07),
-                0 1px 2px rgba(72,49,31,.03),
-                inset 0 0 0 1px rgba(210,190,143,.18),
-                inset 0 1px 0 rgba(255,255,255,.92)!important;
-        }
-        #holdList .hold-card-v2:active{
-            box-shadow:0 2px 8px rgba(72,49,31,.06), inset 0 0 0 1px rgba(210,190,143,.16)!important;
-        }
-        @media (hover:hover){
-            #holdList .hold-card-v2:hover{
-                border-color:rgba(143,36,55,.30)!important;
-                box-shadow:
-                    0 1px 2px rgba(72,49,31,.03),
-                    0 7px 18px rgba(72,49,31,.075),
-                    inset 0 0 0 1px rgba(210,190,143,.24),
-                    inset 0 1px 0 rgba(255,255,255,.96)!important;
-            }
         }
     </style>
 </head>
@@ -45337,7 +45269,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 const cardNameFontCls = Array.from(fullName).length > 4 ? 'hold-card-name-sm' : 'hold-card-name-lg';
                 htmlStr += `<div class="${cardClass}" data-hold-code="${item.marketType}|${item.code}" data-hold-id="${item.id}" role="button" tabindex="0" aria-label="${item.name} ${item.code} 持仓详情" onclick="openHoldCardDetail(${item.id}, event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openHoldCardDetail(${item.id}, event);}">
                     <div class="hold-card-v2-id">
-                        <span class="hold-card-v2-logo">${stockLogoHtml(item, 38)}</span>
+                        <span class="hold-card-v2-logo-plate">${stockLogoHtml(item, 38)}</span>
                         <div class="min-w-0">
                             <div class="hold-card-v2-title">
                                 <span class="hold-card-v2-name ${cardNameFontCls}" title="${item.name}">${cardName}</span>
@@ -45345,14 +45277,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                             </div>
                             <div class="hold-card-v2-meta">
                                 <span class="hcm-code">${item.code}</span>
-                                <span class="hcm-pnl-wrap">盈亏 <span class="hcm-pnl" style="color:${itemPnlColor}">${formatPnl(itemPnl)}</span></span>
+                                <span class="hcm-pnl-wrap">累计 <span class="hcm-pnl" style="color:${itemPnlColor}">${formatPnl(itemPnl)}</span></span>
                             </div>
                         </div>
                     </div>
                     <div class="hold-card-v2-chart">${sparkSvg(item, 100, 36, 'hq-spark')}</div>
                     <div class="hold-card-v2-quote">
+                        <div class="hold-card-v2-mv-label">总市值</div>
                         <div class="hold-card-v2-price" style="color:#2b2723"><span class="hcm-mv">${fmtMoney(itemMarketTotal)}</span></div>
-                        <div class="hold-card-v2-daypnl" style="color:${dayPnlColor}">
+                        <div class="hold-card-v2-daypnl" style="color:${dayPnlColor}" title="今日盈亏">
                             <span class="hcm-daypnl">${dayPnlText}</span>
                             <span class="hcm-daypnlpct">${dayPnlPctText}</span>
                         </div>

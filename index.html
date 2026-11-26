@@ -1622,7 +1622,7 @@
         }
         [id^="pageStats"]:not(#pageStats), #pageStockEdit, #pageTrade, #pageTradeLog, #pageAssetHigh,
         #pageYearSnapshot, #pageNotifCenter, #pageDivDetail, #pageCostDetail, #pageNavDetail, #pageWatchList,
-        #pageBalanceSheet, #pageAnnualReport, #pageFundTransfer, #pageFundTransferAdd, #pageSettings,
+        #pageBalanceSheet, #pageAnnualReport, #pageCollection, #pageFundTransfer, #pageFundTransferAdd, #pageSettings,
         #pageIndustryMap, #pageStockScores, #pageDivEntry, #pageCashFlowAdd,
         #pageBreakEven, #pageWatchManage, #pageStockDetail, #pageHealthCheck{
             animation: appSlideIn .35s cubic-bezier(.22,1,.36,1) backwards;
@@ -27912,6 +27912,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let collectionView = 'year';
         let collectionReturnScroll = 0;
         let collectionReturnTab = 'mine';
+        let collectionClosing = false;
+        let collectionCloseTimer = null;
         function collectionDateISO(v){ return targetMilestoneISO(v); }
         function collectionToday(){
             const d = new Date();
@@ -28174,8 +28176,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function openCollection(tab){
             const page = document.querySelector('#pageCollection');
             if(!page) return;
+            const wasClosing = collectionClosing;
+            if(collectionCloseTimer){ clearTimeout(collectionCloseTimer); collectionCloseTimer = null; }
+            collectionClosing = false;
+            if(wasClosing && !page.classList.contains('hidden')){
+                page.style.animation = 'none';
+                void page.offsetWidth;
+                page.style.animation = '';
+                collectionTab = tab === 'all' ? 'all' : 'trophy';
+                renderCollectionPage();
+                return;
+            }
             const alreadyOpen = !page.classList.contains('hidden');
             if(!alreadyOpen){
+                page.style.animation = 'none';
                 collectionReturnTab = activeTab || 'mine';
                 collectionReturnScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
                 collectionView = 'year';
@@ -28187,23 +28201,34 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             collectionTab = tab === 'all' ? 'all' : 'trophy';
             page.classList.remove('hidden');
+            if(!alreadyOpen){
+                void page.offsetWidth;
+                page.style.animation = '';
+                window.scrollTo(0, 0);
+            }
             renderCollectionPage();
-            if(!alreadyOpen) window.scrollTo(0, 0);
         }
         function closeCollection(){
             const page = document.querySelector('#pageCollection');
-            if(!page || page.classList.contains('hidden')) return;
-            page.classList.add('hidden');
+            if(!page || page.classList.contains('hidden') || collectionClosing) return;
+            collectionClosing = true;
             const target = collectionReturnScroll;
-            try{ switchTab('mine'); }catch(e){
-                const mine = document.querySelector('#pageMine');
-                if(mine) mine.classList.remove('hidden');
-            }
-            if(target > 0){
-                setTimeout(function(){
+            const finish = function(){
+                collectionCloseTimer = null;
+                collectionClosing = false;
+                if(page.classList.contains('hidden')) return;
+                page.style.animation = '';
+                page.classList.add('hidden');
+                try{ switchTab('mine'); }catch(e){
+                    const mine = document.querySelector('#pageMine');
+                    if(mine) mine.classList.remove('hidden');
+                }
+                if(target > 0){
                     try{ window.scrollTo(0, Math.max(0, target)); }catch(e){}
-                }, 80);
-            }
+                }
+            };
+            page.style.animation = 'detailExitOut 0.28s cubic-bezier(.4,0,.2,1) forwards';
+            collectionCloseTimer = setTimeout(finish, 250);
         }
         function renderCollectionEntry(){
             const btn = document.querySelector('#collectionEntryBtn');
@@ -28996,7 +29021,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return '<div class="sds-head">'
                 + '<div class="sds-icon"><i class="fa fa-flask text-[14px]"></i></div>'
                 + '<div class="sds-head-main">'
-                + '<div class="sds-title-row"><span class="sds-title">模拟持仓</span><span class="sds-badge">独立模拟</span></div>'
+                + '<div class="sds-title-row"><span class="sds-title">模拟长持</span><span class="sds-badge">独立长持</span></div>'
                 + '<div class="sds-sub">另存一份股数与成本，不影响真实持仓</div>'
                 + '</div>'
                 + (actionHtml || '')
@@ -29005,8 +29030,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function sdSimRowsHtml(st){
             const prefix = st.currency;
-            return '<div class="sds-row"><span class="sds-row-label">模拟持股</span><span class="sds-row-val">' + (st.sim ? sdSimFmtCount(st.simCount) + ' 股' : '--') + '</span></div>'
-                + '<div class="sds-row"><span class="sds-row-label">模拟成本价</span><span class="sds-row-val">' + (st.sim ? sdSimPrice(st.simCostPrice, prefix) : '--') + '</span></div>'
+            return '<div class="sds-row"><span class="sds-row-label">长持持股</span><span class="sds-row-val">' + (st.sim ? sdSimFmtCount(st.simCount) + ' 股' : '--') + '</span></div>'
+                + '<div class="sds-row"><span class="sds-row-label">长持成本价</span><span class="sds-row-val">' + (st.sim ? sdSimPrice(st.simCostPrice, prefix) : '--') + '</span></div>'
                 + '<div class="sds-row"><span class="sds-row-label">成本总额</span><span class="sds-row-val">' + (st.sim ? sdSimMoney(st.simCostTotal, prefix) : '--') + '</span></div>';
         }
 
@@ -29027,7 +29052,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return;
             }
             const st = sdSimState(stock);
-            const editBtn = '<button type="button" class="sds-edit" aria-label="编辑模拟持仓" onclick="openSimHoldEditor()"><i class="fa fa-pencil text-[9px]"></i>编辑</button>';
+            const editBtn = '<button type="button" class="sds-edit" aria-label="编辑长持持仓" onclick="openSimHoldEditor()"><i class="fa fa-pencil text-[9px]"></i>编辑</button>';
             const simPnl = st.simPnl;
             const simPnlText = simPnl == null ? '--' : sdSimSignedMoney(simPnl);
             const simPnlColor = simPnl == null ? '#a99a8c' : (simPnl > 0 ? '#e03131' : (simPnl < 0 ? '#00a05c' : '#8f2437'));
@@ -29042,23 +29067,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pnlDiffColor = pnlDiff == null ? '#a99a8c' : (pnlDiffZero ? '#8a7354' : (pnlDiff < 0 ? '#00a05c' : '#e03131'));
             let diffTagHtml = '';
             if(pnlDiff != null){
-                const tagText = pnlDiffZero ? '两者持平' : (pnlDiff > 0 ? '真实更高' : '模拟更高');
+                const tagText = pnlDiffZero ? '两者持平' : (pnlDiff > 0 ? '真实更高' : '长持更高');
                 const tagFg = pnlDiffZero ? '#8a7354' : (pnlDiff > 0 ? '#8f2437' : '#0f7a57');
                 const tagBg = pnlDiffZero ? '#f7f1e8' : (pnlDiff > 0 ? '#f8ecef' : '#edf6f1');
                 const tagBorder = pnlDiffZero ? '#e8dcc9' : (pnlDiff > 0 ? '#e8cdd4' : '#cfe6da');
                 diffTagHtml = '<span class="sds-diff-tag" style="color:' + tagFg + ';background:' + tagBg + ';border:1px solid ' + tagBorder + '">' + tagText + '</span>';
             }
             const diffHeroHtml = '<div class="sds-diff-hero">'
-                + '<div class="sds-diff-head"><div class="sds-diff-title">差额（真实 − 模拟）</div>' + diffTagHtml + '</div>'
+                + '<div class="sds-diff-head"><div class="sds-diff-title">差额（真实 − 长持）</div>' + diffTagHtml + '</div>'
                 + '<div class="sds-diff" style="color:' + pnlDiffColor + '">' + pnlDiffText + '</div>'
-                + '<div class="sds-diff-formula">真实持仓盈亏 − 模拟持仓盈亏</div>'
+                + '<div class="sds-diff-formula">真实持仓盈亏 − 长持持仓盈亏</div>'
                 + '</div>';
             const exNote = st.simExCount > 0
-                ? '已按 ' + st.simExCount + ' 笔现金分红除权 · 仅调整模拟成本'
-                : '按当前价估算 · 仅作模拟对照';
+                ? '已按 ' + st.simExCount + ' 笔现金分红除权 · 仅调整长持成本'
+                : '按当前价估算 · 仅作长持对照';
             const detailHtml = '<div class="sds-detail-grid">'
-                + '<div class="sds-detail-item"><span class="sds-detail-label">模拟持股</span><span class="sds-detail-val">' + (st.sim ? sdSimFmtCount(st.simCount) + ' 股' : '--') + '</span></div>'
-                + '<div class="sds-detail-item"><span class="sds-detail-label">模拟成本价</span><span class="sds-detail-val">' + (st.sim ? sdSimPrice(st.simCostPrice, st.currency) : '--') + '</span></div>'
+                + '<div class="sds-detail-item"><span class="sds-detail-label">长持持股</span><span class="sds-detail-val">' + (st.sim ? sdSimFmtCount(st.simCount) + ' 股' : '--') + '</span></div>'
+                + '<div class="sds-detail-item"><span class="sds-detail-label">长持成本价</span><span class="sds-detail-val">' + (st.sim ? sdSimPrice(st.simCostPrice, st.currency) : '--') + '</span></div>'
                 + '<div class="sds-detail-item"><span class="sds-detail-label">成本总额</span><span class="sds-detail-val">' + (st.sim ? sdSimMoney(st.simCostTotal, st.currency) : '--') + '</span></div>'
                 + '</div>';
             if(!st.sim){
@@ -29067,11 +29092,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     + sdSimHeaderHtml('')
                     + diffHeroHtml
                     + '<div class="sds-pnl-grid">'
-                    + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">模拟持仓盈亏</div><div class="sds-pnl-amount" style="color:#a99a8c">--</div><div class="sds-pnl-rate">添加后计算</div></div>'
+                    + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">长持持仓盈亏</div><div class="sds-pnl-amount" style="color:#a99a8c">--</div><div class="sds-pnl-rate">添加后计算</div></div>'
                     + '<div class="sds-pnl-block sds-pnl-real"><div class="sds-pnl-label">真实持仓盈亏</div><div class="sds-pnl-amount" style="color:' + realPnlColor + '">' + realPnlText + '</div><div class="sds-pnl-rate">' + realRateText + '</div></div>'
                     + '</div>'
                     + detailHtml
-                    + '<button type="button" class="sds-add" aria-label="添加模拟数据" onclick="openSimHoldEditor()"><i class="fa fa-plus text-[10px]"></i>添加模拟数据</button>'
+                    + '<button type="button" class="sds-add" aria-label="添加长持数据" onclick="openSimHoldEditor()"><i class="fa fa-plus text-[10px]"></i>添加长持数据</button>'
                     + '</div></div>';
                 return;
             }
@@ -29080,7 +29105,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + sdSimHeaderHtml(editBtn)
                 + diffHeroHtml
                 + '<div class="sds-pnl-grid">'
-                + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">模拟持仓盈亏</div><div class="sds-pnl-amount" style="color:' + simPnlColor + '">' + simPnlText + '</div><div class="sds-pnl-rate">' + simRateText + '</div></div>'
+                + '<div class="sds-pnl-block sds-pnl-sim"><div class="sds-pnl-label">长持持仓盈亏</div><div class="sds-pnl-amount" style="color:' + simPnlColor + '">' + simPnlText + '</div><div class="sds-pnl-rate">' + simRateText + '</div></div>'
                 + '<div class="sds-pnl-block sds-pnl-real"><div class="sds-pnl-label">真实持仓盈亏</div><div class="sds-pnl-amount" style="color:' + realPnlColor + '">' + realPnlText + '</div><div class="sds-pnl-rate">' + realRateText + '</div></div>'
                 + '</div>'
                 + detailHtml
@@ -50002,7 +50027,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         if(!b) return;
         var oc = (b.getAttribute && b.getAttribute('onclick')) || '';
         var id = b.id || '';
-        var hit = /^(openStatsSection|openStatsFromHold|openCashFlowFromHold|openDivScheduleFromHold|openDivDetail|openAssetHighModal|openBreakEvenPage|openAnnualReport|openBalanceSheet|openStockScores|openHealthCheck|openWatchPage|openNotifCenter|openNavDetail|openCostDetail|openIndustryMapPage|openFundTransfer|openFundTransferAdd|openTradeLogPage|openTradeModal|openDivEntry|openYearSnapshot|showSettings)\(/.test(oc.trim())
+        var hit = /^(openStatsSection|openStatsFromHold|openCashFlowFromHold|openDivScheduleFromHold|openDivDetail|openAssetHighModal|openBreakEvenPage|openAnnualReport|openCollection|openBalanceSheet|openStockScores|openHealthCheck|openWatchPage|openNotifCenter|openNavDetail|openCostDetail|openIndustryMapPage|openFundTransfer|openFundTransferAdd|openTradeLogPage|openTradeModal|openDivEntry|openYearSnapshot|showSettings)\(/.test(oc.trim())
               || id === 'annualReportBtn' || id === 'balanceSheetBtn' || id === 'yearSnapshotBtn';
         if(hit){
             // 资产卡内的小文字按钮不能作为原点，否则会从一行小字弹出；
@@ -50246,6 +50271,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         ['openAssetHighModal', function(){ return 'pageAssetHigh'; }],
         ['openBreakEvenPage', function(){ return 'pageBreakEven'; }],
         ['openAnnualReport', function(){ return 'pageAnnualReport'; }],
+        ['openCollection', function(){ return 'pageCollection'; }],
         ['openBalanceSheet', function(){ return 'pageBalanceSheet'; }],
         ['openStockScores', function(){ return 'pageStockScores'; }],
         ['openHealthCheck', function(){ return 'pageHealthCheck'; }],

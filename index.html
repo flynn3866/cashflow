@@ -6045,7 +6045,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection .collection-ring::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#FAF6EF}
         #pageCollection .collection-ring b{position:relative;z-index:1;font-size:10px;line-height:1;font-weight:750;color:#7E7063;font-variant-numeric:tabular-nums}
         #pageCollection .collection-ring b i{font-size:7px;font-style:normal;font-weight:600;margin-left:.5px;color:#A29687}
-        #pageCollection .collection-name{margin-top:8px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:18.5px;line-height:1.18;font-weight:650;letter-spacing:.035em;color:#39271F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-name{margin-top:8px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:22px;line-height:1.18;font-weight:650;letter-spacing:.02em;color:#39271F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #pageCollection .collection-name.name-long{font-size:18px;letter-spacing:0}
+        #pageCollection .collection-name.name-xlong{font-size:17.5px;letter-spacing:0}
         #pageCollection .collection-code-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;width:100%;margin-top:8px}
         #pageCollection .collection-code{min-width:0;font-size:11.5px;line-height:1.2;color:#958779;letter-spacing:.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         #pageCollection .collection-target{flex:0 0 auto;display:inline-flex;align-items:baseline;gap:3px;margin-left:auto;font-size:13px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;color:#7C6E62}
@@ -6088,7 +6090,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection #collectionBody.is-all .collection-card-foot{margin-top:auto;padding:13px 0 0;border-top:1px solid rgba(232,212,170,.24)}
         #pageCollection #collectionBody.is-all .collection-card:not(.is-done) .collection-card-foot{border-top-color:rgba(176,140,82,.17)}
         #pageCollection #collectionBody.is-trophy .collection-seal,
-        #pageCollection #collectionBody.is-all .collection-seal{width:36px;height:36px}
+        #pageCollection #collectionBody.is-all .collection-seal{width:28px;height:28px;opacity:.86}
 
         #pageCollection #collectionBody.is-all .collection-card-mid{flex:1;min-height:0;display:flex;align-items:center;width:100%;padding:8px 0 4px}
         #pageCollection .collection-hold-block{width:100%;min-width:0}
@@ -27031,7 +27033,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function collectionCardHtml(x){
             const item = x.item;
-            const name = targetEsc(String(item.name || item.code || '--'));
+            const rawName = String(item.name || item.code || '--');
+            const name = targetEsc(rawName);
+            const nameLen = Array.from(rawName).length;
+            const nameClass = nameLen > 7 ? ' name-xlong' : (nameLen > 5 ? ' name-long' : '');
             const key = targetEsc(x.key);
             const rawPct = Math.max(0, Number(x.pct) || 0);
             const pct = x.done ? 100 : Math.min(99.9, rawPct);
@@ -27050,7 +27055,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 : '<div class="collection-card-mid"><div class="collection-hold-block"><div class="collection-hold-meta"><span>已持有</span><b>' + targetFmtShares(x.current || 0) + '<i>股</i></b></div><div class="collection-hold-progress"><i style="width:' + pctStyle + '"></i></div></div></div>';
             return '<button type="button" class="collection-card ' + (x.done ? 'is-done' : 'is-locked') + '" data-collection-key="' + key + '" onclick="openCollectionCard(' + Number(item.id) + ',event)" aria-label="' + name + (x.done ? ' 已集齐' : ' 在建中') + '">'
                 + '<div class="collection-card-top"><span class="collection-logo">' + stockLogoHtml(item, 26) + '</span>' + ring + '</div>'
-                + '<div class="collection-name">' + name + '</div>'
+                + '<div class="collection-name' + nameClass + '">' + name + '</div>'
                 + '<div class="collection-code-row"><span class="collection-code">' + code + '</span><span class="collection-target"><span>目标</span><b>' + targetFmtShares(x.target) + '</b><i>股</i></span></div>'
                 + hold
                 + '<div class="collection-card-foot">' + foot + '</div>'

@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261125.666';</script>
+    <script>window.APP_VERSION = '20261126.666';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -10160,6 +10160,60 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .page-asset .asset-hero-updated{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
             .page-asset .asset-hero-ratio{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,250,243,.70)}
             .page-asset .asset-hero-ratio b{font-size:11.2px;font-weight:650;color:#FBF7EF;letter-spacing:-.01em}
+            /* 资产年报入口：像一本放在总览下方的薄册，深咖书脊 + 米纸内页 */
+            .page-asset .asset-annual-entry{
+                position:relative;width:100%;min-height:100px;margin-top:12px;padding:0;
+                display:grid;grid-template-columns:82px minmax(0,1fr) 88px;
+                align-items:stretch;overflow:hidden;text-align:left;
+                border:1px solid #E5D7C4;border-radius:16px;
+                background:
+                    radial-gradient(circle at 94% 0%,rgba(194,157,103,.12),transparent 34%),
+                    linear-gradient(135deg,#FCF7ED 0%,#F6EDE0 100%);
+                box-shadow:0 1px 2px rgba(54,36,24,.035),0 8px 20px -22px rgba(54,36,24,.30);
+                -webkit-tap-highlight-color:transparent;
+                transition:transform .16s ease,box-shadow .16s ease;
+            }
+            .page-asset .asset-annual-entry:active{transform:scale(.985);box-shadow:0 4px 12px -14px rgba(54,36,24,.35)}
+            .page-asset .asset-annual-entry:before{
+                content:"";position:absolute;left:81px;top:0;bottom:0;width:1px;
+                background:linear-gradient(180deg,rgba(200,165,108,.42),rgba(200,165,108,.12));
+                pointer-events:none;
+            }
+            .page-asset .aae-spine{
+                position:relative;display:flex;flex-direction:column;justify-content:space-between;
+                padding:12px 10px 11px 12px;color:#E8CBA0;overflow:hidden;
+                background:
+                    radial-gradient(circle at 20% 0%,rgba(201,154,75,.18),transparent 40%),
+                    linear-gradient(155deg,#33231B 0%,#241814 100%);
+            }
+            .page-asset .aae-spine:after{
+                content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;
+                background:repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 4px);
+            }
+            .page-asset .aae-spine-label{position:relative;z-index:1;font-size:7px;line-height:1;letter-spacing:.17em;color:rgba(232,203,160,.56);font-weight:600}
+            .page-asset .aae-spine-year{
+                position:relative;z-index:1;font-family:Georgia,"Songti SC","Noto Serif SC",serif;
+                font-size:25px;line-height:1;letter-spacing:-.02em;color:#F2D7AC;font-variant-numeric:lining-nums tabular-nums;
+            }
+            .page-asset .aae-spine-foot{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;font-size:7px;letter-spacing:.13em;color:rgba(232,203,160,.44)}
+            .page-asset .aae-spine-foot i{font-size:7px;color:rgba(232,203,160,.7)}
+            .page-asset .aae-main{min-width:0;padding:13px 10px 12px 12px;display:flex;flex-direction:column;justify-content:center}
+            .page-asset .aae-kicker{font-size:7.2px;line-height:1;letter-spacing:.16em;color:#9B8877;font-weight:600;margin-bottom:6px;white-space:nowrap}
+            .page-asset .aae-title{
+                font-family:"Songti SC","Noto Serif SC","Source Han Serif SC",serif;
+                font-size:17.5px;line-height:1.16;font-weight:700;letter-spacing:.02em;color:#2B211B;white-space:nowrap;
+            }
+            .page-asset .aae-sub{margin-top:6px;font-size:8.5px;line-height:1.3;color:#8B7969;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            .page-asset .aae-side{
+                min-width:0;padding:13px 12px 12px 4px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;
+                text-align:right;border-left:1px dashed rgba(119,89,56,.14);
+            }
+            .page-asset .aae-delta{font-size:12.5px;line-height:1.1;font-weight:750;letter-spacing:-.02em;color:#8C6134;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+            .page-asset .aae-delta.is-down{color:#9D5A45}
+            .page-asset .aae-delta.is-empty{font-size:10.5px;font-weight:550;color:#9B8877;letter-spacing:0}
+            .page-asset .aae-growth{margin-top:4px;font-size:8.5px;line-height:1;color:#9B8877;font-variant-numeric:tabular-nums;white-space:nowrap}
+            .page-asset .aae-link{margin-top:9px;display:inline-flex;align-items:center;gap:4px;font-size:8px;line-height:1;letter-spacing:.05em;color:#6E4F33;font-weight:600;white-space:nowrap}
+            .page-asset .aae-link i{font-size:7px;color:#A98555}
             .page-asset .asset-sec-head{
                 display:flex;align-items:center;justify-content:space-between;gap:8px;
                 position:relative;padding:0 2px 0 12px;margin:25px 0 12px;
@@ -10874,6 +10928,371 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 .page-asset .asset-hero-net{font-size:32px}
                 .page-asset .asset-invest-amount{font-size:22px}
             }
+            /* ==================== 个人资产年报 · 私人账本 ====================
+               独立于首页持仓与投资年报，只读取资产页月度快照。
+               纸上年鉴：深咖封面、香槟金细线、衬线标题、精确账表。 */
+            #pageAssetAnnual{
+                position:fixed;inset:0;z-index:120;overflow-y:auto;overflow-x:hidden;
+                overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+                color:#241C17;
+                background:
+                    radial-gradient(circle at 92% -4%,rgba(199,164,106,.18) 0%,rgba(199,164,106,0) 31%),
+                    radial-gradient(circle at -6% 24%,rgba(95,119,104,.075) 0%,rgba(95,119,104,0) 30%),
+                    linear-gradient(180deg,#F6F0E5 0%,#F1E9DC 46%,#EFE5D6 100%);
+                    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+                -webkit-font-smoothing:antialiased;
+                transform-origin:center center;will-change:transform,opacity;
+                animation:none!important;
+            }
+            #pageAssetAnnual.hidden{display:none!important}
+            #assetAnnualBackdrop{
+                position:fixed;inset:0;z-index:119;background:rgba(0,0,0,.5);opacity:0;
+            }
+            #assetAnnualBackdrop.hidden{display:none!important}
+            html.aar-open,body.aar-open{overflow:hidden!important}
+            #pageAssetAnnual:before{
+                content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.40;
+                background-image:
+                    repeating-linear-gradient(0deg,rgba(99,72,43,.032) 0 1px,transparent 1px 4px),
+                    repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 18px);
+                mix-blend-mode:multiply;
+            }
+            #pageAssetAnnual .aar-topbar{
+                position:sticky;top:0;z-index:30;
+                background:rgba(243,236,225,.92);
+                border-bottom:1px solid rgba(80,54,34,.11);
+                -webkit-backdrop-filter:blur(18px) saturate(120%);backdrop-filter:blur(18px) saturate(120%);
+            }
+            #pageAssetAnnual .aar-topbar-inner{
+                max-width:672px;margin:0 auto;height:54px;
+                padding:calc(6px + env(safe-area-inset-top)) 16px 6px;
+                display:flex;align-items:center;gap:10px;box-sizing:content-box;
+            }
+            #pageAssetAnnual .aar-back{
+                width:34px;height:34px;flex:0 0 auto;border-radius:11px;
+                display:flex;align-items:center;justify-content:center;
+                border:1px solid rgba(80,54,34,.14);background:rgba(255,252,246,.62);color:#4B3729;
+                box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+            }
+            #pageAssetAnnual .aar-back:active{transform:scale(.94)}
+            #pageAssetAnnual .aar-back i{font-size:13px}
+            #pageAssetAnnual .aar-top-title{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+            #pageAssetAnnual .aar-top-title b{
+                font-family:"Songti SC","Noto Serif SC","Source Han Serif SC",serif;
+                font-size:15.5px;line-height:1.1;letter-spacing:.05em;font-weight:700;color:#2D211A;white-space:nowrap;
+            }
+            #pageAssetAnnual .aar-top-title span{font-size:7px;line-height:1;letter-spacing:.19em;color:#9C8773;font-weight:600;white-space:nowrap}
+            #pageAssetAnnual .aar-year-tabs{display:flex;align-items:center;gap:4px;flex:0 0 auto;max-width:150px;overflow-x:auto;scrollbar-width:none}
+            #pageAssetAnnual .aar-year-tabs::-webkit-scrollbar{display:none}
+            #pageAssetAnnual .aar-year-tab{
+                border:1px solid rgba(80,54,34,.12);background:rgba(255,252,246,.58);color:#85705E;
+                height:27px;padding:0 8px;border-radius:999px;font-size:9px;line-height:1;font-weight:650;
+                font-variant-numeric:tabular-nums;white-space:nowrap;
+            }
+            #pageAssetAnnual .aar-year-tab.is-on{background:#33231A;border-color:#33231A;color:#EBD0A4;box-shadow:0 4px 10px -7px rgba(35,22,14,.55)}
+            #pageAssetAnnual .aar-sheet{position:relative;z-index:1;max-width:672px;margin:0 auto;padding:14px 16px calc(34px + env(safe-area-inset-bottom))}
+            #pageAssetAnnual .aar-cover{
+                position:relative;isolation:isolate;overflow:hidden;
+                border-radius:23px;padding:20px 21px 18px;
+                background:
+                    radial-gradient(circle at 87% 2%,rgba(215,180,119,.20) 0%,rgba(215,180,119,0) 30%),
+                    radial-gradient(circle at 10% 100%,rgba(157,90,69,.15) 0%,rgba(157,90,69,0) 36%),
+                    linear-gradient(158deg,#1B120E 0%,#312018 48%,#4A3023 100%);
+                border:1px solid rgba(218,187,134,.28);
+                box-shadow:
+                    0 1px 0 rgba(255,255,255,.08) inset,
+                    0 22px 44px -32px rgba(27,16,11,.72),
+                    0 2px 7px rgba(40,27,18,.10);
+                color:#F9F0DE;
+            }
+            #pageAssetAnnual .aar-cover:before{
+                content:"";position:absolute;z-index:0;inset:8px;border:1px solid rgba(218,187,134,.17);border-radius:16px;pointer-events:none;
+            }
+            #pageAssetAnnual .aar-cover:after{
+                content:"";position:absolute;z-index:0;inset:0;pointer-events:none;opacity:.30;
+                background:
+                    repeating-linear-gradient(90deg,transparent 0 19px,rgba(255,255,255,.038) 19px 20px),
+                    repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 1px,transparent 1px 4px);
+            }
+            #pageAssetAnnual .aar-cover-year{
+                position:absolute;z-index:0;right:12px;top:50px;pointer-events:none;
+                font-family:Georgia,"Songti SC",serif;font-size:100px;line-height:.78;letter-spacing:-.075em;
+                color:rgba(229,201,155,.105);font-variant-numeric:lining-nums;
+            }
+            #pageAssetAnnual .aar-cover-head{
+                position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;
+                padding-bottom:11px;border-bottom:1px solid rgba(228,198,148,.16);
+            }
+            #pageAssetAnnual .aar-cover-brand{font-size:7.5px;line-height:1;letter-spacing:.19em;color:rgba(238,210,166,.56);font-weight:650}
+            #pageAssetAnnual .aar-cover-edition{font-size:7.5px;line-height:1;letter-spacing:.14em;color:rgba(238,210,166,.40);font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAssetAnnual .aar-cover-title{
+                position:relative;z-index:2;margin-top:16px;
+                font-family:"Songti SC","Noto Serif SC","Source Han Serif SC",serif;
+                font-size:28px;line-height:1.18;font-weight:700;letter-spacing:.07em;color:#FFFAF0;
+            }
+            #pageAssetAnnual .aar-cover-title em{display:block;margin-top:6px;font-style:normal;font-size:9px;line-height:1.4;font-weight:500;letter-spacing:.12em;color:rgba(238,210,166,.58);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
+            #pageAssetAnnual .aar-cover-net{position:relative;z-index:2;margin-top:22px}
+            #pageAssetAnnual .aar-cover-label{display:flex;align-items:baseline;gap:7px;font-size:9.5px;line-height:1.2;color:rgba(238,210,166,.57);letter-spacing:.05em}
+            #pageAssetAnnual .aar-cover-label b{font-size:9.5px;font-weight:600;color:rgba(247,228,196,.76);letter-spacing:.02em}
+            #pageAssetAnnual .aar-cover-label span{font-size:7px;letter-spacing:.13em;color:rgba(238,210,166,.35)}
+            #pageAssetAnnual .aar-cover-money{
+                display:flex;align-items:baseline;gap:5px;margin-top:7px;min-width:0;
+                font-family:Georgia,"Songti SC","Noto Serif SC",serif;
+                color:#FFFCF6;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1;
+            }
+            #pageAssetAnnual .aar-cover-cur{font-size:18px;line-height:1;font-weight:500;opacity:.88;flex:0 0 auto;color:rgba(252,248,241,.88)}
+            #pageAssetAnnual .aar-cover-num{
+                font-size:clamp(33px,9.7vw,43px);line-height:.98;letter-spacing:-.035em;font-weight:600;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+                color:#FFFCF6;text-shadow:0 1px 0 rgba(255,255,255,.06);
+            }
+            #pageAssetAnnual .aar-cover-num.is-empty{font-size:32px;letter-spacing:.06em;font-weight:500;opacity:.72}
+            #pageAssetAnnual .aar-cover-net-note{margin-top:7px;font-size:8px;line-height:1.4;color:rgba(238,210,166,.38);letter-spacing:.02em}
+            #pageAssetAnnual .aar-cover-metrics{
+                position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;padding-top:13px;
+                border-top:1px solid rgba(228,198,148,.17);
+            }
+            #pageAssetAnnual .aar-cover-metric{min-width:0;padding:0 14px 0 0}
+            #pageAssetAnnual .aar-cover-metric + .aar-cover-metric{padding:0 0 0 15px;border-left:1px solid rgba(228,198,148,.14)}
+            #pageAssetAnnual .aar-cover-metric-label{font-size:8px;line-height:1.2;color:rgba(238,210,166,.43);white-space:nowrap;margin-bottom:5px}
+            #pageAssetAnnual .aar-cover-metric-value{
+                font-size:18px;line-height:1.12;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;
+                color:#FDF9F2;letter-spacing:-.02em;
+            }
+            #pageAssetAnnual .aar-cover-metric-value.is-down{color:#FDF9F2}
+            #pageAssetAnnual .aar-cover-metric-value.is-flat{color:rgba(253,249,242,.66)}
+            #pageAssetAnnual .aar-cover-metric-sub{margin-top:4px;font-size:7.5px;line-height:1.25;color:rgba(238,210,166,.34);white-space:nowrap}
+            #pageAssetAnnual .aar-cover-period{
+                position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;
+                margin-top:17px;padding-top:12px;border-top:1px solid rgba(228,198,148,.14);
+                font-size:8px;line-height:1.3;color:rgba(238,210,166,.39);letter-spacing:.03em;font-variant-numeric:tabular-nums;
+            }
+            #pageAssetAnnual .aar-cover-period b{font-weight:550;color:rgba(253,249,242,.74)}
+            #pageAssetAnnual .aar-glance{
+                display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+                margin-top:12px;background:#FBF6EC;border:1px solid #E4D6C3;border-radius:16px;overflow:hidden;
+                box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 8px 20px -24px rgba(55,36,22,.32);
+            }
+            #pageAssetAnnual .aar-glance-cell{padding:13px 12px 12px;min-width:0}
+            #pageAssetAnnual .aar-glance-cell + .aar-glance-cell{border-left:1px solid rgba(107,77,47,.10)}
+            #pageAssetAnnual .aar-glance-label{font-size:8.5px;line-height:1.2;color:#8E7B69;white-space:nowrap;letter-spacing:.02em}
+            #pageAssetAnnual .aar-glance-value{
+                margin-top:6px;font-size:20px;line-height:1.05;font-weight:750;letter-spacing:-.035em;color:#2C211A;
+                font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            }
+            #pageAssetAnnual .aar-glance-sub{margin-top:5px;font-size:8px;line-height:1.25;color:#9A8774;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #pageAssetAnnual .aar-sec-head{
+                display:flex;align-items:flex-end;justify-content:space-between;gap:10px;
+                margin:25px 4px 10px;padding-top:2px;
+            }
+            #pageAssetAnnual .aar-sec-head-main{display:flex;align-items:baseline;gap:8px;min-width:0}
+            #pageAssetAnnual .aar-sec-no{font-size:8px;line-height:1;letter-spacing:.13em;color:#B08B54;font-weight:700;font-variant-numeric:tabular-nums}
+            #pageAssetAnnual .aar-sec-title{
+                font-family:"Songti SC","Noto Serif SC","Source Han Serif SC",serif;
+                font-size:18px;line-height:1.15;font-weight:700;letter-spacing:.04em;color:#2B211A;white-space:nowrap;
+            }
+            #pageAssetAnnual .aar-sec-note{font-size:7.5px;line-height:1.3;letter-spacing:.08em;color:#9A8672;white-space:nowrap;text-align:right}
+            #pageAssetAnnual .aar-ledger{
+                overflow:hidden;background:#FFFBF4;border:1px solid #E4D6C4;border-radius:18px;
+                box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 10px 26px -30px rgba(58,38,23,.42);
+            }
+            #pageAssetAnnual .aar-ledger-head{
+                display:flex;align-items:center;justify-content:space-between;gap:10px;
+                padding:11px 15px;border-bottom:1px solid rgba(101,71,44,.11);
+                background:linear-gradient(90deg,#FAF3E7,#FCF7EE);
+                font-size:7.5px;line-height:1.2;letter-spacing:.11em;color:#9B8772;
+            }
+            #pageAssetAnnual .aar-ledger-head span:last-child{text-align:right}
+            #pageAssetAnnual .aar-lrow{
+                position:relative;padding:12px 15px 11px 18px;border-bottom:1px solid rgba(101,71,44,.09);
+                background:rgba(255,252,246,.0);transition:background .16s ease;
+            }
+            #pageAssetAnnual .aar-lrow:before{
+                content:"";position:absolute;left:8px;top:15px;bottom:15px;width:2px;border-radius:2px;
+                background:var(--aar-c,#B08B54);opacity:.55;
+            }
+            #pageAssetAnnual .aar-lrow.is-total{background:#FBF3E4;border-top:1px solid rgba(101,71,44,.11)}
+            #pageAssetAnnual .aar-lrow.is-total:before{opacity:.22}
+            #pageAssetAnnual .aar-lrow.is-net{background:linear-gradient(90deg,#F8EEDC,#FBF5E9);border-bottom:0;padding-top:14px;padding-bottom:13px}
+            #pageAssetAnnual .aar-lrow.is-net:before{background:#33231A;opacity:.9}
+            #pageAssetAnnual .aar-lrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:9px;min-width:0}
+            #pageAssetAnnual .aar-lname{
+                font-size:13px;line-height:1.2;font-weight:650;color:#2C211A;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            }
+            #pageAssetAnnual .aar-lrow.is-net .aar-lname{
+                font-family:"Songti SC","Noto Serif SC",serif;font-size:14.5px;font-weight:700;letter-spacing:.03em;
+            }
+            #pageAssetAnnual .aar-lshare{font-size:9px;line-height:1.2;color:#9A8672;font-variant-numeric:tabular-nums;white-space:nowrap;flex:0 0 auto}
+            #pageAssetAnnual .aar-lrow.is-net .aar-lshare{color:#84694A}
+            #pageAssetAnnual .aar-lrow-data{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:8px;margin-top:6px;min-width:0}
+            #pageAssetAnnual .aar-flow{display:flex;align-items:baseline;gap:5px;min-width:0;white-space:nowrap;overflow:hidden}
+            #pageAssetAnnual .aar-flow .aar-start{font-size:10px;line-height:1.2;color:#8E7B69;font-variant-numeric:tabular-nums}
+            #pageAssetAnnual .aar-flow .aar-arrow{font-size:7px;color:#BBA88E;flex:0 0 auto}
+            #pageAssetAnnual .aar-flow .aar-end{font-size:12px;line-height:1.2;color:#2A201A;font-weight:700;font-variant-numeric:tabular-nums}
+            #pageAssetAnnual .aar-lrow.is-net .aar-flow .aar-end{font-size:15px;letter-spacing:-.02em}
+            #pageAssetAnnual .aar-delta{
+                text-align:right;white-space:nowrap;font-size:11px;line-height:1.2;font-weight:700;
+                font-variant-numeric:tabular-nums;color:#8C6134;
+            }
+            #pageAssetAnnual .aar-delta.is-down{color:#9D5A45}
+            #pageAssetAnnual .aar-delta.is-flat{color:#9A8672;font-weight:550}
+            #pageAssetAnnual .aar-delta em{display:inline-block;margin-left:5px;font-style:normal;font-size:8.5px;font-weight:600;color:#9A8672;letter-spacing:0}
+            #pageAssetAnnual .aar-delta.is-pos em{color:#7A6A57}
+            #pageAssetAnnual .aar-lrow.is-net .aar-delta{font-size:12px;color:#5E4126}
+            #pageAssetAnnual .aar-lrow.is-net .aar-delta em{font-size:9px;color:#8A6A45}
+            #pageAssetAnnual .aar-compo{
+                background:#FFFBF4;border:1px solid #E4D6C4;border-radius:18px;padding:15px 16px 14px;
+                box-shadow:0 1px 0 rgba(255,255,255,.85) inset;
+            }
+            #pageAssetAnnual .aar-stack-row{margin-bottom:13px}
+            #pageAssetAnnual .aar-stack-row:last-of-type{margin-bottom:0}
+            #pageAssetAnnual .aar-stack-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+            #pageAssetAnnual .aar-stack-label{font-size:9px;line-height:1.2;color:#7C6754;font-weight:600;letter-spacing:.02em}
+            #pageAssetAnnual .aar-stack-note{font-size:8px;line-height:1.2;color:#A18E7C;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAssetAnnual .aar-stack-bar{display:flex;height:11px;border-radius:999px;overflow:hidden;background:#EADCCB;box-shadow:inset 0 1px 2px rgba(88,60,37,.08)}
+            #pageAssetAnnual .aar-stack-bar.is-empty{
+                align-items:center;justify-content:center;height:15px;background:repeating-linear-gradient(135deg,#E9DCCB 0 5px,#F2E8D9 5px 10px);
+                box-shadow:none;color:#8B735A;font-size:8px;letter-spacing:.1em;line-height:1;
+            }
+            #pageAssetAnnual .aar-stack-seg{height:100%;min-width:0}
+            #pageAssetAnnual .aar-stack-seg + .aar-stack-seg{box-shadow:inset 1px 0 0 rgba(255,255,255,.18)}
+            #pageAssetAnnual .aar-comp-legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:15px;padding-top:13px;border-top:1px dashed rgba(108,76,48,.14)}
+            #pageAssetAnnual .aar-comp-item{display:flex;align-items:center;gap:6px;min-width:0}
+            #pageAssetAnnual .aar-comp-dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px rgba(255,251,244,.7)}
+            #pageAssetAnnual .aar-comp-name{font-size:9px;line-height:1.2;color:#776353;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+            #pageAssetAnnual .aar-comp-pct{margin-left:auto;font-size:9px;line-height:1.2;color:#31251C;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAssetAnnual .aar-debt-note{
+                display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding:9px 10px;
+                border-radius:10px;background:#F8F0E2;border:1px solid rgba(108,76,48,.12);
+                font-size:8.5px;line-height:1.2;color:#806B58;
+            }
+            #pageAssetAnnual .aar-debt-note b{font-size:10.5px;color:#3B2A1E;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAssetAnnual .aar-chart-card{
+                background:#FBF6EC;border:1px solid #E4D6C4;border-radius:18px;overflow:hidden;
+                box-shadow:0 1px 0 rgba(255,255,255,.8) inset;
+            }
+            #pageAssetAnnual .aar-chart-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:13px 15px 0}
+            #pageAssetAnnual .aar-chart-top span{font-size:8px;line-height:1.2;color:#9C8875;letter-spacing:.02em}
+            #pageAssetAnnual .aar-chart-top b{font-size:11px;line-height:1.2;color:#3B2A1E;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAssetAnnual .aar-chart{width:100%;height:132px;padding:0 4px 0}
+            #pageAssetAnnual .aar-chart svg{display:block;width:100%;height:100%}
+            #pageAssetAnnual .aar-chart-empty{padding:26px 18px 30px;text-align:center;font-size:10px;line-height:1.7;color:#9A8774}
+            #pageAssetAnnual .aar-chart-empty b{display:block;font-size:11.5px;font-weight:650;color:#584434;margin-bottom:4px}
+            #pageAssetAnnual .aar-chart-empty span{display:block;max-width:250px;margin:0 auto}
+            #pageAssetAnnual .aar-note-card{
+                position:relative;overflow:hidden;background:#FBF5E9;border:1px solid #E3D4C0;border-radius:18px;padding:17px 17px 15px;
+                box-shadow:0 1px 0 rgba(255,255,255,.85) inset;
+            }
+            #pageAssetAnnual .aar-note-card:before{
+                content:"";position:absolute;left:0;top:16px;bottom:16px;width:3px;border-radius:0 2px 2px 0;
+                background:linear-gradient(180deg,#B08B54,#6E4E33);
+            }
+            #pageAssetAnnual .aar-note-quote{font-family:Georgia,"Songti SC",serif;font-size:29px;line-height:.72;color:#C5A26B;margin-bottom:8px}
+            #pageAssetAnnual .aar-note-title{font-family:"Songti SC","Noto Serif SC",serif;font-size:15px;font-weight:700;letter-spacing:.04em;color:#33251C;margin-bottom:8px}
+            #pageAssetAnnual .aar-note-text{font-family:"Songti SC","Noto Serif SC","Source Han Serif SC",serif;font-size:12.5px;line-height:1.95;color:#49382B;text-align:justify;letter-spacing:.01em}
+            #pageAssetAnnual .aar-note-text b{font-weight:700;color:#7C542E;font-variant-numeric:tabular-nums}
+            #pageAssetAnnual .aar-note-text .is-down{color:#9D5A45}
+            #pageAssetAnnual .aar-foot{
+                margin-top:18px;padding:0 3px;font-size:8.5px;line-height:1.8;color:#9A8774;
+            }
+            #pageAssetAnnual .aar-foot b{display:block;font-size:8px;letter-spacing:.14em;color:#7C6754;font-weight:700;margin-bottom:4px}
+            #pageAssetAnnual .aar-foot p{margin:0 0 2px}
+            #pageAssetAnnual .aar-empty{
+                margin-top:12px;padding:34px 18px 30px;text-align:center;
+                background:#FFFBF4;border:1px solid #E4D6C4;border-radius:18px;
+            }
+            #pageAssetAnnual .aar-empty-mark{
+                width:42px;height:42px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;
+                color:#A48153;background:#F8EFDF;border:1px solid #E5D3B7;
+            }
+            #pageAssetAnnual .aar-empty-mark i{font-size:16px}
+            #pageAssetAnnual .aar-empty b{display:block;font-size:13px;color:#3B2A1E;margin-bottom:5px}
+            #pageAssetAnnual .aar-empty span{display:block;max-width:250px;margin:0 auto;font-size:10px;line-height:1.7;color:#9A8774}
+            #pageAssetAnnual .aar-empty-action{
+                display:inline-flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;padding:9px 14px;border-radius:999px;
+                background:#33231A;color:#EBD0A4;font-size:10px;font-weight:650;
+            }
+
+            /* 与资产主页统一：白底页面 + 白色卡片，仅顶部主卡保留深色账本 */
+            #pageAssetAnnual{background:#FFFFFF}
+            #pageAssetAnnual:before{content:none}
+            #pageAssetAnnual .aar-cover{border-radius:20px}
+            #pageAssetAnnual .aar-topbar{
+                background:rgba(255,255,255,.94);border-bottom-color:rgba(17,17,20,.07);
+            }
+            #pageAssetAnnual .aar-back{
+                border-radius:50%;background:#FAF3E3;border-color:#EEDFC0;color:#8F2437;
+                box-shadow:0 1px 2px rgba(40,30,20,.02);
+            }
+            #pageAssetAnnual .aar-top-title span{color:#9A8B7D}
+            #pageAssetAnnual .aar-year-tab{background:#FFFFFF;border-color:#E8E1D7;color:#7B6A58}
+            #pageAssetAnnual .aar-year-tab.is-on{background:#33231A;border-color:#33231A;color:#EBD0A4}
+            #pageAssetAnnual .aar-glance{
+                background:#FFFFFF;border-color:#ECE8E2;border-radius:16px;
+                box-shadow:0 1px 2px rgba(40,30,20,.03);
+            }
+            #pageAssetAnnual .aar-glance-cell + .aar-glance-cell{border-left-color:rgba(17,17,20,.06)}
+            #pageAssetAnnual .aar-glance-label{color:#7F746A}
+            #pageAssetAnnual .aar-glance-value{color:#2C211A}
+            #pageAssetAnnual .aar-glance-sub{color:#9B9187}
+            #pageAssetAnnual .aar-sec-head{
+                position:relative;align-items:center;padding:0 2px 0 12px;margin:25px 0 12px;
+            }
+            #pageAssetAnnual .aar-sec-head:before{
+                content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+                width:4px;height:16px;border-radius:2.5px;background:#8C7D6E;
+            }
+            #pageAssetAnnual .aar-sec-head-main{gap:7px}
+            #pageAssetAnnual .aar-sec-no{color:#A48153}
+            #pageAssetAnnual .aar-sec-title{
+                font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+                font-size:19px;font-weight:720;letter-spacing:-.01em;color:#1F1F1F;
+            }
+            #pageAssetAnnual .aar-sec-note{font-size:10px;color:#756D66;letter-spacing:.01em}
+            #pageAssetAnnual .aar-ledger{
+                background:#FFFFFF;border-color:#ECE8E2;border-radius:18px;
+                box-shadow:0 1px 2px rgba(40,30,20,.03);
+            }
+            #pageAssetAnnual .aar-ledger-head{
+                background:#FFFFFF;border-bottom-color:#F0EBE4;color:#8E8174;
+            }
+            #pageAssetAnnual .aar-lrow.is-total{background:#FFFFFF;border-top-color:#E7E0D6}
+            #pageAssetAnnual .aar-lrow.is-net{background:#FFFFFF}
+            #pageAssetAnnual .aar-lshare{color:#9A9086}
+            #pageAssetAnnual .aar-compo{
+                background:#FFFFFF;border-color:#ECE8E2;
+                box-shadow:0 1px 2px rgba(40,30,20,.03);
+            }
+            #pageAssetAnnual .aar-stack-label{color:#74685C}
+            #pageAssetAnnual .aar-stack-note{color:#9A9086}
+            #pageAssetAnnual .aar-stack-bar{background:#F2EFEA;box-shadow:none}
+            #pageAssetAnnual .aar-comp-legend{border-top-color:rgba(17,17,20,.08)}
+            #pageAssetAnnual .aar-comp-name{color:#6F655C}
+            #pageAssetAnnual .aar-comp-pct{color:#2C211A}
+            #pageAssetAnnual .aar-debt-note{
+                background:#FFFFFF;border-color:#ECE8E2;color:#7E746A;
+            }
+            #pageAssetAnnual .aar-chart-card{
+                background:#FFFFFF;border-color:#ECE8E2;border-radius:18px;
+                box-shadow:0 1px 2px rgba(40,30,20,.03);
+            }
+            #pageAssetAnnual .aar-chart-top span{color:#95877A}
+            #pageAssetAnnual .aar-chart-top b{color:#2C211A}
+            #pageAssetAnnual .aar-note-card{
+                background:#FFFFFF;border-color:#ECE8E2;
+                box-shadow:0 1px 2px rgba(40,30,20,.03);
+            }
+            #pageAssetAnnual .aar-note-card:before{background:linear-gradient(180deg,#C7A46A,#8C7D6E)}
+            #pageAssetAnnual .aar-note-title{
+                font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+                font-size:15.5px;font-weight:720;letter-spacing:-.01em;color:#2B211C;
+            }
+            #pageAssetAnnual .aar-note-text{
+                font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+                font-size:12.5px;line-height:1.9;color:#4A443D;text-align:left;letter-spacing:.01em;
+            }
+            #pageAssetAnnual .aar-foot{color:#7B726A}
+            #pageAssetAnnual .aar-empty{background:#FFFFFF;border-color:#ECE8E2}
         </style>
 
         <div class="asset-wrap">
@@ -10915,6 +11334,25 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <span class="asset-hero-ratio">负债率 <b id="assetDebtRatio">0.0%</b></span>
                 </div>
             </section>
+
+            <!-- 个人资产年报入口：只读取资产页月度快照，与首页持仓无关 -->
+            <button id="assetAnnualEntry" class="asset-annual-entry" type="button" onclick="openAssetAnnualReport()" aria-label="查看个人资产年报">
+                <span class="aae-spine">
+                    <span class="aae-spine-label">ANNUAL</span>
+                    <span id="aaeYear" class="aae-spine-year">2026</span>
+                    <span class="aae-spine-foot">REPORT <i class="fa fa-arrow-right"></i></span>
+                </span>
+                <span class="aae-main">
+                    <span class="aae-kicker">PERSONAL BALANCE SHEET</span>
+                    <span class="aae-title">个人资产年报</span>
+                    <span id="aaeSub" class="aae-sub">期初与期末之间的全部变化</span>
+                </span>
+                <span class="aae-side">
+                    <span id="aaeDelta" class="aae-delta is-empty">尚未记录</span>
+                    <span id="aaeGrowth" class="aae-growth">记一笔后生成</span>
+                    <span class="aae-link">翻开年报 <i class="fa fa-angle-right"></i></span>
+                </span>
+            </button>
 
             <div class="asset-sec-head">
                 <div class="asset-sec-title">资产分类</div>
@@ -11088,9 +11526,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 投资理财按手动记录计算 · 数据仅保存在本机
             </div>
         </div>
+
+        <!-- 资产年报：覆盖在当前资产页上，独立滚动；不参与首页持仓与投资年报 -->
+        <div id="pageAssetAnnual" class="hidden" role="dialog" aria-modal="true" aria-label="个人资产年报">
+            <div class="aar-topbar">
+                <div class="aar-topbar-inner">
+                    <button type="button" class="aar-back" onclick="closeAssetAnnualReport()" aria-label="返回资产页"><i class="fa fa-arrow-left"></i></button>
+                    <div class="aar-top-title"><b>资产年报</b><span>ANNUAL REVIEW</span></div>
+                    <div id="aarYearTabs" class="aar-year-tabs" role="group" aria-label="选择年报年份"></div>
+                </div>
+            </div>
+            <div id="aarBody" class="aar-sheet"></div>
+        </div>
     </div>
 
     <!-- 分类详情：从资产卡片进入，同一套暖灰／奶油材质 -->
+    <div id="assetAnnualBackdrop" class="hidden" onclick="closeAssetAnnualReport()" aria-hidden="true"></div>
     <div id="assetCategoryBackdrop" class="hidden" onclick="closeAssetCategory()" aria-hidden="true"></div>
     <div id="pageAssetCategory" class="hidden">
         <div class="asset-detail-wrap">
@@ -22743,6 +23194,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }catch(e){}
             // 导航切换时先彻底收起资产分类详情：仅 hidden 页面不够，蒙层仍在会盖住底部导航
             try{ forceCloseAssetCategoryForTab(); }catch(e){}
+            try{ forceCloseAssetAnnualForTab(); }catch(e){}
             // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心/股票详情），等效于点击左上角返回
             document.querySelector('#pageStockDetail').classList.add('hidden');
             document.querySelector('#pageSettings').classList.add('hidden');
@@ -24582,7 +25034,556 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderAssetLifeSummary(t);
             renderAssetInvestCard(t);
             renderAssetNetTrend(t);
+            renderAssetAnnualEntry();
         }
+        // ============ 个人资产年报（只读资产页月度快照） ============
+        const AAR_CATS = [
+            { key:'invest', name:'投资理财', color:'#70839A' },
+            { key:'liquid', name:'流动资金', color:'#6D8A79' },
+            { key:'fixed', name:'固定资产', color:'#B18A5E' },
+            { key:'receivable', name:'应收款', color:'#876C82' }
+        ];
+        let assetAnnualYear = null;
+
+        function aarSnapshotData(){
+            try{
+                const d = JSON.parse(lsGet(BS_ASSET_SNAP_KEY) || '{}');
+                return d && typeof d === 'object' && !Array.isArray(d) ? d : {};
+            }catch(e){ return {}; }
+        }
+        function aarYears(){
+            const data = aarSnapshotData();
+            const years = Object.keys(data)
+                .filter(function(k){ return /^\d{4}-\d{2}$/.test(k); })
+                .map(function(k){ return k.slice(0,4); });
+            return Array.from(new Set(years)).sort(function(a,b){ return Number(b) - Number(a); });
+        }
+        function aarMonthText(month){
+            if(!/^\d{4}-\d{2}$/.test(month || '')) return '—';
+            return month.slice(0,4) + '.' + month.slice(5);
+        }
+        function aarValue(row, field){
+            row = row || {};
+            if(field === 'net') return (Number(row.invest)||0) + (Number(row.liquid)||0) + (Number(row.receivable)||0) - (Number(row.liability)||0);
+            if(field === 'total'){
+                const total = Number(row.total)||0;
+                if(total) return total;
+                return (Number(row.invest)||0) + (Number(row.liquid)||0) + (Number(row.fixed)||0) + (Number(row.receivable)||0);
+            }
+            return Number(row[field]) || 0;
+        }
+        function aarNum(v){
+            if(assetMasked) return '••••';
+            return fmtMoneyExact(Number(v) || 0);
+        }
+        function aarSigned(v){
+            if(assetMasked) return '••••';
+            const n = Number(v) || 0;
+            return (n > 0 ? '+' : (n < 0 ? '−' : '')) + '¥' + fmtMoneyExact(Math.abs(n));
+        }
+        function aarAbsMoney(v){
+            if(assetMasked) return '••••';
+            return '¥' + fmtMoneyExact(Math.abs(Number(v) || 0));
+        }
+        function aarReportYears(){
+            const data = aarSnapshotData();
+            const years = aarYears();
+            const latest = years[0] || '';
+            return years.filter(function(y){
+                const count = Object.keys(data).filter(function(k){ return /^\d{4}-\d{2}$/.test(k) && k.slice(0,4) === y; }).length;
+                return count >= 2 || y === latest;
+            });
+        }
+        function aarShort(v){
+            if(assetMasked) return '••••';
+            const n = Number(v) || 0;
+            return (n < 0 ? '−¥' : '¥') + assetShortMoney(Math.abs(n));
+        }
+        function aarPctText(v){
+            if(v == null || !Number.isFinite(Number(v))) return '—';
+            const n = Number(v);
+            return (n > 0 ? '+' : (n < 0 ? '−' : '')) + Math.abs(n).toFixed(1) + '%';
+        }
+        function aarSnapshotWord(n){
+            return Number(n) === 1 ? 'SNAPSHOT' : 'SNAPSHOTS';
+        }
+        function aarGetReport(year){
+            const data = aarSnapshotData();
+            const allKeys = Object.keys(data).filter(function(k){ return /^\d{4}-\d{2}$/.test(k); }).sort();
+            const years = aarYears();
+            const y = Number(year) || Number(years[0]) || new Date().getFullYear();
+            const yKeys = allKeys.filter(function(k){ return k.slice(0,4) === String(y); });
+            if(!yKeys.length){
+                return { empty:true, year:y, years:years, openingKey:'', closingKey:'', yearCount:0 };
+            }
+            const prevKey = String(y - 1) + '-12';
+            const openingKey = data[prevKey] ? prevKey : yKeys[0];
+            const closingKey = yKeys[yKeys.length - 1];
+            const openingRaw = data[openingKey] || {};
+            const closingRaw = data[closingKey] || {};
+            const opening = { invest:aarValue(openingRaw,'invest'), liquid:aarValue(openingRaw,'liquid'), fixed:aarValue(openingRaw,'fixed'), receivable:aarValue(openingRaw,'receivable'), liability:aarValue(openingRaw,'liability'), total:aarValue(openingRaw,'total'), net:aarValue(openingRaw,'net') };
+            const closing = { invest:aarValue(closingRaw,'invest'), liquid:aarValue(closingRaw,'liquid'), fixed:aarValue(closingRaw,'fixed'), receivable:aarValue(closingRaw,'receivable'), liability:aarValue(closingRaw,'liability'), total:aarValue(closingRaw,'total'), net:aarValue(closingRaw,'net') };
+            const totalClose = closing.total;
+            const rowOf = function(meta, mode){
+                const open = opening[meta.key];
+                const close = closing[meta.key];
+                const delta = close - open;
+                const pct = open !== 0 ? (delta / Math.abs(open) * 100) : null;
+                const share = totalClose > 0 ? (close / totalClose * 100) : null;
+                return { key:meta.key, name:meta.name, color:meta.color, open:open, close:close, delta:delta, pct:pct, share:share, mode:mode };
+            };
+            const assetRows = AAR_CATS.map(function(m){ return rowOf(m,'asset'); });
+            const totalRow = { key:'total', name:'总资产', color:'#8B6944', open:opening.total, close:closing.total, delta:closing.total - opening.total, pct:opening.total !== 0 ? ((closing.total - opening.total) / Math.abs(opening.total) * 100) : null, share:totalClose > 0 ? 100 : null, mode:'total' };
+            const liabilityRow = { key:'liability', name:'负债', color:'#A4614D', open:opening.liability, close:closing.liability, delta:closing.liability - opening.liability, pct:opening.liability !== 0 ? ((closing.liability - opening.liability) / Math.abs(opening.liability) * 100) : null, share:totalClose > 0 ? (closing.liability / totalClose * 100) : null, mode:'liability' };
+            const netRow = { key:'net', name:'净资产', color:'#33231A', open:opening.net, close:closing.net, delta:closing.net - opening.net, pct:opening.net !== 0 ? ((closing.net - opening.net) / Math.abs(opening.net) * 100) : null, share:totalClose > 0 ? (closing.net / totalClose * 100) : null, mode:'net' };
+            const chartKeys = Array.from(new Set([openingKey].concat(yKeys))).sort();
+            const chartPoints = chartKeys.map(function(k){
+                return { month:k, value:aarValue(data[k],'net') };
+            });
+            const ratioOpen = opening.total > 0 ? (opening.liability / opening.total * 100) : 0;
+            const ratioClose = closing.total > 0 ? (closing.liability / closing.total * 100) : 0;
+            const isCompleteYear = closingKey === String(y) + '-12';
+            return {
+                empty:false, year:y, years:years,
+                openingKey:openingKey, closingKey:closingKey,
+                yearCount:yKeys.length, chartKeys:chartKeys, chartPoints:chartPoints,
+                opening:opening, closing:closing,
+                assetRows:assetRows, totalRow:totalRow, liabilityRow:liabilityRow, netRow:netRow,
+                rows:assetRows.concat([totalRow, liabilityRow, netRow]),
+                delta:closing.net - opening.net,
+                growth:opening.net !== 0 ? ((closing.net - opening.net) / Math.abs(opening.net) * 100) : null,
+                hasMovement:openingKey !== closingKey,
+                isCompleteYear:isCompleteYear,
+                isCurrentYear:y === new Date().getFullYear(),
+                ratioOpen:ratioOpen, ratioClose:ratioClose,
+                openingTag:openingKey === prevKey ? '上年末' : '本年首笔',
+                closingTag:isCompleteYear ? '年末' : '最新'
+            };
+        }
+        function aarDeltaTone(row, report){
+            if(!report.hasMovement || row.delta === 0) return '';
+            return row.delta < 0 ? 'is-down' : '';
+        }
+        function aarShareLabel(row, report){
+            if(report.closing.total <= 0) return '—';
+            if(row.key === 'total') return '总资产合计';
+            if(row.key === 'liability') return '负债率 ' + row.share.toFixed(1) + '%';
+            if(row.key === 'net') return '净资产/总资产 ' + row.share.toFixed(1) + '%';
+            return '占总资产 ' + row.share.toFixed(1) + '%';
+        }
+        function aarBar(rows, total){
+            if(!(total > 0)) return '<div class="aar-stack-bar"></div>';
+            return '<div class="aar-stack-bar">' + rows.map(function(r){
+                const v = Math.max(0, Number(r.close) || 0);
+                if(v <= 0) return '';
+                return '<span class="aar-stack-seg" style="width:' + (v / total * 100).toFixed(3) + '%;background:' + r.color + '"></span>';
+            }).join('') + '</div>';
+        }
+        function aarBarOpening(rows, total){
+            if(!(total > 0)) return '<div class="aar-stack-bar"></div>';
+            return '<div class="aar-stack-bar">' + rows.map(function(r){
+                const v = Math.max(0, Number(r.open) || 0);
+                if(v <= 0) return '';
+                return '<span class="aar-stack-seg" style="width:' + (v / total * 100).toFixed(3) + '%;background:' + r.color + '"></span>';
+            }).join('') + '</div>';
+        }
+        function aarChartSvg(report){
+            const pts = report.chartPoints || [];
+            if(pts.length < 2) return '';
+            let min = Math.min.apply(null, pts.map(function(p){ return p.value; }));
+            let max = Math.max.apply(null, pts.map(function(p){ return p.value; }));
+            if(max === min){ min -= 1; max += 1; }
+            const span = max - min;
+            const lo = min - span * .08;
+            const hi = max + span * .08;
+            const xAt = function(i){ return 13 + (pts.length === 1 ? 0 : i / (pts.length - 1) * 294); };
+            const yAt = function(v){ return 14 + (hi - v) / (hi - lo) * 74; };
+            const xy = pts.map(function(p, i){ return { x:xAt(i), y:yAt(p.value) }; });
+            const line = xy.map(function(p){ return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+            const area = 'M' + xy[0].x.toFixed(1) + ' 99 L' + xy.map(function(p){ return p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' L') + ' L' + xy[xy.length-1].x.toFixed(1) + ' 99 Z';
+            const dots = xy.map(function(p, i){
+                if(i === 0) return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3.2" fill="#FBF6EC" stroke="#B08B54" stroke-width="1.2"/>';
+                if(i === xy.length - 1) return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4.6" fill="#C09A62" fill-opacity=".18"/><circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3" fill="#6E4E31"/>';
+                return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="1.7" fill="#B08B54" fill-opacity=".72"/>';
+            }).join('');
+            const first = pts[0], last = pts[pts.length - 1];
+            return '<svg viewBox="0 0 320 116" fill="none" aria-hidden="true">'
+                + '<defs><linearGradient id="aarAreaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C7A46A" stop-opacity=".22"/><stop offset="1" stop-color="#C7A46A" stop-opacity="0"/></linearGradient></defs>'
+                + '<path d="' + area + '" fill="url(#aarAreaGrad)"/>'
+                + '<line x1="13" y1="99" x2="307" y2="99" stroke="#D9C9B4" stroke-width="1" stroke-dasharray="2 4"/>'
+                + '<polyline points="' + line + '" stroke="#8E673F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+                + dots
+                + '<text x="13" y="112" fill="#9D8A76" font-size="7.5" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif">' + aarMonthText(first.month) + '</text>'
+                + '<text x="307" y="112" fill="#9D8A76" font-size="7.5" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif">' + aarMonthText(last.month) + '</text>'
+                + '</svg>';
+        }
+        function aarNarrative(report){
+            if(!report.hasMovement){
+                return '本期只有一笔可用快照，尚不足以判断资产的增减方向。下一次跨月记录后，这一年才会真正开始。';
+            }
+            const word = report.isCompleteYear ? '全年' : '年初至今';
+            const dir = report.delta > 0 ? '增加' : (report.delta < 0 ? '回落' : '基本持平');
+            const topUp = report.assetRows.filter(function(r){ return r.delta > 0; }).sort(function(a,b){ return b.delta - a.delta; }).slice(0,2);
+            const topDown = report.assetRows.filter(function(r){ return r.delta < 0; }).sort(function(a,b){ return a.delta - b.delta; }).slice(0,2);
+            let text = '期初净资产 <b>' + aarShort(report.opening.net) + '</b>，到期末 <b>' + aarShort(report.closing.net) + '</b>，' + word + dir;
+            if(report.delta !== 0) text += ' <b class="' + (report.delta < 0 ? 'is-down' : '') + '">' + aarSigned(report.delta) + '</b>';
+            if(report.growth != null) text += '，增速 <b>' + aarPctText(report.growth) + '</b>';
+            text += '。';
+            if(report.delta >= 0 && topUp.length){
+                text += (topUp.length > 1 ? '最大的两股推力来自' : '最主要的推力来自') + topUp.map(function(r){ return '<b>' + r.name + '</b>'; }).join('与') + '。';
+            } else if(report.delta < 0 && topDown.length){
+                text += '主要拖累来自' + topDown.map(function(r){ return '<b>' + r.name + '</b>'; }).join('与') + '。';
+            } else if(topDown.length){
+                text += '回落主要集中在' + topDown.map(function(r){ return '<b>' + r.name + '</b>'; }).join('与') + '。';
+            }
+            if(report.liabilityRow.delta < 0){
+                text += '负债减少 <b>' + aarAbsMoney(report.liabilityRow.delta) + '</b>，负债率从 ' + report.ratioOpen.toFixed(1) + '% 降到 ' + report.ratioClose.toFixed(1) + '%。';
+            } else if(report.liabilityRow.delta > 0){
+                text += '负债增加 <b class="is-down">' + aarSigned(report.liabilityRow.delta) + '</b>，负债率从 ' + report.ratioOpen.toFixed(1) + '% 升到 ' + report.ratioClose.toFixed(1) + '%。';
+            } else {
+                text += '负债与期初基本持平，负债率维持在 ' + report.ratioClose.toFixed(1) + '%。';
+            }
+            return text;
+        }
+        function renderAssetAnnualEntry(){
+            const entry = document.getElementById('assetAnnualEntry');
+            if(!entry) return;
+            const years = aarYears();
+            const year = years[0] || String(new Date().getFullYear());
+            const report = aarGetReport(year);
+            const yearEl = document.getElementById('aaeYear');
+            const subEl = document.getElementById('aaeSub');
+            const deltaEl = document.getElementById('aaeDelta');
+            const growthEl = document.getElementById('aaeGrowth');
+            if(yearEl) yearEl.innerText = year;
+            if(!report || report.empty){
+                if(subEl) subEl.innerText = '期初与期末之间的全部变化';
+                if(deltaEl){ deltaEl.innerText = '尚未记录'; deltaEl.className = 'aae-delta is-empty'; }
+                if(growthEl) growthEl.innerText = '记一笔后生成';
+                return;
+            }
+            if(subEl) subEl.innerText = aarMonthText(report.openingKey) + ' → ' + aarMonthText(report.closingKey) + ' · ' + report.yearCount + ' 次快照';
+            if(!report.hasMovement){
+                if(deltaEl){ deltaEl.innerText = '待积累'; deltaEl.className = 'aae-delta is-empty'; }
+                if(growthEl) growthEl.innerText = '下月形成对比';
+                return;
+            }
+            if(deltaEl){
+                const d = report.delta;
+                deltaEl.innerText = assetMasked ? '••••' : (d === 0 ? '基本持平' : ((d > 0 ? '+' : '−') + '¥' + assetShortMoney(Math.abs(d))));
+                deltaEl.className = 'aae-delta' + (d < 0 ? ' is-down' : (d === 0 ? ' is-empty' : ''));
+            }
+            if(growthEl) growthEl.innerText = (report.growth == null ? '—' : '增速 ' + aarPctText(report.growth));
+        }
+        let assetAnnualClosing = false;
+        let assetAnnualMainScroll = 0;
+        function openAssetAnnualReport(year, skipAnim){
+            const years = aarYears();
+            const overlay = document.getElementById('pageAssetAnnual');
+            if(!overlay) return;
+            const backdrop = document.getElementById('assetAnnualBackdrop');
+            assetAnnualMainScroll = window.scrollY || 0;
+            assetAnnualClosing = false;
+            assetAnnualYear = Number(year) || (years[0] ? Number(years[0]) : new Date().getFullYear());
+            try{
+                overlay.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+                if(backdrop) backdrop.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+            }catch(e){}
+            overlay.style.transition = 'none';
+            overlay.style.transform = '';
+            overlay.style.transformOrigin = '';
+            overlay.style.opacity = '0';
+            overlay.classList.remove('hidden');
+            document.documentElement.classList.add('aar-open');
+            document.body.classList.add('aar-open');
+            renderAssetAnnualReport();
+            overlay.scrollTop = 0;
+            if(backdrop){
+                backdrop.classList.remove('hidden');
+                backdrop.style.opacity = '0';
+            }
+            const source = document.getElementById('assetAnnualEntry');
+            if(skipAnim || !source || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+                overlay.style.opacity = '1';
+                overlay.style.transform = '';
+                if(backdrop) backdrop.style.opacity = '1';
+                return;
+            }
+            const r = source.getBoundingClientRect();
+            const pr = overlay.getBoundingClientRect();
+            const visible = r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight;
+            const originX = visible ? ((r.left + r.width / 2) - pr.left).toFixed(1) : (pr.width / 2).toFixed(1);
+            const originY = visible ? ((r.top + r.height / 2) - pr.top).toFixed(1) : (pr.height / 2).toFixed(1);
+            overlay.style.transformOrigin = originX + 'px ' + originY + 'px';
+            overlay.style.transform = 'scale(.14)';
+            requestAnimationFrame(function(){
+                if(backdrop){
+                    const bAnim = backdrop.animate([
+                        { opacity: 0 },
+                        { opacity: 1 }
+                    ], { duration: 280, easing: 'ease-out', fill: 'both' });
+                    bAnim.onfinish = function(){ backdrop.style.opacity = '1'; };
+                }
+                const anim = overlay.animate([
+                    { opacity: 0, transform: 'scale(.14)' },
+                    { opacity: 1, transform: 'scale(1)' }
+                ], { duration: 360, easing: 'cubic-bezier(.22,.8,.2,1)', fill: 'both' });
+                anim.onfinish = function(){
+                    overlay.style.transform = '';
+                    overlay.style.opacity = '1';
+                    overlay.style.transition = '';
+                    try{ anim.cancel(); }catch(e){}
+                };
+            });
+        }
+        function closeAssetAnnualReport(immediate){
+            const overlay = document.getElementById('pageAssetAnnual');
+            if(!overlay || overlay.classList.contains('hidden') || assetAnnualClosing) return;
+            assetAnnualClosing = true;
+            const backdrop = document.getElementById('assetAnnualBackdrop');
+            try{
+                overlay.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+                if(backdrop) backdrop.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+            }catch(e){}
+            overlay.style.opacity = '1';
+            overlay.style.transform = '';
+            if(backdrop) backdrop.style.opacity = '1';
+            const finish = function(){
+                // 先解锁并同步归还背景滚动位置，再隐藏年报，避免先看到资产页顶部再向下跳。
+                document.documentElement.classList.remove('aar-open');
+                document.body.classList.remove('aar-open');
+                window.scrollTo(0, assetAnnualMainScroll || 0);
+                overlay.classList.add('hidden');
+                overlay.style.transform = '';
+                overlay.style.opacity = '';
+                overlay.style.transformOrigin = '';
+                overlay.style.transition = '';
+                overlay.scrollTop = 0;
+                if(backdrop){ backdrop.classList.add('hidden'); backdrop.style.opacity = '0'; }
+                assetAnnualClosing = false;
+            };
+            if(immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+                finish();
+                return;
+            }
+            const source = document.getElementById('assetAnnualEntry');
+            if(source){
+                const r = source.getBoundingClientRect();
+                const pr = overlay.getBoundingClientRect();
+                if(r.width > 0 && r.height > 0){
+                    overlay.style.transformOrigin = ((r.left + r.width / 2) - pr.left).toFixed(1) + 'px ' + ((r.top + r.height / 2) - pr.top).toFixed(1) + 'px';
+                }
+            }
+            let backdropCloseAnim = null;
+            if(backdrop){
+                backdropCloseAnim = backdrop.animate([
+                    { opacity: 1 },
+                    { opacity: 0 }
+                ], { duration: 240, easing: 'ease-in', fill: 'both' });
+            }
+            const pageCloseAnim = overlay.animate([
+                { opacity: 1, transform: 'scale(1)' },
+                { opacity: 0, transform: 'scale(.14)' }
+            ], { duration: 240, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'both' });
+            pageCloseAnim.onfinish = function(){
+                finish();
+                try{ pageCloseAnim.cancel(); }catch(e){}
+                if(backdropCloseAnim){ try{ backdropCloseAnim.cancel(); }catch(e){} }
+            };
+        }
+        function forceCloseAssetAnnualForTab(){
+            const overlay = document.getElementById('pageAssetAnnual');
+            const backdrop = document.getElementById('assetAnnualBackdrop');
+            try{
+                if(overlay) overlay.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+                if(backdrop) backdrop.getAnimations().forEach(function(a){ try{ a.cancel(); }catch(e){} });
+            }catch(e){}
+            if(overlay){
+                overlay.classList.add('hidden');
+                overlay.style.transform = '';
+                overlay.style.opacity = '';
+                overlay.style.transformOrigin = '';
+                overlay.style.transition = '';
+                overlay.scrollTop = 0;
+            }
+            if(backdrop){
+                backdrop.classList.add('hidden');
+                backdrop.style.opacity = '0';
+            }
+            document.documentElement.classList.remove('aar-open');
+            document.body.classList.remove('aar-open');
+            assetAnnualClosing = false;
+        }
+        function selectAssetAnnualYear(year){
+            assetAnnualYear = Number(year) || assetAnnualYear;
+            const overlay = document.getElementById('pageAssetAnnual');
+            renderAssetAnnualReport();
+            if(overlay) overlay.scrollTop = 0;
+        }
+        function aarEmptyReportBody(year){
+            const cover = '<section class="aar-cover">'
+                + '<span class="aar-cover-year">' + year + '</span>'
+                + '<div class="aar-cover-head"><span class="aar-cover-brand">PRIVATE LEDGER · ASSET BOOK</span><span class="aar-cover-edition">YTD · NO SNAPSHOTS</span></div>'
+                + '<h1 class="aar-cover-title">个人资产年报<em>ASSET &amp; NET WORTH · 把一年的增减，收束成一张纸</em></h1>'
+                + '<div class="aar-cover-net">'
+                    + '<div class="aar-cover-label"><b>期末净资产</b><span>NET WORTH</span></div>'
+                    + '<div class="aar-cover-money"><span class="aar-cover-cur"></span><span class="aar-cover-num is-empty">—</span></div>'
+                    + '<div class="aar-cover-net-note">尚无月度快照 · 记一笔后开始计算</div>'
+                + '</div>'
+                + '<div class="aar-cover-metrics">'
+                    + '<div class="aar-cover-metric"><div class="aar-cover-metric-label">年度净资产增量</div><div class="aar-cover-metric-value is-flat">—</div><div class="aar-cover-metric-sub">相对期初</div></div>'
+                    + '<div class="aar-cover-metric"><div class="aar-cover-metric-label">年度增速</div><div class="aar-cover-metric-value is-flat">—</div><div class="aar-cover-metric-sub">按期初净资产计</div></div>'
+                + '</div>'
+                + '<div class="aar-cover-period"><span>期初 <b>—</b> · 待记录</span><span>期末 <b>—</b> · 待记录</span></div>'
+            + '</section>';
+            const glance = '<section class="aar-glance">'
+                + '<div class="aar-glance-cell"><div class="aar-glance-label">总资产</div><div class="aar-glance-value">—</div><div class="aar-glance-sub">较期初 —</div></div>'
+                + '<div class="aar-glance-cell"><div class="aar-glance-label">总负债</div><div class="aar-glance-value">—</div><div class="aar-glance-sub">较期初 —</div></div>'
+                + '<div class="aar-glance-cell"><div class="aar-glance-label">资产负债率</div><div class="aar-glance-value">—</div><div class="aar-glance-sub">较期初 —</div></div>'
+            + '</section>';
+            const rows = [
+                { name:'投资理财', color:'#70839A', share:'占总资产 —' },
+                { name:'流动资金', color:'#6D8A79', share:'占总资产 —' },
+                { name:'固定资产', color:'#B18A5E', share:'占总资产 —' },
+                { name:'应收款', color:'#876C82', share:'占总资产 —' },
+                { name:'总资产', color:'#C7A46A', share:'总资产合计', mode:'total' },
+                { name:'负债', color:'#A4614D', share:'负债率 —' },
+                { name:'净资产', color:'#33231A', share:'净资产/总资产 —', mode:'net' }
+            ];
+            const ledgerRows = rows.map(function(r){
+                return '<div class="aar-lrow' + (r.mode === 'total' ? ' is-total' : '') + (r.mode === 'net' ? ' is-net' : '') + '" style="--aar-c:' + r.color + '">'
+                    + '<div class="aar-lrow-top"><span class="aar-lname">' + r.name + '</span><span class="aar-lshare">' + r.share + '</span></div>'
+                    + '<div class="aar-lrow-data"><span class="aar-flow"><span class="aar-start">—</span><span class="aar-arrow">→</span><span class="aar-end">—</span></span><span class="aar-delta is-flat">—</span></div>'
+                + '</div>';
+            }).join('');
+            const ledger = '<section class="aar-ledger">'
+                + '<div class="aar-ledger-head"><span>ASSET / LIABILITY LEDGER</span><span>期初 → 期末 · 增量 / 增幅</span></div>'
+                + ledgerRows
+            + '</section>';
+            const emptyBar = '<div class="aar-stack-bar is-empty">尚无结构数据</div>';
+            const legend = [
+                { name:'投资理财', color:'#70839A' },
+                { name:'流动资金', color:'#6D8A79' },
+                { name:'固定资产', color:'#B18A5E' },
+                { name:'应收款', color:'#876C82' }
+            ].map(function(r){
+                return '<div class="aar-comp-item"><span class="aar-comp-dot" style="background:' + r.color + '"></span><span class="aar-comp-name">' + r.name + '</span><span class="aar-comp-pct">—</span></div>';
+            }).join('');
+            const composition = '<section class="aar-compo">'
+                + '<div class="aar-stack-row"><div class="aar-stack-head"><span class="aar-stack-label">期初结构 · —</span><span class="aar-stack-note">总资产 —</span></div>' + emptyBar + '</div>'
+                + '<div class="aar-stack-row"><div class="aar-stack-head"><span class="aar-stack-label">期末结构 · —</span><span class="aar-stack-note">总资产 —</span></div>' + emptyBar + '</div>'
+                + '<div class="aar-comp-legend">' + legend + '</div>'
+                + '<div class="aar-debt-note"><span>负债 / 总资产 · 期初 —</span><b>—</b></div>'
+            + '</section>';
+            const chart = '<section class="aar-chart-card">'
+                + '<div class="aar-chart-top"><span>NET WORTH TRAJECTORY · —</span><b>暂无快照</b></div>'
+                + '<div class="aar-chart-empty"><b>尚无月度快照</b><span>从资产页记下第一笔后，这里会按月份连成净资产轨迹。</span></div>'
+            + '</section>';
+            const note = '<section class="aar-note-card"><div class="aar-note-quote">“</div><div class="aar-note-title">账本尚未开始</div><div class="aar-note-text">在资产页记下第一笔资产或负债后，这页年报会开始积累；跨月后，期初、期末、增量与结构变化会自动成册。</div></section>';
+            const foot = '<div class="aar-foot"><b>数据口径</b>'
+                + '<p>期初取上年 12 月快照；没有上年末记录时，取本年第一笔快照。期末取本年最后一笔月快照；只有 12 月记录时才称“年末”。</p>'
+                + '<p>净资产 = 投资理财 + 流动资金 + 应收款 − 负债；固定资产计入总资产，不计入净资产。</p>'
+                + '<p>仅使用资产页月度快照，不读取首页持仓股票，也不与年度投资报告共用数据。</p></div>';
+            return cover + glance
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">01</span><span class="aar-sec-title">资产负债变动</span></div><span class="aar-sec-note">期初 / 期末 / 增量</span></div>'
+                + ledger
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">02</span><span class="aar-sec-title">资产结构漂移</span></div><span class="aar-sec-note">按总资产占比</span></div>'
+                + composition
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">03</span><span class="aar-sec-title">净资产轨迹</span></div><span class="aar-sec-note">月度快照</span></div>'
+                + chart
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">04</span><span class="aar-sec-title">年度读记</span></div><span class="aar-sec-note">待记录</span></div>'
+                + note + foot;
+        }
+        function renderAssetAnnualReport(){
+            const body = document.getElementById('aarBody');
+            const tabs = document.getElementById('aarYearTabs');
+            if(!body) return;
+            const years = aarReportYears();
+            const year = Number(assetAnnualYear) || Number(years[0]) || new Date().getFullYear();
+            assetAnnualYear = year;
+            const list = years.length ? years : [String(year)];
+            if(tabs){
+                tabs.innerHTML = list.map(function(y){
+                    return '<button type="button" class="aar-year-tab' + (Number(y) === Number(year) ? ' is-on' : '') + '" onclick="selectAssetAnnualYear(' + Number(y) + ')" aria-pressed="' + (Number(y) === Number(year) ? 'true' : 'false') + '">' + y + '</button>';
+                }).join('');
+            }
+            const rep = aarGetReport(year);
+            if(!rep || rep.empty){
+                body.innerHTML = aarEmptyReportBody(year);
+                return;
+            }
+            const word = rep.isCompleteYear ? '全年' : '年初至今';
+            const netLabel = rep.isCompleteYear ? '年末净资产' : '期末净资产';
+            const netSign = rep.closing.net < 0 ? '−' : '';
+            const cover = '<section class="aar-cover">'
+                + '<span class="aar-cover-year">' + year + '</span>'
+                + '<div class="aar-cover-head"><span class="aar-cover-brand">PRIVATE LEDGER · ASSET BOOK</span><span class="aar-cover-edition">' + (rep.isCompleteYear ? 'YEAR END' : 'YTD') + ' · ' + rep.yearCount + ' ' + aarSnapshotWord(rep.yearCount) + '</span></div>'
+                + '<h1 class="aar-cover-title">个人资产年报<em>ASSET &amp; NET WORTH · 把一年的增减，收束成一张纸</em></h1>'
+                + '<div class="aar-cover-net">'
+                    + '<div class="aar-cover-label"><b>' + netLabel + '</b><span>NET WORTH</span></div>'
+                    + '<div class="aar-cover-money"><span class="aar-cover-cur">' + (assetMasked ? '' : netSign + '¥') + '</span><span class="aar-cover-num">' + aarNum(Math.abs(rep.closing.net)) + '</span></div>'
+                    + '<div class="aar-cover-net-note">可动用口径 · 固定资产不计入净资产</div>'
+                + '</div>'
+                + '<div class="aar-cover-metrics">'
+                    + '<div class="aar-cover-metric"><div class="aar-cover-metric-label">' + word + '净资产增量</div><div class="aar-cover-metric-value' + (rep.delta < 0 ? ' is-down' : (rep.delta === 0 ? ' is-flat' : '')) + '">' + (rep.hasMovement ? aarSigned(rep.delta) : '—') + '</div><div class="aar-cover-metric-sub">相对 ' + aarMonthText(rep.openingKey) + '</div></div>'
+                    + '<div class="aar-cover-metric"><div class="aar-cover-metric-label">' + word + '增速</div><div class="aar-cover-metric-value' + (rep.growth != null && rep.growth < 0 ? ' is-down' : (rep.growth == null ? ' is-flat' : '')) + '">' + (rep.hasMovement && rep.growth != null ? aarPctText(rep.growth) : '—') + '</div><div class="aar-cover-metric-sub">按 ' + aarMonthText(rep.openingKey) + ' 期初净资产计</div></div>'
+                + '</div>'
+                + '<div class="aar-cover-period"><span>期初 <b>' + aarMonthText(rep.openingKey) + '</b> · ' + rep.openingTag + '</span><span>期末 <b>' + aarMonthText(rep.closingKey) + '</b> · ' + rep.closingTag + '</span></div>'
+            + '</section>';
+            const pctText = function(open, close){ return open ? aarPctText((close-open)/Math.abs(open)*100) : '—'; };
+            const ratioDelta = rep.ratioClose - rep.ratioOpen;
+            const glance = '<section class="aar-glance">'
+                + '<div class="aar-glance-cell"><div class="aar-glance-label">总资产</div><div class="aar-glance-value">' + aarShort(rep.closing.total) + '</div><div class="aar-glance-sub">较期初 ' + (rep.hasMovement ? pctText(rep.opening.total, rep.closing.total) : '—') + '</div></div>'
+                + '<div class="aar-glance-cell"><div class="aar-glance-label">总负债</div><div class="aar-glance-value">' + aarShort(rep.closing.liability) + '</div><div class="aar-glance-sub">较期初 ' + (rep.hasMovement ? pctText(rep.opening.liability, rep.closing.liability) : '—') + '</div></div>'
+                + '<div class="aar-glance-cell"><div class="aar-glance-label">资产负债率</div><div class="aar-glance-value">' + rep.ratioClose.toFixed(1) + '%</div><div class="aar-glance-sub">较期初 ' + (ratioDelta > 0 ? '+' : (ratioDelta < 0 ? '−' : '')) + Math.abs(ratioDelta).toFixed(1) + 'pt</div></div>'
+            + '</section>';
+            const ledgerRows = rep.rows.map(function(r){
+                const isSummary = r.mode === 'total' || r.mode === 'net';
+                const deltaText = (!rep.hasMovement || r.delta === 0) ? '—' : aarSigned(r.delta);
+                const pctText = (!rep.hasMovement || r.pct == null) ? '—' : aarPctText(r.pct);
+                return '<div class="aar-lrow' + (r.mode === 'total' ? ' is-total' : '') + (r.mode === 'net' ? ' is-net' : '') + '" style="--aar-c:' + r.color + '">'
+                    + '<div class="aar-lrow-top"><span class="aar-lname">' + r.name + '</span><span class="aar-lshare">' + aarShareLabel(r, rep) + '</span></div>'
+                    + '<div class="aar-lrow-data"><span class="aar-flow"><span class="aar-start">' + aarNum(r.open) + '</span><span class="aar-arrow">→</span><span class="aar-end">' + aarNum(r.close) + '</span></span><span class="aar-delta ' + (aarDeltaTone(r, rep) || '') + '">' + deltaText + '<em>' + pctText + '</em></span></div>'
+                + '</div>';
+            }).join('');
+            const ledger = '<section class="aar-ledger">'
+                + '<div class="aar-ledger-head"><span>ASSET / LIABILITY LEDGER</span><span>期初 → 期末 · 增量 / 增幅</span></div>'
+                + ledgerRows
+            + '</section>';
+            const compRows = rep.assetRows;
+            const composition = '<section class="aar-compo">'
+                + '<div class="aar-stack-row"><div class="aar-stack-head"><span class="aar-stack-label">期初结构 · ' + aarMonthText(rep.openingKey) + '</span><span class="aar-stack-note">总资产 ' + aarShort(rep.opening.total) + '</span></div>' + aarBarOpening(compRows, rep.opening.total) + '</div>'
+                + '<div class="aar-stack-row"><div class="aar-stack-head"><span class="aar-stack-label">期末结构 · ' + aarMonthText(rep.closingKey) + '</span><span class="aar-stack-note">总资产 ' + aarShort(rep.closing.total) + '</span></div>' + aarBar(compRows, rep.closing.total) + '</div>'
+                + '<div class="aar-comp-legend">' + compRows.map(function(r){
+                    return '<div class="aar-comp-item"><span class="aar-comp-dot" style="background:' + r.color + '"></span><span class="aar-comp-name">' + r.name + '</span><span class="aar-comp-pct">' + (r.share == null ? '—' : r.share.toFixed(1) + '%') + '</span></div>';
+                }).join('') + '</div>'
+                + '<div class="aar-debt-note"><span>负债 / 总资产 · 期初 ' + rep.ratioOpen.toFixed(1) + '%</span><b>' + rep.ratioClose.toFixed(1) + '%</b></div>'
+            + '</section>';
+            const chartInner = aarChartSvg(rep);
+            const chart = '<section class="aar-chart-card">'
+                + '<div class="aar-chart-top"><span>NET WORTH TRAJECTORY · ' + aarMonthText(rep.openingKey) + '—' + aarMonthText(rep.closingKey) + '</span><b>' + rep.yearCount + ' 次快照</b></div>'
+                + (chartInner ? '<div class="aar-chart">' + chartInner + '</div>' : '<div class="aar-chart-empty">本月只有一笔快照，跨月后这里会出现净资产轨迹。</div>')
+            + '</section>';
+            const note = '<section class="aar-note-card"><div class="aar-note-quote">“</div><div class="aar-note-title">这一年，账本这样变化</div><div class="aar-note-text">' + aarNarrative(rep) + '</div></section>';
+            const foot = '<div class="aar-foot"><b>数据口径</b>'
+                + '<p>期初取上年 12 月快照；没有上年末记录时，取本年第一笔快照。期末取本年最后一笔月快照；只有 12 月记录时才称“年末”。</p>'
+                + '<p>净资产 = 投资理财 + 流动资金 + 应收款 − 负债；固定资产计入总资产，不计入净资产。</p>'
+                + '<p>仅使用资产页月度快照，不读取首页持仓股票，也不与年度投资报告共用数据。</p></div>';
+            body.innerHTML = cover + glance
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">01</span><span class="aar-sec-title">资产负债变动</span></div><span class="aar-sec-note">期初 / 期末 / 增量</span></div>'
+                + ledger
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">02</span><span class="aar-sec-title">资产结构漂移</span></div><span class="aar-sec-note">按总资产占比</span></div>'
+                + composition
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">03</span><span class="aar-sec-title">净资产轨迹</span></div><span class="aar-sec-note">月度快照</span></div>'
+                + chart
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">04</span><span class="aar-sec-title">年度读记</span></div><span class="aar-sec-note">' + (rep.isCompleteYear ? '完整年度' : '年初至今') + '</span></div>'
+                + note + foot;
+        }
+        document.addEventListener('keydown', function(e){
+            if(e.key !== 'Escape') return;
+            const overlay = document.getElementById('pageAssetAnnual');
+            if(overlay && !overlay.classList.contains('hidden')) closeAssetAnnualReport();
+        });
         function renderAssetInvestCard(t){
             const spark = document.getElementById('assetInvestSpark');
             if(!spark) return;

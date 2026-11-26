@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261125.653';</script>
+    <script>window.APP_VERSION = '20261125.658';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -5919,9 +5919,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection .collection-tab-count{font-size:9px;font-weight:650;line-height:1;padding:3px 5px;border-radius:999px;background:#EDE9E3;color:#7E6F61;font-variant-numeric:tabular-nums}
         #pageCollection .collection-tab.is-active .collection-tab-count{background:rgba(114,42,58,.09);color:#7A3541}
 
+        #pageCollection .collection-index{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 2px 0;min-height:20px;padding:0 1px}
+        #pageCollection .collection-index-caption{display:inline-flex;align-items:center;gap:7px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:9px;font-weight:600;line-height:1;letter-spacing:.13em;color:rgba(122,90,61,.64)}
+        #pageCollection .collection-index-caption::before{content:"";width:12px;height:1px;background:linear-gradient(90deg,rgba(176,140,82,.62),rgba(176,140,82,.10))}
+        #pageCollection .collection-view-switch{display:inline-flex;align-items:center;gap:0;padding:0 1px}
+        #pageCollection .collection-view-switch button{position:relative;border:0;background:transparent;padding:3px 7px 5px;font-family:inherit;font-size:9.5px;font-weight:600;line-height:1;letter-spacing:.08em;color:#9B8B7C;-webkit-tap-highlight-color:transparent}
+        #pageCollection .collection-view-switch button.is-active{color:#7A2A38;font-weight:750}
+        #pageCollection .collection-view-switch button.is-active::after{content:"";position:absolute;left:7px;right:7px;bottom:1px;height:1px;background:linear-gradient(90deg,transparent,#B0884D 18%,#D8C28E 50%,#B0884D 82%,transparent)}
+        #pageCollection .collection-view-divider{width:1px;height:9px;background:rgba(106,82,56,.16)}
 
-        #pageCollection .collection-year{margin-top:21px}
-        #pageCollection .collection-year-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;min-width:0}
+
+        #pageCollection .collection-year{margin-top:30px}
+        #pageCollection .collection-year-head{display:flex;align-items:baseline;gap:8px;margin-bottom:18px;min-width:0}
         #pageCollection .collection-year-title{display:inline-flex;align-items:center;gap:7px;font-family:"Noto Serif SC","Songti SC",Georgia,serif;font-size:17px;font-weight:650;line-height:1;color:#3D2C24;letter-spacing:.03em;font-variant-numeric:tabular-nums}
         #pageCollection .collection-year-title::before,
         #pageCollection .collection-year-title::after{content:"";width:14px;height:1px;flex:0 0 auto;background:linear-gradient(90deg,rgba(176,140,82,0),rgba(176,140,82,.72))}
@@ -5943,21 +5952,21 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #pageCollection .collection-card:active{transform:scale(.975)}
         #pageCollection .collection-card.is-done{
-            border:1px solid rgba(215,195,149,.62);
+            border:1px solid rgba(224,205,162,.68);
             background:
                 radial-gradient(120% 84% at 8% -8%,rgba(198,94,112,.34),transparent 60%),
                 radial-gradient(100% 92% at 96% 108%,rgba(28,8,14,.20),transparent 64%),
                 linear-gradient(155deg,#924957 0%,#7B3442 50%,#672A35 100%);
             box-shadow:
-                0 1px 0 rgba(255,248,230,.14) inset,
-                0 0 0 1px rgba(210,190,143,.11) inset,
-                0 -1px 0 rgba(24,7,12,.16) inset,
-                0 6px 16px rgba(78,32,35,.14);
+                0 1px 0 rgba(255,250,235,.16) inset,
+                0 0 0 1px rgba(232,212,170,.17) inset,
+                0 -1px 0 rgba(24,7,12,.18) inset,
+                0 7px 18px rgba(78,32,35,.16);
         }
         #pageCollection .collection-card.is-done::before{
             content:"";position:absolute;left:12px;right:12px;top:0;height:1.5px;
-            background:linear-gradient(90deg,transparent,#D2BE8F 16%,#E6D6AE 48%,#D2BE8F 82%,transparent);
-            box-shadow:0 0 7px rgba(210,190,143,.18);
+            background:linear-gradient(90deg,transparent,#E1CDA0 16%,#F1E0B8 48%,#E1CDA0 82%,transparent);
+            box-shadow:0 0 8px rgba(226,205,160,.22);
             border-radius:0 0 2px 2px;
             pointer-events:none;
         }
@@ -5990,23 +5999,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection .collection-complete{display:flex;align-items:center;flex:0 0 auto;margin-left:auto}
         #pageCollection .collection-seal{
             width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-            position:relative;color:#D2BE8F;
+            position:relative;color:#E6D1A1;
             background:
-                radial-gradient(circle at 36% 28%,rgba(210,190,143,.05),rgba(210,190,143,.012) 55%,transparent 72%);
-            border:1px solid rgba(210,190,143,.58);
+                radial-gradient(circle at 36% 28%,rgba(236,216,174,.08),rgba(226,205,160,.02) 55%,transparent 72%);
+            border:1px solid rgba(226,207,162,.68);
             box-shadow:
-                inset 0 1px 1px rgba(35,10,16,.22),
-                inset 0 -1px 1px rgba(255,238,190,.06);
+                inset 0 1px 1px rgba(35,10,16,.20),
+                inset 0 -1px 1px rgba(255,238,190,.08);
             transform:rotate(-4deg);
             transform-origin:50% 50%;
         }
         #pageCollection .collection-seal::before{content:none}
-        #pageCollection .collection-seal::after{content:"";position:absolute;inset:4px;border-radius:50%;border:.55px solid rgba(210,190,143,.15);pointer-events:none}
+        #pageCollection .collection-seal::after{content:"";position:absolute;inset:4px;border-radius:50%;border:.55px solid rgba(230,210,166,.24);pointer-events:none}
         #pageCollection .collection-seal-char{
             display:block;font-family:"Noto Serif SC","Songti SC",Georgia,serif;
             font-size:15px;line-height:1;font-weight:600;letter-spacing:.02em;
-            color:#D2BE8F;
-            text-shadow:0 1px 0 rgba(30,8,14,.32),0 -1px 0 rgba(255,240,200,.10);
+            color:#E8D3A6;
+            text-shadow:0 1px 0 rgba(30,8,14,.30),0 -1px 0 rgba(255,240,200,.14);
         }
         #pageCollection .collection-ring{
             width:32px;height:32px;border-radius:50%;position:relative;flex:0 0 auto;margin-left:auto;
@@ -6026,18 +6035,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         #pageCollection .collection-target i{font-size:9.5px;line-height:1.2;font-style:normal;color:#A09284}
         #pageCollection .collection-card.is-done .collection-name{color:#FFF9EF}
         #pageCollection .collection-card.is-done .collection-code,
-        #pageCollection .collection-card.is-done .collection-target{color:rgba(245,239,228,.74)}
+        #pageCollection .collection-card.is-done .collection-target{color:rgba(247,240,226,.78)}
         #pageCollection .collection-card.is-done .collection-target span,
-        #pageCollection .collection-card.is-done .collection-target i{color:rgba(245,239,228,.60)}
-        #pageCollection .collection-card.is-done .collection-target b{color:#DBC79A;font-weight:650}
+        #pageCollection .collection-card.is-done .collection-target i{color:rgba(246,237,218,.66)}
+        #pageCollection .collection-card.is-done .collection-target b{color:#F1DFB7;font-weight:650}
         #pageCollection .collection-card.is-locked .collection-code{color:#A19588}
         #pageCollection .collection-card-foot{margin-top:22px;padding:0;display:flex;align-items:baseline;justify-content:flex-end;gap:4px;text-align:right;min-width:0;width:100%}
         #pageCollection .collection-date{display:block;margin-left:auto;text-align:right;font-size:11.5px;line-height:1.25;color:rgba(142,119,104,.72);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         #pageCollection .collection-date-label{font-size:10.5px;line-height:1.2;color:rgba(142,119,104,.62);letter-spacing:.04em;margin-right:2px}
         #pageCollection .collection-date b{font-size:12.5px;line-height:1.2;font-weight:650;color:#7A2A38;font-variant-numeric:tabular-nums;letter-spacing:.01em}
-        #pageCollection .collection-card.is-done .collection-date{color:rgba(210,190,143,.86)}
-        #pageCollection .collection-card.is-done .collection-date-label{color:rgba(210,190,143,.66)}
-        #pageCollection .collection-card.is-done .collection-date b{color:#E4CFA3}
+        #pageCollection .collection-card.is-done .collection-date{color:rgba(232,213,170,.90)}
+        #pageCollection .collection-card.is-done .collection-date-label{color:rgba(234,216,178,.72)}
+        #pageCollection .collection-card.is-done .collection-date b{color:#E9D4A6}
         #pageCollection .collection-gap{display:block;margin-left:auto;text-align:right;font-size:11.5px;line-height:1.25;color:rgba(140,125,113,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         #pageCollection .collection-gap-label{font-size:10.5px;line-height:1.2;color:rgba(140,125,113,.66);letter-spacing:.04em;margin-right:2px}
         #pageCollection .collection-gap b{font-size:12.5px;line-height:1.2;font-weight:700;color:#7A2A38;font-variant-numeric:tabular-nums}
@@ -6067,7 +6076,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         #pageCollection .collection-empty-cta:active{transform:scale(.975)}
 
-        #pageCollection .collection-footnote{padding:24px 6px 4px;text-align:center;font-size:8.5px;line-height:1.7;color:#B4A89B;letter-spacing:.03em}
+        #pageCollection .collection-footnote{padding:28px 6px 4px;text-align:center;font-size:8.5px;line-height:1.7;color:#B4A89B;letter-spacing:.03em}
         #pageCollection .collection-footnote i{font-size:8px;color:rgba(169,134,81,.68);margin-right:4px}
 
         /* 我的页入口：不新增底部导航，保持 5 个主入口；从“我的”一步进入 */
@@ -9674,6 +9683,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         <div class="collection-tabs" role="tablist" aria-label="藏品分类">
             <button id="collectionTabTrophy" class="collection-tab is-active" role="tab" aria-selected="true" onclick="setCollectionTab('trophy')">战利品<span class="collection-tab-count" id="collectionTrophyCount">0</span></button>
             <button id="collectionTabAll" class="collection-tab" role="tab" aria-selected="false" onclick="setCollectionTab('all')">图鉴全集<span class="collection-tab-count" id="collectionAllCount">0</span></button>
+        </div>
+
+        <div class="collection-index" id="collectionIndexBar">
+            <span class="collection-index-caption">藏品索引</span>
+            <div class="collection-view-switch" role="group" aria-label="藏品分组方式">
+                <button type="button" id="collectionViewYear" class="is-active" aria-pressed="true" onclick="setCollectionView('year')">按年份</button>
+                <span class="collection-view-divider" aria-hidden="true"></span>
+                <button type="button" id="collectionViewIndustry" aria-pressed="false" onclick="setCollectionView('industry')">按行业</button>
+            </div>
         </div>
 
         <div id="collectionBody"></div>
@@ -26842,6 +26860,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // ---------- 藏品馆数据 ----------
         let collectionTab = 'trophy';
+        let collectionView = 'year';
         let collectionReturnScroll = 0;
         let collectionReturnTab = 'mine';
         function collectionDateISO(v){ return targetMilestoneISO(v); }
@@ -26927,6 +26946,39 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 };
             });
         }
+        function collectionIndustryLabel(x){
+            const mapped = getStockIndustry(x.item);
+            if(mapped && mapped !== '其他') return mapped;
+            const raw = String((x.item && x.item.industry) || '').trim();
+            if(!raw) return '其他';
+            const mappedRaw = getIndustryStat(raw);
+            return (mappedRaw && mappedRaw !== '其他') ? mappedRaw : raw;
+        }
+        function collectionGroupIndustries(items){
+            const groups = {};
+            items.forEach(function(x){
+                const label = collectionIndustryLabel(x);
+                if(!groups[label]) groups[label] = [];
+                groups[label].push(x);
+            });
+            return Object.keys(groups).map(function(label){
+                const list = groups[label].slice();
+                list.sort(function(a, b){
+                    if(a.done !== b.done) return a.done ? -1 : 1;
+                    if(a.done && b.done) return String(b.completedAt).localeCompare(String(a.completedAt));
+                    return b.pct - a.pct || a.item.name.localeCompare(b.item.name, 'zh-CN');
+                });
+                return {
+                    label: label, list: list,
+                    doneCount: list.filter(function(x){ return x.done; }).length,
+                    buildCount: list.filter(function(x){ return !x.done; }).length
+                };
+            }).sort(function(a, b){
+                if(a.label === '其他' && b.label !== '其他') return 1;
+                if(b.label === '其他' && a.label !== '其他') return -1;
+                return b.list.length - a.list.length || a.label.localeCompare(b.label, 'zh-CN');
+            });
+        }
         function collectionCountText(group, mode){
             if(mode === 'trophy') return '· ' + group.doneCount + ' 件藏品';
             return '· ' + group.doneCount + ' 件已集齐 · ' + group.buildCount + ' 件在建';
@@ -27007,6 +27059,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const allCount = document.querySelector('#collectionAllCount');
             const tabTrophy = document.querySelector('#collectionTabTrophy');
             const tabAll = document.querySelector('#collectionTabAll');
+            const indexBar = document.querySelector('#collectionIndexBar');
+            const viewYear = document.querySelector('#collectionViewYear');
+            const viewIndustry = document.querySelector('#collectionViewIndustry');
             if(topCount) topCount.innerText = completed + ' / ' + total;
             if(heroCount) heroCount.innerText = String(completed);
             if(heroProgress) heroProgress.innerHTML = collectionProgressHtml(completed, total);
@@ -27024,19 +27079,35 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 tabAll.classList.toggle('is-active', collectionTab === 'all');
                 tabAll.setAttribute('aria-selected', collectionTab === 'all' ? 'true' : 'false');
             }
+            if(indexBar) indexBar.classList.toggle('hidden', !model.all.length);
+            if(viewYear){
+                viewYear.classList.toggle('is-active', collectionView === 'year');
+                viewYear.setAttribute('aria-pressed', collectionView === 'year' ? 'true' : 'false');
+            }
+            if(viewIndustry){
+                viewIndustry.classList.toggle('is-active', collectionView === 'industry');
+                viewIndustry.setAttribute('aria-pressed', collectionView === 'industry' ? 'true' : 'false');
+            }
             if(!body) return;
             const items = collectionTab === 'trophy' ? model.completed : model.all;
-            const groups = collectionGroupYears(items, collectionTab);
+            const groups = collectionView === 'industry'
+                ? collectionGroupIndustries(items)
+                : collectionGroupYears(items, collectionTab);
             if(!groups.length){
                 body.innerHTML = collectionEmptyHtml(collectionTab, model);
                 return;
             }
             body.innerHTML = groups.map(function(group){
+                const heading = collectionView === 'industry' ? group.label : group.year;
                 return '<section class="collection-year">'
-                    + '<div class="collection-year-head"><span class="collection-year-title">' + targetEsc(group.year) + '</span><span class="collection-year-count">' + targetEsc(collectionCountText(group, collectionTab)) + '</span><span class="collection-year-line"></span></div>'
+                    + '<div class="collection-year-head"><span class="collection-year-title">' + targetEsc(heading) + '</span><span class="collection-year-count">' + targetEsc(collectionCountText(group, collectionTab)) + '</span><span class="collection-year-line"></span></div>'
                     + '<div class="collection-grid">' + group.list.map(collectionCardHtml).join('') + '</div>'
                     + '</section>';
             }).join('');
+        }
+        function setCollectionView(view){
+            collectionView = view === 'industry' ? 'industry' : 'year';
+            renderCollectionPage();
         }
         function setCollectionTab(tab){
             collectionTab = tab === 'all' ? 'all' : 'trophy';
@@ -27049,6 +27120,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!alreadyOpen){
                 collectionReturnTab = activeTab || 'mine';
                 collectionReturnScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+                collectionView = 'year';
                 if(collectionReturnTab !== 'mine'){
                     try{ switchTab('mine'); }catch(e){}
                     collectionReturnScroll = 0;

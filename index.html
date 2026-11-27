@@ -1810,7 +1810,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         .module-mark i{ font-size:13px; line-height:1; }
         .module-mark svg{ width:13px; height:13px; stroke:currentColor; }
         .stats-t-chip{ display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:999px; background:#f8ecef; color:#8f2437; font-size:8.5px; line-height:1; font-weight:600; white-space:nowrap; }
-        .stats-t-tabs{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; padding:4px; margin-top:12px; background:#f4eee2; border:1px solid #eee4d2; border-radius:12px; }
+        .stats-t-tabs{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; padding:4px; margin-top:12px; background:#f4eee2; border:1px solid #eee4d2; border-radius:12px; }
         .stats-t-tab{ border:0; background:transparent; border-radius:9px; padding:7px 3px; color:#8e8375; font-size:10px; font-weight:600; line-height:1.2; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
         .stats-t-tab.is-on{ background:linear-gradient(135deg,#8f2437 0%,#742034 100%); color:#fff3dd; box-shadow:0 3px 9px rgba(116,32,52,.22), inset 0 1px 0 rgba(255,255,255,.10); }
         .stats-t-hero{ position:relative; overflow:hidden; margin-top:10px; border-radius:18px; padding:14px 14px 13px; color:#1f2937; background:linear-gradient(180deg,#fffdf8 0%,#fffaf3 100%); border:1px solid #eadfce; box-shadow:0 3px 12px rgba(82,55,32,.06), inset 0 1px 0 rgba(255,255,255,.86); }
@@ -6551,6 +6551,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <button type="button" data-ti-period="month" onclick="setTradeInsightPeriod('month')" class="ti-tab">本月</button>
                     <button type="button" data-ti-period="half" onclick="setTradeInsightPeriod('half')" class="ti-tab">近半年</button>
                     <button type="button" data-ti-period="year" onclick="setTradeInsightPeriod('year')" class="ti-tab">今年</button>
+                    <button type="button" data-ti-period="all" onclick="setTradeInsightPeriod('all')" class="ti-tab">全部</button>
                 </div>
             </div>
             <div class="ti-card">
@@ -9445,6 +9446,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <button type="button" data-t-period="month" onclick="setStatsTPeriod('month')" class="stats-t-tab is-on">本月</button>
                     <button type="button" data-t-period="half" onclick="setStatsTPeriod('half')" class="stats-t-tab">最近半年</button>
                     <button type="button" data-t-period="year" onclick="setStatsTPeriod('year')" class="stats-t-tab">今年</button>
+                    <button type="button" data-t-period="all" onclick="setStatsTPeriod('all')" class="stats-t-tab">全部</button>
                 </div>
                 <div class="stats-t-hero">
                     <div class="relative z-10">
@@ -9489,7 +9491,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <div class="stats-t-rank-head">
                         <div class="min-w-0">
                             <div class="stats-t-rank-title">做T贡献榜</div>
-                            <div class="stats-t-rank-sub">当期做T净收益 · 盈利前五 / 亏损前五</div>
+                            <div id="statsTRankSub" class="stats-t-rank-sub">当期做T净收益 · 盈利前五 / 亏损前五</div>
                         </div>
                         <div id="statsTContribChip" class="stats-t-chip">--</div>
                     </div>
@@ -9497,7 +9499,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         <div class="stats-t-empty">本期暂无已闭环的做T</div>
                     </div>
                 </div>
-                <div class="stats-t-foot">按本期已闭环做T净收益排序；同一股票合并当前持仓与已清仓流水；买卖均按扣费后净价计算。</div>
+                <div id="statsTFoot" class="stats-t-foot">按本期已闭环做T净收益排序；同一股票合并当前持仓与已清仓流水；买卖均按扣费后净价计算。</div>
             </div>
         </div>
         <!-- 做T月度走势：全账户近12个月柱形 -->
@@ -14551,7 +14553,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                         quoteFetchLastOk = true;
                         quoteUpdatedTs = Date.now();
                         it.nowPrice = q.price;
-                        recordHoldSparkPoint(it.marketType, it.code, q.price);
+                        recordHoldSparkPoint(it.marketType, it.code, q.price, undefined, q.prevClose);
                         if(q.changePct != null && !isNaN(q.changePct)){
                             it.changePct = q.changePct;
                             // 只有本轮真正拿到最新涨跌幅的标的才允许参与异动提示，
@@ -23194,6 +23196,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     unlockHoldCardDetailScroll();
                 }
             }catch(e){}
+            // 交易洞察是首页目标卡上的浮层；切底部导航时先收起并解锁，避免背景滚动被锁在其他 Tab
+            try{
+                const tradeInsightEl = document.querySelector('#pageTradeInsight');
+                if(tradeInsightEl && !tradeInsightEl.classList.contains('hidden')){
+                    closeTradeInsight(true);
+                }else{
+                    appScrollUnlock('tradeInsight');
+                }
+            }catch(e){}
             // 导航切换时先彻底收起资产分类详情：仅 hidden 页面不够，蒙层仍在会盖住底部导航
             try{ forceCloseAssetCategoryForTab(); }catch(e){}
             try{ forceCloseAssetAnnualForTab(); }catch(e){}
@@ -28383,18 +28394,19 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let tradeInsightPeriod = 'month';
         let _tradeInsightOrigin = null;
         function tradeInsightPeriodName(p){
-            return p === 'day' ? '今日' : (p === 'half' ? '近半年' : (p === 'year' ? '今年' : '本月'));
+            return p === 'all' ? '全部' : (p === 'day' ? '今日' : (p === 'half' ? '近半年' : (p === 'year' ? '今年' : '本月')));
         }
         function renderTradeInsightPage(){
             const page = document.querySelector('#pageTradeInsight');
             if(!page) return;
             const data = calcStatsTData(tradeInsightPeriod);
             const pName = tradeInsightPeriodName(tradeInsightPeriod);
+            const allTime = tradeInsightPeriod === 'all';
             const totalEl = document.querySelector('#tiTotal');
             const metaEl = document.querySelector('#tiMeta');
             const labelEl = document.querySelector('#tiPeriodLabel');
             const tagEl = document.querySelector('#tiTopbarTag');
-            if(labelEl) labelEl.innerText = pName + '做T净收益';
+            if(labelEl) labelEl.innerText = (allTime ? '全部时间' : pName) + '做T净收益';
             if(tagEl) tagEl.innerText = pName;
             if(totalEl){
                 totalEl.innerText = fmtTradeInsightMoney(data.total);
@@ -28403,7 +28415,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(metaEl){
                 metaEl.innerText = data.stockCount
                     ? (data.stockCount + '只 · ' + data.winCount + '盈 ' + data.loseCount + '亏 · ' + data.pairTotal + '笔闭环')
-                    : '本期暂无已闭环做T';
+                    : (allTime ? '暂无已闭环做T' : '本期暂无已闭环做T');
             }
             document.querySelectorAll('#tiTabs [data-ti-period]').forEach(function(b){
                 const on = b.getAttribute('data-ti-period') === tradeInsightPeriod;
@@ -28413,7 +28425,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const listEl = document.querySelector('#tiList');
             if(!listEl) return;
             if(!data.stockCount){
-                listEl.innerHTML = '<div class="ti-empty">本期暂无已闭环做T<br><span style="font-size:9px;color:#c0b09d">有买卖闭环后会自动汇总</span></div>';
+                listEl.innerHTML = '<div class="ti-empty">' + (allTime ? '暂无已闭环做T' : '本期暂无已闭环做T') + '<br><span style="font-size:9px;color:#c0b09d">有买卖闭环后会自动汇总</span></div>';
                 return;
             }
             const rows = data.rows.slice().sort(function(a, b){ return b.profit - a.profit; });
@@ -28468,6 +28480,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const rect = ev && ev.currentTarget ? ev.currentTarget.getBoundingClientRect() : (strip ? strip.getBoundingClientRect() : null);
             _tradeInsightOrigin = rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
             page.classList.remove('hidden');
+            try{ appScrollLock('tradeInsight', { fixed: false }); }catch(e){}
             sheet.scrollTop = 0;
             resetTradeInsightSheetStyle(sheet, backdrop);
             const sheetRect = sheet.getBoundingClientRect();
@@ -28498,7 +28511,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function closeTradeInsight(immediate){
             const page = document.querySelector('#pageTradeInsight');
-            if(!page || page.classList.contains('hidden')) return;
+            if(!page || page.classList.contains('hidden')){
+                try{ appScrollUnlock('tradeInsight'); }catch(e){}
+                return;
+            }
             const sheet = document.querySelector('#tradeInsightSheet');
             const backdrop = document.querySelector('#tradeInsightBackdrop');
             if(!sheet || !backdrop) return;
@@ -28506,6 +28522,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(immediate || reduce || !_tradeInsightOrigin || !sheet.animate){
                 page.classList.add('hidden');
                 resetTradeInsightSheetStyle(sheet, backdrop);
+                try{ appScrollUnlock('tradeInsight'); }catch(e){}
                 return;
             }
             const sheetRect = sheet.getBoundingClientRect();
@@ -28522,6 +28539,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sAnim.onfinish = function(){
                 page.classList.add('hidden');
                 resetTradeInsightSheetStyle(sheet, backdrop);
+                try{ appScrollUnlock('tradeInsight'); }catch(e){}
             };
             backdrop.animate([
                 { opacity: 1 },
@@ -37978,7 +37996,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ============ 交易明细（统计页）：每笔买入/卖出 + 修改持仓事件，本地实时 ============
         let statsTradeFilter = 'all';
         let statsTradePageCount = 10;
-        let statsTPeriod = 'month'; // 交易统计页做T期间：day / month / half / year
+        let statsTPeriod = 'month'; // 交易统计页做T期间：day / month / half / year / all
         let statsTMonthlyChart = null;
         function updateStatsTradeFilterUI(){
             document.querySelectorAll('.stats-trade-filter').forEach(function(b){
@@ -38127,8 +38145,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         // ==================== 交易统计页 · 期间做T统计 ====================
         // 复用持仓详情页同一套做T配对：当天用 calcDayTProfitPair（与日内已兑现同口径），
-        // 本月/近半年/今年用 buildRangeTTrades + calcRangeTProfit（与每月做T柱图同口径）。
+        // 本月/近半年/今年/全部用 buildRangeTTrades + calcRangeTProfit（与每月做T柱图同口径）。
         // 不另写任何做T价差公式；费用净价、底仓规则、分红除权全部沿用现有通用方法。
+        function statsTEarliestTradeTime(){
+            let earliest = 0;
+            const scan = function(it){
+                if(!it) return;
+                (it.transactions || []).forEach(function(tr){
+                    const ts = Number(tr && tr.t) || 0;
+                    if(ts > 0 && (!earliest || ts < earliest)) earliest = ts;
+                });
+            };
+            (holdDataList || []).forEach(scan);
+            if(typeof historyData !== 'undefined' && historyData && historyData.closedStocks){
+                historyData.closedStocks.forEach(scan);
+            }
+            return earliest;
+        }
         function statsTPeriodRange(periodKey){
             const now = new Date();
             const end = new Date(now.getTime());
@@ -38140,6 +38173,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
             } else if(periodKey === 'half'){
                 start = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate(), 0, 0, 0, 0);
+            } else if(periodKey === 'all'){
+                const earliest = statsTEarliestTradeTime();
+                start = earliest ? new Date(earliest) : new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+                start.setHours(0, 0, 0, 0);
             } else {
                 start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
             }
@@ -38152,6 +38189,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const end = range.end;
             if(periodKey === 'day') return '当天 · ' + statsTShortDate(end);
             if(periodKey === 'month') return '本月 · ' + end.getFullYear() + '年' + (end.getMonth() + 1) + '月';
+            if(periodKey === 'all') return '全部时间 · ' + range.start.getFullYear() + '年起';
             if(periodKey === 'half') return '最近半年 · ' + statsTShortDate(range.start) + ' - ' + statsTShortDate(end);
             return '今年 · ' + end.getFullYear() + '年';
         }
@@ -38331,12 +38369,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const card = document.querySelector('#statsTCard');
             if(!card) return;
             const data = calcStatsTData(statsTPeriod);
+            const allTime = statsTPeriod === 'all';
             document.querySelectorAll('#statsTTabs [data-t-period]').forEach(function(b){
                 const on = b.getAttribute('data-t-period') === statsTPeriod;
                 b.className = 'stats-t-tab' + (on ? ' is-on' : '');
             });
             const subEl = document.querySelector('#statsTPeriodSub');
             if(subEl) subEl.innerText = statsTPeriodCaption(statsTPeriod, data.range);
+            const rankSubEl = document.querySelector('#statsTRankSub');
+            if(rankSubEl) rankSubEl.innerText = (allTime ? '全部时间' : '当期') + '做T净收益 · 盈利前五 / 亏损前五';
+            const footEl = document.querySelector('#statsTFoot');
+            if(footEl) footEl.innerText = (allTime ? '按全部时间' : '按本期') + '已闭环做T净收益排序；同一股票合并当前持仓与已清仓流水；买卖均按扣费后净价计算。';
             const pairChip = document.querySelector('#statsTParticipateChip');
             if(pairChip) pairChip.innerText = '闭环 ' + (data.pairTotal || 0) + ' 笔';
             const totalEl = document.querySelector('#statsTTotal');
@@ -38359,7 +38402,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const listEl = document.querySelector('#statsTContribList');
             if(!listEl) return;
             if(!data.stockCount){
-                listEl.innerHTML = '<div class="stats-t-empty">本期暂无已闭环的做T<br><span style="font-size:8px;color:#b0a390">有买卖闭环后会自动汇总</span></div>';
+                listEl.innerHTML = '<div class="stats-t-empty">' + (allTime ? '暂无已闭环的做T' : '本期暂无已闭环的做T') + '<br><span style="font-size:8px;color:#b0a390">有买卖闭环后会自动汇总</span></div>';
                 return;
             }
             const winAll = data.rows.filter(function(x){ return x.profit > 0.01; }).sort(function(a, b){ return b.profit - a.profit; });
@@ -38516,7 +38559,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             try{ if(statsTMonthlyChart && !statsTMonthlyChart.isDisposed()) statsTMonthlyChart.resize(); }catch(e){}
         });
         function setStatsTPeriod(periodKey){
-            if(['day', 'month', 'half', 'year'].indexOf(periodKey) < 0) return;
+            if(['day', 'month', 'half', 'year', 'all'].indexOf(periodKey) < 0) return;
             if(statsTPeriod === periodKey) return;
             statsTPeriod = periodKey;
             renderStatsTStats();
@@ -46195,9 +46238,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(holdCardDetailKey) updateHoldCardDetailNumbers(sumQ);
         }
 
-        // ===== 卡片模式 v3：Robinhood 式横向扁卡 + 20 点迷你走势 =====
-        const HOLD_SPARK_KEY = 'dividendHoldSparkV1';
+        // ===== 卡片模式 v3：Robinhood 式横向扁卡 + 当日 5 分钟迷你走势 =====
+        const HOLD_SPARK_KEY = 'dividendHoldSparkV1'; // 旧版“近20次价格变化”，仍供详情迷你图使用
+        const HOLD_SPARK_DAY_KEY = 'dividendHoldSparkDayV1'; // 新版：按交易日保存 5 分钟点
         let _holdSparkSaveTimer = null;
+        let _holdSparkDaySaveTimer = null;
 
         function loadHoldSparkHistory(){
             if(window.__holdSparkHistory) return window.__holdSparkHistory;
@@ -46225,9 +46270,179 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 try{ lsSet(HOLD_SPARK_KEY, JSON.stringify(loadHoldSparkHistory())); }catch(e){}
             }, 1200);
         }
-        function recordHoldSparkPoint(market, code, price){
+
+        // 新版卡片走势：只保留最近 3 个有记录的交易日，每天最多 200 个 5 分钟点。
+        function holdSparkDateKey(d){
+            const p2 = function(n){ return String(n).padStart(2, '0'); };
+            return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+        }
+        function loadHoldSparkDayHistory(){
+            if(window.__holdSparkDayHistory) return window.__holdSparkDayHistory;
+            let obj = {};
+            try{
+                const raw = lsGet(HOLD_SPARK_DAY_KEY);
+                if(raw){
+                    const parsed = JSON.parse(raw);
+                    if(parsed && typeof parsed === 'object' && !Array.isArray(parsed)) obj = parsed;
+                }
+            }catch(e){ obj = {}; }
+            const clean = {};
+            Object.keys(obj).forEach(function(key){
+                const src = obj[key];
+                if(!src || typeof src !== 'object' || Array.isArray(src)) return;
+                const days = {};
+                Object.keys(src).forEach(function(ds){
+                    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ds))) return;
+                    const arr = src[ds];
+                    if(!Array.isArray(arr)) return;
+                    const seen = {}, pts = [];
+                    arr.forEach(function(pt){
+                        const t = Number(pt && pt.t), p = Number(pt && pt.p);
+                        if(!(t > 0) || !isFinite(p) || p <= 0 || seen[t]) return;
+                        seen[t] = true;
+                        pts.push({ t: t, p: p });
+                    });
+                    pts.sort(function(a, b){ return a.t - b.t; });
+                    if(pts.length) days[ds] = pts.slice(-200);
+                });
+                const kept = Object.keys(days).sort().slice(-3);
+                if(kept.length){
+                    clean[key] = {};
+                    kept.forEach(function(ds){ clean[key][ds] = days[ds]; });
+                }
+            });
+            window.__holdSparkDayHistory = clean;
+            return clean;
+        }
+        function saveHoldSparkDayHistorySoon(){
+            if(_holdSparkDaySaveTimer) return;
+            _holdSparkDaySaveTimer = setTimeout(function(){
+                _holdSparkDaySaveTimer = null;
+                try{ lsSet(HOLD_SPARK_DAY_KEY, JSON.stringify(loadHoldSparkDayHistory())); }catch(e){}
+            }, 1200);
+        }
+        // 记录窗口：交易日 9:00 起；A 股到 15:00、港股到 16:00，午间不记；按 5 分钟整点归桶，每桶只记第一个成功报价。
+        // 每天的首个点固定为上一交易日收盘价（9:00），之后才是当天 5 分钟报价，保证起始基准正确。
+        function holdSparkDaySlot(now, market){
+            if(!isTradingDay(now)) return null;
+            const isHk = String(market || '').toUpperCase() === 'HK';
+            const morningEnd = isHk ? 720 : 690; // 港股 12:00，A 股 11:30
+            const afternoonEnd = isHk ? 960 : 900; // 港股 16:00，A 股 15:00
+            const mins = now.getHours() * 60 + now.getMinutes();
+            const inMorning = mins >= 540 && mins <= morningEnd;
+            const inAfternoon = mins >= 780 && mins <= afternoonEnd;
+            if(!inMorning && !inAfternoon) return null;
+            const bucket = Math.floor(mins / 5) * 5;
+            const slotDate = new Date(now.getTime());
+            slotDate.setHours(Math.floor(bucket / 60), bucket % 60, 0, 0);
+            return { dateKey: holdSparkDateKey(slotDate), ts: slotDate.getTime() };
+        }
+        function holdSparkPrevClose(days, todayKey, fallback){
+            let prevKey = '';
+            Object.keys(days || {}).forEach(function(ds){
+                if(ds < todayKey && days[ds] && days[ds].length && ds > prevKey) prevKey = ds;
+            });
+            if(prevKey){
+                const arr = days[prevKey];
+                const last = arr[arr.length - 1];
+                if(last && Number(last.p) > 0) return Number(last.p);
+            }
+            const f = Number(fallback);
+            return isFinite(f) && f > 0 ? f : 0;
+        }
+        function recordHoldSparkDayPoint(market, code, price, atTs, prevClose){
             const p = Number(price);
             if(!isFinite(p) || p <= 0) return;
+            const now = atTs ? new Date(Number(atTs)) : new Date();
+            if(!isFinite(now.getTime())) return;
+            const slot = holdSparkDaySlot(now, market);
+            if(!slot) return;
+            const hist = loadHoldSparkDayHistory();
+            const key = holdSparkKey(market, code);
+            const days = hist[key] || (hist[key] = {});
+            const pts = days[slot.dateKey] || (days[slot.dateKey] = []);
+            const seedDate = new Date(now.getTime());
+            seedDate.setHours(9, 0, 0, 0);
+            const seedTs = seedDate.getTime();
+            let seedVal = Number(prevClose);
+            if(!isFinite(seedVal) || seedVal <= 0){
+                seedVal = holdSparkPrevClose(days, slot.dateKey, 0);
+            }
+            if(!seedVal || seedVal <= 0){
+                const legacy = loadHoldSparkHistory()[key] || [];
+                const lastLegacy = Number(legacy[legacy.length - 1]);
+                if(isFinite(lastLegacy) && lastLegacy > 0) seedVal = lastLegacy;
+            }
+            let changed = false;
+            if(!pts.length){
+                if(seedVal > 0){
+                    pts.push({ t: seedTs, p: seedVal });
+                    changed = true;
+                }
+                if(slot.ts > seedTs || (!seedVal && slot.ts === seedTs)){
+                    pts.push({ t: slot.ts, p: p });
+                    changed = true;
+                }
+            } else {
+                // 若历史当天数据缺少 9:00 基准，补上；若 9:00 点已被当天报价占用，用昨收校正。
+                if(seedVal > 0){
+                    if(pts[0].t > seedTs){
+                        pts.unshift({ t: seedTs, p: seedVal });
+                        changed = true;
+                    } else if(pts[0].t === seedTs && Math.abs(Number(pts[0].p) - seedVal) > 0.000001){
+                        pts[0].p = seedVal;
+                        changed = true;
+                    }
+                }
+                const last = pts[pts.length - 1];
+                if(!last || last.t < slot.ts){
+                    pts.push({ t: slot.ts, p: p });
+                    changed = true;
+                }
+            }
+            if(!changed) return;
+            const keys = Object.keys(days).sort();
+            while(keys.length > 3) delete days[keys.shift()];
+            saveHoldSparkDayHistorySoon();
+        }
+        // 卡片只取“当前交易日”或“最近已收盘交易日”；交易日 9 点前、周末与节假日沿用上一交易日。
+        function getHoldCardSparkPoints(item, atTs){
+            const now = atTs ? new Date(Number(atTs)) : new Date();
+            const key = holdSparkKey(item && item.marketType, item && item.code);
+            const days = loadHoldSparkDayHistory()[key] || {};
+            const todayKey = holdSparkDateKey(now);
+            const todayPts = days[todayKey] || [];
+            const mins = now.getHours() * 60 + now.getMinutes();
+            // 交易日 9 点以后且已有当天数据：只显示当天；收盘后当天数据仍作为最近完整交易日显示。
+            if(isTradingDay(now) && mins >= 540 && todayPts.length){
+                return todayPts.map(function(pt){ return pt.p; });
+            }
+            let prevKey = '';
+            Object.keys(days).forEach(function(ds){
+                if(ds < todayKey && days[ds] && days[ds].length && ds > prevKey) prevKey = ds;
+            });
+            if(prevKey){
+                return days[prevKey].map(function(pt){ return pt.p; });
+            }
+            // 新表还没有记录时，沿用旧版最近 20 个价格点，保证升级后的上一交易日曲线不消失。
+            const legacy = (loadHoldSparkHistory()[key] || []).slice(-20);
+            if(legacy.length) return legacy;
+            // 完全没有历史时，用昨收/开盘/现价做临时兜底，不写入历史。
+            const nowPrice = Number(item && item.nowPrice);
+            const prev = Number(item && item.prevClose);
+            const open = Number(item && item.openPrice);
+            if(isFinite(nowPrice) && nowPrice > 0){
+                if(isFinite(prev) && prev > 0 && isFinite(open) && open > 0) return [prev, open, nowPrice];
+                if(isFinite(prev) && prev > 0) return [prev, nowPrice];
+                return [nowPrice];
+            }
+            return [];
+        }
+        function recordHoldSparkPoint(market, code, price, atTs, prevClose){
+            const p = Number(price);
+            if(!isFinite(p) || p <= 0) return;
+            // 首页卡片的新窗口单独记 5 分钟点；旧的近 20 次价格仍保留给详情迷你图，互不影响。
+            recordHoldSparkDayPoint(market, code, p, atTs, prevClose);
             const hist = loadHoldSparkHistory();
             const key = holdSparkKey(market, code);
             const arr = hist[key] || [];
@@ -46299,9 +46514,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return d;
         }
         function sparkSvgInner(item, w, h, color){
-            const rawPts = getHoldSparkPoints(item);
-            // 少于 5 个真实/可计算点时不画折线，只保留一条 1px 灰基线，避免“断线图表”的错觉
-            if(!rawPts || rawPts.length < 5){
+            const rawPts = getHoldCardSparkPoints(item);
+            // 只有一个点无法构成走势，保留一条 1px 灰基线；两个点起即可显示当天走势。
+            if(!rawPts || rawPts.length < 2){
                 return '<path d="M0,' + (h/2) + ' L' + w + ',' + (h/2) + '" stroke="#d9cbbb" stroke-width="1" fill="none" opacity=".8"/>';
             }
             const pts = smoothSparkVals(rawPts);

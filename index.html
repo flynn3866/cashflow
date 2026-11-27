@@ -3450,6 +3450,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         /* 自选股票详情顶栏：与年度投资报告详情页同一套吸顶与材质 */
         #pageStockDetail{padding-top:0!important;}
+        #pageStockDetail.sd-stage-bg{background:inherit;}
         #pageStockDetail #sdTopBar{
             top:0;
             margin-top:calc(1.5rem + env(safe-area-inset-top));
@@ -5871,6 +5872,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             color:var(--col-ink);
             background:#FFFFFF;
         }
+        #pageCollection.kline-underlay-hidden{visibility:hidden;}
         #pageCollection .collection-topbar{
             position:sticky;top:0;z-index:40;
             display:flex;align-items:center;gap:10px;
@@ -23197,6 +23199,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             try{ forceCloseAssetAnnualForTab(); }catch(e){}
             // 切换底部导航时同时收起所有二级页面（设置/交易明细/新增编辑/交易/资产新高/年度报告/消息中心/股票详情），等效于点击左上角返回
             document.querySelector('#pageStockDetail').classList.add('hidden');
+            document.querySelector('#pageStockDetail').classList.remove('sd-stage-bg');
             document.querySelector('#pageSettings').classList.add('hidden');
             document.querySelector('#pageStockScores').classList.add('hidden');
             document.querySelector('#pageHealthCheck').classList.add('hidden');
@@ -23221,6 +23224,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             try{ closeBsQuickAdd(); }catch(e){}
             document.querySelector('#pageYearSnapshot').classList.add('hidden');
             document.querySelector('#pageCollection').classList.add('hidden');
+            document.querySelector('#pageCollection').classList.remove('kline-underlay-hidden');
             document.querySelector('#pageIndustryMap').classList.add('hidden');
             document.querySelector('#pageFundTransfer').classList.add('hidden');
             document.querySelector('#pageFundTransferAdd').classList.add('hidden');
@@ -28176,6 +28180,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function openCollection(tab){
             const page = document.querySelector('#pageCollection');
             if(!page) return;
+            page.classList.remove('kline-underlay-hidden');
             const wasClosing = collectionClosing;
             if(collectionCloseTimer){ clearTimeout(collectionCloseTimer); collectionCloseTimer = null; }
             collectionClosing = false;
@@ -28211,6 +28216,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         function closeCollection(){
             const page = document.querySelector('#pageCollection');
             if(!page || page.classList.contains('hidden') || collectionClosing) return;
+            page.classList.remove('kline-underlay-hidden');
             collectionClosing = true;
             const target = collectionReturnScroll;
             const finish = function(){
@@ -33983,7 +33989,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let sdDetailOrigin = 'watch';
         let sdCurrentStock = null;
         function openStockDetail(code, market, name, fromTab){
-            sdDetailOrigin = fromTab === 'hold' ? 'hold' : 'watch';
+            sdDetailOrigin = fromTab === 'collection' ? 'collection' : (fromTab === 'hold' ? 'hold' : 'watch');
             sdCurrentStock = { code: code, market: market, name: name };
             rememberScroll();
             // 详情页为 fixed 容器内部滚动（与自选页同款防橡皮筋方案）：锁死 body，滚动全部发生在容器内
@@ -33991,13 +33997,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             document.documentElement.style.overflow = 'hidden';
             document.body.classList.add('sd-detail-open');
             sdHideHostChrome();
-            if(sdDetailOrigin === 'hold'){
-                // 从首页持仓进入时必须隐藏首页，否则详情页会与首页叠在一起（自选入口原本就会隐藏）
+            if(sdDetailOrigin === 'hold' || sdDetailOrigin === 'collection'){
+                // 从首页持仓或藏品馆内持仓详情进入时必须隐藏首页，否则详情页会与首页叠在一起
                 const holdPg = document.querySelector('#pageHold');
                 if(holdPg) holdPg.classList.add('hidden');
             }
+            if(sdDetailOrigin === 'collection'){
+                // 藏品馆只做视觉隐藏，保留布局高度和滚动位置；否则display:none会塌陷页面高度，
+                // 返回后藏品馆会跳到顶部，且顶部吸顶栏会盖在K线页上。
+                const collectionPg = document.querySelector('#pageCollection');
+                if(collectionPg) collectionPg.classList.add('kline-underlay-hidden');
+            }
             document.querySelector('#pageWatchSel').classList.add('hidden');
             const page = document.querySelector('#pageStockDetail');
+            // K线页是透明舞台：从藏品馆进入时补上与首页/自选一致的羊皮纸底，
+            // 避免卡片缝隙和页面边缘透出藏品馆的深酒红卡面。
+            page.classList.toggle('sd-stage-bg', sdDetailOrigin === 'collection');
             page.classList.remove('hidden');
             document.querySelector('#sdTitle').innerText = name || code;
             document.querySelector('#sdCode').innerText = code + (market === 'HK' ? '.HK' : '.SH');
@@ -34019,7 +34034,41 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             sdKlineDispose();
             const origin = sdDetailOrigin;
             const page = document.querySelector('#pageStockDetail');
+            if(origin === 'collection'){
+                // K线页是 fixed 内滚页，可以先放开外层滚动，再把持仓详情铺在K线下面：
+                // 关闭时K线在z层上淡出，直接露出详情而不是藏品馆，避免藏品馆闪一下。
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                const collectionPg = document.querySelector('#pageCollection');
+                if(collectionPg){
+                    collectionPg.classList.remove('hidden');
+                    collectionPg.classList.remove('kline-underlay-hidden');
+                }
+                document.querySelector('#pageWatchSel').classList.add('hidden');
+                document.querySelector('#pageHold').classList.add('hidden');
+                document.querySelector('#pageMine').classList.add('hidden');
+                activeTab = 'mine';
+                if(page) page.style.zIndex = '70';
+                restoreHoldCardDetailIfNeeded(true, true);
+            }
             exitDetailPage(page, function(){
+                if(origin === 'collection'){
+                    // 从藏品馆内的持仓详情进入K线：保持在藏品馆，详情已在K线淡出前铺好
+                    if(page){ page.style.zIndex = ''; page.classList.remove('sd-stage-bg'); }
+                    const collectionPg = document.querySelector('#pageCollection');
+                    if(collectionPg){
+                        collectionPg.classList.remove('hidden');
+                        collectionPg.classList.remove('kline-underlay-hidden');
+                    }
+                    document.querySelector('#pageWatchSel').classList.add('hidden');
+                    document.querySelector('#pageHold').classList.add('hidden');
+                    document.querySelector('#pageMine').classList.add('hidden');
+                    activeTab = 'mine';
+                    sdRestoreHostChrome();
+                    sdDetailOrigin = 'watch';
+                    sdCurrentStock = null;
+                    return;
+                }
                 if(origin === 'hold'){
                     // 从首页持仓进入：返回首页，恢复外层文档滚动
                     document.querySelector('#pageWatchSel').classList.add('hidden');
@@ -34041,11 +34090,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 sdCurrentStock = null;
             });
         }
-        function openHoldStockDetail(id){
+        function openHoldStockDetail(id, fromParent){
             const key = String(id);
             const item = (holdDataList || []).find(function(x){ return String(x.id) === key; });
             if(!item){ showToast('未找到该持仓'); return; }
-            openStockDetail(item.code, item.marketType, item.name, 'hold');
+            openStockDetail(item.code, item.marketType, item.name, fromParent === 'collection' ? 'collection' : 'hold');
         }
         // 财务表横向手势自接管 + 纵向放行原生滚动（iOS 防橡皮筋，与自选页方向分流手势同款）：
         // 横滑自己控制 scrollLeft、到边界即停（无橡皮筋回弹）；纵滑不阻止默认、保留原生惯性丝滑
@@ -46350,6 +46399,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         // ===== 卡片点击后的轻量持仓详情（非 K 线页） =====
         var holdCardDetailKey = null;
         var holdCardDetailOriginEl = null;
+        var holdCardDetailAnchor = null;
+        var holdCardDetailParent = 'hold';
         // 仅记录“从持仓详情页进入子页”的返回上下文；列表/统计页入口不设置，保持原有返回首页行为
         var holdCardDetailReturnState = null;
 
@@ -46694,12 +46745,14 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             holdCardDetailScrollLock = null;
             appScrollUnlock('holdDetail');
         }
-        function openHoldCardDetail(id, ev, skipAnim, originEl){
+        function openHoldCardDetail(id, ev, skipAnim, originEl, anchorOverride){
             const item = holdDataList.find(function(it){ return String(it.id) === String(id); });
             if(!item) return;
             const bodyEl = document.querySelector('#holdCardDetailBody');
             const pageEl = document.querySelector('#pageHoldCardDetail');
             if(!bodyEl || !pageEl) return;
+            const collectionPage = document.querySelector('#pageCollection');
+            holdCardDetailParent = (collectionPage && !collectionPage.classList.contains('hidden')) ? 'collection' : 'hold';
             lockHoldCardDetailScroll();
             // 详情页关闭动画使用 fill:both，动画结束后会残留透明/缩放状态；
             // 再次打开前先清掉旧动画，否则页面内容会被旧动画压成 scale(.14) 且 opacity 0。
@@ -46735,15 +46788,32 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             const card = originEl || (ev && ev.currentTarget ? ev.currentTarget.closest('.hold-card-v2') : document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]'));
             holdCardDetailOriginEl = card || null;
+            const overrideAnchor = (anchorOverride && isFinite(anchorOverride.x) && isFinite(anchorOverride.y))
+                ? { x: Number(anchorOverride.x), y: Number(anchorOverride.y) }
+                : null;
+            let anchorPoint = overrideAnchor;
+            if(!anchorPoint && card){
+                const cr = card.getBoundingClientRect();
+                if(cr.width || cr.height){
+                    anchorPoint = { x: cr.left + cr.width / 2, y: cr.top + cr.height / 2 };
+                }
+            }
+            holdCardDetailAnchor = anchorPoint;
             if(skipAnim || !card || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+                pageEl.style.transform = '';
+                pageEl.style.opacity = '1';
+                pageEl.style.transformOrigin = '';
+                if(backdropEl) backdropEl.style.opacity = '1';
+                return;
+            }
+            if(!anchorPoint){
                 pageEl.style.transform = '';
                 pageEl.style.opacity = '1';
                 if(backdropEl) backdropEl.style.opacity = '1';
                 return;
             }
-            const r = card.getBoundingClientRect();
             const pr = pageEl.getBoundingClientRect();
-            pageEl.style.transformOrigin = ((r.left + r.width / 2) - pr.left).toFixed(1) + 'px ' + ((r.top + r.height / 2) - pr.top).toFixed(1) + 'px';
+            pageEl.style.transformOrigin = (anchorPoint.x - pr.left).toFixed(1) + 'px ' + (anchorPoint.y - pr.top).toFixed(1) + 'px';
             pageEl.style.opacity = '0';
             pageEl.style.transform = 'scale(.14)';
             pageEl.style.transition = 'none';
@@ -46790,6 +46860,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 if(fabEl) fabEl.classList.remove('hold-fab-hidden');
                 holdCardDetailKey = null;
                 holdCardDetailOriginEl = null;
+                holdCardDetailAnchor = null;
                 unlockHoldCardDetailScroll();
             };
             if(immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
@@ -46799,9 +46870,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const card = (holdCardDetailOriginEl && holdCardDetailOriginEl.isConnected)
                 ? holdCardDetailOriginEl
                 : (holdCardDetailKey ? document.querySelector('#holdList .hold-card-v2[data-hold-code="' + holdCardDetailKey + '"]') : null);
-            if(card){
+            const pr = pageEl.getBoundingClientRect();
+            if(holdCardDetailAnchor){
+                pageEl.style.transformOrigin = (holdCardDetailAnchor.x - pr.left).toFixed(1) + 'px ' + (holdCardDetailAnchor.y - pr.top).toFixed(1) + 'px';
+            } else if(card){
                 const r = card.getBoundingClientRect();
-                const pr = pageEl.getBoundingClientRect();
                 pageEl.style.transformOrigin = ((r.left + r.width / 2) - pr.left).toFixed(1) + 'px ' + ((r.top + r.height / 2) - pr.top).toFixed(1) + 'px';
             }
             const backdropEl = document.querySelector('#holdCardDetailBackdrop');
@@ -46830,17 +46903,22 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const pageEl = document.querySelector('#pageHoldCardDetail');
             holdCardDetailReturnState = {
                 id: String(item.id),
-                scrollTop: pageEl ? (Number(pageEl.scrollTop) || 0) : 0
+                scrollTop: pageEl ? (Number(pageEl.scrollTop) || 0) : 0,
+                parent: holdCardDetailParent || 'hold',
+                originEl: holdCardDetailOriginEl,
+                anchor: holdCardDetailAnchor ? { x: holdCardDetailAnchor.x, y: holdCardDetailAnchor.y } : null
             };
             return true;
         }
 
-        function restoreHoldCardDetailIfNeeded(){
+        function restoreHoldCardDetailIfNeeded(immediate, ignoreStockDetail){
             const state = holdCardDetailReturnState;
             if(!state) return;
             // 如果还停留在由详情页打开的另一层全屏子页（例如从K线里再开目标设置），
             // 先不恢复，等最后一层子页关闭时再回详情，避免详情盖住子页。
-            const childOpen = ['#pageTrade', '#pageTradeLog', '#pageStockEdit', '#pageStockDetail'].some(function(sel){
+            const checks = ['#pageTrade', '#pageTradeLog', '#pageStockEdit'];
+            if(!ignoreStockDetail) checks.push('#pageStockDetail');
+            const childOpen = checks.some(function(sel){
                 const el = document.querySelector(sel);
                 return el && !el.classList.contains('hidden');
             });
@@ -46848,11 +46926,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             holdCardDetailReturnState = null;
             const item = holdDataList.find(function(it){ return String(it.id) === state.id; });
             if(!item) return;
-            requestAnimationFrame(function(){
-                openHoldCardDetail(item.id, null, true);
+            const open = function(){
+                openHoldCardDetail(item.id, null, true, state.originEl, state.anchor);
                 const pageEl = document.querySelector('#pageHoldCardDetail');
                 if(pageEl) pageEl.scrollTop = state.scrollTop || 0;
-            });
+            };
+            if(immediate) open();
+            else requestAnimationFrame(open);
         }
 
         function updateHoldCardDetailNumbers(sumQ){
@@ -46932,9 +47012,10 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function holdDetailOpenKline(id){
             if(!rememberHoldCardDetailReturn(id)) return;
+            const parent = (holdCardDetailReturnState && holdCardDetailReturnState.parent) || 'hold';
             // 与“交易明细”一致：关闭详情后同步打开K线页，避免中间一帧露出首页
             closeHoldCardDetail(true);
-            openHoldStockDetail(id);
+            openHoldStockDetail(id, parent);
         }
         // 列表模式渲染（极简两行列表：按总市值倒序，详情点开后在嵌套面板出现）
         function renderHoldListMode(sorted, sum){

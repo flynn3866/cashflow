@@ -19,7 +19,7 @@
     <meta name="theme-color" content="#FFFFFF">
     <title>细水长流 - 股息持仓记录</title>
     <!-- 版本号：每次更新文件时修改此版本号，手机端会自动检测并刷新 -->
-    <script>window.APP_VERSION = '20261126.666';</script>
+    <script>window.APP_VERSION = '20261128.666';</script>
 
     <script>
         // ===== 图标体系：统一线性 SVG（stroke 1.8 圆角端点，currentColor 继承颜色，em 继承字号） =====
@@ -4348,6 +4348,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             overscroll-behavior-x:contain;scrollbar-width:none;
         }
         .tring-rail::-webkit-scrollbar{display:none;}
+        .tring-rail.is-dragging{
+            scroll-snap-type:none!important;
+            touch-action:none;
+            cursor:grabbing;
+        }
+        .tring-rail-placeholder{
+            flex:0 0 auto;align-self:stretch;box-sizing:border-box;
+            border-radius:14px;
+            border:1px dashed rgba(143,36,55,.22);
+            background:linear-gradient(162deg,rgba(255,254,252,.52),rgba(250,241,233,.34));
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+            opacity:.78;pointer-events:none;
+        }
+        body.tring-rail-dragging{
+            user-select:none;-webkit-user-select:none;
+            overscroll-behavior:none;cursor:grabbing;
+        }
         .tring-pager{
             display:flex;align-items:center;justify-content:center;gap:5px;
             height:6px;margin:3px 0 0;padding:0;
@@ -4404,7 +4421,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             border:1px solid rgba(126,58,68,.16);
             box-shadow:0 8px 22px rgba(80,52,38,.07),0 1.5px 3px rgba(80,52,38,.035),inset 0 1px 0 rgba(255,255,255,.98);
             cursor:pointer;-webkit-tap-highlight-color:transparent;
+            user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
             transition:transform .18s cubic-bezier(.22,.61,.36,1),box-shadow .18s ease,border-color .18s ease,background .18s ease;
+        }
+        .tring-card.is-pressing{
+            transform:scale(.985);
+            border-color:rgba(143,36,55,.28);
+            box-shadow:0 11px 24px rgba(80,52,38,.11),0 0 0 1px rgba(143,36,55,.10),inset 0 1px 0 rgba(255,255,255,.98);
+        }
+        .tring-card.is-dragging{
+            transition:none!important;
+            transform:scale(1.025)!important;
+            border-color:rgba(143,36,55,.34)!important;
+            box-shadow:0 18px 38px rgba(80,52,38,.18),0 0 0 1px rgba(143,36,55,.12),inset 0 1px 0 rgba(255,255,255,.98)!important;
+            cursor:grabbing;
         }
         .tring-card::before{
             content:"";position:absolute;left:11px;right:11px;top:0;height:1px;z-index:1;
@@ -10102,9 +10132,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             .page-asset .asset-hero{
                 position:relative;overflow:hidden;border-radius:20px;
                 padding:24px 20px 17px;color:#FBF7EF;
-                background:#5E442B;
+                background:
+                    radial-gradient(130% 120% at 10% -8%,rgba(255,236,207,.085) 0%,rgba(255,236,207,0) 46%),
+                    radial-gradient(100% 130% at 102% 108%,rgba(34,21,11,.20) 0%,rgba(34,21,11,0) 62%),
+                    linear-gradient(145deg,#63482F 0%,#5C422A 54%,#533B25 100%);
                 border:0;
-                box-shadow:none;
+                box-shadow:
+                    inset 0 1px 0 rgba(255,247,234,.075),
+                    inset 0 0 0 1px rgba(255,246,232,.035),
+                    0 16px 34px -26px rgba(50,32,17,.58);
                 margin-top:0;
             }
             .page-asset .asset-hero:before,
@@ -10114,56 +10150,101 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }
             .page-asset .asset-hero-titleline{display:flex;align-items:center;gap:8px;min-width:0}
             .page-asset .asset-hero-kicker{
-                font-size:13px;line-height:1.35;letter-spacing:.03em;font-weight:560;color:rgba(255,247,235,.76);
+                font-size:13px;line-height:1.35;letter-spacing:.05em;font-weight:590;color:rgba(255,248,238,.82);
             }
             .page-asset .asset-hero-badge{
                 display:inline-flex;align-items:center;height:22px;padding:0 8px;flex:0 0 auto;
-                border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
-                color:rgba(255,247,235,.80);font-size:10.5px;line-height:1;font-weight:520;letter-spacing:.01em;
+                border-radius:999px;background:rgba(255,249,240,.075);border:0;
+                box-shadow:inset 0 0 0 1px rgba(255,249,240,.10);
+                color:rgba(255,248,238,.74);font-size:10.5px;line-height:1;font-weight:520;letter-spacing:.01em;
                 white-space:nowrap;
             }
             .page-asset .asset-hero-netline{
-                position:relative;z-index:2;display:flex;align-items:baseline;gap:1px;margin-top:16px;
+                position:relative;z-index:2;display:flex;align-items:baseline;gap:2px;margin-top:16px;min-width:0;
             }
             .page-asset .asset-hero-cur{
                 font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
-                font-size:11px;line-height:1;font-weight:500;letter-spacing:0;color:rgba(252,248,241,.88);
+                font-size:clamp(24px,6.5vw,29px);line-height:1;font-weight:560;letter-spacing:-.01em;color:rgba(252,248,241,.92);
                 font-variant-numeric:proportional-nums lining-nums;font-feature-settings:"pnum" 1,"lnum" 1;
+                flex:0 0 auto;
             }
             .page-asset .asset-hero-net{
                 font-family:"Space Grotesk", Bahnschrift, "DIN Alternate", ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
-                font-size:32px;line-height:1;font-weight:600;letter-spacing:-.02em;
+                font-size:clamp(36px,10.9vw,47px);line-height:.98;font-weight:730;letter-spacing:-.052em;
                 font-variant-numeric:proportional-nums lining-nums;font-feature-settings:"pnum" 1,"lnum" 1;
-                color:#FFFCF6;
+                color:#FFFCF6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
             }
             .page-asset .asset-hero-net.is-neg{color:#FFFCF6}
+            /* 净资产下方：与上一次盘点比较（不是上一自然月） */
+            .page-asset .asset-hero-compare{
+                position:relative;z-index:2;display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+                margin-top:7px;min-height:20px;
+            }
+            .page-asset .asset-compare-label{
+                display:inline-flex;align-items:center;gap:4px;min-width:0;
+                font-size:9.8px;line-height:1.2;color:rgba(255,248,238,.70);white-space:nowrap;
+            }
+            .page-asset .asset-compare-label b{
+                font-weight:680;color:rgba(255,250,242,.90);font-variant-numeric:tabular-nums;letter-spacing:.01em;
+            }
+            .page-asset .asset-compare-pill{
+                display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;
+                border-radius:7px;border:0;background:rgba(255,249,240,.055);
+                font-size:9.8px;line-height:1;color:rgba(255,248,238,.80);white-space:nowrap;
+                font-variant-numeric:tabular-nums;letter-spacing:-.005em;
+            }
+            .page-asset .asset-compare-pill.is-pos{
+                color:#FFDDD5;background:rgba(196,69,73,.16);box-shadow:inset 0 0 0 1px rgba(255,173,169,.12);
+            }
+            .page-asset .asset-compare-pill.is-neg{
+                color:#C9EEDD;background:rgba(21,134,91,.15);box-shadow:inset 0 0 0 1px rgba(153,220,186,.12);
+            }
+            .page-asset .asset-compare-pill.is-zero{color:rgba(255,247,235,.70)}
+            .page-asset .asset-compare-pill.is-empty{color:rgba(255,247,235,.56);background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.10)}
+            .page-asset .asset-compare-arrow{font-size:9px;line-height:1;font-weight:750;margin-right:1px}
+            .page-asset .asset-compare-pct{
+                margin-left:1px;padding-left:5px;border-left:1px solid rgba(255,255,255,.17);
+                color:currentColor;opacity:.78;font-size:9.2px;
+            }
             .page-asset .asset-hero-sub{
-                position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:21px;
+                position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px;
                 padding-top:0;border-top:0;
             }
             .page-asset .asset-hero-kpi{min-width:0}
-            .page-asset .asset-hero-kpi + .asset-hero-kpi{padding-left:18px;border-left:1px solid rgba(255,255,255,.20)}
+            .page-asset .asset-hero-kpi + .asset-hero-kpi{padding-left:0;border-left:0}
             .page-asset .asset-hero-label{
-                font-size:11.5px;line-height:1.3;letter-spacing:.01em;color:rgba(255,247,235,.78);margin-bottom:6px;
+                display:flex;align-items:center;gap:5px;
+                font-size:10.5px;line-height:1.3;letter-spacing:.02em;color:rgba(255,248,238,.70);margin-bottom:5px;
             }
+            .page-asset .asset-hero-dot{width:5px;height:5px;border-radius:50%;flex:0 0 auto;display:inline-block}
+            .page-asset .asset-hero-dot.is-assets{
+                background:conic-gradient(#5C56C4 0 25%,#15865B 25% 50%,#AD7225 50% 75%,#0E7C8C 75% 100%);
+                box-shadow:0 0 0 1px rgba(255,255,255,.12);
+            }
+            .page-asset .asset-hero-dot.is-liab{background:#CE4149;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+            .page-asset .asset-hero-dot.is-liab.is-zero{background:rgba(255,248,238,.34);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
             .page-asset .asset-hero-value-row{display:flex;align-items:baseline;gap:2px;min-width:0}
             .page-asset .asset-hero-value-cur{
-                font-size:16.5px;line-height:1.3;font-weight:620;color:#FDF9F2;flex:0 0 auto;
+                font-size:12.5px;line-height:1.25;font-weight:600;color:rgba(253,249,242,.92);flex:0 0 auto;
             }
-            .page-asset .asset-hero-value-cur.is-liab{color:#FDF9F2}
+            .page-asset .asset-hero-value-cur.is-liab{color:rgba(253,249,242,.92)}
             .page-asset .asset-hero-value{
-                font-size:19px;line-height:1.26;font-weight:650;letter-spacing:-.015em;
-                color:#FDF9F2;font-variant-numeric:tabular-nums;white-space:nowrap;
+                font-size:15.5px;line-height:1.25;font-weight:660;letter-spacing:-.018em;
+                color:#FBF7EF;font-variant-numeric:tabular-nums;white-space:nowrap;
                 overflow:hidden;text-overflow:ellipsis;
             }
-            .page-asset .asset-hero-value.is-liab{color:#FDF9F2}
+            .page-asset .asset-hero-value.is-liab{color:#FBF7EF}
+            .page-asset .asset-hero-value.is-zero{
+                font-size:15.5px;font-weight:560;letter-spacing:.035em;
+                color:rgba(255,251,244,.84);font-variant-numeric:normal;
+            }
             .page-asset .asset-hero-foot{
                 position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;
-                margin-top:20px;font-size:11px;line-height:1.4;color:rgba(255,250,243,.68);
+                margin-top:16px;font-size:9.5px;line-height:1.35;color:rgba(255,250,243,.66);
             }
             .page-asset .asset-hero-updated{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-            .page-asset .asset-hero-ratio{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,250,243,.70)}
-            .page-asset .asset-hero-ratio b{font-size:11.2px;font-weight:650;color:#FBF7EF;letter-spacing:-.01em}
+            .page-asset .asset-hero-ratio{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:rgba(255,250,243,.66)}
+            .page-asset .asset-hero-ratio b{font-size:10px;font-weight:680;color:rgba(255,250,243,.92);letter-spacing:-.01em}
             /* 资产年报入口：像一本放在总览下方的薄册，深咖书脊 + 米纸内页 */
             .page-asset .asset-annual-entry{
                 position:relative;width:100%;min-height:100px;margin-top:12px;padding:0;
@@ -10363,52 +10444,86 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 font-size:20px;font-weight:720;letter-spacing:-.02em;color:#466B58;line-height:1.15;
             }
 
-            .page-asset .asset-structure-card{
-                position:relative;border-radius:14px;background:#fff;border:1px solid #EDE9E4;
-                box-shadow:0 1px 2px rgba(40,30,20,.02);padding:19px 18px 17px;
+            .page-asset .asset-sec-pill{
+                display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;
+                background:#F6F1EA;border:1px solid #EADFD2;color:#8B7662;
+                font-size:9.5px;line-height:1;font-weight:600;letter-spacing:.04em;white-space:nowrap;
             }
-            .page-asset .asset-structure-top{display:flex;align-items:center;gap:14px}
+            .page-asset .asset-structure-card{
+                position:relative;overflow:hidden;border-radius:22px;
+                background:
+                    radial-gradient(circle at 50% -10%,rgba(196,157,100,.08),transparent 44%),
+                    linear-gradient(180deg,#FFFFFF 0%,#FFFDFA 100%);
+                border:1px solid #ECE5DB;
+                box-shadow:0 1px 2px rgba(54,36,24,.025),0 14px 34px -32px rgba(54,36,24,.34);
+                padding:17px 17px 15px;
+            }
+            .page-asset .asset-structure-card:after{
+                content:"";position:absolute;left:20px;right:20px;bottom:0;height:1px;
+                background:linear-gradient(90deg,transparent,rgba(173,114,37,.10),transparent);pointer-events:none;
+            }
+            .page-asset .asset-structure-donut{display:flex;justify-content:center;padding:4px 0 0}
             .page-asset .asset-ring-wrap{
-                width:132px;height:132px;flex:0 0 auto;position:relative;display:flex;align-items:center;justify-content:center;
+                width:220px;height:220px;flex:0 0 auto;position:relative;display:flex;align-items:center;justify-content:center;
+            }
+            .page-asset .asset-ring-wrap:before{
+                content:"";position:absolute;inset:-7px;border-radius:50%;pointer-events:none;
+                background:radial-gradient(circle,rgba(91,62,38,.055) 0%,rgba(91,62,38,.018) 47%,transparent 70%);
             }
             .page-asset .asset-ring{
                 position:absolute;inset:0;border-radius:50%;
-                background:conic-gradient(#d8cabb 0deg,#d8cabb 360deg);
-                transition:background .45s ease;
+                background:transparent;
+                box-shadow:none;
+                filter:drop-shadow(0 8px 13px rgba(54,36,24,.075));
+                transition:none;
+                z-index:1;
             }
-            .page-asset .asset-ring:after{
-                content:"";position:absolute;inset:13px;border-radius:50%;background:#fff;
-                box-shadow:inset 0 0 0 1px rgba(105,79,58,.06);
+            .page-asset .asset-ring svg,
+            .page-asset .asset-ring canvas{display:block;width:100%!important;height:100%!important;border-radius:50%}
+            .page-asset .asset-ring-center{position:relative;z-index:3;text-align:center;line-height:1.1;max-width:132px;pointer-events:none}
+            .page-asset .asset-ring-center small{
+                display:block;font-size:10px;color:#857568;letter-spacing:.025em;margin-bottom:7px;
+                font-weight:620;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
             }
-            .page-asset .asset-ring-center{position:relative;z-index:2;text-align:center;line-height:1.1;max-width:90px}
-            .page-asset .asset-ring-center small{display:block;font-size:10.5px;color:#756F68;letter-spacing:.08em;margin-bottom:5px}
             .page-asset .asset-ring-center b{
-                display:block;font-size:18px;font-weight:750;letter-spacing:-.03em;color:#1F1F1F;
+                display:block;font-size:30px;font-weight:750;letter-spacing:-.045em;color:#211A14;
                 font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
             }
-            .page-asset .asset-ring-center em{display:block;font-size:10.5px;color:#756F68;margin-top:4px;font-style:normal}
-            .page-asset .asset-legend{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
-            .page-asset .asset-legend-item{min-width:0}
-            .page-asset .asset-legend-line{display:flex;align-items:center;gap:5px;min-width:0}
-            .page-asset .asset-legend-dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
-            .page-asset .asset-legend-name{font-size:10.5px;color:#6F6A64;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-            .page-asset .asset-legend-value{
-                font-size:12.5px;font-weight:650;color:#2A2521;margin-top:3px;font-variant-numeric:tabular-nums;
+            .page-asset .asset-ring-center em{display:block;font-size:9.5px;color:#9B8D80;margin-top:6px;font-style:normal;letter-spacing:.015em}
+            .page-asset .asset-alloc-grid{
+                display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;
+                margin-top:10px;padding-top:13px;border-top:1px solid #F2ECE4;
+            }
+            .page-asset .asset-alloc-item{
+                min-width:0;display:flex;align-items:center;gap:9px;padding:5px 0;border-radius:10px;
+            }
+            .page-asset .asset-alloc-icon{
+                width:28px;height:28px;border-radius:50%;flex:0 0 auto;
+                display:flex;align-items:center;justify-content:center;
+                border:0;
+            }
+            .page-asset .asset-alloc-icon svg{width:16px;height:16px;display:block}
+            .page-asset .asset-alloc-icon i{font-size:12.5px;line-height:1}
+            .page-asset .asset-alloc-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px}
+            .page-asset .asset-alloc-top{display:flex;align-items:baseline;justify-content:space-between;gap:5px;min-width:0}
+            .page-asset .asset-alloc-name{
+                font-size:10.8px;line-height:1.3;font-weight:600;color:#4B4036;
                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
             }
-            .page-asset .asset-legend-pct{font-size:10.5px;color:#756F68;margin-left:4px}
-            .page-asset .asset-debt-box{
-                margin-top:15px;padding-top:13px;border-top:1px solid #f3eee9;
+            .page-asset .asset-alloc-pct{
+                font-size:11px;line-height:1.2;font-weight:730;color:#251D17;
+                font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.02em;
             }
-            .page-asset .asset-debt-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
-            .page-asset .asset-debt-label{font-size:10.5px;color:#6F6A64;display:flex;align-items:center;gap:5px}
-            .page-asset .asset-debt-label i{color:#CE4149;font-size:8px}
-            .page-asset .asset-debt-value{font-size:11px;font-weight:650;color:#CE4149;font-variant-numeric:tabular-nums}
-            .page-asset .asset-debt-track{height:5px;border-radius:999px;background:#FBEDEE;overflow:hidden}
-            .page-asset .asset-debt-fill{
-                height:100%;border-radius:999px;width:0%;background:linear-gradient(90deg,#E99095,#CE4149);
-                transition:width .55s cubic-bezier(.2,.8,.2,1);
+            .page-asset .asset-alloc-amt{
+                font-size:9.3px;line-height:1.2;color:#9C8F82;font-variant-numeric:tabular-nums;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
             }
+            .page-asset .asset-alloc-empty{
+                grid-column:1/-1;padding:14px 10px 13px;border-radius:12px;text-align:center;
+                background:#FBF8F3;border:1px dashed #E8DDCE;
+            }
+            .page-asset .asset-alloc-empty b{display:block;font-size:11.5px;color:#5D5248;font-weight:650;margin-bottom:4px}
+            .page-asset .asset-alloc-empty span{display:block;font-size:9.5px;line-height:1.55;color:#9B8D7E}
             .page-asset .asset-trend-card{
                 border-radius:14px;background:#fff;border:1px solid #EDE9E4;
                 box-shadow:0 1px 2px rgba(40,30,20,.02);padding:16px 16px 14px;overflow:hidden;
@@ -10916,20 +11031,27 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             body:has(#pageAssetCategory:not(.hidden)){overflow:hidden;}
             body.asset-detail-open{overflow:hidden;}
             @media (max-width:380px){
-                .page-asset .asset-hero-net{font-size:32px}
-                .page-asset .asset-ring-wrap{width:124px;height:124px}
-                .page-asset .asset-legend{gap:9px 6px}
-                .page-asset .asset-legend-value{font-size:10.5px}
+                .page-asset .asset-hero-net{font-size:34px}
+                .page-asset .asset-ring-wrap{width:186px;height:186px}
+                .page-asset .asset-ring-center{max-width:118px}
+                .page-asset .asset-ring-center b{font-size:27px}
+                .page-asset .asset-alloc-grid{gap:7px 12px}
+                .page-asset .asset-alloc-icon{width:26px;height:26px}
+                .page-asset .asset-alloc-name{font-size:10.2px}
+                .page-asset .asset-alloc-pct{font-size:10.6px}
                 #pageAssetCategory .asset-dh-amount{font-size:24px}
             }
             @media (min-width:400px){
                 .page-asset .asset-hero{padding:26px 20px 18px}
                 .page-asset .asset-hero-netline{margin-top:17px}
-                .page-asset .asset-hero-sub{margin-top:22px}
-                .page-asset .asset-hero-foot{margin-top:21px}
+                .page-asset .asset-hero-sub{margin-top:20px}
+                .page-asset .asset-hero-foot{margin-top:20px}
+                .page-asset .asset-ring-wrap{width:232px;height:232px}
+                .page-asset .asset-ring-center{max-width:144px}
+                .page-asset .asset-ring-center b{font-size:31.5px}
             }
             @media (min-width:600px){
-                .page-asset .asset-hero-net{font-size:32px}
+                .page-asset .asset-hero-net{font-size:46px}
                 .page-asset .asset-invest-amount{font-size:22px}
             }
             /* ==================== 个人资产年报 · 私人账本 ====================
@@ -11104,7 +11226,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 display:flex;align-items:center;justify-content:space-between;gap:10px;
                 padding:11px 15px;border-bottom:1px solid rgba(101,71,44,.11);
                 background:linear-gradient(90deg,#FAF3E7,#FCF7EE);
-                font-size:7.5px;line-height:1.2;letter-spacing:.11em;color:#9B8772;
+                font-size:8px;line-height:1.2;letter-spacing:.085em;color:#8E7D6A;
             }
             #pageAssetAnnual .aar-ledger-head span:last-child{text-align:right}
             #pageAssetAnnual .aar-lrow{
@@ -11119,30 +11241,56 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             #pageAssetAnnual .aar-lrow.is-total:before{opacity:.22}
             #pageAssetAnnual .aar-lrow.is-net{background:linear-gradient(90deg,#F8EEDC,#FBF5E9);border-bottom:0;padding-top:14px;padding-bottom:13px}
             #pageAssetAnnual .aar-lrow.is-net:before{background:#33231A;opacity:.9}
-            #pageAssetAnnual .aar-lrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:9px;min-width:0}
+            #pageAssetAnnual .aar-lrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
+            #pageAssetAnnual .aar-lhead{display:flex;align-items:baseline;gap:7px;min-width:0}
             #pageAssetAnnual .aar-lname{
-                font-size:13px;line-height:1.2;font-weight:650;color:#2C211A;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                font-size:13px;line-height:1.2;font-weight:650;color:#2C211A;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;
             }
             #pageAssetAnnual .aar-lrow.is-net .aar-lname{
                 font-family:"Songti SC","Noto Serif SC",serif;font-size:14.5px;font-weight:700;letter-spacing:.03em;
             }
-            #pageAssetAnnual .aar-lshare{font-size:9px;line-height:1.2;color:#9A8672;font-variant-numeric:tabular-nums;white-space:nowrap;flex:0 0 auto}
+            #pageAssetAnnual .aar-lshare{font-size:8.5px;line-height:1.2;color:#9A9086;font-variant-numeric:tabular-nums;white-space:nowrap;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
             #pageAssetAnnual .aar-lrow.is-net .aar-lshare{color:#84694A}
-            #pageAssetAnnual .aar-lrow-data{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:8px;margin-top:6px;min-width:0}
-            #pageAssetAnnual .aar-flow{display:flex;align-items:baseline;gap:5px;min-width:0;white-space:nowrap;overflow:hidden}
-            #pageAssetAnnual .aar-flow .aar-start{font-size:10px;line-height:1.2;color:#8E7B69;font-variant-numeric:tabular-nums}
-            #pageAssetAnnual .aar-flow .aar-arrow{font-size:7px;color:#BBA88E;flex:0 0 auto}
-            #pageAssetAnnual .aar-flow .aar-end{font-size:12px;line-height:1.2;color:#2A201A;font-weight:700;font-variant-numeric:tabular-nums}
-            #pageAssetAnnual .aar-lrow.is-net .aar-flow .aar-end{font-size:15px;letter-spacing:-.02em}
-            #pageAssetAnnual .aar-delta{
-                text-align:right;white-space:nowrap;font-size:11px;line-height:1.2;font-weight:700;
-                font-variant-numeric:tabular-nums;color:#8C6134;
+            #pageAssetAnnual .aar-lrow-data{
+                display:grid;grid-template-columns:60px minmax(38px,1fr) 96px;align-items:center;gap:9px;
+                margin-top:8px;min-width:0;
             }
+            #pageAssetAnnual .aar-start{font-size:10px;line-height:1.2;color:#8E7B69;font-variant-numeric:tabular-nums;white-space:nowrap}
+            #pageAssetAnnual .aar-end{font-size:12px;line-height:1.2;color:#2A201A;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+            #pageAssetAnnual .aar-lrow.is-total .aar-end{font-size:13px;font-weight:750}
+            #pageAssetAnnual .aar-lrow.is-net .aar-end{font-size:15px;font-weight:750;letter-spacing:-.02em}
+            #pageAssetAnnual .aar-track{
+                position:relative;display:block;align-self:center;height:6px;min-width:38px;border-radius:3px;overflow:visible;
+                background:linear-gradient(90deg,#F1ECE5 0%,#EAE2D8 100%);
+                box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 0 -0.5px 0 rgba(94,65,41,.07);
+            }
+            #pageAssetAnnual .aar-fill{
+                position:absolute;left:7px;top:0;bottom:0;min-width:4px;border-radius:3px;z-index:0;
+                background:var(--aar-bar,#8C6134);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+            }
+            #pageAssetAnnual .aar-track.is-flat{background:linear-gradient(90deg,rgba(241,236,229,.62),rgba(238,231,222,.50));box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+            #pageAssetAnnual .aar-dot{
+                position:absolute;top:50%;width:7px;height:7px;border-radius:50%;z-index:2;box-sizing:border-box;
+                transform:translate(-50%,-50%);background:var(--aar-bar,#C9B8A6);
+                box-shadow:0 0 0 1px rgba(255,251,244,.72);
+            }
+            #pageAssetAnnual .aar-dot.is-origin,
+            #pageAssetAnnual .aar-dot.is-zero{
+                left:3.5px;background:transparent;border:1.5px solid var(--aar-bar,#C9B8A6);
+            }
+            #pageAssetAnnual .aar-dot.is-zero{opacity:.9}
+            #pageAssetAnnual .aar-track.is-empty{opacity:.46;box-shadow:none}
+            #pageAssetAnnual .aar-delta{
+                display:inline-flex;align-items:baseline;justify-content:flex-end;gap:1px;flex:0 0 auto;
+                text-align:right;white-space:nowrap;font-size:11px;line-height:1.2;font-weight:650;
+                font-variant-numeric:tabular-nums;color:#8A5E2A;letter-spacing:-.012em;
+            }
+            #pageAssetAnnual .aar-delta-sign{font-size:9px;line-height:1;font-weight:750;letter-spacing:0;margin-right:1px;opacity:.9}
+            #pageAssetAnnual .aar-delta.is-pos{color:#8A5E2A}
             #pageAssetAnnual .aar-delta.is-down{color:#9D5A45}
             #pageAssetAnnual .aar-delta.is-flat{color:#9A8672;font-weight:550}
-            #pageAssetAnnual .aar-delta em{display:inline-block;margin-left:5px;font-style:normal;font-size:8.5px;font-weight:600;color:#9A8672;letter-spacing:0}
-            #pageAssetAnnual .aar-delta.is-pos em{color:#7A6A57}
-            #pageAssetAnnual .aar-lrow.is-net .aar-delta{font-size:12px;color:#5E4126}
+            #pageAssetAnnual .aar-delta em{display:inline-block;margin-left:5px;font-style:normal;font-size:8.5px;font-weight:600;color:#9B8B7D;letter-spacing:0}
+            #pageAssetAnnual .aar-delta.is-pos em{color:#8E7A62}
             #pageAssetAnnual .aar-lrow.is-net .aar-delta em{font-size:9px;color:#8A6A45}
             #pageAssetAnnual .aar-compo{
                 background:#FFFBF4;border:1px solid #E4D6C4;border-radius:18px;padding:15px 16px 14px;
@@ -11296,7 +11444,127 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 font-size:12.5px;line-height:1.9;color:#4A443D;text-align:left;letter-spacing:.01em;
             }
             #pageAssetAnnual .aar-foot{color:#7B726A}
+            /* 年度读记：藏品足迹一行，不另起卡片 */
+            #pageAssetAnnual .aar-note-collection{
+                display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 9px;
+                margin-top:14px;padding-top:11px;
+                border-top:1px solid rgba(122,31,35,.10);
+                font-size:10.5px;line-height:1.6;color:#7A6B61;letter-spacing:.01em;
+            }
+            #pageAssetAnnual .aar-note-coll-kicker{
+                font-size:6.8px;line-height:1;font-weight:700;letter-spacing:.16em;
+                color:#B08B54;white-space:nowrap;
+            }
+            #pageAssetAnnual .aar-note-coll-text b{
+                font-weight:750;color:#7A1F23;font-variant-numeric:tabular-nums;
+                letter-spacing:-.01em;
+            }
+            /* 年度快照印章：藏书票式收尾，压印而非发光 */
+            #pageAssetAnnual .aar-seal-wrap{
+                position:relative;display:flex;flex-direction:column;align-items:center;
+                margin-top:30px;padding-top:22px;
+            }
+            #pageAssetAnnual .aar-seal-wrap:before{
+                content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+                width:56px;height:1px;
+                background:linear-gradient(90deg,rgba(215,180,106,0),#D7B46A,rgba(215,180,106,0));
+                opacity:.65;
+            }
+            #pageAssetAnnual .aar-seal{
+                position:relative;width:clamp(120px,31vw,140px);aspect-ratio:1;
+                opacity:.86;mix-blend-mode:multiply;
+                filter:drop-shadow(0 1px 0 rgba(255,255,255,.86));
+            }
+            #pageAssetAnnual .aar-seal svg{display:block;width:100%;height:100%}
+            #pageAssetAnnual .aar-seal:after{
+                content:"";position:absolute;inset:-2%;border-radius:50%;pointer-events:none;
+                background:repeating-linear-gradient(116deg,rgba(255,255,255,.08) 0 1px,rgba(122,31,35,.02) 1px 2px,transparent 2px 7px);
+                mix-blend-mode:soft-light;opacity:.42;
+            }
+            #pageAssetAnnual .aar-seal-caption{
+                margin-top:9px;font-size:7px;line-height:1;font-weight:600;
+                letter-spacing:.19em;color:#A89991;text-align:center;text-transform:uppercase;
+            }
             #pageAssetAnnual .aar-empty{background:#FFFFFF;border-color:#ECE8E2}
+            /* 00 变动归因：2×2（移动端）/ 4 列（宽屏），16px 间距，软阴影浮起 */
+            #pageAssetAnnual .aar-attr-head{margin-top:26px;margin-bottom:18px}
+            #pageAssetAnnual .aar-attr-sum{
+                display:flex;flex-direction:row;align-items:baseline;justify-content:flex-end;gap:7px;
+                min-width:0;text-align:right;
+            }
+            #pageAssetAnnual .aar-attr-sum-label{
+                font-size:clamp(8.2px,1.9vw,9.2px);line-height:1;letter-spacing:.1em;color:#8A7A72;
+                font-weight:500;white-space:nowrap;
+            }
+            #pageAssetAnnual .aar-attr-sum-value{
+                font-family:Georgia,"Songti SC","Noto Serif SC",serif;
+                font-size:clamp(14px,3.6vw,17.5px);line-height:1;font-weight:600;
+                letter-spacing:-.025em;color:#7A1F23;white-space:nowrap;
+                font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1;
+            }
+            #pageAssetAnnual .aar-attr-sum.is-down .aar-attr-sum-value{color:#B5452B}
+            #pageAssetAnnual .aar-attr-sum.is-zero .aar-attr-sum-value{color:#5C4A42}
+            #pageAssetAnnual .aar-attr-grid{
+                display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+                gap:16px;align-items:stretch;
+            }
+            #pageAssetAnnual .aar-attr-card{
+                position:relative;min-width:0;box-sizing:border-box;overflow:hidden;
+                padding:16px 12px;border-radius:12px;
+                background:linear-gradient(180deg,#FDF9F7 0%,#FBF7F4 60%,#F8F1EE 100%);
+                border:0;
+                box-shadow:
+                    0 2px 6px rgba(122,31,35,.06),
+                    0 1px 2px rgba(122,31,35,.035),
+                    inset 0 0 0 1px rgba(232,221,216,.92),
+                    inset 0 1px 0 rgba(255,255,255,.72);
+            }
+            #pageAssetAnnual .aar-attr-card.is-masked .aar-attr-bar{opacity:.62}
+            #pageAssetAnnual .aar-attr-card.is-masked .aar-attr-amount{color:#7A1F23}
+            #pageAssetAnnual .aar-attr-card.is-masked .aar-attr-contribution{color:#8A7A72}
+            #pageAssetAnnual .aar-attr-bar{
+                display:block;width:100%;height:3px;margin:0 0 10px;border-radius:2px;
+                background:#7A1F23;
+            }
+            #pageAssetAnnual .aar-attr-label{
+                font-size:clamp(9.4px,2.4vw,11px);line-height:1.2;font-weight:600;
+                letter-spacing:-.015em;color:#5C4A42;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            }
+            #pageAssetAnnual .aar-attr-amount{
+                margin-top:7px;font-size:clamp(21px,5.4vw,27px);line-height:1;
+                font-weight:750;letter-spacing:-.03em;color:#7A1F23;
+                white-space:nowrap;font-variant-numeric:tabular-nums;
+                font-feature-settings:"tnum";
+            }
+            #pageAssetAnnual .aar-attr-contribution{
+                margin-top:7px;font-size:clamp(8.2px,2.1vw,9.8px);line-height:1.25;
+                font-weight:500;color:#8A7A72;white-space:nowrap;font-variant-numeric:tabular-nums;
+                letter-spacing:.01em;
+            }
+            #pageAssetAnnual .aar-attr-amount.is-down,
+            #pageAssetAnnual .aar-attr-contribution.is-down{color:#B5452B}
+            #pageAssetAnnual .aar-attr-amount.is-zero{color:#5C4A42}
+            #pageAssetAnnual .aar-attr-foot{
+                display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+                margin:9px 4px 0;font-size:8.8px;line-height:1.4;color:#A89991;letter-spacing:.015em;
+            }
+            #pageAssetAnnual .aar-attr-foot b{font-weight:600;color:#7C6C5A}
+            @media (min-width:600px){
+                #pageAssetAnnual .aar-attr-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+            }
+            /* 年报全屏时保留底部导航：置于年报之上，并给报表底部留出安全距离 */
+            body.aar-open #bottomNav{
+                z-index:130!important;
+                background:rgba(250,246,239,.93)!important;
+                border-top-color:rgba(126,99,70,.16)!important;
+                box-shadow:0 -10px 26px -18px rgba(56,37,22,.30)!important;
+                -webkit-backdrop-filter:blur(18px) saturate(1.08);
+                backdrop-filter:blur(18px) saturate(1.08);
+            }
+            body.aar-open #pageAssetAnnual .aar-sheet{
+                padding-bottom:calc(96px + env(safe-area-inset-bottom));
+            }
         </style>
 
         <div class="asset-wrap">
@@ -11323,14 +11591,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     <span id="assetCurrency" class="asset-hero-cur asset-money-short">¥</span>
                     <span id="assetNetWorth" class="asset-hero-net asset-money">0.00</span>
                 </div>
+                <div class="asset-hero-compare">
+                    <span id="assetCompareLabel" class="asset-compare-label">资产盘点</span>
+                    <span id="assetComparePill" class="asset-compare-pill is-empty">首次盘点 · 下次记录后显示变化</span>
+                </div>
                 <div class="asset-hero-sub">
                     <div class="asset-hero-kpi">
-                        <div class="asset-hero-label">总资产</div>
+                        <div class="asset-hero-label"><i class="asset-hero-dot is-assets"></i>总资产</div>
                         <div class="asset-hero-value-row"><span class="asset-hero-value-cur">¥</span><div id="assetTotalAssets" class="asset-hero-value asset-money">0.00</div></div>
                     </div>
                     <div class="asset-hero-kpi">
-                        <div class="asset-hero-label">总负债</div>
-                        <div class="asset-hero-value-row"><span class="asset-hero-value-cur is-liab">¥</span><div id="assetTotalLiab" class="asset-hero-value is-liab asset-money">0.00</div></div>
+                        <div class="asset-hero-label"><i id="assetLiabDot" class="asset-hero-dot is-liab"></i>总负债</div>
+                        <div class="asset-hero-value-row"><span id="assetLiabCurrency" class="asset-hero-value-cur is-liab">¥</span><div id="assetTotalLiab" class="asset-hero-value is-liab asset-money">0.00</div></div>
                     </div>
                 </div>
                 <div class="asset-hero-foot">
@@ -11465,26 +11737,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
             <div class="asset-sec-head">
                 <div class="asset-sec-title">资产负债结构</div>
+                <span class="asset-sec-pill">仅资产</span>
             </div>
             <section class="asset-structure-card">
-                <div class="asset-structure-top">
+                <div class="asset-structure-donut">
                     <div class="asset-ring-wrap">
                         <div id="assetRing" class="asset-ring"></div>
                         <div class="asset-ring-center">
-                            <small>总资产</small>
-                            <b id="assetRingTotal" class="asset-money">0.00</b>
+                            <small id="assetRingName">总资产</small>
+                            <b id="assetRingTotal" class="asset-money">0.0%</b>
                             <em id="assetRingCount">0 项</em>
                         </div>
                     </div>
-                    <div id="assetStructureLegend" class="asset-legend"></div>
                 </div>
-                <div class="asset-debt-box">
-                    <div class="asset-debt-line">
-                        <span class="asset-debt-label"><i class="fa fa-circle"></i>负债占资产</span>
-                        <span id="assetDebtMeterText" class="asset-debt-value">0.0% · 0.00</span>
-                    </div>
-                    <div class="asset-debt-track"><div id="assetDebtFill" class="asset-debt-fill"></div></div>
-                </div>
+                <div id="assetStructureLegend" class="asset-alloc-grid"></div>
             </section>
 
             <div class="asset-sec-head">
@@ -13555,10 +13821,13 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const EXPORT_KEYS = ['holdViewMode','dividendHkFx','dividendWatchList','dividendWatchGroupsV1','dividendWatchGroupMembersV1','dividendWatchActiveGroup','dividendNotifFired',
             'dividendNotifications','hcSellCheckLog','dividendIndustryMapping','dividendHkIndustryMap',
             'settingsCollapseState','statsCollapseState','statsSubCollapse','dividendMilestones',
-            'divCashFlow','dividendFeeCfg','dividendGoalCfg','holdingTargetGoals','holdingTargetNotifs',
+            'divCashFlow','dividendFeeCfg','dividendGoalCfg','holdingTargetGoals','holdingTargetDashboardOrderV1','holdingTargetNotifs',
             'dividendSimHoldingsV1'];
         // 个股目标持仓：与交易/持仓主数据分离，避免目标字段进入成本、快照和历史计算。
         const HOLDING_GOALS_KEY = 'holdingTargetGoals';
+        // 首页横向目标卡的独立顺序：管理列表的 sortOrder/priority 不再直接决定首页顺序。
+        const HOLDING_TARGET_DASH_ORDER_KEY = 'holdingTargetDashboardOrderV1';
+        const HOLDING_TARGET_RAIL_HINT_KEY = 'holdingTargetRailHintV1';
         const HOLDING_TARGET_NOTIF_KEY = 'holdingTargetNotifs';
         let holdDataList = [];
         // 成本价统一口径：仅存储 4 位小数；计算过程仍按原公式，不对中间值做截断。
@@ -24113,6 +24382,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         // ============ 资产负债表（家庭资产负债盘点：总资产含非流动资产；净资产只按可动用资产口径计算） ============
         const BS_KEY = 'dividendBalanceSheet';
+        // 资产“上一次盘点”记录：保存每次真实资产变更后的快照（同一月可多次），
+        // 与每月趋势快照分开，避免同月多次记录被覆盖后无法比较上一次记录日。
+        const BS_LEDGER_RECORD_KEY = 'dividendAssetLedgerRecordV1';
         const BS_TREND_KEY = 'dividendNetTrend';
         const BS_CASH_TREND_KEY = 'dividendCashTrend';
         const BS_CATS = {
@@ -24173,8 +24445,11 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             return newBsData();
         }
         function saveBalanceSheet(){
-            bsData.updatedAt = new Date().toISOString();   // 保存即记录当时统计时间
+            const savedAt = new Date().toISOString();
+            bsData.updatedAt = savedAt;   // 保存即记录当时统计时间
             try{ lsSet(BS_KEY, JSON.stringify(bsData)); }catch(e){}
+            // 只有资产/负债分项真的变化时才推进“上一次盘点”，无变化的保存不会制造 0 对比。
+            try{ syncAssetLedgerRecord(assetTotals(), savedAt); }catch(e){}
         }
         function bsCatItems(side, group, cat){
             if(side === 'assets'){
@@ -24243,25 +24518,29 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         const ASSET_GROUP_META = {
             invest: {
                 name:'投资理财', en:'INVESTMENTS', icon:'fa-line-chart',
-                ink:'#5C56C4', tone:'#5C56C4', soft:'linear-gradient(145deg,#F5F4FD 0%,#ECEAFB 62%,#E3E0F7 100%)',
+                ink:'#5C56C4', tone:'#5C56C4', tile:'#EFEFFB',
+                soft:'linear-gradient(145deg,#F5F4FD 0%,#ECEAFB 62%,#E3E0F7 100%)',
                 hero:'linear-gradient(140deg,#FAF9FE 0%,#ECEAFB 62%,#E1DDF6 100%)',
                 border:'rgba(92,86,196,.18)', sub:'证券持仓、基金与自有理财'
             },
             liquid: {
                 name:'流动资金', en:'LIQUID FUNDS', icon:'fa-tint',
-                ink:'#15865B', tone:'#15865B', soft:'linear-gradient(145deg,#F2FBF7 0%,#E6F5EE 62%,#D8EDE3 100%)',
+                ink:'#15865B', tone:'#15865B', tile:'#E8F3EF',
+                soft:'linear-gradient(145deg,#F2FBF7 0%,#E6F5EE 62%,#D8EDE3 100%)',
                 hero:'linear-gradient(140deg,#F8FCFA 0%,#E7F5EE 62%,#D9EDE4 100%)',
                 border:'rgba(21,134,91,.18)', sub:'现金、银行卡与其他流动余额'
             },
             fixed: {
                 name:'固定资产', en:'FIXED ASSETS', icon:'fa-home',
-                ink:'#AD7225', tone:'#AD7225', soft:'linear-gradient(145deg,#FBF7F0 0%,#F4EBDD 62%,#EBDCC6 100%)',
+                ink:'#AD7225', tone:'#AD7225', tile:'#F7F1E9',
+                soft:'linear-gradient(145deg,#FBF7F0 0%,#F4EBDD 62%,#EBDCC6 100%)',
                 hero:'linear-gradient(140deg,#FCFAF6 0%,#F5EDDF 62%,#EBDDC7 100%)',
                 border:'rgba(173,114,37,.18)', sub:'房产、车辆、年金与其他长期资产'
             },
             receivable: {
                 name:'应收款', en:'RECEIVABLES', icon:'fa-handshake-o',
-                ink:'#0E7C8C', tone:'#0E7C8C', soft:'linear-gradient(145deg,#F1FAFB 0%,#E3F3F5 62%,#D2EBEE 100%)',
+                ink:'#0E7C8C', tone:'#0E7C8C', tile:'#E7F4F5',
+                soft:'linear-gradient(145deg,#F1FAFB 0%,#E3F3F5 62%,#D2EBEE 100%)',
                 hero:'linear-gradient(140deg,#F8FDFD 0%,#E4F4F6 62%,#D3EBEE 100%)',
                 border:'rgba(14,124,140,.18)', sub:'借出款、报销款与待收款'
             },
@@ -24286,6 +24565,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             { key:'liquid', label:'流动现金', color:'#15865B' }
         ];
         let assetTrendVisible = { net:true, liquid:true };
+        let assetRingChart = null;
         let assetCurrentGroup = null;
         let assetCategoryOriginKey = null;
         let assetDetailRange = 12;
@@ -24343,6 +24623,110 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 净资产按可动用资产口径：投资理财 + 流动资金 + 应收款 − 负债；固定资产不计入。
             const net = invest + liquid + receivable - liab;
             return { invest:invest, liquid:liquid, fixed:fixed, receivable:receivable, liab:liab, assets:assets, net:net };
+        }
+        // ===== 上一次盘点（记录级，不是月度快照） =====
+        // 每条记录保存 invest/liquid/fixed/receivable/liability/assets/net 与 at；
+        // 同一月内多次记录会依次把上一条推进为 prev，因此顶卡比较的是“上一次记录日”。
+        function assetLedgerRow(t){
+            const round = function(v){ return Math.round((Number(v) || 0) * 100) / 100; };
+            return {
+                invest:round(t.invest), liquid:round(t.liquid), fixed:round(t.fixed),
+                receivable:round(t.receivable), liability:round(t.liab),
+                assets:round(t.assets), net:round(t.net)
+            };
+        }
+        function assetLedgerRowSame(a, b){
+            if(!a || !b) return false;
+            return ['invest','liquid','fixed','receivable','liability','assets','net'].every(function(k){
+                return Number(a[k] || 0) === Number(b[k] || 0);
+            });
+        }
+        function loadAssetLedgerRecord(){
+            try{
+                const raw = JSON.parse(lsGet(BS_LEDGER_RECORD_KEY) || 'null');
+                if(raw && typeof raw === 'object' && raw.current && typeof raw.current === 'object') return raw;
+            }catch(e){}
+            return null;
+        }
+        function writeAssetLedgerRecord(rec){
+            try{ lsSet(BS_LEDGER_RECORD_KEY, JSON.stringify(rec)); }catch(e){}
+        }
+        function syncAssetLedgerRecord(t, at){
+            const row = assetLedgerRow(t);
+            const hasData = Math.abs(row.assets) > 0.004 || Math.abs(row.liability) > 0.004;
+            let rec = loadAssetLedgerRecord();
+            if(!hasData){
+                // 空账本不写 0 值盘点，避免第一次记录出现“从 0 涨到 X”的伪对比。
+                return rec;
+            }
+            const stamp = at || new Date().toISOString();
+            if(!rec){
+                rec = { prev:null, current:Object.assign({}, row, { at:stamp }) };
+                writeAssetLedgerRecord(rec);
+                return rec;
+            }
+            if(!assetLedgerRowSame(rec.current, row)){
+                rec = {
+                    prev:{ invest:rec.current.invest, liquid:rec.current.liquid, fixed:rec.current.fixed,
+                        receivable:rec.current.receivable, liability:rec.current.liability,
+                        assets:rec.current.assets, net:rec.current.net, at:rec.current.at },
+                    current:Object.assign({}, row, { at:stamp })
+                };
+                writeAssetLedgerRecord(rec);
+            }
+            return rec;
+        }
+        function assetCompareDateText(iso, currentIso){
+            if(!iso) return '上次盘点';
+            try{
+                const d = new Date(iso);
+                const cur = currentIso ? new Date(currentIso) : new Date();
+                if(isNaN(d.getTime())) return '上次盘点';
+                const p2 = function(x){ return (x < 10 ? '0' : '') + x; };
+                const sameYear = d.getFullYear() === cur.getFullYear();
+                const sameDay = sameYear && d.getMonth() === cur.getMonth() && d.getDate() === cur.getDate();
+                const base = (sameYear ? '' : d.getFullYear() + '年') + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+                // 同一天多次盘点时补上时间，避免“较 9月28日 盘点”指向不明。
+                return sameDay ? base + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) : base;
+            }catch(e){ return '上次盘点'; }
+        }
+        function assetCompareAmount(v){
+            if(assetMasked) return '••••';
+            const abs = Math.abs(Number(v) || 0);
+            let body;
+            if(abs >= 100000000) body = (abs / 100000000).toFixed(2) + '亿';
+            else if(abs >= 1000000) body = (abs / 10000).toFixed(1) + '万';
+            else body = Math.round(abs).toLocaleString('zh-CN');
+            return (v < 0 ? '−' : '+') + '¥' + body;
+        }
+        function renderAssetComparison(t){
+            const labelEl = document.getElementById('assetCompareLabel');
+            const pillEl = document.getElementById('assetComparePill');
+            if(!labelEl || !pillEl) return;
+            const rec = loadAssetLedgerRecord();
+            const prev = rec && rec.prev;
+            if(!prev){
+                labelEl.innerText = '资产盘点';
+                pillEl.className = 'asset-compare-pill is-empty';
+                pillEl.innerText = '首次盘点 · 下次记录后显示变化';
+                return;
+            }
+            const currentIso = (rec.current && rec.current.at) || bsData.updatedAt;
+            const dateText = assetCompareDateText(prev.at, currentIso);
+            labelEl.innerHTML = (dateText && dateText !== '上次盘点')
+                ? '较 <b id="assetCompareDate">' + dateText + '</b> 盘点'
+                : '上次盘点';
+            const delta = (Number(t.net) || 0) - (Number(prev.net) || 0);
+            const pct = Math.abs(Number(prev.net) || 0) > 0.004 ? delta / Math.abs(Number(prev.net)) * 100 : null;
+            const tone = delta > 0.004 ? 'pos' : (delta < -0.004 ? 'neg' : 'zero');
+            pillEl.className = 'asset-compare-pill is-' + tone;
+            if(tone === 'zero'){
+                pillEl.innerHTML = '<span class="asset-compare-arrow">·</span>持平<span class="asset-compare-pct">0.00%</span>';
+                return;
+            }
+            const arrow = tone === 'pos' ? '↑' : '↓';
+            const pctText = pct === null ? (delta > 0 ? '新增' : '减少') : '<span class="asset-compare-pct">' + (pct > 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+            pillEl.innerHTML = '<span class="asset-compare-arrow">' + arrow + '</span>' + assetCompareAmount(delta) + pctText;
         }
         function assetMoneyText(v, showSign){
             if(assetMasked) return '••••••';
@@ -24447,6 +24831,49 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             }catch(e){ return { full:'--', short:'--', day:'尚未记录', cn:'尚未记录' }; }
         }
         const BS_ASSET_SNAP_KEY = 'dividendAssetSnapshots';
+        const BS_ASSET_YEAR_OPEN_KEY = 'dividendAssetAnnualOpeningV1';
+        function assetYearOpenStore(){
+            try{
+                const d = JSON.parse(lsGet(BS_ASSET_YEAR_OPEN_KEY) || '{}');
+                return d && typeof d === 'object' && !Array.isArray(d) ? d : {};
+            }catch(e){ return {}; }
+        }
+        function assetYearOpenRecord(year){
+            const rec = assetYearOpenStore()[String(Number(year))];
+            return rec && rec.values && typeof rec.values === 'object' ? rec : null;
+        }
+        // 仅在本年没有“上年 12 月最终快照”时启用：冻结本年第一次观察到的期初，
+        // 后续修改当前资产只影响期末，不再把期初一起改掉。
+        function assetFreezeYearOpening(year, sourceKey, row){
+            try{
+                const store = assetYearOpenStore();
+                const key = String(Number(year));
+                if(store[key] && store[key].values) return store[key];
+                row = row || {};
+                const invest = Number(row.invest) || 0;
+                const liquid = Number(row.liquid) || 0;
+                const fixed = Number(row.fixed) || 0;
+                const receivable = Number(row.receivable) || 0;
+                const liability = Number(row.liability) || 0;
+                const total = Number(row.total) || (invest + liquid + fixed + receivable);
+                store[key] = {
+                    sourceKey: sourceKey,
+                    tag: '本年首笔',
+                    values: {
+                        invest: invest,
+                        liquid: liquid,
+                        fixed: fixed,
+                        receivable: receivable,
+                        liability: liability,
+                        total: total,
+                        net: invest + liquid + receivable - liability,
+                        date: row.date || ''
+                    }
+                };
+                lsSet(BS_ASSET_YEAR_OPEN_KEY, JSON.stringify(store));
+                return store[key];
+            }catch(e){ return null; }
+        }
         function assetSnapshotDate(){
             const d = new Date();
             const p2 = function(x){ return (x < 10 ? '0' : '') + x; };
@@ -24482,6 +24909,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 };
                 const valueKeys = ['invest','liquid','fixed','receivable','liability','total','net'];
                 const prev = data[month];
+                const yearKey = month.slice(0, 4);
+                const prevDecKey = String(Number(yearKey) - 1) + '-12';
+                const hasPrevDec = Object.prototype.hasOwnProperty.call(data, prevDecKey);
+                const hasYearBefore = Object.keys(data).some(function(k){
+                    return /^\d{4}-\d{2}$/.test(k) && k.slice(0, 4) === yearKey;
+                });
                 const unchanged = prev && valueKeys.every(function(k){ return Number(prev[k]) === next[k]; });
                 if(unchanged){
                     // 老快照缺日期时补一次；已有日期的保持不变，避免无意义改写。
@@ -24489,8 +24922,18 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                     return;
                 }
                 // 同月覆盖为最后一次观察，不同月各保留一个点，供“近1年/近5年/所有”使用。
+                // 若上年 12 月缺失且尚未冻结期初，先锁定本年最早的已有记录，再覆盖本月。
+                if(!hasPrevDec && !assetYearOpenRecord(yearKey) && hasYearBefore){
+                    const firstYearKey = Object.keys(data).filter(function(k){
+                        return /^\d{4}-\d{2}$/.test(k) && k.slice(0, 4) === yearKey;
+                    }).sort()[0];
+                    if(firstYearKey) assetFreezeYearOpening(yearKey, firstYearKey, data[firstYearKey]);
+                }
                 data[month] = next;
                 lsSet(BS_ASSET_SNAP_KEY, JSON.stringify(data));
+                if(!hasPrevDec && !hasYearBefore){
+                    assetFreezeYearOpening(yearKey, month, next);
+                }
             }catch(e){}
         }
         function assetSnapshotValue(row, field){
@@ -25007,12 +25450,16 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
 
         function renderAssetMain(){
             const t = assetTotals();
-            const totalCount = assetGroupCount('invest') + assetGroupCount('liquid') + assetGroupCount('fixed') + assetGroupCount('receivable') + assetGroupCount('liability');
+            const assetItemCount = assetGroupCount('invest') + assetGroupCount('liquid') + assetGroupCount('fixed') + assetGroupCount('receivable');
             const dateInfo = assetFormatDate(bsData.updatedAt);
             const setText = function(id, text){ const el = document.getElementById(id); if(el) el.innerText = text; };
+            // 初次打开旧版本数据时，先把当前数值登记为本次盘点（还没有上一条可比较）。
+            syncAssetLedgerRecord(t, bsData.updatedAt);
+            const hasAssetBook = assetItemCount > 0 || assetGroupCount('liability') > 0 || !!bsData.updatedAt;
+            const liabIsZero = hasAssetBook && Math.abs(Number(t.liab) || 0) < 0.005;
             setText('assetNetWorth', assetMoneyText(t.net));
             setText('assetTotalAssets', assetMoneyText(t.assets));
-            setText('assetTotalLiab', assetMoneyText(t.liab));
+            setText('assetTotalLiab', liabIsZero ? '无负债' : assetMoneyText(t.liab));
             setText('assetUpdateAt', dateInfo.cn || dateInfo.full);
             setText('assetInvestMeta', assetGroupCount('invest') + ' 项');
             setText('assetLiquidMeta', assetGroupCount('liquid') + ' 项');
@@ -25037,13 +25484,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(currencyEl) currencyEl.innerText = assetMasked ? '' : (t.net < 0 ? '−¥' : '¥');
             const netEl = document.getElementById('assetNetWorth');
             if(netEl) netEl.classList.toggle('is-neg', t.net < 0);
+            const liabValueEl = document.getElementById('assetTotalLiab');
+            const liabCurrencyEl = document.getElementById('assetLiabCurrency');
+            const liabDotEl = document.getElementById('assetLiabDot');
+            if(liabValueEl) liabValueEl.classList.toggle('is-zero', liabIsZero);
+            if(liabCurrencyEl) liabCurrencyEl.style.display = liabIsZero ? 'none' : '';
+            if(liabDotEl) liabDotEl.classList.toggle('is-zero', liabIsZero);
             const ratio = t.assets > 0 ? (t.liab / t.assets * 100) : (t.liab > 0 ? 100 : 0);
             setText('assetDebtRatio', ratio.toFixed(1) + '%');
-            setText('assetDebtMeterText', ratio.toFixed(1) + '% · ' + assetMoneyText(t.liab));
-            setText('assetRingTotal', assetShortMoney(t.assets));
-            setText('assetRingCount', totalCount + ' 项');
             setText('assetTrendRangeLabel', assetRangeLabelText(assetNetRange));
-            renderAssetStructure(t);
+            renderAssetComparison(t);
+            renderAssetStructure(t, assetItemCount);
             renderAssetHealth(t);
             recordAssetSnapshot(t);
             renderAssetLifeSummary(t);
@@ -25052,11 +25503,12 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             renderAssetAnnualEntry();
         }
         // ============ 个人资产年报（只读资产页月度快照） ============
+        // 年报分类色直接继承资产主页的分类主题色，避免两套色板各自漂移。
         const AAR_CATS = [
-            { key:'invest', name:'投资理财', color:'#70839A' },
-            { key:'liquid', name:'流动资金', color:'#6D8A79' },
-            { key:'fixed', name:'固定资产', color:'#B18A5E' },
-            { key:'receivable', name:'应收款', color:'#876C82' }
+            { key:'invest', name:'投资理财', color:ASSET_GROUP_META.invest.ink },
+            { key:'liquid', name:'流动资金', color:ASSET_GROUP_META.liquid.ink },
+            { key:'fixed', name:'固定资产', color:ASSET_GROUP_META.fixed.ink },
+            { key:'receivable', name:'应收款', color:ASSET_GROUP_META.receivable.ink }
         ];
         let assetAnnualYear = null;
 
@@ -25086,6 +25538,9 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 return (Number(row.invest)||0) + (Number(row.liquid)||0) + (Number(row.fixed)||0) + (Number(row.receivable)||0);
             }
             return Number(row[field]) || 0;
+        }
+        function aarReportNet(row){
+            return aarValue(row, 'total') - (Number((row || {}).liability) || 0);
         }
         function aarNum(v){
             if(assetMasked) return '••••';
@@ -25131,13 +25586,33 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!yKeys.length){
                 return { empty:true, year:y, years:years, openingKey:'', closingKey:'', yearCount:0 };
             }
-            const prevKey = String(y - 1) + '-12';
-            const openingKey = data[prevKey] ? prevKey : yKeys[0];
+            // 年报期初固定为“上一年度 12 月的最终快照”，不再用本年首月倒推。
+            // 只有上年 12 月缺失时，才退回本年第一个记录点；并把它冻结为“本年首笔”，
+            // 后续修改当前资产只影响期末，不再反向改写期初。
             const closingKey = yKeys[yKeys.length - 1];
-            const openingRaw = data[openingKey] || {};
+            const prevDecKey = String(Number(y) - 1) + '-12';
+            let openingKey, openingTag, openingRaw;
+            if(Object.prototype.hasOwnProperty.call(data, prevDecKey)){
+                openingKey = prevDecKey;
+                openingRaw = data[prevDecKey] || {};
+                openingTag = '上年年末';
+            }else{
+                const firstKey = yKeys[0];
+                const locked = assetYearOpenRecord(y);
+                if(locked && locked.values){
+                    openingKey = /^\d{4}-\d{2}$/.test(locked.sourceKey || '') ? locked.sourceKey : firstKey;
+                    openingRaw = locked.values;
+                    openingTag = '本年首笔';
+                }else{
+                    openingKey = firstKey;
+                    openingRaw = data[firstKey] || {};
+                    openingTag = '本年首笔';
+                    assetFreezeYearOpening(y, firstKey, openingRaw);
+                }
+            }
             const closingRaw = data[closingKey] || {};
-            const opening = { invest:aarValue(openingRaw,'invest'), liquid:aarValue(openingRaw,'liquid'), fixed:aarValue(openingRaw,'fixed'), receivable:aarValue(openingRaw,'receivable'), liability:aarValue(openingRaw,'liability'), total:aarValue(openingRaw,'total'), net:aarValue(openingRaw,'net') };
-            const closing = { invest:aarValue(closingRaw,'invest'), liquid:aarValue(closingRaw,'liquid'), fixed:aarValue(closingRaw,'fixed'), receivable:aarValue(closingRaw,'receivable'), liability:aarValue(closingRaw,'liability'), total:aarValue(closingRaw,'total'), net:aarValue(closingRaw,'net') };
+            const opening = { invest:aarValue(openingRaw,'invest'), liquid:aarValue(openingRaw,'liquid'), fixed:aarValue(openingRaw,'fixed'), receivable:aarValue(openingRaw,'receivable'), liability:aarValue(openingRaw,'liability'), total:aarValue(openingRaw,'total'), net:aarReportNet(openingRaw) };
+            const closing = { invest:aarValue(closingRaw,'invest'), liquid:aarValue(closingRaw,'liquid'), fixed:aarValue(closingRaw,'fixed'), receivable:aarValue(closingRaw,'receivable'), liability:aarValue(closingRaw,'liability'), total:aarValue(closingRaw,'total'), net:aarReportNet(closingRaw) };
             const totalClose = closing.total;
             const rowOf = function(meta, mode){
                 const open = opening[meta.key];
@@ -25149,12 +25624,15 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             };
             const assetRows = AAR_CATS.map(function(m){ return rowOf(m,'asset'); });
             const totalRow = { key:'total', name:'总资产', color:'#8B6944', open:opening.total, close:closing.total, delta:closing.total - opening.total, pct:opening.total !== 0 ? ((closing.total - opening.total) / Math.abs(opening.total) * 100) : null, share:totalClose > 0 ? 100 : null, mode:'total' };
-            const liabilityRow = { key:'liability', name:'负债', color:'#A4614D', open:opening.liability, close:closing.liability, delta:closing.liability - opening.liability, pct:opening.liability !== 0 ? ((closing.liability - opening.liability) / Math.abs(opening.liability) * 100) : null, share:totalClose > 0 ? (closing.liability / totalClose * 100) : null, mode:'liability' };
+            const liabilityRow = { key:'liability', name:'负债', color:ASSET_GROUP_META.liability.ink, open:opening.liability, close:closing.liability, delta:closing.liability - opening.liability, pct:opening.liability !== 0 ? ((closing.liability - opening.liability) / Math.abs(opening.liability) * 100) : null, share:totalClose > 0 ? (closing.liability / totalClose * 100) : null, mode:'liability' };
             const netRow = { key:'net', name:'净资产', color:'#33231A', open:opening.net, close:closing.net, delta:closing.net - opening.net, pct:opening.net !== 0 ? ((closing.net - opening.net) / Math.abs(opening.net) * 100) : null, share:totalClose > 0 ? (closing.net / totalClose * 100) : null, mode:'net' };
             const chartKeys = Array.from(new Set([openingKey].concat(yKeys))).sort();
             const chartPoints = chartKeys.map(function(k){
-                return { month:k, value:aarValue(data[k],'net') };
+                const row = (k === openingKey && chartKeys.length > 1) ? openingRaw : data[k];
+                return { month:k, value:aarReportNet(row) };
             });
+            const rows = assetRows.concat([totalRow, liabilityRow, netRow]);
+            const hasMovement = openingKey !== closingKey || rows.some(function(r){ return Math.abs(Number(r.delta) || 0) >= 0.005; });
             const ratioOpen = opening.total > 0 ? (opening.liability / opening.total * 100) : 0;
             const ratioClose = closing.total > 0 ? (closing.liability / closing.total * 100) : 0;
             const isCompleteYear = closingKey === String(y) + '-12';
@@ -25164,20 +25642,109 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 yearCount:yKeys.length, chartKeys:chartKeys, chartPoints:chartPoints,
                 opening:opening, closing:closing,
                 assetRows:assetRows, totalRow:totalRow, liabilityRow:liabilityRow, netRow:netRow,
-                rows:assetRows.concat([totalRow, liabilityRow, netRow]),
+                rows:rows,
                 delta:closing.net - opening.net,
                 growth:opening.net !== 0 ? ((closing.net - opening.net) / Math.abs(opening.net) * 100) : null,
-                hasMovement:openingKey !== closingKey,
+                hasMovement:hasMovement,
                 isCompleteYear:isCompleteYear,
                 isCurrentYear:y === new Date().getFullYear(),
                 ratioOpen:ratioOpen, ratioClose:ratioClose,
-                openingTag:openingKey === prevKey ? '上年末' : '本年首笔',
+                openingTag:openingTag,
                 closingTag:isCompleteYear ? '年末' : '最新'
             };
         }
+        // 00 变动归因：后端口径（全资产、正交、可相加）
+        // 投资理财变动 = 期末投资 − 期初投资
+        // 流动资金变动 = 期末流动 − 期初流动
+        // 固资及应收变动 = (期末固定资产 + 期末应收) − (期初固定资产 + 期初应收)
+        // 负债变动贡献 = 期初负债 − 期末负债
+        // 四项合计 = 总资产 − 总负债 的年度增量（含固定资产）
+        function aarAttrModel(rep){
+            if(!rep || rep.empty) return null;
+            const o = rep.opening || {};
+            const c = rep.closing || {};
+            const n = function(v){ return Number(v) || 0; };
+            const rows = [
+                { key:'invest', name:'投资理财变动', color:'#4F74A8', value:n(c.invest) - n(o.invest) },
+                { key:'liquid', name:'流动资金变动', color:'#C8A878', value:n(c.liquid) - n(o.liquid) },
+                { key:'fixedRec', name:'固资及应收变动', color:'#A6A3B8', value:(n(c.fixed) + n(c.receivable)) - (n(o.fixed) + n(o.receivable)) },
+                { key:'liability', name:'负债变动贡献', color:'#787C82', value:n(o.liability) - n(c.liability) }
+            ];
+            const net = rows.reduce(function(s, r){ return s + r.value; }, 0);
+            return {
+                rows: rows, net: net, pageNet: rep.delta,
+                fixedDelta: n(c.fixed) - n(o.fixed)
+            };
+        }
+        function aarAttrShortMoney(v){
+            if(assetMasked) return '••••';
+            const n = Number(v) || 0;
+            const sign = n > 0 ? '+' : (n < 0 ? '−' : '');
+            const abs = Math.abs(n);
+            const trim = function(s){ return String(s).replace(/\.0$/, ''); };
+            let body;
+            if(abs >= 100000000) body = trim((abs / 100000000).toFixed(2)) + '亿';
+            else if(abs >= 1000000) body = trim((abs / 10000).toFixed(0)) + '万';
+            else if(abs >= 10000) body = Math.round(abs).toLocaleString('en-US');
+            else if(abs >= 1) body = Math.round(abs).toLocaleString('en-US');
+            else body = abs ? abs.toFixed(2) : '0';
+            return sign + body;
+        }
+        function aarAttrPct(v, net){
+            if(assetMasked) return '••••';
+            const total = Math.abs(Number(net) || 0);
+            if(total < 0.005) return '—';
+            const pct = (Number(v) || 0) / total * 100;
+            if(Math.abs(pct) < 0.05) return '贡献 0%';
+            const sign = pct < 0 ? '−' : '';
+            const abs = Math.abs(pct);
+            const num = abs >= 100 ? Math.round(abs) : abs.toFixed(1).replace(/\.0$/, '');
+            return '贡献 ' + sign + num + '%';
+        }
+        // 占比四舍五入后以最大分项吸收尾差，确保四个贡献相加为 +100% / −100%。
+        function aarAttrPctList(rows, net){
+            if(assetMasked) return rows.map(function(){ return '••••'; });
+            const total = Math.abs(Number(net) || 0);
+            if(total < 0.005) return rows.map(function(){ return '—'; });
+            const exact = rows.map(function(r){ return (Number(r.value) || 0) / total * 100; });
+            const rounded = exact.map(function(p){
+                const sign = p < 0 ? -1 : 1;
+                const abs = Math.abs(p);
+                return sign * (abs >= 100 ? Math.round(abs) : Math.round(abs * 10) / 10);
+            });
+            const target = net > 0 ? 100 : -100;
+            const diff = target - rounded.reduce(function(s, p){ return s + p; }, 0);
+            if(Math.abs(diff) > 0.001){
+                const idx = exact.reduce(function(best, p, i){
+                    return Math.abs(p) > Math.abs(exact[best]) ? i : best;
+                }, 0);
+                rounded[idx] = Math.round((rounded[idx] + diff) * 10) / 10;
+            }
+            return rounded.map(function(p){
+                if(Math.abs(p) < 0.05) return '贡献 0%';
+                const sign = p < 0 ? '−' : '';
+                const abs = Math.abs(p);
+                const num = abs >= 100 ? Math.round(abs) : abs.toFixed(1).replace(/\.0$/, '');
+                return '贡献 ' + sign + num + '%';
+            });
+        }
+        function aarAttrCardHtml(row, net, pctText){
+            const down = row.value < -0.005;
+            const zero = Math.abs(row.value) < 0.005;
+            const pctPct = net && Math.abs(net) >= 0.005 ? row.value / Math.abs(net) * 100 : null;
+            const pctDown = pctPct != null && pctPct < -0.05;
+            const shownPct = pctText || aarAttrPct(row.value, net);
+            const full = assetMasked ? '' : ' title="' + row.name + ' ' + aarSigned(row.value) + ' · ' + shownPct + '"';
+            return '<div class="aar-attr-card' + (assetMasked ? ' is-masked' : '') + '" style="--aar-attr-c:' + row.color + '" aria-label="' + row.name + '"' + full + '>'
+                + '<span class="aar-attr-bar" aria-hidden="true"></span>'
+                + '<div class="aar-attr-label">' + row.name + '</div>'
+                + '<div class="aar-attr-amount' + (down ? ' is-down' : (zero ? ' is-zero' : '')) + '">' + aarAttrShortMoney(row.value) + '</div>'
+                + '<div class="aar-attr-contribution' + (pctDown ? ' is-down' : '') + '">' + shownPct + '</div>'
+            + '</div>';
+        }
         function aarDeltaTone(row, report){
-            if(!report.hasMovement || row.delta === 0) return '';
-            return row.delta < 0 ? 'is-down' : '';
+            if(!report.hasMovement || Math.abs(Number(row.delta) || 0) < 0.005) return 'is-flat';
+            return row.delta < 0 ? 'is-down' : 'is-pos';
         }
         function aarShareLabel(row, report){
             if(report.closing.total <= 0) return '—';
@@ -25185,6 +25752,37 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(row.key === 'liability') return '负债率 ' + row.share.toFixed(1) + '%';
             if(row.key === 'net') return '净资产/总资产 ' + row.share.toFixed(1) + '%';
             return '占总资产 ' + row.share.toFixed(1) + '%';
+        }
+        // 年报行内变动量：± 前置、不重复币种；百分比作为次级注释。
+        function aarRowDeltaHtml(row, report){
+            const tone = aarDeltaTone(row, report);
+            if(tone === 'is-flat') return '<span class="aar-delta is-flat">—</span>';
+            const pct = (row.pct == null ? '—' : aarPctText(row.pct));
+            if(assetMasked){
+                return '<span class="aar-delta ' + tone + '">••••<em>' + pct + '</em></span>';
+            }
+            const sign = row.delta > 0 ? '+' : '−';
+            return '<span class="aar-delta ' + tone + '">'
+                + '<span class="aar-delta-sign">' + sign + '</span>'
+                + fmtMoneyExact(Math.abs(Number(row.delta) || 0))
+                + '<em>' + pct + '</em>'
+            + '</span>';
+        }
+        // 细基线：长度只表达该行变动占全表最大变动的相对比例，不按真实金额铺宽。
+        function aarChangeBar(row, maxAbs, report){
+            if(assetMasked) return '<span class="aar-track is-empty" aria-hidden="true"></span>';
+            const abs = Math.abs(Number(row.delta) || 0);
+            if(!report.hasMovement || abs < 0.005 || maxAbs <= 0){
+                const flatColor = row.key === 'liability' && Math.abs(Number(row.close) || 0) < 0.005 ? '#C9B8A6' : row.color;
+                return '<span class="aar-track is-flat" style="--aar-bar:' + flatColor + '" aria-hidden="true"><i class="aar-dot is-zero"></i></span>';
+            }
+            const pct = Math.max(6.5, Math.min(100, abs / maxAbs * 100));
+            const color = row.delta < 0 ? '#B36B5D' : row.color;
+            return '<span class="aar-track" style="--aar-bar:' + color + '" aria-hidden="true">'
+                + '<span class="aar-fill" style="width:calc(' + pct.toFixed(1) + '% - 7px)"></span>'
+                + '<i class="aar-dot is-origin"></i>'
+                + '<i class="aar-dot" style="left:' + pct.toFixed(1) + '%"></i>'
+            + '</span>';
         }
         function aarBar(rows, total){
             if(!(total > 0)) return '<div class="aar-stack-bar"></div>';
@@ -25236,7 +25834,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             if(!report.hasMovement){
                 return '本期只有一笔可用快照，尚不足以判断资产的增减方向。下一次跨月记录后，这一年才会真正开始。';
             }
-            const word = report.isCompleteYear ? '全年' : '年初至今';
+            const word = report.isCompleteYear ? '全年' : '年内';
             const dir = report.delta > 0 ? '增加' : (report.delta < 0 ? '回落' : '基本持平');
             const topUp = report.assetRows.filter(function(r){ return r.delta > 0; }).sort(function(a,b){ return b.delta - a.delta; }).slice(0,2);
             const topDown = report.assetRows.filter(function(r){ return r.delta < 0; }).sort(function(a,b){ return a.delta - b.delta; }).slice(0,2);
@@ -25259,6 +25857,53 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 text += '负债与期初基本持平，负债率维持在 ' + report.ratioClose.toFixed(1) + '%。';
             }
             return text;
+        }
+        function aarCollectionNote(year){
+            try{
+                if(typeof collectionModel !== 'function') return '';
+                const model = collectionModel();
+                if(!model || !model.completed.length) return '';
+                const y = String(year);
+                const throughYear = model.completed.filter(function(x){
+                    return String(x.completedAt || '').slice(0,4) <= y;
+                });
+                if(!throughYear.length) return '';
+                const unlocked = throughYear.filter(function(x){
+                    return String(x.completedAt || '').slice(0,4) === y;
+                }).length;
+                const shares = throughYear.reduce(function(sum, x){
+                    return sum + Math.max(0, Math.round(Number(x.current) || 0));
+                }, 0);
+                const unlockedText = assetMasked ? '••••' : String(unlocked).padStart(2, '0');
+                const sharesText = assetMasked ? '••••' : targetFmtShares(shares);
+                return '<div class="aar-note-collection">'
+                    + '<span class="aar-note-coll-kicker">COLLECTION TRACE</span>'
+                    + '<span class="aar-note-coll-text">今年解锁 <b>' + unlockedText + '</b> 件 · 累计收集 <b>' + sharesText + '</b> 股</span>'
+                + '</div>';
+            }catch(e){ return ''; }
+        }
+        function aarArchiveStamp(report, year){
+            const snapDate = report.isCompleteYear ? (year + '.12.31') : aarMonthText(report.closingKey);
+            const topLabel = year + ' 年度';
+            return '<div class="aar-seal-wrap">'
+                + '<div class="aar-seal" role="img" aria-label="' + targetEsc(topLabel + ' 财富档案 · 快照 ' + snapDate) + '">'
+                    + '<svg viewBox="0 0 200 200" fill="none" aria-hidden="true">'
+                        + '<defs>'
+                            + '<path id="aarSealTop" d="M 36 100 A 64 64 0 0 1 164 100"/>'
+                            + '<path id="aarSealBottom" d="M 42 100 A 58 58 0 0 0 158 100"/>'
+                        + '</defs>'
+                        + '<circle cx="100" cy="100" r="94" stroke="#B08B54" stroke-width="1.15" opacity=".9"/>'
+                        + '<circle cx="100" cy="100" r="86" stroke="#D7B46A" stroke-width=".55" opacity=".86"/>'
+                        + '<circle cx="100" cy="100" r="78" stroke="#B08B54" stroke-width=".35" opacity=".40" stroke-dasharray="1.6 5"/>'
+                        + '<text font-size="13" font-weight="500" letter-spacing="1.6" fill="#8C6A36" font-family="-apple-system,BlinkMacSystemFont,\'PingFang SC\',sans-serif"><textPath href="#aarSealTop" startOffset="50%" text-anchor="middle">' + topLabel + '</textPath></text>'
+                        + '<text x="100" y="96" text-anchor="middle" font-size="24" font-weight="600" letter-spacing="1.2" fill="#9A763B" font-family="\'Songti SC\',\'Noto Serif SC\',serif">财富档案</text>'
+                        + '<line x1="71" y1="106" x2="129" y2="106" stroke="#C9A66F" stroke-width=".5" opacity=".58"/>'
+                        + '<text x="100" y="122" text-anchor="middle" font-size="8.6" font-weight="500" letter-spacing=".2" fill="#A98550" font-family="-apple-system,BlinkMacSystemFont,\'PingFang SC\',sans-serif">快照日期 ' + snapDate + '</text>'
+                        + '<text font-size="10.5" font-weight="500" letter-spacing="2.2" fill="#8C6A36" font-family="-apple-system,BlinkMacSystemFont,\'PingFang SC\',sans-serif"><textPath href="#aarSealBottom" startOffset="50%" text-anchor="middle">SNAPSHOT</textPath></text>'
+                    + '</svg>'
+                + '</div>'
+                + '<div class="aar-seal-caption">END OF ARCHIVE · ' + year + '</div>'
+            + '</div>';
         }
         function renderAssetAnnualEntry(){
             const entry = document.getElementById('assetAnnualEntry');
@@ -25457,30 +26102,30 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="aar-glance-cell"><div class="aar-glance-label">资产负债率</div><div class="aar-glance-value">—</div><div class="aar-glance-sub">较期初 —</div></div>'
             + '</section>';
             const rows = [
-                { name:'投资理财', color:'#70839A', share:'占总资产 —' },
-                { name:'流动资金', color:'#6D8A79', share:'占总资产 —' },
-                { name:'固定资产', color:'#B18A5E', share:'占总资产 —' },
-                { name:'应收款', color:'#876C82', share:'占总资产 —' },
-                { name:'总资产', color:'#C7A46A', share:'总资产合计', mode:'total' },
-                { name:'负债', color:'#A4614D', share:'负债率 —' },
+                { name:'投资理财', color:ASSET_GROUP_META.invest.ink, share:'占总资产 —' },
+                { name:'流动资金', color:ASSET_GROUP_META.liquid.ink, share:'占总资产 —' },
+                { name:'固定资产', color:ASSET_GROUP_META.fixed.ink, share:'占总资产 —' },
+                { name:'应收款', color:ASSET_GROUP_META.receivable.ink, share:'占总资产 —' },
+                { name:'总资产', color:'#8B6944', share:'总资产合计', mode:'total' },
+                { name:'负债', color:ASSET_GROUP_META.liability.ink, share:'负债率 —' },
                 { name:'净资产', color:'#33231A', share:'净资产/总资产 —', mode:'net' }
             ];
             const ledgerRows = rows.map(function(r){
                 return '<div class="aar-lrow' + (r.mode === 'total' ? ' is-total' : '') + (r.mode === 'net' ? ' is-net' : '') + '" style="--aar-c:' + r.color + '">'
-                    + '<div class="aar-lrow-top"><span class="aar-lname">' + r.name + '</span><span class="aar-lshare">' + r.share + '</span></div>'
-                    + '<div class="aar-lrow-data"><span class="aar-flow"><span class="aar-start">—</span><span class="aar-arrow">→</span><span class="aar-end">—</span></span><span class="aar-delta is-flat">—</span></div>'
+                    + '<div class="aar-lrow-top"><div class="aar-lhead"><span class="aar-lname">' + r.name + '</span><span class="aar-lshare">' + r.share + '</span></div><span class="aar-delta is-flat">—</span></div>'
+                    + '<div class="aar-lrow-data"><span class="aar-start">—</span><span class="aar-track is-empty" aria-hidden="true"></span><span class="aar-end">—</span></div>'
                 + '</div>';
             }).join('');
             const ledger = '<section class="aar-ledger">'
-                + '<div class="aar-ledger-head"><span>ASSET / LIABILITY LEDGER</span><span>期初 → 期末 · 增量 / 增幅</span></div>'
+                + '<div class="aar-ledger-head"><span>ASSET / LIABILITY LEDGER</span><span>期初 → 期末 · 线段按变动幅度</span></div>'
                 + ledgerRows
             + '</section>';
             const emptyBar = '<div class="aar-stack-bar is-empty">尚无结构数据</div>';
             const legend = [
-                { name:'投资理财', color:'#70839A' },
-                { name:'流动资金', color:'#6D8A79' },
-                { name:'固定资产', color:'#B18A5E' },
-                { name:'应收款', color:'#876C82' }
+                { name:'投资理财', color:ASSET_GROUP_META.invest.ink },
+                { name:'流动资金', color:ASSET_GROUP_META.liquid.ink },
+                { name:'固定资产', color:ASSET_GROUP_META.fixed.ink },
+                { name:'应收款', color:ASSET_GROUP_META.receivable.ink }
             ].map(function(r){
                 return '<div class="aar-comp-item"><span class="aar-comp-dot" style="background:' + r.color + '"></span><span class="aar-comp-name">' + r.name + '</span><span class="aar-comp-pct">—</span></div>';
             }).join('');
@@ -25497,7 +26142,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const note = '<section class="aar-note-card"><div class="aar-note-quote">“</div><div class="aar-note-title">账本尚未开始</div><div class="aar-note-text">在资产页记下第一笔资产或负债后，这页年报会开始积累；跨月后，期初、期末、增量与结构变化会自动成册。</div></section>';
             const foot = '<div class="aar-foot"><b>数据口径</b>'
                 + '<p>期初取上年 12 月快照；没有上年末记录时，取本年第一笔快照。期末取本年最后一笔月快照；只有 12 月记录时才称“年末”。</p>'
-                + '<p>净资产 = 投资理财 + 流动资金 + 应收款 − 负债；固定资产计入总资产，不计入净资产。</p>'
+                + '<p>净资产 = 总资产 − 总负债；固定资产计入总资产与净资产，四项归因与净资产增量同口径。</p>'
                 + '<p>仅使用资产页月度快照，不读取首页持仓股票，也不与年度投资报告共用数据。</p></div>';
             return cover + glance
                 + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">01</span><span class="aar-sec-title">资产负债变动</span></div><span class="aar-sec-note">期初 / 期末 / 增量</span></div>'
@@ -25527,7 +26172,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 body.innerHTML = aarEmptyReportBody(year);
                 return;
             }
-            const word = rep.isCompleteYear ? '全年' : '年初至今';
+            const word = rep.isCompleteYear ? '全年' : '年内';
             const netLabel = rep.isCompleteYear ? '年末净资产' : '期末净资产';
             const netSign = rep.closing.net < 0 ? '−' : '';
             const cover = '<section class="aar-cover">'
@@ -25537,7 +26182,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="aar-cover-net">'
                     + '<div class="aar-cover-label"><b>' + netLabel + '</b><span>NET WORTH</span></div>'
                     + '<div class="aar-cover-money"><span class="aar-cover-cur">' + (assetMasked ? '' : netSign + '¥') + '</span><span class="aar-cover-num">' + aarNum(Math.abs(rep.closing.net)) + '</span></div>'
-                    + '<div class="aar-cover-net-note">可动用口径 · 固定资产不计入净资产</div>'
+                    + '<div class="aar-cover-net-note">总资产 − 总负债 · 固定资产计入</div>'
                 + '</div>'
                 + '<div class="aar-cover-metrics">'
                     + '<div class="aar-cover-metric"><div class="aar-cover-metric-label">' + word + '净资产增量</div><div class="aar-cover-metric-value' + (rep.delta < 0 ? ' is-down' : (rep.delta === 0 ? ' is-flat' : '')) + '">' + (rep.hasMovement ? aarSigned(rep.delta) : '—') + '</div><div class="aar-cover-metric-sub">相对 ' + aarMonthText(rep.openingKey) + '</div></div>'
@@ -25552,17 +26197,31 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<div class="aar-glance-cell"><div class="aar-glance-label">总负债</div><div class="aar-glance-value">' + aarShort(rep.closing.liability) + '</div><div class="aar-glance-sub">较期初 ' + (rep.hasMovement ? pctText(rep.opening.liability, rep.closing.liability) : '—') + '</div></div>'
                 + '<div class="aar-glance-cell"><div class="aar-glance-label">资产负债率</div><div class="aar-glance-value">' + rep.ratioClose.toFixed(1) + '%</div><div class="aar-glance-sub">较期初 ' + (ratioDelta > 0 ? '+' : (ratioDelta < 0 ? '−' : '')) + Math.abs(ratioDelta).toFixed(1) + 'pt</div></div>'
             + '</section>';
+            const attrModel = aarAttrModel(rep);
+            const attrPcts = attrModel ? aarAttrPctList(attrModel.rows, attrModel.net) : [];
+            const attrSection = attrModel
+                ? '<div class="aar-sec-head aar-attr-head"><div class="aar-sec-head-main"><span class="aar-sec-no">00</span><span class="aar-sec-title">变动归因</span></div><div class="aar-attr-sum aar-attr-total' + (attrModel.net < -0.005 ? ' is-down' : (Math.abs(attrModel.net) < 0.005 ? ' is-zero' : '')) + '" role="group" aria-label="净值变动总额"><span class="aar-attr-sum-label">净值变动总额</span><span class="aar-attr-sum-value">' + (assetMasked ? '••••' : aarSigned(attrModel.net)) + '</span></div></div>'
+                    + '<div class="aar-attr-grid">' + attrModel.rows.map(function(r, i){ return aarAttrCardHtml(r, attrModel.net, attrPcts[i]); }).join('') + '</div>'
+                    + '<div class="aar-attr-foot"><span><b>归因口径</b> · 净资产变动</span><span>含固定资产</span></div>'
+                : '';
+            const maxAbsDelta = rep.rows.reduce(function(m, r){
+                return Math.max(m, Math.abs(Number(r.delta) || 0));
+            }, 0);
             const ledgerRows = rep.rows.map(function(r){
-                const isSummary = r.mode === 'total' || r.mode === 'net';
-                const deltaText = (!rep.hasMovement || r.delta === 0) ? '—' : aarSigned(r.delta);
-                const pctText = (!rep.hasMovement || r.pct == null) ? '—' : aarPctText(r.pct);
                 return '<div class="aar-lrow' + (r.mode === 'total' ? ' is-total' : '') + (r.mode === 'net' ? ' is-net' : '') + '" style="--aar-c:' + r.color + '">'
-                    + '<div class="aar-lrow-top"><span class="aar-lname">' + r.name + '</span><span class="aar-lshare">' + aarShareLabel(r, rep) + '</span></div>'
-                    + '<div class="aar-lrow-data"><span class="aar-flow"><span class="aar-start">' + aarNum(r.open) + '</span><span class="aar-arrow">→</span><span class="aar-end">' + aarNum(r.close) + '</span></span><span class="aar-delta ' + (aarDeltaTone(r, rep) || '') + '">' + deltaText + '<em>' + pctText + '</em></span></div>'
+                    + '<div class="aar-lrow-top">'
+                        + '<div class="aar-lhead"><span class="aar-lname">' + r.name + '</span><span class="aar-lshare">' + aarShareLabel(r, rep) + '</span></div>'
+                        + aarRowDeltaHtml(r, rep)
+                    + '</div>'
+                    + '<div class="aar-lrow-data">'
+                        + '<span class="aar-start">' + aarNum(r.open) + '</span>'
+                        + aarChangeBar(r, maxAbsDelta, rep)
+                        + '<span class="aar-end">' + aarNum(r.close) + '</span>'
+                    + '</div>'
                 + '</div>';
             }).join('');
             const ledger = '<section class="aar-ledger">'
-                + '<div class="aar-ledger-head"><span>ASSET / LIABILITY LEDGER</span><span>期初 → 期末 · 增量 / 增幅</span></div>'
+                + '<div class="aar-ledger-head"><span>ASSET / LIABILITY LEDGER</span><span>期初 → 期末 · 线段按变动幅度</span></div>'
                 + ledgerRows
             + '</section>';
             const compRows = rep.assetRows;
@@ -25576,23 +26235,23 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             + '</section>';
             const chartInner = aarChartSvg(rep);
             const chart = '<section class="aar-chart-card">'
-                + '<div class="aar-chart-top"><span>NET WORTH TRAJECTORY · ' + aarMonthText(rep.openingKey) + '—' + aarMonthText(rep.closingKey) + '</span><b>' + rep.yearCount + ' 次快照</b></div>'
+                + '<div class="aar-chart-top"><span>NET WORTH TRAJECTORY · ' + aarMonthText(rep.openingKey) + '—' + aarMonthText(rep.closingKey) + '</span><b>' + rep.chartPoints.length + ' 次快照</b></div>'
                 + (chartInner ? '<div class="aar-chart">' + chartInner + '</div>' : '<div class="aar-chart-empty">本月只有一笔快照，跨月后这里会出现净资产轨迹。</div>')
             + '</section>';
-            const note = '<section class="aar-note-card"><div class="aar-note-quote">“</div><div class="aar-note-title">这一年，账本这样变化</div><div class="aar-note-text">' + aarNarrative(rep) + '</div></section>';
+            const note = '<section class="aar-note-card"><div class="aar-note-quote">“</div><div class="aar-note-title">这一年，账本这样变化</div><div class="aar-note-text">' + aarNarrative(rep) + '</div>' + aarCollectionNote(year) + '</section>';
             const foot = '<div class="aar-foot"><b>数据口径</b>'
                 + '<p>期初取上年 12 月快照；没有上年末记录时，取本年第一笔快照。期末取本年最后一笔月快照；只有 12 月记录时才称“年末”。</p>'
-                + '<p>净资产 = 投资理财 + 流动资金 + 应收款 − 负债；固定资产计入总资产，不计入净资产。</p>'
+                + '<p>净资产 = 总资产 − 总负债；固定资产计入总资产与净资产，四项归因与净资产增量同口径。</p>'
                 + '<p>仅使用资产页月度快照，不读取首页持仓股票，也不与年度投资报告共用数据。</p></div>';
-            body.innerHTML = cover + glance
+            body.innerHTML = cover + glance + attrSection
                 + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">01</span><span class="aar-sec-title">资产负债变动</span></div><span class="aar-sec-note">期初 / 期末 / 增量</span></div>'
                 + ledger
                 + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">02</span><span class="aar-sec-title">资产结构漂移</span></div><span class="aar-sec-note">按总资产占比</span></div>'
                 + composition
                 + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">03</span><span class="aar-sec-title">净资产轨迹</span></div><span class="aar-sec-note">月度快照</span></div>'
                 + chart
-                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">04</span><span class="aar-sec-title">年度读记</span></div><span class="aar-sec-note">' + (rep.isCompleteYear ? '完整年度' : '年初至今') + '</span></div>'
-                + note + foot;
+                + '<div class="aar-sec-head"><div class="aar-sec-head-main"><span class="aar-sec-no">04</span><span class="aar-sec-title">年度读记</span></div><span class="aar-sec-note">' + (rep.empty ? '暂无' : (rep.isCompleteYear ? '完整年度' : (rep.openingTag === '上年年末' ? '年初至今' : '自首笔至今'))) + '</span></div>'
+                + note + foot + aarArchiveStamp(rep, year);
         }
         document.addEventListener('keydown', function(e){
             if(e.key !== 'Escape') return;
@@ -25643,42 +26302,144 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '<circle cx="' + end.x.toFixed(2) + '" cy="' + end.y.toFixed(2) + '" r="2.5" fill="#5C56C4"/>'
                 + '</svg>';
         }
-        function renderAssetStructure(t){
+        // 与资产分类大卡完全一致的线性图标，避免结构区图例出现另一套图标语言
+        const ASSET_GROUP_ICON_SVG = {
+            invest:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 17.2 9.1 12.6l3.2 2.2L19.8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.5 8h3.3v3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            liquid:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.8" y="6.3" width="16.4" height="11.4" rx="2.3" stroke="currentColor" stroke-width="1.8"/><path d="M3.9 9.6h16.2" stroke="currentColor" stroke-width="1.8"/><path d="M14.8 12.3h3.2c.9 0 1.7.8 1.7 1.7s-.8 1.7-1.7 1.7h-3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            fixed:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.7 10.6 11.2 4c.5-.4 1.1-.4 1.6 0l7.5 6.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.6 9.5v9.2c0 .7.6 1.3 1.3 1.3h10.2c.7 0 1.3-.6 1.3-1.3V9.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.7 19.9v-4.6c0-.7.6-1.3 1.3-1.3h2c.7 0 1.3.6 1.3 1.3v4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            receivable:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M15 9 9 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8.7 10.1v4.9h4.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+        };
+        function assetRingMount(el){
+            if(!el || typeof echarts === 'undefined') return null;
+            try{
+                let chart = echarts.getInstanceByDom(el);
+                if(!chart) chart = echarts.init(el, null, { renderer:'canvas' });
+                assetRingChart = chart;
+                if(!window.__assetRingResizeBound){
+                    window.__assetRingResizeBound = true;
+                    window.addEventListener('resize', function(){
+                        if(!assetRingChart || assetRingChart.isDisposed()) return;
+                        clearTimeout(window.__assetRingResizeTimer);
+                        window.__assetRingResizeTimer = setTimeout(function(){
+                            try{ assetRingChart.resize(); }catch(e){}
+                        }, 80);
+                    });
+                }
+                return chart;
+            }catch(e){
+                return null;
+            }
+        }
+        function renderAssetStructure(t, assetItemCount){
             const parts = [
                 { key:'invest', label:'投资理财', v:t.invest, color:ASSET_GROUP_META.invest.tone },
                 { key:'liquid', label:'流动资金', v:t.liquid, color:ASSET_GROUP_META.liquid.tone },
                 { key:'fixed', label:'固定资产', v:t.fixed, color:ASSET_GROUP_META.fixed.tone },
                 { key:'receivable', label:'应收款', v:t.receivable, color:ASSET_GROUP_META.receivable.tone }
             ];
-            const total = t.assets;
-            let acc = 0;
-            const stops = [];
-            if(total > 0){
-                parts.forEach(function(p){
-                    const a = acc / total * 360;
-                    acc += Math.max(0, p.v);
-                    const b = acc / total * 360;
-                    stops.push(p.color + ' ' + a.toFixed(2) + 'deg ' + b.toFixed(2) + 'deg');
-                });
-                if(acc < total) stops.push('#e7ddd4 ' + (acc/total*360).toFixed(2) + 'deg 360deg');
-            } else {
-                stops.push('#e7ddd4 0deg 360deg');
+            const total = Math.max(0, Number(t.assets) || 0);
+            const ordered = parts.slice().sort(function(a, b){ return (Number(b.v) || 0) - (Number(a.v) || 0); });
+            const activeCats = parts.filter(function(p){ return (Number(p.v) || 0) > 0.004; }).length;
+            const focus = total > 0 && ordered.length ? ordered[0] : null;
+
+            const ringName = document.getElementById('assetRingName');
+            const ringTotal = document.getElementById('assetRingTotal');
+            const ringCount = document.getElementById('assetRingCount');
+            if(ringName) ringName.innerText = focus ? focus.label : '资产结构';
+            if(ringTotal) ringTotal.innerText = focus && total > 0 ? ((Number(focus.v) || 0) / total * 100).toFixed(1) + '%' : '—';
+            if(ringCount){
+                ringCount.innerText = total > 0 ? activeCats + ' 类 · ' + (Number(assetItemCount) || 0) + ' 项' : '记账后生成占比';
             }
+
             const ring = document.getElementById('assetRing');
-            if(ring) ring.style.background = 'conic-gradient(' + stops.join(',') + ')';
+            const chart = assetRingMount(ring);
+            if(chart){
+                ring.style.background = 'transparent';
+                const ringSize = ring.clientWidth || 220;
+                const centerRadius = ringSize * 0.37;
+                const data = total > 0
+                    ? ordered.filter(function(p){ return (Number(p.v) || 0) > 0.004; }).map(function(p){
+                        const ratio = total > 0 ? Math.max(0, Number(p.v) || 0) / total : 0;
+                        const arc = Math.max(0, ratio * 2 * Math.PI * centerRadius);
+                        return {
+                            value:Math.max(0, Number(p.v) || 0),
+                            name:p.label,
+                            itemStyle:{
+                                color:p.color,
+                                // 小占比段自动收窄圆角，避免被圆角吃掉；大段保持利落的小圆角
+                                borderRadius:Math.min(8, Math.max(3, arc / 2))
+                            }
+                        };
+                    })
+                    : [{ value:1, name:'empty', itemStyle:{ color:'#E9DED2', borderWidth:0, borderRadius:0 } }];
+                const onlyOne = data.length <= 1;
+                if(onlyOne && total > 0){
+                    data[0].itemStyle.borderRadius = 0;
+                    data[0].itemStyle.borderWidth = 0;
+                }
+                chart.setOption({
+                    animation:false,
+                    backgroundColor:'transparent',
+                    series:[{
+                        type:'pie',
+                        radius:['55%','93%'],
+                        center:['50%','50%'],
+                        startAngle:90,
+                        clockwise:true,
+                        silent:true,
+                        avoidLabelOverlap:false,
+                        stillShowZeroSum:false,
+                        minAngle:0,
+                        label:{ show:false },
+                        labelLine:{ show:false },
+                        emphasis:{ scale:false },
+                        itemStyle:{
+                            borderColor:'#FFFDFA',
+                            borderWidth:onlyOne ? 0 : 3,
+                            borderRadius:onlyOne ? 0 : 8,
+                            shadowBlur:0
+                        },
+                        data:data
+                    }]
+                }, true);
+                requestAnimationFrame(function(){
+                    try{ if(!chart.isDisposed()) chart.resize(); }catch(e){}
+                });
+            }else if(ring){
+                // 极端兜底：图表库不可用时仍保留连续色环，不影响数据阅读
+                let acc = 0;
+                const stops = [];
+                if(total > 0){
+                    ordered.forEach(function(p){
+                        const v = Math.max(0, Number(p.v) || 0);
+                        if(v <= 0) return;
+                        const a = acc / total * 360;
+                        acc += v;
+                        stops.push(p.color + ' ' + a.toFixed(2) + 'deg ' + (acc / total * 360).toFixed(2) + 'deg');
+                    });
+                }
+                if(!stops.length) stops.push('#E9DED2 0deg 360deg');
+                ring.style.background = 'conic-gradient(' + stops.join(',') + ')';
+            }
+
             const legend = document.getElementById('assetStructureLegend');
             if(legend){
-                legend.innerHTML = parts.map(function(p){
-                    const pct = total > 0 ? (p.v / total * 100) : 0;
-                    return '<div class="asset-legend-item">'
-                        + '<div class="asset-legend-line"><span class="asset-legend-dot" style="background:' + p.color + '"></span><span class="asset-legend-name">' + p.label + '</span></div>'
-                        + '<div class="asset-legend-value">' + assetShortMoney(p.v) + '<span class="asset-legend-pct">' + pct.toFixed(1) + '%</span></div>'
-                        + '</div>';
-                }).join('');
+                if(total <= 0){
+                    legend.innerHTML = '<div class="asset-alloc-empty"><b>还没有资产记录</b>'
+                        + '<span>记一笔资产后，这里会按投资理财、流动资金、固定资产和应收款显示占比。</span></div>';
+                } else {
+                    legend.innerHTML = ordered.map(function(p){
+                        const v = Math.max(0, Number(p.v) || 0);
+                        const pct = total > 0 ? v / total * 100 : 0;
+                        const meta = ASSET_GROUP_META[p.key];
+                        return '<div class="asset-alloc-item" aria-label="' + p.label + ' ' + pct.toFixed(1) + '%">'
+                            + '<span class="asset-alloc-icon" style="background:' + meta.tile + ';color:' + p.color + '">' + (ASSET_GROUP_ICON_SVG[p.key] || '') + '</span>'
+                            + '<span class="asset-alloc-copy">'
+                            + '<span class="asset-alloc-top"><span class="asset-alloc-name">' + p.label + '</span><b class="asset-alloc-pct">' + pct.toFixed(1) + '%</b></span>'
+                            + '</span></div>';
+                    }).join('');
+                }
             }
-            const fill = document.getElementById('assetDebtFill');
-            const ratio = total > 0 ? (t.liab / total * 100) : (t.liab > 0 ? 100 : 0);
-            if(fill) fill.style.width = Math.min(100, Math.max(0, ratio)).toFixed(1) + '%';
         }
         function renderAssetHealth(t){
             const box = document.getElementById('assetHealthList');
@@ -27247,6 +28008,68 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             // 新建目标会显式写入 false，必须手动开启才会进入首页横向卡片。
             return !g || g.dashboard !== false;
         }
+        function targetDashboardOrderLoad(){
+            const raw = lsGet(HOLDING_TARGET_DASH_ORDER_KEY);
+            if(raw == null || raw === '') return null;
+            try{
+                const arr = JSON.parse(raw);
+                if(!Array.isArray(arr)) return null;
+                const out = [];
+                const seen = Object.create(null);
+                arr.forEach(function(k){
+                    const key = String(k || '');
+                    if(!key || seen[key]) return;
+                    seen[key] = true;
+                    out.push(key);
+                });
+                return out;
+            }catch(e){ return null; }
+        }
+        function targetDashboardOrderWrite(keys){
+            const out = [];
+            const seen = Object.create(null);
+            (keys || []).forEach(function(k){
+                const key = String(k || '');
+                if(!key || seen[key]) return;
+                seen[key] = true;
+                out.push(key);
+            });
+            try{ lsSet(HOLDING_TARGET_DASH_ORDER_KEY, JSON.stringify(out)); }catch(e){}
+            return out;
+        }
+        function targetDashboardSeedRows(visible){
+            // 首次启用独立顺序时，沿用旧版首页视觉顺序，避免升级后卡片跳位。
+            return (visible || []).slice().sort(function(a, b){
+                if(!!a.goal.priority !== !!b.goal.priority) return a.goal.priority ? -1 : 1;
+                const ao = targetSortOrderValue(a.goal);
+                const bo = targetSortOrderValue(b.goal);
+                if(ao !== bo) return ao - bo;
+                return a.item.name.localeCompare(b.item.name, 'zh-CN');
+            });
+        }
+        function targetDashboardOrderSync(rows){
+            const visible = (rows || []).filter(function(r){ return targetGoalDashboardOn(r.goal); });
+            const visibleKeys = visible.map(function(r){ return targetKey(r.item.marketType, r.item.code); });
+            const visibleSet = Object.create(null);
+            visibleKeys.forEach(function(k){ visibleSet[k] = true; });
+            const stored = targetDashboardOrderLoad();
+            let order = [];
+            if(stored === null){
+                order = targetDashboardSeedRows(visible).map(function(r){ return targetKey(r.item.marketType, r.item.code); });
+            }else{
+                order = stored.filter(function(k){ return visibleSet[k]; });
+                // 新目标、重新开启仪表盘展示的目标，默认追加到末尾。
+                visibleKeys.forEach(function(k){
+                    if(order.indexOf(k) < 0) order.push(k);
+                });
+            }
+            const same = stored !== null && stored.length === order.length && stored.every(function(k, i){ return k === order[i]; });
+            if(!same) targetDashboardOrderWrite(order);
+            return order;
+        }
+        function targetDashboardOrderPrime(){
+            try{ targetDashboardOrderSync(targetRows()); }catch(e){}
+        }
         function targetSortOrderValue(g){
             const n = Number(g && g.sortOrder);
             return Number.isFinite(n) && n > 0 ? n : 9999;
@@ -27368,16 +28191,20 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         }
         function targetDashboardRows(rows){
             const base = rows || targetRows();
-            return base.filter(function(r){ return r.goal.dashboard !== false; }).sort(function(a, b){
-                if(!!a.goal.priority !== !!b.goal.priority) return a.goal.priority ? -1 : 1;
-                const ao = targetSortOrderValue(a.goal);
-                const bo = targetSortOrderValue(b.goal);
-                if(ao !== bo) return ao - bo;
+            const visible = base.filter(function(r){ return targetGoalDashboardOn(r.goal); });
+            const order = targetDashboardOrderSync(base);
+            return visible.sort(function(a, b){
+                const ak = targetKey(a.item.marketType, a.item.code);
+                const bk = targetKey(b.item.marketType, b.item.code);
+                const ai = order.indexOf(ak);
+                const bi = order.indexOf(bk);
+                if(ai !== bi) return ai - bi;
                 return a.item.name.localeCompare(b.item.name, 'zh-CN');
             });
         }
         // 管理列表按状态分组：待完成在上，已达成统一沉底。
-        // 首页仪表盘的顺序仍由 priority + sortOrder 决定，不随“达成”状态自动重排。
+        // 首页仪表盘顺序由独立的 HOLDING_TARGET_DASH_ORDER_KEY 决定：
+        // priority 只做“最高优先”标记，不再强制置顶；达成状态也不自动重排首页。
         function targetManageRows(rows){
             const base = (rows || targetRows()).slice();
             return base.sort(function(a, b){
@@ -28696,11 +29523,317 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 rail.__targetPagerRO = ro;
             }
         }
+
+        // ===== 首页目标卡：长按 1 秒后横向拖拽，顺序只写首页独立数组 =====
+        const TRING_RAIL_HOLD_MS = 1000;
+        const TRING_RAIL_MOVE_TOL = 8;
+        let _tringRailDrag = null;
+        let _tringRailPress = null;
+        let _tringRailSuppressClick = false;
+        let _tringRailAutoScrollRaf = 0;
+        let _tringRailHintTimer = 0;
+        function tringRailCards(rail){
+            return Array.prototype.slice.call(rail.querySelectorAll('.tring-card[data-target-key]'));
+        }
+        function tringRailKey(card){
+            return card ? String(card.getAttribute('data-target-key') || '') : '';
+        }
+        function tringRailCancelPress(){
+            if(!_tringRailPress) return;
+            const press = _tringRailPress;
+            _tringRailPress = null;
+            clearTimeout(press.timer);
+            clearTimeout(press.feedbackTimer);
+            if(press.card) press.card.classList.remove('is-pressing');
+        }
+        function tringRailResetCard(card){
+            if(!card) return;
+            card.classList.remove('is-dragging', 'is-pressing');
+            card.style.position = '';
+            card.style.left = '';
+            card.style.top = '';
+            card.style.width = '';
+            card.style.height = '';
+            card.style.margin = '';
+            card.style.zIndex = '';
+            card.style.boxSizing = '';
+            card.style.pointerEvents = '';
+            card.style.transition = '';
+            card.style.cursor = '';
+        }
+        function tringRailUpdateSlot(clientX){
+            const d = _tringRailDrag;
+            if(!d) return;
+            const x = Number(clientX);
+            if(!isFinite(x)) return;
+            d.lastX = x;
+            const cards = tringRailCards(d.rail);
+            let before = null;
+            for(let i = 0; i < cards.length; i++){
+                const r = cards[i].getBoundingClientRect();
+                if(x < r.left + r.width / 2){
+                    before = cards[i];
+                    break;
+                }
+            }
+            if(before){
+                if(d.placeholder.nextElementSibling !== before || d.placeholder.parentNode !== d.rail){
+                    d.rail.insertBefore(d.placeholder, before);
+                }
+            }else if(d.placeholder.parentNode !== d.rail || d.placeholder.nextElementSibling){
+                d.rail.appendChild(d.placeholder);
+            }
+        }
+        function tringRailAutoScrollStop(){
+            if(_tringRailAutoScrollRaf){
+                cancelAnimationFrame(_tringRailAutoScrollRaf);
+                _tringRailAutoScrollRaf = 0;
+            }
+        }
+        function tringRailAutoScrollTick(){
+            _tringRailAutoScrollRaf = 0;
+            const d = _tringRailDrag;
+            if(!d) return;
+            const rail = d.rail;
+            const rr = rail.getBoundingClientRect();
+            const edge = Math.min(64, Math.max(40, rr.width * 0.16));
+            const x = Number(d.lastX) || 0;
+            let dir = 0, strength = 0;
+            if(x < rr.left + edge){
+                dir = -1;
+                strength = Math.min(1, (rr.left + edge - x) / edge);
+            }else if(x > rr.right - edge){
+                dir = 1;
+                strength = Math.min(1, (x - (rr.right - edge)) / edge);
+            }
+            if(!dir) return;
+            const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+            if(max <= 2) return;
+            const speed = 3 + strength * 13;
+            const prev = rail.scrollLeft;
+            const next = Math.max(0, Math.min(max, prev + dir * speed));
+            if(Math.abs(next - prev) < 0.5){
+                tringRailUpdateSlot(x);
+                return;
+            }
+            rail.scrollLeft = next;
+            d.moved = true;
+            tringRailUpdateSlot(x);
+            _tringRailAutoScrollRaf = requestAnimationFrame(tringRailAutoScrollTick);
+        }
+        function tringRailAutoScrollKick(){
+            if(_tringRailAutoScrollRaf) return;
+            _tringRailAutoScrollRaf = requestAnimationFrame(tringRailAutoScrollTick);
+        }
+        function tringRailBeginDrag(press){
+            if(!press || _tringRailDrag) return;
+            const card = press.card;
+            const rail = press.rail;
+            if(!card || !rail || !rail.contains(card)) return;
+            if(tringRailCards(rail).length < 2) return;
+            const rect = card.getBoundingClientRect();
+            const nextCard = card.nextElementSibling && card.nextElementSibling.classList && card.nextElementSibling.classList.contains('tring-card')
+                ? card.nextElementSibling : null;
+            const ph = document.createElement('div');
+            ph.className = 'tring-rail-placeholder';
+            ph.setAttribute('aria-hidden', 'true');
+            ph.style.width = rect.width + 'px';
+            ph.style.height = rect.height + 'px';
+            ph.style.flex = '0 0 ' + rect.width + 'px';
+            if(nextCard) rail.insertBefore(ph, nextCard);
+            else rail.appendChild(ph);
+            card.classList.remove('is-pressing');
+            document.body.appendChild(card);
+            card.classList.add('is-dragging');
+            card.style.position = 'fixed';
+            card.style.left = rect.left + 'px';
+            card.style.top = rect.top + 'px';
+            card.style.width = rect.width + 'px';
+            card.style.height = rect.height + 'px';
+            card.style.margin = '0';
+            card.style.zIndex = '160';
+            card.style.boxSizing = 'border-box';
+            card.style.pointerEvents = 'none';
+            card.style.transition = 'none';
+            card.style.cursor = 'grabbing';
+            _tringRailDrag = {
+                card: card, rail: rail, placeholder: ph,
+                key: tringRailKey(card),
+                pointerId: press.pointerId,
+                startX: press.startX,
+                lastX: press.startX,
+                startLeft: rect.left,
+                offsetX: press.startX - rect.left,
+                originalNextKey: nextCard ? tringRailKey(nextCard) : '',
+                moved: false
+            };
+            document.body.classList.add('tring-rail-dragging');
+            rail.classList.add('is-dragging');
+            try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+            tringRailUpdateSlot(press.startX);
+        }
+        function tringRailEndDrag(shouldPersist){
+            const d = _tringRailDrag;
+            if(!d) return;
+            tringRailAutoScrollStop();
+            _tringRailDrag = null;
+            document.body.classList.remove('tring-rail-dragging');
+            d.rail.classList.remove('is-dragging');
+            if(shouldPersist !== false){
+                try{
+                    if(d.placeholder.parentNode) d.placeholder.parentNode.insertBefore(d.card, d.placeholder);
+                    else d.rail.appendChild(d.card);
+                    if(d.placeholder.parentNode) d.placeholder.remove();
+                }catch(e){}
+                tringRailResetCard(d.card);
+                const keys = tringRailCards(d.rail).map(tringRailKey).filter(Boolean);
+                if(keys.length) targetDashboardOrderWrite(keys);
+            }else{
+                try{
+                    const cards = tringRailCards(d.rail);
+                    const next = d.originalNextKey ? cards.find(function(c){ return tringRailKey(c) === d.originalNextKey; }) : null;
+                    if(next) d.rail.insertBefore(d.card, next);
+                    else d.rail.appendChild(d.card);
+                    if(d.placeholder.parentNode) d.placeholder.remove();
+                }catch(e){}
+                tringRailResetCard(d.card);
+            }
+            _tringRailSuppressClick = true;
+            setTimeout(function(){ _tringRailSuppressClick = false; }, 420);
+        }
+        function tringRailPointerDown(ev){
+            if(_tringRailDrag || !ev || ev.isPrimary === false) return;
+            if(ev.pointerType === 'mouse' && ev.button !== 0) return;
+            const card = ev.target && ev.target.closest ? ev.target.closest('.tring-card[data-target-key]') : null;
+            if(!card) return;
+            const rail = card.closest('.tring-rail');
+            if(!rail || !rail.contains(card)) return;
+            if(tringRailCards(rail).length < 2) return;
+            tringRailCancelPress();
+            const press = {
+                card: card, rail: rail,
+                pointerId: ev.pointerId,
+                startX: Number(ev.clientX) || 0,
+                startY: Number(ev.clientY) || 0,
+                moved: false, timer: 0, feedbackTimer: 0
+            };
+            _tringRailPress = press;
+            press.feedbackTimer = setTimeout(function(){
+                if(_tringRailPress !== press || press.moved) return;
+                press.card.classList.add('is-pressing');
+            }, 320);
+            press.timer = setTimeout(function(){
+                if(_tringRailPress !== press || press.moved) return;
+                _tringRailPress = null;
+                tringRailBeginDrag(press);
+            }, TRING_RAIL_HOLD_MS);
+        }
+        function tringRailPointerMove(ev){
+            if(_tringRailDrag){
+                if(_tringRailDrag.pointerId != null && ev.pointerId != null && ev.pointerId !== _tringRailDrag.pointerId) return;
+                if(ev.cancelable) ev.preventDefault();
+                const x = Number(ev.clientX);
+                if(!isFinite(x)) return;
+                const maxLeft = Math.max(4, window.innerWidth - _tringRailDrag.card.offsetWidth - 4);
+                const nextLeft = Math.max(4, Math.min(maxLeft, _tringRailDrag.startLeft + (x - _tringRailDrag.startX)));
+                _tringRailDrag.card.style.left = nextLeft + 'px';
+                tringRailUpdateSlot(x);
+                tringRailAutoScrollKick();
+                return;
+            }
+            if(!_tringRailPress) return;
+            if(_tringRailPress.pointerId != null && ev.pointerId != null && ev.pointerId !== _tringRailPress.pointerId) return;
+            const dx = (Number(ev.clientX) || 0) - _tringRailPress.startX;
+            const dy = (Number(ev.clientY) || 0) - _tringRailPress.startY;
+            if(Math.sqrt(dx * dx + dy * dy) > TRING_RAIL_MOVE_TOL){
+                _tringRailPress.moved = true;
+                tringRailCancelPress();
+                // 滑动已经开始，避免松手后误判为点击而打开详情。
+                _tringRailSuppressClick = true;
+                setTimeout(function(){ _tringRailSuppressClick = false; }, 420);
+            }
+        }
+        function tringRailPointerUp(ev){
+            if(_tringRailDrag){
+                if(_tringRailDrag.pointerId != null && ev && ev.pointerId != null && ev.pointerId !== _tringRailDrag.pointerId) return;
+                if(ev && ev.cancelable) ev.preventDefault();
+                tringRailEndDrag(true);
+                return;
+            }
+            tringRailCancelPress();
+        }
+        function tringRailPointerCancel(ev){
+            if(_tringRailDrag) tringRailEndDrag(false);
+            else tringRailCancelPress();
+        }
+        function tringRailMaybeShowHint(rail){
+            if(!rail || lsGet(HOLDING_TARGET_RAIL_HINT_KEY)) return;
+            if(tringRailCards(rail).length < 2) return;
+            clearTimeout(_tringRailHintTimer);
+            function fire(){
+                if(!rail.isConnected || !rail.getBoundingClientRect().height) return;
+                if(_tringRailDrag || _tringRailPress){
+                    _tringRailHintTimer = setTimeout(fire, 650);
+                    return;
+                }
+                if(lsGet(HOLDING_TARGET_RAIL_HINT_KEY)) return;
+                lsSet(HOLDING_TARGET_RAIL_HINT_KEY, '1');
+                try{ showToast('长按目标卡片 1 秒可拖动排序，左右滑动不受影响'); }catch(e){}
+            }
+            _tringRailHintTimer = setTimeout(fire, 850);
+        }
+        function targetBindRailDrag(rail){
+            if(!rail || rail.__targetRailDragBound) return;
+            rail.__targetRailDragBound = true;
+            rail.addEventListener('pointerdown', tringRailPointerDown);
+            rail.addEventListener('click', function(e){
+                if(!_tringRailSuppressClick) return;
+                e.preventDefault();
+                e.stopPropagation();
+                _tringRailSuppressClick = false;
+            }, true);
+            tringRailMaybeShowHint(rail);
+        }
+        if(!window.__tringRailPointerBound){
+            window.__tringRailPointerBound = true;
+            window.addEventListener('pointermove', tringRailPointerMove, {passive:false});
+            window.addEventListener('pointerup', tringRailPointerUp);
+            window.addEventListener('pointercancel', tringRailPointerCancel);
+            window.addEventListener('blur', function(){
+                if(_tringRailDrag) tringRailEndDrag(false);
+                tringRailCancelPress();
+            });
+            window.addEventListener('resize', function(){
+                if(_tringRailDrag) tringRailEndDrag(false);
+                tringRailCancelPress();
+            });
+            document.addEventListener('visibilitychange', function(){
+                if(document.visibilityState === 'hidden' && _tringRailDrag) tringRailEndDrag(false);
+            });
+            window.addEventListener('touchmove', function(e){
+                if(_tringRailDrag && e.cancelable) e.preventDefault();
+            }, {passive:false});
+            window.addEventListener('contextmenu', function(e){
+                if(_tringRailDrag || _tringRailPress){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+            window.addEventListener('selectstart', function(e){
+                if(_tringRailDrag || _tringRailPress) e.preventDefault();
+            }, true);
+        }
+
         function updateTargetSummaryStrip(){
             const el = document.querySelector('#targetSummaryStrip');
             if(!el) return;
+            // 拖拽中行情刷新可能重建卡片：跳过本轮，避免正在拖的 DOM 被销毁。
+            if(_tringRailDrag) return;
+            const oldRail = el.querySelector('.tring-rail');
+            const oldRailScrollLeft = oldRail ? oldRail.scrollLeft : 0;
             const rows = targetRows();
             if(!rows.length){
+                if(oldRail && oldRail.__targetPagerRO){ oldRail.__targetPagerRO.disconnect(); oldRail.__targetPagerRO = null; }
                 el.classList.remove('hidden');
                 el.innerHTML = '<div class="tring-empty" role="button" tabindex="0" aria-label="设置目标持仓" onclick="openTargetEmptySetup(event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTargetEmptySetup(event);}">'
                     + '<span class="target-kicker">目标持仓</span>'
@@ -28725,7 +29858,6 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 ? '<div class="tring-pager" id="targetRingPager" aria-hidden="true"></div>'
                 : '';
             el.classList.remove('hidden');
-            const oldRail = el.querySelector('.tring-rail');
             if(oldRail && oldRail.__targetPagerRO){ oldRail.__targetPagerRO.disconnect(); oldRail.__targetPagerRO = null; }
             el.innerHTML = '<div class="tring-head" role="button" tabindex="0" aria-label="查看目标持仓总览" onclick="openTargetOverview(event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openTargetOverview(event);}">'
                 + '<span class="target-kicker">目标持仓</span>'
@@ -28734,7 +29866,17 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 + '</div>'
                 + dashboardBody + pager;
             const rail = el.querySelector('.tring-rail');
-            if(rail) targetBindRailPager(rail);
+            if(rail){
+                // 行情/目标刷新重建卡片时保留原来的横向滚动位置，避免分页点突然回到第一张。
+                if(oldRailScrollLeft > 0){
+                    rail.scrollLeft = oldRailScrollLeft;
+                    requestAnimationFrame(function(){
+                        if(rail.isConnected) rail.scrollLeft = oldRailScrollLeft;
+                    });
+                }
+                targetBindRailDrag(rail);
+                targetBindRailPager(rail);
+            }
             updateTradeInsightStrip();
             const animated = el.querySelectorAll('.tring-ring-progress[data-animate="1"]');
             if(animated.length){
@@ -29349,7 +30491,7 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
         let targetEditStock = null;
         let targetRemindOn = true;
         let targetPriorityOn = false;
-        let targetDashboardOn = false;
+        let targetDashboardOn = true;
         let targetReturnOverview = false;
         let _targetOverviewOrigin = null; // 首页目标卡打开总览时的 Peek/Pop 原点
         let _targetEditorOrigin = null;   // 持仓详情“目标”按钮打开设置时的 Peek/Pop 原点
@@ -29543,8 +30685,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const g = targetGetGoal(item.code, item.marketType);
             targetRemindOn = g ? g.remind !== false : true;
             targetPriorityOn = g ? g.priority === true : false;
-            // 旧目标缺省视为已展示；新建目标默认关闭，需手动开启才进入首页横向卡片
-            targetDashboardOn = g ? (g.dashboard !== false) : false;
+            // 旧目标缺省视为已展示；新建目标默认开启，保存后直接进入首页横向卡片
+            targetDashboardOn = g ? (g.dashboard !== false) : true;
             document.querySelector('#targetEditStockLine').innerText = item.name + ' · ' + item.code + ' · ' + (item.marketType === 'HK' ? '港股' : 'A股');
             document.querySelector('#targetEditCurrent').innerText = targetFmtShares(item.count);
             document.querySelector('#targetSharesInput').value = g ? String(g.targetShares) : '';
@@ -29670,6 +30812,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
             const currentHeld = Math.max(0, Math.round(Number(targetEditStock.count) || 0));
             const priorityAutoOff = targetPriorityOn && n <= currentHeld;
             if(priorityAutoOff) targetPriorityOn = false;
+            // 先固化现有首页默认顺序，新增目标才能按“新卡末尾”落位，而不是被最高优先插到最前。
+            targetDashboardOrderPrime();
             const map = targetLoadGoals();
             const key = targetKey(targetEditStock.marketType, targetEditStock.code);
             const old = map[key] || {};
@@ -49360,6 +50504,8 @@ url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%
                 // 详情浮层可见时，底部导航仍可操作；切页前先收起详情，避免浮层覆盖新页面
                 const detailEl = document.querySelector('#pageHoldCardDetail');
                 if(detailEl && !detailEl.classList.contains('hidden')) closeHoldCardDetail(true);
+                const annualEl = document.querySelector('#pageAssetAnnual');
+                if(annualEl && !annualEl.classList.contains('hidden')) closeAssetAnnualReport(true);
                 switchTab(btn.getAttribute('data-tab'));
             });
         });
